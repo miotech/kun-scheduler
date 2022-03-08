@@ -109,7 +109,7 @@ public class DataQualityController {
     }
 
     @GetMapping("/data-quality/history")
-    public RequestResult<List<DataQualityHistoryRecords>> getHistory(DataQualityHistoryRequest request) {
+    public RequestResult<List<DataQualityHistoryRecords>> getHistory(ExpectationRunHistoryRequest request) {
         return RequestResult.success(dataQualityService.getHistory(request.getCaseIds(), request.getLimit()));
     }
 
@@ -119,33 +119,31 @@ public class DataQualityController {
     }
 
     @PostMapping("/data-quality/add")
-    public RequestResult<IdVO> addCase(@RequestBody DataQualityRequest dataQualityRequest) {
-        ExpectationBO expectationBO = dataQualityRequest.convertTo();
-        Long id = dataQualityService.createExpectation(expectationBO);
+    public RequestResult<IdVO> createExpectation(@RequestBody ExpectationRequest expectationRequest) {
+        Long id = dataQualityService.createExpectation(expectationRequest);
         return RequestResult.success(new IdVO(id));
     }
 
     @GetMapping("/data-quality/{id}")
-    public RequestResult<DataQualityCase> getCase(@PathVariable("id") Long id) {
-        return RequestResult.success(dataQualityService.getCase(id));
+    public RequestResult<ExpectationVO> getExpectation(@PathVariable("id") Long id) {
+        return RequestResult.success(dataQualityService.getExpectation(id));
     }
 
     @GetMapping("/data-qualities")
-    public RequestResult<DataQualityCaseBasics> getCasesByGid(DataQualitiesRequest request) {
-        DataQualityCaseBasics caseBasics = dataQualityService.getCasesByGid(request);
-        return RequestResult.success(caseBasics);
+    public RequestResult<ExpectationBasics> getExpectationsByGid(@RequestBody ExpectationsRequest request) {
+        ExpectationBasics expectationBasics = dataQualityService.getExpectationBasics(request);
+        return RequestResult.success(expectationBasics);
     }
 
     @PostMapping("/sql/validate")
-    public RequestResult<ValidateSqlResult> validateSql(@RequestBody ValidateSqlRequest request) {
-        return RequestResult.success(dataQualityService.validateSql(request));
+    public RequestResult<ValidateMetricsResult> validateSql(@RequestBody ValidateMetricsRequest validateMetricsRequest) {
+        return RequestResult.success(dataQualityService.validateSql(validateMetricsRequest));
     }
 
     @PostMapping("/data-quality/{id}/edit")
     public RequestResult<IdVO> updateCase(@PathVariable("id") Long id,
-                                          @RequestBody DataQualityRequest dataQualityRequest) {
-        ExpectationBO expectationBO = dataQualityRequest.convertTo();
-        dataQualityService.updateExpectation(id, expectationBO);
+                                          @RequestBody ExpectationRequest expectationRequest) {
+        dataQualityService.updateExpectation(id, expectationRequest);
         return RequestResult.success(new IdVO(id));
     }
 

@@ -6,16 +6,18 @@ import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.pubsub.event.PrivateEvent;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.core.ExpectationSpec;
-import com.miotech.kun.dataquality.mock.MockDataQualityFactory;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.mock.MockExpectationRequestFactory;
 import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
 import com.miotech.kun.dataquality.mock.MockOperatorFactory;
 import com.miotech.kun.dataquality.mock.MockSubscriber;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
-import com.miotech.kun.dataquality.web.model.bo.DataQualityRequest;
+import com.miotech.kun.dataquality.web.model.bo.ExpectationRequest;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
+import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
+import com.miotech.kun.dataquality.web.service.DataQualityService;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Task;
@@ -25,6 +27,7 @@ import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
+import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +53,9 @@ public class SubscriberTest extends DataQualityTestBase {
     private MockSubscriber eventSubscriber;
 
     @Autowired
+    private DataQualityService dataQualityService;
+
+    @Autowired
     private DataQualityRepository dataQualityRepository;
 
     @Autowired
@@ -66,6 +72,9 @@ public class SubscriberTest extends DataQualityTestBase {
 
     @SpyBean
     private EventPublisher publisher;
+
+    @SpyBean
+    private DatasetRepository datasetRepository;
 
     @BeforeEach
     public void mock() {
@@ -99,19 +108,19 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset2Id = IdGenerator.getInstance().nextId();
         Long dateset3Id = IdGenerator.getInstance().nextId();
         //case1
-        ExpectationSpec expectationSpec1 = MockExpectationSpecFactory.create(dateset1Id);
-        Long case1Id = expectationSpec1.getExpectationId();
-        expectationDao.create(expectationSpec1);
+        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Long case1Id = expectation1.getExpectationId();
+        expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        ExpectationSpec expectationSpec2 = MockExpectationSpecFactory.create(dateset1Id);
-        Long case2Id = expectationSpec2.getExpectationId();
-        expectationDao.create(expectationSpec2);
+        Expectation expectation2 = MockExpectationSpecFactory.create(dateset1Id);
+        Long case2Id = expectation2.getExpectationId();
+        expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset1Id));
         //case3
-        ExpectationSpec expectationSpec3 = MockExpectationSpecFactory.create(dateset2Id);
-        Long case3Id = expectationSpec3.getExpectationId();
-        expectationDao.create(expectationSpec3);
+        Expectation expectation3 = MockExpectationSpecFactory.create(dateset2Id);
+        Long case3Id = expectation3.getExpectationId();
+        expectationDao.create(expectation3);
         expectationDao.createRelatedDataset(case3Id, Lists.newArrayList(dateset2Id));
 
         //prepare event
@@ -133,12 +142,17 @@ public class SubscriberTest extends DataQualityTestBase {
 
     @Test
     public void handleCheckEventNoOutput_should_not_invoke_test_case() {
+        // mock
+        doNothing().when(workflowService).updateUpstreamTaskCheckType(anyLong(), any(CheckType.class));
+        doReturn(1L).when(datasetRepository).findDataSourceIdByGid(anyLong());
+
         //prepare case
         List<Long> relatedTableIds = new ArrayList<>();
         Long primaryDatasetId = IdGenerator.getInstance().nextId();
         relatedTableIds.add(primaryDatasetId);
-        DataQualityRequest dataQualityRequest = MockDataQualityFactory.createRequestWithRelatedTable(relatedTableIds, primaryDatasetId);
-        dataQualityRepository.addCase(dataQualityRequest);
+
+        ExpectationRequest expectationRequest = MockExpectationRequestFactory.create(relatedTableIds, primaryDatasetId);
+        dataQualityService.createExpectation(expectationRequest);
 
         //prepare event
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
@@ -159,14 +173,14 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        ExpectationSpec expectationSpec1 = MockExpectationSpecFactory.create(dateset1Id);
-        Long case1Id = expectationSpec1.getExpectationId();
-        expectationDao.create(expectationSpec1);
+        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Long case1Id = expectation1.getExpectationId();
+        expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        ExpectationSpec expectationSpec2 = MockExpectationSpecFactory.create(dateset2Id);
-        Long case2Id = expectationSpec2.getExpectationId();
-        expectationDao.create(expectationSpec2);
+        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Long case2Id = expectation2.getExpectationId();
+        expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
 
         //prepare check event
@@ -210,14 +224,14 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        ExpectationSpec expectationSpec1 = MockExpectationSpecFactory.create(dateset1Id);
-        Long case1Id = expectationSpec1.getExpectationId();
-        expectationDao.create(expectationSpec1);
+        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Long case1Id = expectation1.getExpectationId();
+        expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        ExpectationSpec expectationSpec2 = MockExpectationSpecFactory.create(dateset2Id);
-        Long case2Id = expectationSpec2.getExpectationId();
-        expectationDao.create(expectationSpec2);
+        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Long case2Id = expectation2.getExpectationId();
+        expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
 
         //prepare check event
@@ -237,7 +251,7 @@ public class SubscriberTest extends DataQualityTestBase {
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), false);
-        TaskAttemptFinishedEvent failedEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectationSpec1.getTaskId(),
+        TaskAttemptFinishedEvent failedEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectation1.getTaskId(),
                 caseRunIds.get(0), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
 
         eventSubscriber.receiveEvent(failedEvent);
@@ -258,14 +272,14 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        ExpectationSpec expectationSpec1 = MockExpectationSpecFactory.create(dateset1Id);
-        Long case1Id = expectationSpec1.getExpectationId();
-        expectationDao.create(expectationSpec1);
+        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Long case1Id = expectation1.getExpectationId();
+        expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        ExpectationSpec expectationSpec2 = MockExpectationSpecFactory.create(dateset2Id);
-        Long case2Id = expectationSpec2.getExpectationId();
-        expectationDao.create(expectationSpec2);
+        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Long case2Id = expectation2.getExpectationId();
+        expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
 
         //prepare check event
@@ -285,7 +299,7 @@ public class SubscriberTest extends DataQualityTestBase {
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), true);
-        TaskAttemptFinishedEvent successEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectationSpec1.getTaskId(),
+        TaskAttemptFinishedEvent successEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectation1.getTaskId(),
                 caseRunIds.get(0), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
 
         eventSubscriber.receiveEvent(successEvent);
@@ -322,14 +336,14 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        ExpectationSpec expectationSpec1 = MockExpectationSpecFactory.create(dateset1Id);
-        Long case1Id = expectationSpec1.getExpectationId();
-        expectationDao.create(expectationSpec1);
+        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Long case1Id = expectation1.getExpectationId();
+        expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        ExpectationSpec expectationSpec2 = MockExpectationSpecFactory.create(dateset2Id);
-        Long case2Id = expectationSpec2.getExpectationId();
-        expectationDao.create(expectationSpec2);
+        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Long case2Id = expectation2.getExpectationId();
+        expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
 
         //prepare check event
@@ -349,11 +363,11 @@ public class SubscriberTest extends DataQualityTestBase {
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), true);
-        TaskAttemptFinishedEvent successEvent1 = new TaskAttemptFinishedEvent(taskAttemptId, expectationSpec1.getTaskId(),
+        TaskAttemptFinishedEvent successEvent1 = new TaskAttemptFinishedEvent(taskAttemptId, expectation1.getTaskId(),
                 caseRunIds.get(0), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
         eventSubscriber.receiveEvent(successEvent1);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(1), true);
-        TaskAttemptFinishedEvent successEvent2 = new TaskAttemptFinishedEvent(taskAttemptId, expectationSpec2.getTaskId(),
+        TaskAttemptFinishedEvent successEvent2 = new TaskAttemptFinishedEvent(taskAttemptId, expectation2.getTaskId(),
                 caseRunIds.get(1), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
         eventSubscriber.receiveEvent(successEvent2);
 
@@ -370,10 +384,10 @@ public class SubscriberTest extends DataQualityTestBase {
     public void handleNonBlockingCaseFailed_should_not_send_event() {
         //prepare case
         Long datesetId = IdGenerator.getInstance().nextId();
-        ExpectationSpec expectationSpec = MockExpectationSpecFactory.create(datesetId);
-        ExpectationSpec nonBlockingExpectationSpec = expectationSpec.cloneBuilder().withIsBlocking(false).build();
-        Long caseId = nonBlockingExpectationSpec.getExpectationId();
-        expectationDao.create(nonBlockingExpectationSpec);
+        Expectation expectation = MockExpectationSpecFactory.create(datesetId);
+        Expectation nonBlockingExpectation = expectation.cloneBuilder().withIsBlocking(false).build();
+        Long caseId = nonBlockingExpectation.getExpectationId();
+        expectationDao.create(nonBlockingExpectation);
         expectationDao.createRelatedDataset(caseId, Lists.newArrayList(datesetId));
 
         //prepare check event
@@ -392,7 +406,7 @@ public class SubscriberTest extends DataQualityTestBase {
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), false);
-        TaskAttemptFinishedEvent failedEvent = new TaskAttemptFinishedEvent(taskAttemptId, nonBlockingExpectationSpec.getTaskId(),
+        TaskAttemptFinishedEvent failedEvent = new TaskAttemptFinishedEvent(taskAttemptId, nonBlockingExpectation.getTaskId(),
                 caseRunIds.get(0), TaskRunStatus.FAILED, new ArrayList<>(), new ArrayList<>());
 
         eventSubscriber.receiveEvent(failedEvent);

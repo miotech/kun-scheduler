@@ -1,20 +1,18 @@
 package com.miotech.kun.dataquality;
 
+import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.mock.MockDataQualityRuleFactory;
 import com.miotech.kun.dataquality.mock.MockDatasetBasicFactory;
-import com.miotech.kun.dataquality.mock.MockValidateSqlRequestFactory;
-import com.miotech.kun.dataquality.web.model.bo.ValidateSqlRequest;
-import com.miotech.kun.dataquality.web.model.entity.DataQualityRule;
+import com.miotech.kun.dataquality.mock.MockValidateMetricsRequestFactory;
+import com.miotech.kun.dataquality.web.model.bo.ValidateMetricsRequest;
 import com.miotech.kun.dataquality.web.model.entity.DatasetBasic;
 import com.miotech.kun.dataquality.web.model.entity.SQLParseResult;
-import com.miotech.kun.dataquality.web.model.entity.ValidateSqlResult;
+import com.miotech.kun.dataquality.web.model.entity.ValidateMetricsResult;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import com.miotech.kun.dataquality.web.utils.SQLValidator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
@@ -40,13 +38,12 @@ public class SQLValidatorTest extends DataQualityTestBase {
 
         Long datasetId = IdGenerator.getInstance().nextId();
         String sqlText = String.format("select %s from %s.%s", field, database, table);
-        DataQualityRule dataQualityRule = MockDataQualityRuleFactory.create(field, "=", "number", "1", "1");
-        ValidateSqlRequest vsr = MockValidateSqlRequestFactory.create(datasetId, sqlText, com.google.common.collect.ImmutableList.of(dataQualityRule));
-        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getDatasetId());
+        ValidateMetricsRequest vsr = MockValidateMetricsRequestFactory.create(datasetId, sqlText, field);
+        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getMetricsRequest().getDatasetGid());
 
         String otherDatabase = "other_db";
         SQLParseResult sqlParseResult = new SQLParseResult(ImmutableList.of(String.format("%s.%s", otherDatabase, table)), ImmutableList.of(field));
-        ValidateSqlResult result = sqlValidator.validate(sqlParseResult, vsr);
+        ValidateMetricsResult result = sqlValidator.validate(sqlParseResult, vsr);
         assertThat(result.isSuccess(), is(false));
         assertThat(result.getMessage(), is("Not related to current dataset."));
     }
@@ -61,13 +58,12 @@ public class SQLValidatorTest extends DataQualityTestBase {
 
         Long datasetId = IdGenerator.getInstance().nextId();
         String sqlText = String.format("select %s from %s.%s", field, database, table);
-        DataQualityRule dataQualityRule = MockDataQualityRuleFactory.create(field, "=", "number", "1", "1");
-        ValidateSqlRequest vsr = MockValidateSqlRequestFactory.create(datasetId, sqlText, com.google.common.collect.ImmutableList.of(dataQualityRule));
-        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getDatasetId());
+        ValidateMetricsRequest vsr = MockValidateMetricsRequestFactory.create(datasetId, sqlText, field);
+        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getMetricsRequest().getDatasetGid());
 
         String otherTable = "other_table";
         SQLParseResult sqlParseResult = new SQLParseResult(ImmutableList.of(String.format("%s.%s", database, otherTable)), ImmutableList.of(field));
-        ValidateSqlResult result = sqlValidator.validate(sqlParseResult, vsr);
+        ValidateMetricsResult result = sqlValidator.validate(sqlParseResult, vsr);
         assertThat(result.isSuccess(), is(false));
         assertThat(result.getMessage(), is("Not related to current dataset."));
     }
@@ -82,13 +78,12 @@ public class SQLValidatorTest extends DataQualityTestBase {
 
         Long datasetId = IdGenerator.getInstance().nextId();
         String sqlText = String.format("select %s from %s.%s", field, database, table);
-        DataQualityRule dataQualityRule = MockDataQualityRuleFactory.create(field, "=", "number", "1", "1");
-        ValidateSqlRequest vsr = MockValidateSqlRequestFactory.create(datasetId, sqlText, com.google.common.collect.ImmutableList.of(dataQualityRule));
-        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getDatasetId());
+        ValidateMetricsRequest vsr = MockValidateMetricsRequestFactory.create(datasetId, sqlText, field);
+        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getMetricsRequest().getDatasetGid());
 
         String otherField = "other_field";
         SQLParseResult sqlParseResult = new SQLParseResult(ImmutableList.of(String.format("%s.%s", database, table)), ImmutableList.of(otherField));
-        ValidateSqlResult result = sqlValidator.validate(sqlParseResult, vsr);
+        ValidateMetricsResult result = sqlValidator.validate(sqlParseResult, vsr);
         assertThat(result.isSuccess(), is(false));
         assertThat(result.getMessage(), is("The column names returned in the SQL statement are inconsistent with the validation rules."));
     }
@@ -103,12 +98,11 @@ public class SQLValidatorTest extends DataQualityTestBase {
 
         Long datasetId = IdGenerator.getInstance().nextId();
         String sqlText = String.format("select %s from %s.%s", field, database, table);
-        DataQualityRule dataQualityRule = MockDataQualityRuleFactory.create(field, "=", "number", "1", "1");
-        ValidateSqlRequest vsr = MockValidateSqlRequestFactory.create(datasetId, sqlText, com.google.common.collect.ImmutableList.of(dataQualityRule));
-        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getDatasetId());
+        ValidateMetricsRequest vsr = MockValidateMetricsRequestFactory.create(datasetId, sqlText, field);
+        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getMetricsRequest().getDatasetGid());
 
         SQLParseResult sqlParseResult = new SQLParseResult(ImmutableList.of(String.format("%s.%s", database, table)), ImmutableList.of(field));
-        ValidateSqlResult result = sqlValidator.validate(sqlParseResult, vsr);
+        ValidateMetricsResult result = sqlValidator.validate(sqlParseResult, vsr);
         assertThat(result.isSuccess(), is(true));
     }
 

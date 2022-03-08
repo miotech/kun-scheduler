@@ -4,7 +4,7 @@ import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.entity.CaseRun;
-import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
+import com.miotech.kun.dataquality.web.model.entity.ExpectationBasic;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
@@ -31,8 +31,8 @@ public class DataQualityTaskAttemptFinishedEventHandler implements TaskAttemptFi
     public void handle(TaskAttemptFinishedEvent taskAttemptFinishedEvent) {
         log.info("handle task attempt finish event = {}", taskAttemptFinishedEvent);
         //handle testcase
-        DataQualityCaseBasic dataQualityCaseBasic = expectationDao.fetchCaseBasicByTaskId(taskAttemptFinishedEvent.getTaskId());
-        if (dataQualityCaseBasic == null) {
+        ExpectationBasic expectationBasic = expectationDao.fetchCaseBasicByTaskId(taskAttemptFinishedEvent.getTaskId());
+        if (expectationBasic == null) {
             return;
         }
         boolean caseStatus = taskAttemptFinishedEvent.getFinalStatus().isSuccess();
@@ -58,7 +58,7 @@ public class DataQualityTaskAttemptFinishedEventHandler implements TaskAttemptFi
             return;
         }
         log.info("caseRunId = {} for taskRunId ={} is failed", caseRunId, taskRunId);
-        if (!dataQualityCaseBasic.getIsBlocking()) {
+        if (!expectationBasic.getIsBlocking()) {
             log.info("caseRun {} is non-blocking, skip.", caseRunId);
             return;
         }

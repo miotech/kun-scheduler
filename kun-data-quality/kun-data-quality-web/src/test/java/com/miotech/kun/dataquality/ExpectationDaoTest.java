@@ -2,18 +2,18 @@ package com.miotech.kun.dataquality;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.miotech.kun.dataquality.core.ExpectationSpec;
-import com.miotech.kun.dataquality.core.ValidationResult;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.dataquality.mock.MockDatasetBasicFactory;
 import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
 import com.miotech.kun.dataquality.mock.MockValidationResultFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
-import com.miotech.kun.dataquality.web.model.bo.DataQualitiesRequest;
-import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
-import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasics;
+import com.miotech.kun.dataquality.web.model.bo.ExpectationsRequest;
 import com.miotech.kun.dataquality.web.model.entity.DataQualityHistoryRecords;
 import com.miotech.kun.dataquality.web.model.entity.DatasetBasic;
+import com.miotech.kun.dataquality.web.model.entity.ExpectationBasic;
+import com.miotech.kun.dataquality.web.model.entity.ExpectationBasics;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
@@ -40,37 +40,37 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @Test
     public void testCreateThenFetch() {
-        ExpectationSpec expectationSpec = MockExpectationSpecFactory.create();
-        expectationDao.create(expectationSpec);
+        Expectation expectation = MockExpectationSpecFactory.create();
+        expectationDao.create(expectation);
 
-        ExpectationSpec fetched = expectationDao.fetchById(expectationSpec.getExpectationId());
-        assertThat(expectationSpec, sameBeanAs(fetched).ignoring("dataset"));
-        assertThat(expectationSpec.getDataset().getGid(), is(fetched.getDataset().getGid()));
+        Expectation fetched = expectationDao.fetchById(expectation.getExpectationId());
+        assertThat(expectation, sameBeanAs(fetched).ignoring("dataset"));
+        assertThat(expectation.getDataset().getGid(), is(fetched.getDataset().getGid()));
     }
 
     @Test
     public void testDelete() {
-        ExpectationSpec expectationSpec = MockExpectationSpecFactory.create();
-        expectationDao.create(expectationSpec);
+        Expectation expectation = MockExpectationSpecFactory.create();
+        expectationDao.create(expectation);
 
-        ExpectationSpec fetched = expectationDao.fetchById(expectationSpec.getExpectationId());
+        Expectation fetched = expectationDao.fetchById(expectation.getExpectationId());
         assertThat(fetched, notNullValue());
 
-        expectationDao.deleteById(expectationSpec.getExpectationId());
-        fetched = expectationDao.fetchById(expectationSpec.getExpectationId());
+        expectationDao.deleteById(expectation.getExpectationId());
+        fetched = expectationDao.fetchById(expectation.getExpectationId());
         assertThat(fetched, nullValue());
     }
 
     @Test
     public void testUpdate() {
-        ExpectationSpec expectationSpec = MockExpectationSpecFactory.create();
-        expectationDao.create(expectationSpec);
+        Expectation expectation = MockExpectationSpecFactory.create();
+        expectationDao.create(expectation);
 
         String newName = "new expectation name";
-        ExpectationSpec newExpectationSpec = expectationSpec.cloneBuilder().withName(newName).build();
-        expectationDao.updateById(expectationSpec.getExpectationId(), newExpectationSpec);
+        Expectation newExpectation = expectation.cloneBuilder().withName(newName).build();
+        expectationDao.updateById(expectation.getExpectationId(), newExpectation);
 
-        ExpectationSpec fetched = expectationDao.fetchById(expectationSpec.getExpectationId());
+        Expectation fetched = expectationDao.fetchById(expectation.getExpectationId());
         assertThat(fetched, notNullValue());
         assertThat(fetched.getName(), is(newName));
     }
@@ -108,7 +108,7 @@ public class ExpectationDaoTest extends DataQualityTestBase {
     @Test
     public void testGetRelatedDatasets() {
         // prepare
-        ExpectationSpec spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationSpecFactory.create();
         expectationDao.create(spec);
         expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
 
@@ -122,20 +122,20 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @Test
     public void testGetExpectationBasic() {
-        ExpectationSpec spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationSpecFactory.create();
         expectationDao.create(spec);
         expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
 
-        DataQualitiesRequest dataQualitiesRequest = new DataQualitiesRequest();
-        dataQualitiesRequest.setGid(spec.getDataset().getGid());
-        DataQualityCaseBasics expectationBasic = expectationDao.getExpectationBasic(dataQualitiesRequest);
-        assertThat(expectationBasic.getTotalCount(), is(1));
-        assertThat(expectationBasic.getDqCases().size(), is(1));
-        DataQualityCaseBasic dataQualityCaseBasic = expectationBasic.getDqCases().get(0);
-        assertThat(dataQualityCaseBasic.getId(), is(spec.getExpectationId()));
-        assertThat(dataQualityCaseBasic.getName(), is(spec.getName()));
-        assertThat(dataQualityCaseBasic.getUpdater(), is(spec.getUpdateUser()));
-        assertThat(dataQualityCaseBasic.getTaskId(), is(spec.getTaskId()));
+        ExpectationsRequest expectationsRequest = new ExpectationsRequest();
+        expectationsRequest.setGid(spec.getDataset().getGid());
+        ExpectationBasics expectationBasics = expectationDao.getExpectationBasics(expectationsRequest);
+        assertThat(expectationBasics.getTotalCount(), is(1));
+        assertThat(expectationBasics.getExpectationBasics().size(), is(1));
+        ExpectationBasic expectationBasic = expectationBasics.getExpectationBasics().get(0);
+        assertThat(expectationBasic.getId(), is(spec.getExpectationId()));
+        assertThat(expectationBasic.getName(), is(spec.getName()));
+        assertThat(expectationBasic.getUpdater(), is(spec.getUpdateUser()));
+        assertThat(expectationBasic.getTaskId(), is(spec.getTaskId()));
     }
 
 }

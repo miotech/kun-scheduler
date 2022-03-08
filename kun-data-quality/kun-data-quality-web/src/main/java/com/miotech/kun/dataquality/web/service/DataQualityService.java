@@ -1,16 +1,10 @@
 package com.miotech.kun.dataquality.web.service;
 
 import com.google.common.collect.Lists;
-import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.dataquality.core.ExpectationMethod;
-import com.miotech.kun.dataquality.core.ExpectationSpec;
-import com.miotech.kun.dataquality.core.JDBCExpectationAssertion;
-import com.miotech.kun.dataquality.core.JDBCExpectationMethod;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.TemplateType;
-import com.miotech.kun.dataquality.web.model.bo.DataQualitiesRequest;
-import com.miotech.kun.dataquality.web.model.bo.ExpectationBO;
-import com.miotech.kun.dataquality.web.model.bo.ValidateSqlRequest;
+import com.miotech.kun.dataquality.web.model.bo.*;
 import com.miotech.kun.dataquality.web.model.entity.*;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
@@ -64,24 +58,25 @@ public class DataQualityService extends BaseSecurityService {
         return expectationDao.getHistoryOfTheLastNTimes(expectationIds, limit);
     }
 
-    public ValidateSqlResult validateSql(ValidateSqlRequest request) {
+    public ValidateMetricsResult validateSql(ValidateMetricsRequest validateMetricsRequest) {
         try {
-            DatasetBasic selectedDataset = datasetRepository.findBasic(request.getDatasetId());
+            MetricsRequest metricsRequest = validateMetricsRequest.getMetricsRequest();
+            DatasetBasic selectedDataset = datasetRepository.findBasic(metricsRequest.getDatasetGid());
             String druidType = Constants.DATASOURCE_TO_DRUID_TYPE.get(selectedDataset.getDatasourceType());
             if (StringUtils.isEmpty(druidType)) {
-                return ValidateSqlResult.failed("Not supported data source.");
+                return ValidateMetricsResult.failed("Not supported data source.");
             }
 
-            SQLParseResult sqlParseResult = sqlParser.parseQuerySQL(request.getSqlText().trim().toLowerCase(), druidType);
-            ValidateSqlResult validateSqlResult = sqlValidator.validate(sqlParseResult, request);
-            if (!validateSqlResult.isSuccess()) {
-                return validateSqlResult;
+            SQLParseResult sqlParseResult = sqlParser.parseQuerySQL(metricsRequest.getSql().trim().toLowerCase(), druidType);
+            ValidateMetricsResult validateMetricsResult = sqlValidator.validate(sqlParseResult, validateMetricsRequest);
+            if (!validateMetricsResult.isSuccess()) {
+                return validateMetricsResult;
             }
 
             List<DatasetBasic> relatedDatasets = parseRelatedDatasets(sqlParseResult.getRelatedDatasetNames(), selectedDataset);
-            return ValidateSqlResult.success(relatedDatasets);
+            return ValidateMetricsResult.success(relatedDatasets);
         } catch (Exception e) {
-            return ValidateSqlResult.failed(e.getMessage());
+            return ValidateMetricsResult.failed(e.getMessage());
         }
     }
 
@@ -91,59 +86,24 @@ public class DataQualityService extends BaseSecurityService {
         return dimensionConfig;
     }
 
-    public DataQualityCase getCase(Long id) {
-        ExpectationSpec expectationSpec = expectationDao.fetchById(id);
+    public ExpectationVO getExpectation(Long id) {
+        Expectation expectation = expectationDao.fetchById(id);
         List<DatasetBasic> relatedDatasets = expectationDao.getRelatedDatasets(id);
-        DataQualityCase result = new DataQualityCase();
-        result.setId(expectationSpec.getExpectationId());
-        result.setName(expectationSpec.getName());
-        result.setDescription(expectationSpec.getDescription());
-        result.setDimension(TemplateType.CUSTOMIZE.name());
 
-        JSONObject dimensionConfig = new JSONObject();
-        dimensionConfig.put("sql", ((JDBCExpectationMethod) expectationSpec.getMethod()).getSql());
-        result.setDimensionConfig(dimensionConfig);
-        result.setValidateRules(convertFromExpectationMethod(expectationSpec.getMethod()));
-        result.setRelatedTables(relatedDatasets);
-        result.setTypes(expectationSpec.getTypes());
-        result.setIsBlocking(expectationSpec.isBlocking());
-
-        return result;
+        return ExpectationVO.newBuilder()
+                .withId(expectation.getExpectationId())
+                .withName(expectation.getName())
+                .withDescription(expectation.getDescription())
+                .withTypes(expectation.getTypes())
+                .withMetrics(MetricsRequest.convertFrom(expectation.getMetrics()))
+                .withAssertion(AssertionRequest.convertFrom(expectation.getAssertion()))
+                .withRelatedTables(relatedDatasets)
+                .withIsBlocking(expectation.isBlocking())
+                .build();
     }
 
-    private List<DataQualityRule> convertFromExpectationMethod(ExpectationMethod method) {
-        List<DataQualityRule> result = Lists.newArrayList();
-        ExpectationMethod.Mode mode = method.getMode();
-        switch (mode) {
-            case JDBC:
-                JDBCExpectationMethod jdbcExpectationMethod = (JDBCExpectationMethod) method;
-                List<JDBCExpectationAssertion> assertions = jdbcExpectationMethod.getAssertions();
-                for (JDBCExpectationAssertion assertion : assertions) {
-                    DataQualityRule rule = new DataQualityRule();
-                    rule.setField(assertion.getField());
-                    rule.setOperator(assertion.getComparisonOperator().getSymbol());
-                    rule.setExpectedValue(assertion.getExpectedValue());
-                    rule.setExpectedType(assertion.getExpectedType());
-                    result.add(rule);
-                }
-        }
-        return result;
-    }
-
-    public DataQualityCaseBasic getCaseBasic(Long id) {
-        return dataQualityRepository.getCaseBasic(id);
-    }
-
-    public DataQualityCaseBasics getCasesByGid(DataQualitiesRequest request) {
-        return expectationDao.getExpectationBasic(request);
-    }
-
-    public void saveTaskId(Long caseId, Long taskId) {
-        dataQualityRepository.saveTaskId(caseId, taskId);
-    }
-
-    public Long getLatestTaskId(Long caseId) {
-        return dataQualityRepository.getLatestTaskId(caseId);
+    public ExpectationBasics getExpectationBasics(ExpectationsRequest request) {
+        return expectationDao.getExpectationBasics(request);
     }
 
     public List<Long> getAllCaseId() {
@@ -159,44 +119,39 @@ public class DataQualityService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Long createExpectation(ExpectationBO expectationBO) {
+    public Long createExpectation(ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
-        expectationBO.setCreateUser(currentUsername);
-        expectationBO.setCreateTime(DateTimeUtils.now());
-        expectationBO.setUpdateUser(currentUsername);
-        expectationBO.setUpdateTime(expectationBO.getCreateTime());
+        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
 
-        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationBO.getDatasetGid());
-        ExpectationSpec expectationSpec = expectationBO.convertTo(dataSourceId);
-        expectationDao.create(expectationSpec);
-        updateRelatedDataset(expectationSpec.getExpectationId(), expectationBO.getRelatedTableIds());
+        Expectation expectation = expectationRequest.convertTo(dataSourceId, currentUsername);
+        expectationDao.create(expectation);
+        updateRelatedDataset(expectation.getExpectationId(), expectationRequest.getRelatedDatasetGids());
 
-        Long taskId = workflowService.executeTask(expectationSpec.getExpectationId()).getTask().getId();
-        expectationDao.updateTaskId(expectationSpec.getExpectationId(), taskId);
+        Long taskId = workflowService.executeTask(expectation.getExpectationId()).getTask().getId();
+        expectationDao.updateTaskId(expectation.getExpectationId(), taskId);
 
-        CheckType checkType = expectationBO.getCheckType();
-        workflowService.updateUpstreamTaskCheckType(expectationBO.getDatasetGid(), checkType);
-        return expectationSpec.getExpectationId();
+        CheckType checkType = expectationRequest.getCheckType();
+        workflowService.updateUpstreamTaskCheckType(expectationRequest.getMetrics().getDatasetGid(), checkType);
+        return expectation.getExpectationId();
     }
 
     public void deleteExpectation(Long id) {
         workflowService.deleteTaskByCase(id);
         expectationDao.deleteById(id);
+        expectationDao.deleteAllRelatedDataset(id);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void updateExpectation(Long id, ExpectationBO expectationBO) {
+    public void updateExpectation(Long id, ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
-        expectationBO.setUpdateUser(currentUsername);
-        expectationBO.setUpdateTime(DateTimeUtils.now());
 
-        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationBO.getDatasetGid());
-        ExpectationSpec expectationSpec = expectationBO.convertTo(dataSourceId);
-        expectationDao.updateById(id, expectationSpec);
-        updateRelatedDataset(id, expectationBO.getRelatedTableIds());
+        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
+        Expectation expectation = expectationRequest.convertTo(dataSourceId, currentUsername);
+        expectationDao.updateById(id, expectation);
+        updateRelatedDataset(id, expectationRequest.getRelatedDatasetGids());
 
-        CheckType checkType = expectationBO.getCheckType();
-        workflowService.updateUpstreamTaskCheckType(expectationBO.getDatasetGid(), checkType);
+        CheckType checkType = expectationRequest.getCheckType();
+        workflowService.updateUpstreamTaskCheckType(expectationRequest.getMetrics().getDatasetGid(), checkType);
     }
 
     private void updateRelatedDataset(Long id, List<Long> datasetIds) {

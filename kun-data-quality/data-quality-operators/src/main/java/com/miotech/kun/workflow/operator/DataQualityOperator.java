@@ -1,13 +1,15 @@
 package com.miotech.kun.workflow.operator;
 
+import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.query.service.ConfigService;
 import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.dataquality.core.Expectation;
-import com.miotech.kun.dataquality.core.ExpectationFactory;
-import com.miotech.kun.dataquality.core.ExpectationSpec;
-import com.miotech.kun.dataquality.core.ValidationResult;
+import com.miotech.kun.dataquality.core.assertion.Assertion;
+import com.miotech.kun.dataquality.core.expectation.*;
+import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
+import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -51,19 +53,30 @@ public class DataQualityOperator extends KunOperator {
 
     @Override
     public boolean run() {
+        ValidationResult.Builder vrb = ValidationResult.newBuilder()
+                .withExpectationId(caseId)
+                .withUpdateTime(DateTimeUtils.now());
         try {
-            ExpectationSpec expectationSpec = dataQualityClient.getExpectation(caseId);
-            Expectation expectation = ExpectationFactory.get(expectationSpec);
-            ValidationResult vr = expectation.validate();
-            dataQualityClient.record(vr, caseRunId);
+            logger.info("prepare to execute the test case: {}", caseId);
+            Expectation expectation = dataQualityClient.getExpectation(caseId);
+            SQLMetrics sqlMetrics = (SQLMetrics) expectation.getMetrics();
+            Assertion assertion = expectation.getAssertion();
+
+            SQLMetricsCollectedResult sqlMetricsCollectedResult = (SQLMetricsCollectedResult) sqlMetrics.collect();
+            dataQualityClient.recordMetricsCollectedResult(expectation.getExpectationId(), sqlMetricsCollectedResult);
+            logger.info("metrics: {} collection completed, result: {}", JSONUtils.toJsonString(sqlMetrics),
+                    JSONUtils.toJsonString(sqlMetricsCollectedResult));
+
+            boolean isPassed = assertion.doAssert(sqlMetricsCollectedResult);
+            logger.info("assertion result: {}", isPassed);
+            vrb.withPassed(isPassed);
+            vrb.withAssertionResults(ImmutableList.of(AssertionResult.from(sqlMetrics, assertion, sqlMetricsCollectedResult)));
+            dataQualityClient.record(vrb.build() , caseRunId);
             return true;
         } catch (Exception e) {
             logger.error(String.format("caseId=%d %s", caseId, "Failed to run test case."), e);
-            ValidationResult.Builder vrb = ValidationResult.newBuilder();
-            vrb.withExpectationId(caseId);
             vrb.withPassed(false);
             vrb.withExecutionResult(ExceptionUtils.getStackTrace(e));
-            vrb.withUpdateTime(DateTimeUtils.now());
             dataQualityClient.record(vrb.build(), caseRunId);
             return false;
         }

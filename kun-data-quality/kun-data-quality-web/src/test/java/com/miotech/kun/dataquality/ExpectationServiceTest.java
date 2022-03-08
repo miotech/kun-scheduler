@@ -1,7 +1,7 @@
 package com.miotech.kun.dataquality;
 
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.core.ExpectationSpec;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.service.ExpectationService;
@@ -30,7 +30,7 @@ public class ExpectationServiceTest extends DataQualityTestBase {
     @Test
     public void testGetTaskId() {
         // prepare
-        ExpectationSpec spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationSpecFactory.create();
         expectationDao.create(spec);
 
         Long taskId = expectationService.getTaskId(spec.getExpectationId());
