@@ -7,6 +7,7 @@ import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -36,6 +37,7 @@ public class RequestParameterBuilder {
                 .withDescription(StringUtils.EMPTY)
                 .withOperatorId(operatorId)
                 .withDependencies(Lists.newArrayList())
+                .withCheckType(CheckType.SKIP)
                 .withTags(Lists.newArrayList());
         fillConfig(taskBuilder, taskName, props);
         return taskBuilder.build();
