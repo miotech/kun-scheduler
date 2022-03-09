@@ -3,14 +3,13 @@ package com.miotech.kun.datadiscovery.controller;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
-import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryId;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryPage;
+import com.miotech.kun.datadiscovery.model.entity.SearchResult;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +67,7 @@ public class GlossaryController {
     }
 
     @GetMapping("/metadata/glossaries/search")
-    public RequestResult<GlossaryPage> search(GlossaryBasicSearchRequest basicSearchRequest) {
+    public RequestResult<SearchResult> search(GlossaryBasicSearchRequest basicSearchRequest) {
         return RequestResult.success(glossaryService.search(basicSearchRequest));
     }
 

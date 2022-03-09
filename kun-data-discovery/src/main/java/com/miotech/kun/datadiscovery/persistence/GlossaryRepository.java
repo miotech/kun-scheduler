@@ -1,6 +1,5 @@
 package com.miotech.kun.datadiscovery.persistence;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.common.utils.IdUtils;
@@ -11,7 +10,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryPage;
+import com.miotech.kun.datadiscovery.model.entity.SearchResult;
 import com.miotech.kun.datadiscovery.util.BasicMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -367,51 +366,6 @@ public class GlossaryRepository extends BaseRepository {
         paramList.add(updateTime);
         paramList.addAll(glossaryIds);
         jdbcTemplate.update(sql, paramList.toArray());
-    }
-
-    public GlossaryPage search(GlossaryBasicSearchRequest searchRequest) {
-        List<Object> sqlArgs = new ArrayList<>();
-        String sql = "select id, name from kun_mt_glossary\n";
-        String whereClause = wrapSql("where 1=1 and deleted=false");
-
-        if (StringUtils.isNotEmpty(searchRequest.getKeyword())) {
-            whereClause += wrapSql("and upper(name) like ?");
-            sqlArgs.add(toLikeSql(searchRequest.getKeyword().toUpperCase()));
-        }
-
-        List<Long> glossaryIds = searchRequest.getGlossaryIds();
-        if (CollectionUtils.isNotEmpty(glossaryIds)) {
-            whereClause += wrapSql("and id in " + collectionToConditionSql(sqlArgs, glossaryIds));
-        }
-        Long currentId = searchRequest.getCurrentId();
-        if (Objects.nonNull(currentId)) {
-            List<Long> descendants = findSelfDescendants(currentId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
-            if (CollectionUtils.isNotEmpty(descendants)) {
-                whereClause += wrapSql("and id  not in  " + collectionToConditionSql(sqlArgs, descendants));
-            }
-        }
-
-        sql += whereClause;
-
-        String orderClause = "order by name asc\n";
-        sql += orderClause;
-
-        String limitSql = toLimitSql(1, searchRequest.getPageSize());
-        sql += limitSql;
-
-        return jdbcTemplate.query(sql,
-                rs ->
-
-                {
-                    GlossaryPage page = new GlossaryPage();
-                    while (rs.next()) {
-                        GlossaryBasicInfo basic = new GlossaryBasicInfo();
-                        basic.setId(rs.getLong("id"));
-                        basic.setName(rs.getString("name"));
-                        page.add(basic);
-                    }
-                    return page;
-                }, sqlArgs.toArray());
     }
 
 
