@@ -7,10 +7,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
+import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.util.BasicMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -203,8 +201,8 @@ public class GlossaryRepository extends BaseRepository {
         Long oldParentId = glossaryBasicInfo.getParentId();
         Long id = glossaryBasicInfo.getId();
         Long basicInfoPrevId = glossaryBasicInfo.getPrevId();
-        if (id.equals(newParentId)) {
-            throw new IllegalArgumentException(String.format("new parent id  should not be id,parent id:%s,id:%s", newParentId, id));
+        if (isSelfDescendants(id, newParentId)) {
+            throw new IllegalArgumentException(String.format("new parent id  should not be id or  Descendants id,parent id:%s,id:%s", newParentId, id));
         }
         if (String.valueOf(newParentId).equals(String.valueOf(oldParentId))) {
             return;
@@ -230,6 +228,37 @@ public class GlossaryRepository extends BaseRepository {
         jdbcTemplate.update(updateSql, newParentId, id);
 
 
+    }
+
+    public boolean isSelfDescendants(Long id, Long newParentId) {
+        return findSelfDescendants(id).stream().map(GlossaryBasicInfo::getId).anyMatch(newParentId::equals);
+    }
+
+    /**
+     * return descendants contains self
+     *
+     * @param id
+     * @return
+     */
+    public List<GlossaryBasicInfo> findSelfDescendants(Long id) {
+
+        String tmpTableName = "tmp";
+        String tmpColumnList = "id,name ,parent_id ,prev_id,depth";
+
+        String optionsSql = DefaultSQLBuilder.newBuilder().select("id,name ,parent_id ,prev_id ,0 as depth ")
+                .from(TABLE_NAME_KUN_MT_GLOSSARY, ALIAS_KUN_MT_GLOSSARY).where("id=?").getSQL();
+        String withSql = DefaultSQLBuilder.newBuilder().select("wkmg.id,wkmg.name ,wkmg.parent_id,wkmg.prev_id ,depth+1 as depth ")
+                .from(TABLE_NAME_KUN_MT_GLOSSARY, "wkmg")
+                .join("inner", tmpTableName, "t")
+                .on("wkmg.parent_id=t.id").getSQL();
+        String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).orderBy("depth asc").getSQL();
+        String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
+        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
+        List<GlossaryBasicInfo> query = jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, id);
+        if (CollectionUtils.isEmpty(query)) {
+            return Lists.newArrayList();
+        }
+        return query;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -337,6 +366,16 @@ public class GlossaryRepository extends BaseRepository {
             GlossaryBasicSearchRequest glossaryBasicSearchRequest = (GlossaryBasicSearchRequest) searchRequest;
             if (CollectionUtils.isNotEmpty(glossaryBasicSearchRequest.getGlossaryIds())) {
                 whereClause += wrapSql("and id in " + collectionToConditionSql(sqlArgs, glossaryBasicSearchRequest.getGlossaryIds()));
+            }
+        } else if (searchRequest instanceof GlossaryMovedSearchRequest) {
+            GlossaryMovedSearchRequest glossaryMovedSearchRequest = (GlossaryMovedSearchRequest) searchRequest;
+            Long currentId = glossaryMovedSearchRequest.getCurrentId();
+            if (Objects.nonNull(currentId)) {
+                List<Long> descendants = findSelfDescendants(currentId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
+                if (CollectionUtils.isNotEmpty(descendants)) {
+                    whereClause += wrapSql("and id  not in  " + collectionToConditionSql(sqlArgs, descendants));
+                }
+
             }
         }
 
