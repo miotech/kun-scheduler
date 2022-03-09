@@ -24,6 +24,8 @@ public class DataQualityRule {
 
     String expectedValue;
 
+    String benchmarkValue;
+
     @Override
     public String toString() {
         return new StringJoiner(", ", "[", "]")
