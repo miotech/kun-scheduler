@@ -1,6 +1,6 @@
 package com.miotech.kun.dataquality.web.common.service;
 
-import com.miotech.kun.dataquality.core.ExpectationSpec;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,17 +11,17 @@ public class ExpectationService {
     @Autowired
     private ExpectationDao expectationDao;
 
-    public ExpectationSpec fetchById(Long expectationId) {
+    public Expectation fetchById(Long expectationId) {
         return expectationDao.fetchById(expectationId);
     }
 
     public Long getTaskId(Long expectationId) {
-        ExpectationSpec expectationSpec = fetchById(expectationId);
-        if (expectationSpec == null) {
+        Expectation expectation = fetchById(expectationId);
+        if (expectation == null) {
             return null;
         }
 
-        return expectationSpec.getTaskId();
+        return expectation.getTaskId();
     }
 
     public void updateTaskId(Long expectationId, Long taskId) {
