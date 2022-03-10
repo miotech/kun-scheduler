@@ -915,7 +915,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     }
 
     @Test
-    public void getSpecifiedTaskRunGanttChart_shouldSuccess() {
+    public void getSpecifiedTaskRunGanttChart_withAllSuccess_shouldSuccess() {
 
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(5, "0>>1;1>>2;2>>3;3>>4")
                 .stream()
@@ -965,5 +965,80 @@ public class TaskRunServiceTest extends CommonTestBase {
         //fetch the up&downstream for taskRun4, taskRun0,1,2 are created 24h before, excluded
         TaskRunGanttChartVO result3 = taskRunService.getTaskRunGantt(taskRuns.get(4).getId(), 24);
         assertThat(result3.getInfoList().size(), is(2));
+    }
+
+    @Test
+    public void getSpecifiedTaskRunGanttChart_withFailedCase_shouldSuccess() {
+
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(6, "0>>1;1>>2;2>>3;3>>4;4>>5")
+                .stream()
+                .map(t -> t.cloneBuilder()
+                        .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?", "Asia/Kuching"))
+                        .build())
+                .collect(Collectors.toList());
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;1>>2;2>>3;3>>4;4>>5");
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        DateTimeUtils.freeze();
+        for (Task task : tasks) {
+            taskDao.create(task);
+        }
+        // 5 taskruns 0>>1>>2>>3>>4
+        // task run 0 created 75h ago, queued 74h ago, start 72h ago, end 69h ago
+        // task run 1 created 60h ago, queued 59h ago, start 57h ago, end 54h ago
+        // task run 2 created 45h ago, queued 44h ago, start 42h ago, end 39h ago Failed
+        // task run 3 created 30h ago, end 24h ago with upstream_failed
+        // task run 4 created 15h ago, end 15h ago with upstream_failed
+        // task run 5 created now, end now with upstream_failed
+        for (int taskRun_index = 0; taskRun_index < taskRuns.size(); taskRun_index++) {
+            Long taskRunGap_hours = 15L;
+            TaskRun taskRun = taskRuns.get(taskRun_index);
+            taskRunDao.createTaskRun(taskRun);
+            if (taskRun_index < 2) {
+                taskRun = taskRun.cloneBuilder()
+                        .withStatus(TaskRunStatus.SUCCESS)
+                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
+                        .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-1))
+                        .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-3))
+                        .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-6))
+                        .build();
+            } else if (taskRun_index == 2) {
+                taskRun = taskRun.cloneBuilder()
+                        .withStatus(TaskRunStatus.FAILED)
+                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
+                        .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-1))
+                        .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-3))
+                        .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-6))
+                        .build();
+            } else {
+                taskRun = taskRun.cloneBuilder()
+                        .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
+                        .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
+                        .build();
+            }
+            taskRunDao.updateTaskRun(taskRun);
+            if (taskRun_index == 0) {
+                taskRunDao.updateTaskRunStat(taskRun.getId(), 0L, 0L);
+            } else {
+                taskRunDao.updateTaskRunStat(taskRun.getId(), 3600L, 3600L);
+            }
+        }
+
+        //fetch the up&downstream for taskRun2, taskRun 0 is created 30h earlier > 24h, excluded
+        TaskRunGanttChartVO result1 = taskRunService.getTaskRunGantt(taskRuns.get(2).getId(), 24);
+        assertThat(result1.getInfoList().size(), is(5));
+        assertThat(result1.getInfoList().get(2).getTaskRunId(), is(taskRuns.get(3).getId()));
+
+        //fetch the up&downstream for taskRun0, all downstream included
+        TaskRunGanttChartVO result2 = taskRunService.getTaskRunGantt(taskRuns.get(0).getId(), 24);
+        assertThat(result2.getInfoList().size(), is(6));
+
+        //fetch the up&downstream for taskRun4, taskRun0,1,2 are created 24h before, excluded
+        TaskRunGanttChartVO result3 = taskRunService.getTaskRunGantt(taskRuns.get(4).getId(), 24);
+        assertThat(result3.getInfoList().size(), is(3));
+
+        //fetch the up&downstream for taskRun4, trace 72h, all included
+        TaskRunGanttChartVO result4 = taskRunService.getTaskRunGantt(taskRuns.get(5).getId(), 72);
+        assertThat(result4.getInfoList().size(), is(5));
     }
 }
