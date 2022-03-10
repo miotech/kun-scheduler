@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
@@ -67,7 +68,7 @@ public class GlossaryController {
     }
 
     @GetMapping("/metadata/glossaries/search")
-    public RequestResult<GlossaryPage> search(BasicSearchRequest basicSearchRequest) {
+    public RequestResult<GlossaryPage> search(GlossaryBasicSearchRequest basicSearchRequest) {
         return RequestResult.success(glossaryService.search(basicSearchRequest));
     }
 

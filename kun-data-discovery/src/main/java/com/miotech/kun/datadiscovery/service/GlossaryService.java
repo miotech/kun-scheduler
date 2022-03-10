@@ -3,6 +3,7 @@ package com.miotech.kun.datadiscovery.service;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -48,7 +49,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
-        return glossaryRepository.updateGraph(id, glossaryGraphRequest);
+        return glossaryRepository.updateGraph(getCurrentUsername(),id, glossaryGraphRequest);
     }
 
     public List<GlossaryBasicInfo> getGlossariesByDataset(Long datasetGid) {
@@ -117,10 +118,10 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public void delete(Long id) {
-        glossaryRepository.delete(id);
+        glossaryRepository.delete(getCurrentUsername(),id);
     }
 
-    public GlossaryPage search(BasicSearchRequest searchRequest) {
+    public GlossaryPage search(GlossaryBasicSearchRequest searchRequest) {
         return glossaryRepository.search(searchRequest);
     }
 
