@@ -43,7 +43,8 @@ Docker Compose >= v1.27.0
 
 部署包括以下步骤：
 
-Step1:Download kun-scheduler
+第1步：下载kun-scheduler
+
 ```
 curl -LfO 'https://raw.githubusercontent.com/miotech/kun-scheduler/master/dist/kun-scheduler-0.7.0-rc3.tar.gz'
 tar xf kun-scheduler-0.7.0-rc3.tar.gz
@@ -51,27 +52,30 @@ cd kun-scheduler
 docker-compose up
 ```
 
-Step2:Config Hadoop env
+第2步：配置hadoop环境
+
 ```
-edit hadoop.env file and config follwing params
-#hive configuration
+# edit hadoop.env file and config follwing params
+# hive-size.xml configuration
 HIVE_SITE_CONF_hive_metastore_uris=
 HIVE_SITE_CONF_hive_metastore_warehouse_dir=
 
-#hdfs-site configuration
+# hdfs-site.xml configuration
 HDFS_CONF_fs_defaultFS=
 
-#yarn-site configuration
+# yarn-site.xml configuration
 //yarn ip
 YARN_CONF_yarn_resourcemanager_hostname=
 
-#core-site configuration
+# core-site.xml configuration
 CORE_CONF_fs_defaultFS=
 ```
 
-Step3:start docker-compose
+第3步：启动docker-compose
+
 ```
 docker-compose up
+```
 
 首次启动因为需要初始化数据库等操作，所以需大约等待1分钟左右。当看到下面这行日志时，说明启动已经完成。
 
@@ -100,6 +104,7 @@ Killed
 以下会用几个简单的例子来展示 kun-scheduler 如何使用。
 
 ## 导入数据到Hive
+
 对于csv文件，你可以通过Hive的load功能导入，例如
 
 1. 上传cvs文件到hdfs
@@ -125,6 +130,7 @@ Killed
     HiveServer 用户名: HiveServer的用户名
     HiveServer 密码: HiveServer的密码
     ```
+
 3. 添加完数据源之后，点击数据源的刷新按钮。这样 kun-scheduler 就会开始收集 Hive 中所有的表信息。
 4. 由于导入过程目前还没有制作进度条，所以请耐心等待。过一段时间后数据源就会导入完成，并展示在“数据集”页面里。
 
@@ -135,28 +141,42 @@ Killed
 1. 点击左侧标签页的“设置”->“全局变量设置”，然后点击“创建新变量”。
 2. 填写 key 为 `yarn.host`，value 则是 yarn 的地址，形如`127.0.0.1:8088`。
 
-然后我们需要上传血缘解析的 jar 包到 HDFS 上。
+然后我们需要上传两个 jar 包到 HDFS 上
 
-1. 血缘解析的 jar 包在安装包的`libs`目录下，名为`kun-spline-0.7.0-rc1.jar`。我们需要将其上传到一个能够从部署 kun-scheduler 的机器可以访问的 HDFS 地址。
+1. 两个 jar 包在`libs`目录下，分别名为`kun-spline-0.7.0-rc1.jar`和`spark-submit-sql-assembly-0.1.jar`。我们需要将其上传到一个能够从部署 kun-scheduler 的机器可以访问的 HDFS 地址。
 2. 和上面相同的，需要在“全局变量设置”中增加以下配置
 
     ```
-    lineage.analysis.jar: 血缘解析 jar 包上传以后的地址
-    lineage.output.path: HDFS 的临时目录，因为血缘解析结果会暂存为 HDFS 上的文件
-    spark.sql.jar: 封装SparkSQL任务的jar的地址
+    lineage.analysis.jar  # kun-spline-0.7.0.rc1.jar的hdfs地址，例如 hdfs://hadoopNS/libs/kun-spline-0.7.0-rc1.jar
+    spark.sql.jar # spark-submit-sql-assembly-0.1.jar的hdfs地址，例如 hdfs://hadoopNS/libs/spark-submit-sql-assembly-0.1.jar
+    lineage.output.path # 用于存放血缘解析结果的临时目录，例如 hdfs://hadoopNS/var/kun/
     ```
 
 接下来我们开始创建 SparkSQL 任务。
 
 1. 点击左侧标签页的“数据开发”，选择右上角的“创建任务”，创建“SparkSQL”任务。
 2. 输入任务名之后，任务会被创建，点击进入任务的配置页面，填写sql脚本
-DROP TABLE IF EXISTS kun.sales_record; CREATE TABLE kun.sales_record (id BIGINT, name STRING,price DECIMAL, date STRING); INSERT INTO TABLE kun.sales_record VALUES (1, 'cola', 3,'2021-07-01'),(2, 'ice-cream', 5,'2021-07-01'),(3, 'cola', 3,'2021-07-02');
+
+    ```
+    DROP TABLE IF EXISTS kun.sales_record;
+    CREATE TABLE kun.sales_record (id BIGINT, name STRING,price DECIMAL, date STRING);
+    INSERT INTO TABLE kun.sales_record VALUES
+        (1, 'cola', 3,'2021-07-01'),
+        (2, 'ice-cream', 5,'2021-07-01'),
+        (3, 'cola', 3,'2021-07-02');
+    ```
+
 3. 配置完任务参数后，再打开“调度规则”，选择“手动触发”，保存。
 4. 点击右上角的“试运行”按钮，可以对任务进行试跑。
 5. 如试跑无问题，点击右上角的“发布”按钮，可以将任务发布到线上，也就会正式开始调度了。不过由于我们选择的调度方式是”手动触发“，所以不会被自动调度，但可以手动补数据。
 6. 仿照之前的步骤，再创建一个spark-sql任务，填写sql脚本
-CREATE TABLE if not exists kun.daily_sales;INSERT INTO kun.daily_sales_record SELECT date,sum(price) from kun.sales_record group by date
-并在"调度规则"的"上游配置"中填入之前创建的任务名并选中搜索结果，最后将这个任务保存并发布
+
+    ```
+    CREATE TABLE if not exists kun.daily_sales;
+    INSERT INTO kun.daily_sales_record SELECT date,sum(price) from kun.sales_record group by date;
+    ```
+
+并在"调度规则"的"上游配置"中填入之前创建的任务名并选中搜索结果，最后将这个任务保存并发布。
 7. 再次回到“数据开发”页面，勾选中刚刚创建的任务，点击右上角的“执行数据回填”，就会触发一次补数据。补数据的结果可以在左侧标签页的“补数据实例”处看到。
 
 最后我们再来看下数据血缘的解析结果。
