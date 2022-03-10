@@ -1,9 +1,4 @@
-import {
-  GlossaryChild,
-  SearchGlossaryItem,
-  GlossaryDetail,
-  Asset,
-} from '@/rematch/models/glossary';
+import { GlossaryChild, SearchGlossaryItem, GlossaryDetail, Asset } from '@/rematch/models/glossary';
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
@@ -22,12 +17,9 @@ export async function fetchGlossariesService(parentId?: string) {
 export interface SearchGlossariesServiceResp {
   glossaries: SearchGlossaryItem[];
 }
-export async function searchGlossariesService(
-  keyword: string,
-  pageSize: number,
-) {
+export async function searchGlossariesService(keyword: string, pageSize: number, currentId?: string) {
   return get<SearchGlossariesServiceResp>('/metadata/glossaries/search', {
-    query: { pageSize, keyword },
+    query: { pageSize, keyword, currentId },
     prefix: DEFAULT_API_PREFIX,
   });
 }
@@ -54,10 +46,7 @@ export interface EditGlossaryReqBody {
   parentId?: string;
   assetIds?: string[];
 }
-export async function editGlossaryService(
-  id: string,
-  params: EditGlossaryReqBody,
-) {
+export async function editGlossaryService(id: string, params: EditGlossaryReqBody) {
   return post<GlossaryDetail>('/metadata/glossary/:id/update', {
     pathParams: { id },
     data: params,
@@ -65,12 +54,10 @@ export async function editGlossaryService(
   });
 }
 
-export async function copyGlossaryServicey(
-  id: string,
-) {
+export async function copyGlossaryServicey(id: string) {
   return post<GlossaryDetail>('/metadata/glossary/copy/:id', {
     pathParams: { id },
-    data: {id},
+    data: { id },
     prefix: DEFAULT_API_PREFIX,
   });
 }
