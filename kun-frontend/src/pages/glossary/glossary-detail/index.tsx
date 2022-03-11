@@ -345,6 +345,7 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
               <div className={styles.label}>{t('glossary.parent')}</div>
               <div>
                 <ParentSearch
+                  currentId={currentId}
                   setCurrentId={setCurrentId}
                   isEditting={isEditing}
                   selectedParent={inputtingDetail?.parent}

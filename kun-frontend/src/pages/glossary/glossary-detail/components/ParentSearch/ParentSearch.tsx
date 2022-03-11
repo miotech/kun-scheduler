@@ -13,7 +13,8 @@ interface Props {
   selectedParent?: SearchGlossaryItem | null;
   onChange: (value: SearchGlossaryItem) => void;
   disabledId?: string;
-  setCurrentId:(id:string)=>void
+  currentId?: string;
+  setCurrentId: (id: string) => void;
 }
 
 export default memo(function ParentSearch({
@@ -21,12 +22,11 @@ export default memo(function ParentSearch({
   selectedParent,
   onChange,
   disabledId,
-  setCurrentId
+  currentId,
+  setCurrentId,
 }: Props) {
   const t = useI18n();
-  const [keyword, setKeyword] = useState(
-    selectedParent ? selectedParent.name : '',
-  );
+  const [keyword, setKeyword] = useState(selectedParent ? selectedParent.name : '');
   useEffect(() => {
     if (selectedParent) {
       setKeyword(selectedParent.name);
@@ -46,7 +46,7 @@ export default memo(function ParentSearch({
     let ignore = false;
     const search = async () => {
       if (debounceKeyword) {
-        const resp = await searchGlossariesService(debounceKeyword, 10);
+        const resp = await searchGlossariesService(debounceKeyword, 10, currentId);
         if (resp && !ignore) {
           setGlossaryList(resp.glossaries.filter(i => i.id !== disabledId));
         }
@@ -56,7 +56,7 @@ export default memo(function ParentSearch({
     return () => {
       ignore = true;
     };
-  }, [debounceKeyword, disabledId]);
+  }, [debounceKeyword, disabledId, currentId]);
 
   const handleChange = useCallback(v => {
     setKeyword(v);
@@ -82,18 +82,16 @@ export default memo(function ParentSearch({
         options={options}
         value={keyword}
       >
-        <Input.Search
-          value={keyword}
-          size="large"
-          placeholder={t('common.searchContent')}
-        />
+        <Input.Search value={keyword} size="large" placeholder={t('common.searchContent')} />
       </AutoComplete>
     );
   }
   return (
     <div className={styles.noEditName}>
       <CopyOutlined />
-        <span className={styles.name}onClick={()=>setCurrentId(selectedParent!.id)}>{selectedParent!.name}</span>
+      <span className={styles.name} onClick={() => setCurrentId(selectedParent!.id)}>
+        {selectedParent!.name}
+      </span>
     </div>
   );
 });
