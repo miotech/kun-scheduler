@@ -8,6 +8,7 @@ import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import moment from 'moment-timezone';
+import { taskColorConfig } from '@/constants/colorConfig';
 import TextContainer from '../TextContainer/TextContainer';
 
 export interface Node {
@@ -59,23 +60,8 @@ function getLinkUrl(data: any) {
 }
 
 function renderStatus(status: RunStatusEnum) {
-  switch (status) {
-    case 'RUNNING':
-      return <Badge status="processing" text={status} />;
-    case 'CREATED':
-    case 'QUEUED':
-    case 'UPSTREAM_FAILED':
-      return <Badge status="warning" text={status} />;
-    case 'ABORTED':
-    case 'ABORTING':
-    case 'FAILED':
-    case 'CHECK_FAILED':
-      return <Badge status="error" text={status} />;
-    case 'SUCCESS':
-      return <Badge status="success" text={status} />;
-    default:
-      return <Badge status="default" text={status} />;
-  }
+  const color:string = taskColorConfig[status] ? taskColorConfig[status] : taskColorConfig.DEFAULT;
+  return <Badge color={color} text={status} />;
 }
 
 export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
@@ -91,14 +77,8 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
     if (data?.isDeployed) {
       return '#4cc5ca';
     }
-    if (data?.status === 'RUNNING') {
-      return '#4cc5ca';
-    }
-    if (data?.status === 'SUCCESS') {
-      return '#62cf5c';
-    }
-    if (data?.status === 'ABORTED' || data?.status === 'FAILED') {
-      return '#f16578';
+    if (data?.status && taskColorConfig[data?.status]) {
+      return taskColorConfig[data?.status];
     }
     // else
     return '#ffbe3d';

@@ -19,6 +19,7 @@ import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import Icon, { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
+import { taskColorConfig } from '@/constants/colorConfig';
 
 import { BackfillDetail } from '@/definitions/Backfill.type';
 import css from './BackfillDetailView.module.less';
@@ -32,26 +33,8 @@ function backfillIsAlreadyComplete(status: RunStatusEnum[]): boolean {
 }
 
 function renderByTaskRunListStatus(status: RunStatusEnum[]) {
-  if (status.some(s => s === 'ABORTED' || s === 'ABORTING')) {
-    return <Badge status="error" text="ABORTED" />;
-  }
-  if (status.some(s => s === 'RUNNING')) {
-    return <Badge status="processing" text="RUNNING" />;
-  }
-  if (status.some(s => s === 'FAILED')) {
-    return <Badge status="error" text="FAILED" />;
-  }
-  if (status.some(s => s === 'CHECK_FAILED')) {
-    return <Badge status="error" text="CHECK_FAILED" />;
-  }
-  if (status.every(s => s === 'SUCCESS' || s === 'SKIPPED')) {
-    return <Badge status="success" text="SUCCESS" />;
-  }
-  if (status.some(s => s === 'CREATED' || s === 'QUEUED' || s === 'UPSTREAM_FAILED')) {
-    return <Badge status="warning" text="PENDING" />;
-  }
-  // else
-  return <Badge status="default" text="UNKNOWN" />;
+  const color:string = taskColorConfig[status[0]] ? taskColorConfig[status[0]] : taskColorConfig.DEFAULT;
+  return <Badge color={color} text={status[0]} />;
 }
 
 export const BackfillDetailView: React.FC<Props> = memo(function BackfillDetailView() {
