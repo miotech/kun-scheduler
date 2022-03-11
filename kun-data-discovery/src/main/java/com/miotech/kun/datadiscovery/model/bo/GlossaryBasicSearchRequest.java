@@ -13,5 +13,6 @@ import java.util.List;
 @Data
 public class GlossaryBasicSearchRequest extends BasicSearchRequest {
 
-    List<Long> glossaryIds;
+    private Long currentId;
+    private List<Long> glossaryIds;
 }

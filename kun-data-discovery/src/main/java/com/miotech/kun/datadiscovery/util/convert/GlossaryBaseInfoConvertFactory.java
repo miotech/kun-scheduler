@@ -25,6 +25,7 @@ public class GlossaryBaseInfoConvertFactory  implements ConverterFactory<Glossar
             glossary.setCreateTime(source.getCreateTime());
             glossary.setUpdateTime(source.getUpdateTime());
             glossary.setUpdateUser(source.getUpdateUser());
+            glossary.setDeleted(source.isDeleted());
             return (T) glossary;
         };
     }

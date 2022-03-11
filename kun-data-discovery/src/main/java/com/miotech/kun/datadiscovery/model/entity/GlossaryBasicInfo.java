@@ -45,4 +45,6 @@ public class GlossaryBasicInfo {
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     OffsetDateTime updateTime;
 
+    private boolean deleted;
+
 }
