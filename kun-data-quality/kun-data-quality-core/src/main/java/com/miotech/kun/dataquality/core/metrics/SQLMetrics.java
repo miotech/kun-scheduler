@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.sql.ResultSet;
 
-public class SQLMetrics extends Metrics {
+public class SQLMetrics extends Metrics<String> {
 
     private final String sql;
 
@@ -49,7 +49,7 @@ public class SQLMetrics extends Metrics {
             ResultSet rs = connector.query(query);
 
             if (rs.next()) {
-                return new MetricsCollectedResult<String>(this, DateTimeUtils.now(), rs.getObject(this.field).toString());
+                return new MetricsCollectedResult(this, DateTimeUtils.now(), rs.getObject(this.field).toString());
             } else {
                 throw new IllegalStateException("No data returned");
             }

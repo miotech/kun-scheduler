@@ -8,7 +8,7 @@ import com.miotech.kun.dataquality.core.expectation.Dataset;
 @JsonSubTypes(value = {
         @JsonSubTypes.Type(value = SQLMetrics.class, name = "SQL")
 })
-public abstract class Metrics {
+public abstract class Metrics<R> {
 
     private final MetricsType metricsType;
 
@@ -48,9 +48,7 @@ public abstract class Metrics {
         return dataset;
     }
 
-    public abstract MetricsCollectedResult<String> collect();
-
-
+    public abstract MetricsCollectedResult<R> collect();
 
     public enum Granularity {
         TABLE, FIELD, CUSTOM;
