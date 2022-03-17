@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.dataquality.core.assertion.Assertion;
 import com.miotech.kun.dataquality.core.assertion.ComparisonOperator;
+import com.miotech.kun.dataquality.core.metrics.Metrics;
+import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
-import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
 
 public class AssertionResult {
 
@@ -65,17 +66,21 @@ public class AssertionResult {
         return benchmarkValue;
     }
 
-    public static AssertionResult from(SQLMetrics sqlMetrics, Assertion assertion,
-                                       SQLMetricsCollectedResult sqlMetricsCollectedResult,
-                                       SQLMetricsCollectedResult benchmarkMetricsCollectedNResult) {
-        return AssertionResult.newBuilder()
-                .withField(sqlMetrics.getField())
+    public static AssertionResult from(Metrics metrics, Assertion assertion,
+                                       MetricsCollectedResult<String> currentMetricsCollectedResult,
+                                       MetricsCollectedResult<String> benchmarkMetricsCollectedNResult) {
+        Builder builder = AssertionResult.newBuilder()
                 .withComparisonOperator(assertion.getComparisonOperator())
                 .withOperator(assertion.getComparisonOperator().getSymbol())
                 .withExpectedValue(assertion.getExpectedValue())
-                .withOriginalValue(sqlMetricsCollectedResult.getValue())
-                .withBenchmarkValue(benchmarkMetricsCollectedNResult == null ? null : benchmarkMetricsCollectedNResult.getValue())
-                .build();
+                .withOriginalValue(currentMetricsCollectedResult.getValue())
+                .withBenchmarkValue(benchmarkMetricsCollectedNResult == null ? null : benchmarkMetricsCollectedNResult.getValue());
+        if (metrics instanceof SQLMetrics) {
+            SQLMetrics sqlMetrics = (SQLMetrics) metrics;
+            builder.withField(sqlMetrics.getField());
+        }
+
+        return builder.build();
     }
 
     public static Builder newBuilder() {

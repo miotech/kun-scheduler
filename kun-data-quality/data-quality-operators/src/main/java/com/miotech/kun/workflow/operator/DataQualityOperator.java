@@ -8,8 +8,8 @@ import com.miotech.kun.dataquality.core.assertion.AssertionSample;
 import com.miotech.kun.dataquality.core.expectation.AssertionResult;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
-import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
-import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
+import com.miotech.kun.dataquality.core.metrics.Metrics;
+import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -62,22 +62,22 @@ public class DataQualityOperator extends KunOperator {
         try {
             logger.info("prepare to execute the test case: {}", caseId);
             Expectation expectation = dataQualityClient.getExpectation(caseId);
-            SQLMetrics sqlMetrics = (SQLMetrics) expectation.getMetrics();
+            Metrics metrics = expectation.getMetrics();
             Assertion assertion = expectation.getAssertion();
             logger.info("assertion: {}", JSONUtils.toJsonString(assertion));
 
-            SQLMetricsCollectedResult sqlMetricsCollectedResult = (SQLMetricsCollectedResult) sqlMetrics.collect();
-            dataQualityClient.recordMetricsCollectedResult(expectation.getExpectationId(), sqlMetricsCollectedResult);
-            logger.info("metrics: {} collection completed, result: {}", JSONUtils.toJsonString(sqlMetrics),
-                    JSONUtils.toJsonString(sqlMetricsCollectedResult));
+            MetricsCollectedResult<String> currentMetricsCollectedResult = metrics.collect();
+            dataQualityClient.recordMetricsCollectedResult(expectation.getExpectationId(), currentMetricsCollectedResult);
+            logger.info("metrics: {} collection completed, result: {}", JSONUtils.toJsonString(metrics),
+                    JSONUtils.toJsonString(currentMetricsCollectedResult));
 
-            SQLMetricsCollectedResult theResultCollectedNDaysAgo = dataQualityClient.getTheResultCollectedNDaysAgo(expectation.getExpectationId(),
+            MetricsCollectedResult<String> theResultCollectedNDaysAgo = dataQualityClient.getTheResultCollectedNDaysAgo(expectation.getExpectationId(),
                     assertion.getComparisonPeriod().getDaysAgo());
             logger.info("benchmark metrics: {}", JSONUtils.toJsonString(theResultCollectedNDaysAgo));
-            boolean isPassed = assertion.doAssert(AssertionSample.of(sqlMetricsCollectedResult, theResultCollectedNDaysAgo));
+            boolean isPassed = assertion.doAssert(AssertionSample.of(currentMetricsCollectedResult, theResultCollectedNDaysAgo));
             logger.info("assertion result: {}", isPassed);
             vrb.withPassed(isPassed);
-            vrb.withAssertionResults(ImmutableList.of(AssertionResult.from(sqlMetrics, assertion, sqlMetricsCollectedResult, theResultCollectedNDaysAgo)));
+            vrb.withAssertionResults(ImmutableList.of(AssertionResult.from(metrics, assertion, currentMetricsCollectedResult, theResultCollectedNDaysAgo)));
             dataQualityClient.record(vrb.build() , caseRunId);
             return true;
         } catch (Exception e) {

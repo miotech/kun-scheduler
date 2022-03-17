@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.operator.client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
@@ -10,13 +11,12 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.assertion.Assertion;
 import com.miotech.kun.dataquality.core.expectation.Dataset;
-import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
-import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.workflow.operator.DataQualityConfiguration;
 import com.miotech.kun.workflow.operator.utils.DataSourceClient;
@@ -129,7 +129,7 @@ public class DataQualityClient {
                 JSONUtils.toJsonString(metricsCollectedResult), metricsCollectedResult.getCollectedAt());
     }
 
-    public SQLMetricsCollectedResult getTheResultCollectedNDaysAgo(Long expectationId, int nDaysAgo) {
+    public MetricsCollectedResult<String> getTheResultCollectedNDaysAgo(Long expectationId, int nDaysAgo) {
         String sql = "select execution_result from kun_dq_metrics_collection where expectation_id = ? and collected_at < ? order by id desc limit 1";
         OffsetDateTime endOfNDaysAgo = DateTimeUtils.now().minusDays(nDaysAgo).withHour(23).withMinute(59).withSecond(59).withNano(999999000);
         String executionResult = databaseOperator.fetchOne(sql, rs -> rs.getString("execution_result"), expectationId, endOfNDaysAgo);
@@ -137,7 +137,8 @@ public class DataQualityClient {
             return null;
         }
 
-        return JSONUtils.jsonToObject(executionResult, SQLMetricsCollectedResult.class);
+        return JSONUtils.jsonToObject(executionResult, new TypeReference<MetricsCollectedResult<String>>() {
+        });
     }
 
     private static class SingletonHolder {

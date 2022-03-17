@@ -1,6 +1,6 @@
 package com.miotech.kun.dataquality.core.assertion;
 
-import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
+import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 
 public abstract class VolatilityAssertion extends Assertion {
 
@@ -15,12 +15,12 @@ public abstract class VolatilityAssertion extends Assertion {
         return comparisonPeriod;
     }
 
-    public abstract boolean doVolatilityAssert(SQLMetricsCollectedResult currentValue, SQLMetricsCollectedResult benchmarkValue);
+    public abstract boolean doVolatilityAssert(MetricsCollectedResult<String> currentValue, MetricsCollectedResult<String> benchmarkValue);
 
     @Override
     public boolean doAssert(AssertionSample assertionSample) {
-        SQLMetricsCollectedResult currentValue= (SQLMetricsCollectedResult) assertionSample.getCurrentValue();
-        SQLMetricsCollectedResult benchmarkValue = (SQLMetricsCollectedResult) assertionSample.getBenchmarkValue();
+        MetricsCollectedResult<String> currentValue= (MetricsCollectedResult<String>) assertionSample.getCurrentValue();
+        MetricsCollectedResult<String> benchmarkValue = (MetricsCollectedResult<String>) assertionSample.getBenchmarkValue();
         if (benchmarkValue == null) {
             return true;
         }

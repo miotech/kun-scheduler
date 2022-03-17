@@ -2,7 +2,7 @@ package com.miotech.kun.dataquality.core.assertion;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
+import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 
 public class GreaterThanAssertion extends FixedValueAssertion {
 
@@ -13,9 +13,9 @@ public class GreaterThanAssertion extends FixedValueAssertion {
     }
 
     @Override
-    public boolean doFixValueAssert(SQLMetricsCollectedResult sqlMetricsCollectedResult) {
+    public boolean doFixValueAssert(MetricsCollectedResult<String> metricsCollectedResult) {
         String expectedValue = getExpectedValue();
-        String originalValue = sqlMetricsCollectedResult.getResult();
+        String originalValue = metricsCollectedResult.getValue();
         return Double.parseDouble(originalValue) > Double.parseDouble(expectedValue);
     }
 }

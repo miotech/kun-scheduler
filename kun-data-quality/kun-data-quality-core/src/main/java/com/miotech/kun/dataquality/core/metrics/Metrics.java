@@ -48,7 +48,7 @@ public abstract class Metrics {
         return dataset;
     }
 
-    public abstract MetricsCollectedResult collect();
+    public abstract MetricsCollectedResult<String> collect();
 
 
 

@@ -1,6 +1,6 @@
 package com.miotech.kun.dataquality.core.assertion;
 
-import com.miotech.kun.dataquality.core.metrics.SQLMetricsCollectedResult;
+import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 
 public abstract class FixedValueAssertion extends Assertion {
 
@@ -10,10 +10,10 @@ public abstract class FixedValueAssertion extends Assertion {
         super(AssertionType.FIXED_VALUE, ComparisonPeriod.from(ComparisonPeriod.FixedPeriod.THIS_TIME), comparisonOperator, expectedType, expectedValue);
     }
 
-    public abstract boolean doFixValueAssert(SQLMetricsCollectedResult sqlMetricsCollectedResult);
+    public abstract boolean doFixValueAssert(MetricsCollectedResult<String> metricsCollectedResult);
 
     @Override
     public boolean doAssert(AssertionSample assertionSample) {
-        return doFixValueAssert((SQLMetricsCollectedResult) assertionSample.getCurrentValue());
+        return doFixValueAssert((MetricsCollectedResult<String>) assertionSample.getCurrentValue());
     }
 }

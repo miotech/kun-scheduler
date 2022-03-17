@@ -40,7 +40,7 @@ public class SQLMetrics extends Metrics {
     }
 
     @Override
-    public MetricsCollectedResult collect() {
+    public MetricsCollectedResult<String> collect() {
         DataSource dataSource = super.getDataset().getDataSource();
         Connector connector = null;
         try {
@@ -49,7 +49,7 @@ public class SQLMetrics extends Metrics {
             ResultSet rs = connector.query(query);
 
             if (rs.next()) {
-                return new SQLMetricsCollectedResult(this, DateTimeUtils.now(), rs.getObject(this.field).toString());
+                return new MetricsCollectedResult<String>(this, DateTimeUtils.now(), rs.getObject(this.field).toString());
             } else {
                 throw new IllegalStateException("No data returned");
             }
