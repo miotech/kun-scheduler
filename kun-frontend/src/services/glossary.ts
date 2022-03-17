@@ -15,7 +15,7 @@ export async function fetchGlossariesService(parentId?: string) {
 }
 
 export interface SearchGlossariesServiceResp {
-  glossaries: SearchGlossaryItem[];
+  searchedInfoList: SearchGlossaryItem[];
 }
 export async function searchGlossariesService(keyword: string, pageSize: number, currentId?: string) {
   return get<SearchGlossariesServiceResp>('/metadata/glossaries/search', {
