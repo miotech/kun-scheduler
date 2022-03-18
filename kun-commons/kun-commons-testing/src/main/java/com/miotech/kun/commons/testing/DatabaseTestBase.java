@@ -38,14 +38,15 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     protected String flywayLocation;
 
+
     @Container
-    public static PostgreSQLContainer postgres = startPostgres();
+    public static final PostgreSQLContainer postgres = startPostgres();
 
     protected boolean usePostgres() {
-        return false;
+        return true;
     }
 
-    protected void setFlayWayLocation(){
+    protected void setFlayWayLocation() {
         flywayLocation = "kun-infra/";
     }
 
@@ -130,6 +131,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
             this.usePostgres = usePostgres;
         }
 
+        //        alter system set max_connections=1000;
         @Provides
         @Singleton
         public DataSource createDataSource() {
