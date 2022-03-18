@@ -1,14 +1,17 @@
 import React, { memo, useCallback, useEffect } from 'react';
 import { useHistory } from 'umi';
-import { AutoComplete, Input } from 'antd';
+import { AutoComplete } from 'antd';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
 import styles from './AutosuggestInput.less';
 
+const { Option } = AutoComplete;
+
 export default memo(function AutosuggestInput() {
   const history = useHistory();
   const t = useI18n();
+
   const { selector, dispatch } = useRedux(state => state.glossary);
 
   const debounceKeyword = useDebounce(selector.searchContent, 300);
@@ -25,18 +28,20 @@ export default memo(function AutosuggestInput() {
     },
     [dispatch.glossary],
   );
-
+  const options = selector.autoSuggestGlossaryList.map(item => ({
+    value: item.name,
+    id: item.gid,
+    description: item.description,
+  }));
+  
   const handleSelect = useCallback(
     (v, option) => {
-      history.push(`/data-discovery/glossary?glossaryId=${option.id}`);
+      history.push(`/data-discovery/glossary?glossaryId=${option.key}`);
     },
     [history],
   );
 
-  const options = selector.autoSuggestGlossaryList.map(item => ({
-    value: item.name,
-    id: item.id,
-  }));
+
 
   return (
     <AutoComplete
@@ -44,9 +49,13 @@ export default memo(function AutosuggestInput() {
       filterOption={false}
       onSelect={handleSelect}
       onChange={handleChange}
-      options={options}
+      placeholder={t('glossary.searchGlossary')}
     >
-      <Input.Search size="large" placeholder={t('glossary.searchGlossary')} />
+      {options.map((item: any) => (
+        <Option key={item.id} value={item.value}>
+          <span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span>
+        </Option>
+      ))}
     </AutoComplete>
   );
 });

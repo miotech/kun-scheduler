@@ -31,8 +31,14 @@ export interface GlossaryNode extends GlossaryChild {
 }
 
 export interface SearchGlossaryItem {
-  id: string;
+  gid: string;
+  resourceType: string;
   name: string;
+  description: string;
+  resourceAttribute: {
+    owners: string;
+  };
+  deleted: false;
 }
 
 export enum AssetType {
@@ -170,7 +176,7 @@ export const glossary = {
           if (currentSearchGlossariesFlag === searchGlossariesFlag && resp) {
             dispatch.glossary.updateState({
               key: 'autoSuggestGlossaryList',
-              value: resp.glossaries || [],
+              value: resp.searchedInfoList || [],
             });
           }
         } catch (e) {
@@ -218,41 +224,9 @@ export const glossary = {
           id: string;
           params: EditGlossaryReqBody;
         },
-        rootState: RootState,
       ) {
-        // 首先从之前的父节点将子节点除去
-        const oldParentId = rootState.glossary.currentGlossaryDetail?.parent?.id;
-
         try {
-          const resp = await editGlossaryService(id, params);
-          if (resp) {
-            dispatch.glossary.updateState({
-              key: 'currentGlossaryDetail',
-              value: resp,
-            });
-            const currentNode = deepFirstSearch(rootState.glossary.glossaryData, resp.id);
-
-            if ((oldParentId || params.parentId) && oldParentId !== params.parentId) {
-              if (oldParentId) {
-                deleteNodeFromParent(id, oldParentId, rootState.glossary.glossaryData);
-              } else if (rootState.glossary.glossaryData?.children) {
-                rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
-                  child => child.id !== id,
-                );
-                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
-              }
-
-              if (resp.parent && resp.parent.id) {
-                addNodeToParent(currentNode, resp.parent.id, rootState.glossary.glossaryData);
-                if (currentNode) {
-                  currentNode.name = resp.name;
-                  currentNode.parentId = resp.parent?.id;
-                }
-              }
-            }
-
-            return resp;
-          }
+         return await editGlossaryService(id, params);
         } catch (e) {
           // do nothing
         }

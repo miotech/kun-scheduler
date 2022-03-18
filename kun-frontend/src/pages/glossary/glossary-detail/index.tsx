@@ -117,6 +117,7 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
       ...detail,
       [key]: value,
     }));
+
   };
 
   const handleChangeName = useCallback(e => {
@@ -177,6 +178,7 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
 
       dispatch.glossary.editGlossary({ id, params }).then(resp => {
         diss();
+        console.log(resp);
         if (resp) {
           message.success(t('common.operateSuccess'));
           setIsEditing(false);
