@@ -39,7 +39,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     protected String flywayLocation;
 
     @Container
-    public static PostgreSQLContainer postgres = startPostgres();
+    public static  final  PostgreSQLContainer postgres = startPostgres();
 
     protected boolean usePostgres() {
         return true;
@@ -75,6 +75,13 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     public static PostgreSQLContainer startPostgres() {
         PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
+        try {
+            postgres.createConnection("test").createStatement().executeUpdate("alter system set max_connections=1000;");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }finally {
+
+        }
         return postgres;
     }
 
@@ -129,7 +136,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         TestDatabaseModule(Boolean usePostgres) {
             this.usePostgres = usePostgres;
         }
-
+//        alter system set max_connections=1000;
         @Provides
         @Singleton
         public DataSource createDataSource() {
@@ -137,7 +144,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
                 HikariConfig config = new HikariConfig();
                 config.setUsername(postgres.getUsername());
                 config.setPassword(postgres.getPassword());
-                config.setMaximumPoolSize(5);
                 config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
                 config.setDriverClassName("org.postgresql.Driver");
                 return new HikariDataSource(config);
