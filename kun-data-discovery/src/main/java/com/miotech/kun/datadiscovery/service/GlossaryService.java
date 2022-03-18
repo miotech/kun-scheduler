@@ -1,15 +1,17 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.persistence.GlossaryRepository;
 import com.miotech.kun.datadiscovery.util.convert.AppBasicConversionService;
+import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
+import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author: Jie Chen
@@ -40,6 +45,8 @@ public class GlossaryService extends BaseSecurityService {
     RestTemplate restTemplate;
     @Autowired
     GlossaryRepository glossaryRepository;
+    @Autowired
+    SearchAppService searchAppService;
 
     public static final String COPY_PREFIX = "Copy of ";
 
@@ -49,7 +56,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
-        return glossaryRepository.updateGraph(getCurrentUsername(),id, glossaryGraphRequest);
+        return glossaryRepository.updateGraph(getCurrentUsername(), id, glossaryGraphRequest);
     }
 
     public List<GlossaryBasicInfo> getGlossariesByDataset(Long datasetGid) {
@@ -70,7 +77,9 @@ public class GlossaryService extends BaseSecurityService {
         glossaryRequest.setCreateTime(now);
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
-        return glossaryRepository.insert(glossaryRequest);
+        Long gid = glossaryRepository.insert(glossaryRequest);
+        searchAppService.saveOrUpdateGlossarySearchInfo(getGlossaryBasicInfo(gid));
+        return gid;
     }
 
     public List<GlossaryBasicInfo> fetchChildrenBasicList(Long parentId) {
@@ -114,15 +123,36 @@ public class GlossaryService extends BaseSecurityService {
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
         glossaryRepository.update(id, glossaryRequest);
-        return fetchGlossary(id);
+        Glossary glossary = fetchGlossary(id);
+        searchAppService.saveOrUpdateGlossarySearchInfo(glossary);
+        return glossary;
     }
 
     public void delete(Long id) {
-        glossaryRepository.delete(getCurrentUsername(),id);
+        glossaryRepository.delete(getCurrentUsername(), id);
+        searchAppService.removeGlossarySearchInfo(id);
     }
 
-    public GlossaryPage search(GlossaryBasicSearchRequest searchRequest) {
-        return glossaryRepository.search(searchRequest);
+    public SearchResult search(GlossaryBasicSearchRequest searchRequest) {
+        Iterable<String> keywords = Splitter.on(" ").omitEmptyStrings().split(searchRequest.getKeyword());
+        ArrayList<String> keywordList = Lists.newArrayList(keywords);
+        String[] keywordArray = new String[keywordList.size()];
+        keywordList.toArray(keywordArray);
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageSize(), keywordArray);
+        Stream<SearchedInfo> searchedInfoStream = universalSearchInfo.getSearchedInfoList().stream();
+        Long currentId = searchRequest.getCurrentId();
+        if (Objects.nonNull(currentId)) {
+            List<Long> descendants = glossaryRepository.findSelfDescendants(currentId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
+            searchedInfoStream = searchedInfoStream.filter(searchedInfo -> !descendants.contains(searchedInfo.getGid()));
+        }
+        List<Long> glossaryIds = searchRequest.getGlossaryIds();
+        if (CollectionUtils.isNotEmpty(glossaryIds)) {
+            searchedInfoStream = searchedInfoStream.filter(searchedInfo -> glossaryIds.contains(searchedInfo.getGid()));
+        }
+        List<SearchedInfo> collect = searchedInfoStream.collect(Collectors.toList());
+        SearchResult searchResult = new SearchResult();
+        searchResult.setSearchedInfoList(collect);
+        return searchResult;
     }
 
     @Transactional(rollbackFor = Exception.class)
