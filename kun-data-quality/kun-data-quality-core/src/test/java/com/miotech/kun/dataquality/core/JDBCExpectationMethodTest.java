@@ -1,6 +1,7 @@
 package com.miotech.kun.dataquality.core;
 
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.dataquality.core.expectation.JDBCExpectationMethod;
 import org.junit.jupiter.api.Test;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;

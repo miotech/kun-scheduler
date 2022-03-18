@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.core.JDBCExpectationAssertionResult;
-import com.miotech.kun.dataquality.core.ValidationResult;
+import com.miotech.kun.dataquality.core.expectation.AssertionResult;
+import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +71,7 @@ public class ExpectationRunDao {
                     .withPassed(rs.getBoolean("passed"))
                     .withExecutionResult(rs.getString("execution_result"))
                     .withAssertionResults(JSONUtils.jsonToObject(rs.getString("assertion_result"),
-                            new TypeReference<List<JDBCExpectationAssertionResult>>() {
+                            new TypeReference<List<AssertionResult>>() {
                             }))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
                     .build();
@@ -83,7 +83,7 @@ public class ExpectationRunDao {
                 .select("continuous_failing_count")
                 .from(TABLE_NAME)
                 .where("expectation_id = ?")
-                .orderBy("update_time desc")
+                .orderBy("id desc")
                 .limit(1)
                 .getSQL();
 

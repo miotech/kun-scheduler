@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.operator.client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
@@ -9,19 +9,24 @@ import com.miotech.kun.commons.query.service.ConfigService;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.core.Dataset;
-import com.miotech.kun.dataquality.core.ExpectationMethod;
-import com.miotech.kun.dataquality.core.ExpectationSpec;
-import com.miotech.kun.dataquality.core.ValidationResult;
+import com.miotech.kun.dataquality.core.assertion.Assertion;
+import com.miotech.kun.dataquality.core.expectation.Dataset;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
+import com.miotech.kun.dataquality.core.expectation.ValidationResult;
+import com.miotech.kun.dataquality.core.metrics.Metrics;
+import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
+import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.workflow.operator.DataQualityConfiguration;
-import com.miotech.kun.workflow.operator.model.*;
 import com.miotech.kun.workflow.operator.utils.DataSourceClient;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.postgresql.util.PGobject;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -32,11 +37,14 @@ public class DataQualityClient {
 
     private static final String EXPECTATION_TABLE_NAME = "kun_dq_expectation";
     private static final String EXPECTATION_RUN_TABLE_NAME = "kun_dq_expectation_run";
-    private static final List<String> EXPECTATION_COLUMNS = ImmutableList.of("id", "name", "types", "description", "method", "trigger",
-            "dataset_gid", "task_id", "is_blocking", "create_time", "update_time", "create_user", "update_user");
+    private static final String EXPECTATION_METRICS_COLLECTION_TABLE_NAME = "kun_dq_metrics_collection";
+    private static final List<String> EXPECTATION_COLUMNS = ImmutableList.of("id", "name", "types", "description", "method",
+            "metrics_config", "assertion_config", "trigger", "dataset_gid", "task_id", "is_blocking", "create_time",
+            "update_time", "create_user", "update_user");
     private static final List<String> EXPECTATION_RUN_INSERT_COLUMNS = ImmutableList.of("id", "expectation_id", "passed", "execution_result",
             "assertion_result", "continuous_failing_count", "update_time");
 
+    private static final List<String> EXPECTATION_METRICS_COLLECTION_COLUMNS = ImmutableList.of("expectation_id", "execution_result", "collected_at");
 
     private DatabaseOperator databaseOperator;
 
@@ -44,7 +52,7 @@ public class DataQualityClient {
         databaseOperator = new DatabaseOperator(MetadataDataSource.getInstance().getMetadataDataSource());
     }
 
-    public ExpectationSpec getExpectation(Long caseId) {
+    public Expectation getExpectation(Long caseId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(EXPECTATION_COLUMNS.toArray(new String[0]))
                 .from(EXPECTATION_TABLE_NAME)
@@ -52,16 +60,18 @@ public class DataQualityClient {
                 .getSQL();
 
         return databaseOperator.query(sql, rs -> {
-            ExpectationSpec.Builder builder = ExpectationSpec.newBuilder();
+            Expectation.Builder builder = Expectation.newBuilder();
             if (rs.next()) {
-                Long datasetGid = rs.getLong("dataset_gid");
-                Long dataSourceId = fetchDataSourceIdByGid(datasetGid);
+                Dataset dataset = buildDataset(rs);
+                Metrics metrics = buildMetrics(rs, dataset);
                 builder
                         .withExpectationId(rs.getLong("id"))
                         .withName(rs.getString("name"))
                         .withDescription(rs.getString("description"))
                         .withMethod(com.miotech.kun.workflow.utils.JSONUtils.jsonToObject(rs.getString("method"), ExpectationMethod.class))
-                        .withTrigger(ExpectationSpec.ExpectationTrigger.valueOf(rs.getString("trigger")))
+                        .withMetrics(metrics)
+                        .withAssertion(JSONUtils.jsonToObject(rs.getString("assertion_config"), Assertion.class))
+                        .withTrigger(Expectation.ExpectationTrigger.valueOf(rs.getString("trigger")))
                         .withTaskId(rs.getLong("task_id"))
                         .withIsBlocking(rs.getBoolean("is_blocking"))
                         .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")))
@@ -69,18 +79,13 @@ public class DataQualityClient {
                         .withCreateUser(rs.getString("create_user"))
                         .withUpdateUser(rs.getString("update_user"));
 
-                DataSourceClient client = new DataSourceClient(ConfigService.getInstance().getProperties().get(DataQualityConfiguration.INFRA_BASE_URL));
-                DataSource dataSourceById = client.getDataSourceById(dataSourceId);
-                builder.withDataset(Dataset.builder().gid(datasetGid).dataSource(dataSourceById).build());
+                builder.withDataset(dataset);
             }
             return builder.build();
         }, caseId);
     }
 
-    private Long fetchDataSourceIdByGid(Long datasetGid) {
-        String sql = "select datasource_id from kun_mt_dataset where gid = ?";
-        return databaseOperator.fetchOne(sql, rs -> rs.getLong("datasource_id"), datasetGid);
-    }
+
 
     public void record(ValidationResult vr, Long caseRunId) {
         long failedCount = 0;
@@ -114,131 +119,34 @@ public class DataQualityClient {
         databaseOperator.update(updateStatusSql, status, caseRunId);
     }
 
+    public void recordMetricsCollectedResult(Long expectationId, MetricsCollectedResult metricsCollectedResult) {
+        String insertSql = DefaultSQLBuilder.newBuilder()
+                .insert(EXPECTATION_METRICS_COLLECTION_COLUMNS.toArray(new String[0]))
+                .into(EXPECTATION_METRICS_COLLECTION_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+        databaseOperator.create(insertSql, expectationId,
+                JSONUtils.toJsonString(metricsCollectedResult), metricsCollectedResult.getCollectedAt());
+    }
+
+    public MetricsCollectedResult<String> getTheResultCollectedNDaysAgo(Long expectationId, int nDaysAgo) {
+        String sql = "select execution_result from kun_dq_metrics_collection where expectation_id = ? and collected_at < ? order by id desc limit 1";
+        OffsetDateTime endOfNDaysAgo = DateTimeUtils.now().minusDays(nDaysAgo).withHour(23).withMinute(59).withSecond(59).withNano(999999000);
+        String executionResult = databaseOperator.fetchOne(sql, rs -> rs.getString("execution_result"), expectationId, endOfNDaysAgo);
+        if (StringUtils.isBlank(executionResult)) {
+            return null;
+        }
+
+        return JSONUtils.jsonToObject(executionResult, new TypeReference<MetricsCollectedResult<String>>() {
+        });
+    }
+
     private static class SingletonHolder {
         private static DataQualityClient instance = new DataQualityClient();
     }
 
     public static DataQualityClient getInstance() {
         return DataQualityClient.SingletonHolder.instance;
-    }
-
-    public DataQualityCase getCase(Long caseId) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("kdc.id as case_id",
-                        "kdc.name as case_name",
-                        "kdc.description as case_description",
-                        "kdc.template_id as case_temp_id",
-                        "kdc.execution_string as custom_string",
-                        "kdcdt.execution_string as temp_string",
-                        "kdct.type as temp_type")
-                .from("kun_dq_case kdc")
-                .join("left", "kun_dq_case_datasource_template", "kdcdt").on("kdcdt.id = kdc.template_id")
-                .join("left", "kun_dq_case_template", "kdct").on("kdct.id = kdcdt.template_id")
-                .where("kdc.id = ?")
-                .getSQL();
-
-        return databaseOperator.query(sql, rs -> {
-            DataQualityCase dqCase = new DataQualityCase();
-            if (rs.next()) {
-                Long tempId = rs.getLong("case_temp_id");
-                if (tempId.equals(0L)) {
-                    dqCase.setDimension(TemplateType.CUSTOMIZE);
-                    dqCase.setExecutionString(rs.getString("custom_string"));
-                } else {
-                    dqCase.setDimension(TemplateType.valueOf(rs.getString("temp_type")));
-                    dqCase.setExecutionString(rs.getString("temp_string"));
-                }
-                dqCase.setRules(getRulesByCaseId(caseId));
-                dqCase.setDatasetIds(getDatasetIdsByCaseId(caseId));
-            }
-
-            return dqCase;
-        }, caseId);
-    }
-
-    private List<DataQualityRule> getRulesByCaseId(Long caseId) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("field",
-                        "operator",
-                        "expected_value_type",
-                        "expected_value")
-                .from("kun_dq_case_rules")
-                .where("case_id = ?")
-                .getSQL();
-
-        return databaseOperator.query(sql, rs -> {
-            List<DataQualityRule> rules = new ArrayList<>();
-            while (rs.next()) {
-                DataQualityRule rule = new DataQualityRule();
-                rule.setField(rs.getString("field"));
-                rule.setOperator(rs.getString("operator"));
-                rule.setExpectedType(rs.getString("expected_value_type"));
-                rule.setExpectedValue(rs.getString("expected_value"));
-                rules.add(rule);
-            }
-            return rules;
-        }, caseId);
-    }
-
-    public List<Long> getDatasetIdsByCaseId(Long caseId) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("dataset_id")
-                .from("kun_dq_case_associated_dataset")
-                .where("case_id = ?")
-                .getSQL();
-
-        return databaseOperator.query(sql, rs -> {
-            List<Long> ids = new ArrayList<>();
-            while (rs.next()) {
-                ids.add(rs.getLong("dataset_id"));
-            }
-            return ids;
-        }, caseId);
-    }
-
-    public List<Long> getDatasetFieldIdsByCaseId(Long caseId) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("dataset_field_id")
-                .from("kun_dq_case_associated_dataset_field")
-                .where("case_id = ?")
-                .getSQL();
-
-        return databaseOperator.query(sql, rs -> {
-            List<Long> fieldIds = new ArrayList<>();
-            while (rs.next()) {
-                fieldIds.add(rs.getLong("dataset_field_id"));
-            }
-            return fieldIds;
-        }, caseId);
-    }
-
-    public void recordCaseMetrics(DataQualityCaseMetrics metrics, Long caseRunId) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .insert()
-                .into("kun_dq_case_metrics")
-                .valueSize(6)
-                .getSQL();
-
-        long failedCount = 0;
-        if (CaseStatus.FAILED == metrics.getCaseStatus()) {
-            long latestFailingCount = getLatestFailingCount(metrics.getCaseId());
-            failedCount = latestFailingCount + 1;
-        }
-
-        databaseOperator.update(sql, IdGenerator.getInstance().nextId(),
-                metrics.getErrorReason(),
-                failedCount,
-                DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
-                transferObjectToPGObject(metrics.getRuleRecords()),
-                metrics.getCaseId());
-
-        String updateStatusSql = DefaultSQLBuilder.newBuilder()
-                .update("kun_dq_case_run")
-                .set("status")
-                .where("case_run_id = ?")
-                .asPrepared()
-                .getSQL();
-        databaseOperator.update(updateStatusSql, metrics.getCaseStatus().name(), caseRunId);
     }
 
     private Long getLatestFailingCount(Long expectationId) {
@@ -271,4 +179,28 @@ public class DataQualityClient {
         }
         return jsonObject;
     }
+
+    private Metrics buildMetrics(ResultSet rs, Dataset dataset) throws SQLException {
+        Metrics metrics = JSONUtils.jsonToObject(rs.getString("metrics_config"), Metrics.class);
+        if (!(metrics instanceof SQLMetrics)) {
+            throw new IllegalStateException("Invalid metrics type: " + metrics.getMetricsType().name());
+        }
+
+        SQLMetrics sqlMetrics = (SQLMetrics) metrics;
+        return sqlMetrics.cloneBuilder().withDataset(dataset).build();
+    }
+
+    private Dataset buildDataset(ResultSet rs) throws SQLException {
+        Long datasetGid = rs.getLong("dataset_gid");
+        Long dataSourceId = fetchDataSourceIdByGid(datasetGid);
+        DataSourceClient client = new DataSourceClient(ConfigService.getInstance().getProperties().get(DataQualityConfiguration.INFRA_BASE_URL));
+        DataSource dataSourceById = client.getDataSourceById(dataSourceId);
+        return Dataset.builder().gid(datasetGid).dataSource(dataSourceById).build();
+    }
+
+    private Long fetchDataSourceIdByGid(Long datasetGid) {
+        String sql = "select datasource_id from kun_mt_dataset where gid = ?";
+        return databaseOperator.fetchOne(sql, rs -> rs.getLong("datasource_id"), datasetGid);
+    }
+
 }
