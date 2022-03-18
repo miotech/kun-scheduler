@@ -137,7 +137,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
                 HikariConfig config = new HikariConfig();
                 config.setUsername(postgres.getUsername());
                 config.setPassword(postgres.getPassword());
-                config.setIdleTimeout(5);
+                config.setMaximumPoolSize(2);
                 config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
                 config.setDriverClassName("org.postgresql.Driver");
                 return new HikariDataSource(config);
