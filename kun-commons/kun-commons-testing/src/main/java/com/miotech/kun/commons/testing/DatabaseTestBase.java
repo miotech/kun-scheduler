@@ -70,8 +70,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         if (usePostgres() && (!POSTGRES_CONF)) {
             try {
                 dataSource.getConnection().createStatement().executeUpdate("alter system set max_connections=1000;");
-                postgres.stop();
-                postgres.start();
                 POSTGRES_CONF = true;
             } catch (SQLException e) {
                 e.printStackTrace();
