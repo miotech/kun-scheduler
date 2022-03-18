@@ -226,7 +226,14 @@ export const glossary = {
         },
       ) {
         try {
-         return await editGlossaryService(id, params);
+          const resp = await editGlossaryService(id, params);
+          if (resp) {
+            dispatch.glossary.updateState({
+              key: 'currentGlossaryDetail',
+              value: resp,
+            });
+            return resp;
+          }
         } catch (e) {
           // do nothing
         }
