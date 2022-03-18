@@ -35,17 +35,19 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     private List<String> userTables;
 
     private static final String POSTGRES_IMAGE = "postgres:12.3";
+    private static boolean POSTGRES_CONF = false;
 
     protected String flywayLocation;
 
+
     @Container
-    public static  final  PostgreSQLContainer postgres = startPostgres();
+    public static final PostgreSQLContainer postgres = startPostgres();
 
     protected boolean usePostgres() {
         return true;
     }
 
-    protected void setFlayWayLocation(){
+    protected void setFlayWayLocation() {
         flywayLocation = "kun-infra/";
     }
 
@@ -65,6 +67,16 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     public void initDatabase() {
         // initialize database
         dataSource = injector.getInstance(DataSource.class);
+        if (usePostgres() && (!POSTGRES_CONF)) {
+            try {
+                dataSource.getConnection().createStatement().executeUpdate("alter system set max_connections=1000;");
+                postgres.stop();
+                postgres.start();
+                POSTGRES_CONF = true;
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
         Props props = new Props();
         if (!usePostgres()) {
             props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
@@ -75,13 +87,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     public static PostgreSQLContainer startPostgres() {
         PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
-        try {
-            postgres.createConnection("test").createStatement().executeUpdate("alter system set max_connections=1000;");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }finally {
-
-        }
         return postgres;
     }
 
@@ -136,7 +141,8 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         TestDatabaseModule(Boolean usePostgres) {
             this.usePostgres = usePostgres;
         }
-//        alter system set max_connections=1000;
+
+        //        alter system set max_connections=1000;
         @Provides
         @Singleton
         public DataSource createDataSource() {
