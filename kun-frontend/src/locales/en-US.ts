@@ -133,7 +133,6 @@ export default {
   'dataDiscovery.dbtype': 'Type',
   'dataDiscovery.datasource': 'Datasource',
   'dataDiscovery.db': 'Database',
-  'dataDiscovery.glossary': 'Glossary',
   'dataDiscovery.popularDatasets': 'Popular Datasets',
   'dataDiscovery.datasetsTable.header.name': 'Name',
   'dataDiscovery.datasetsTable.header.database': 'Database',
