@@ -139,7 +139,7 @@ class SearchServiceTest extends DatabaseTestBase {
  
     @Test
     void test_search_simple_one() {
-        String keyword = "kun";
+        String keyword = "'kun";
         DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBilder()
                 .withDatabaseName("test")
                 .withDatasourceAttrs("hive-attr")
