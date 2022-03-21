@@ -1,6 +1,6 @@
 package com.miotech.kun.monitor.alert.notifyconfig.dao;
 
-import com.miotech.kun.monitor.alert.AppTestBase;
+import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.alert.common.dao.TaskNotifyConfigDao;
 import com.miotech.kun.monitor.alert.mocking.MockTaskNotifyConfigFactory;
 import com.miotech.kun.monitor.facade.model.alert.TaskNotifyConfig;
@@ -15,7 +15,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-public class TaskNotifyConfigDaoTest extends AppTestBase {
+public class TaskNotifyConfigDaoTest extends MonitorAlertTestBase {
     @Autowired
     private TaskNotifyConfigDao taskNotifyConfigDao;
 

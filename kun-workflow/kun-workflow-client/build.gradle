@@ -21,4 +21,5 @@ dependencies {
     testImplementation project(':kun-metadata:kun-metadata-web')
     testImplementation project(':kun-infra')
     testImplementation 'org.testcontainers:neo4j'
+    testImplementation "org.testcontainers:postgresql"
 }

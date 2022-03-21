@@ -1,7 +1,7 @@
 package com.miotech.kun.dataplatform.web.common.taskdefview.dao;
 
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
@@ -23,7 +23,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TaskDefinitionViewDaoTest extends AppTestBase {
+public class TaskDefinitionViewDaoTest extends DataPlatformTestBase {
     private final Logger logger = LoggerFactory.getLogger(TaskDefinitionViewDaoTest.class);
 
     @Autowired

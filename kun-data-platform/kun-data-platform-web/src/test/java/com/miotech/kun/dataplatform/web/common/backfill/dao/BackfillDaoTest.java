@@ -3,7 +3,7 @@ package com.miotech.kun.dataplatform.web.common.backfill.dao;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.PageResult;
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
@@ -25,7 +25,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BackfillDaoTest extends AppTestBase {
+public class BackfillDaoTest extends DataPlatformTestBase {
     @Autowired
     private BackfillDao backfillDao;
 

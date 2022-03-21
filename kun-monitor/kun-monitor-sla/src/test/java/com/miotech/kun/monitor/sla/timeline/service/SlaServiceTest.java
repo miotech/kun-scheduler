@@ -1,7 +1,7 @@
 package com.miotech.kun.monitor.sla.timeline.service;
 
 import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
-import com.miotech.kun.monitor.sla.AppTestBase;
+import com.miotech.kun.monitor.sla.MonitorSlaTestBase;
 import com.miotech.kun.monitor.sla.common.service.SlaService;
 import com.miotech.kun.monitor.sla.mocking.MockTaskDefinitionNodeFactory;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +16,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-public class SlaServiceTest extends AppTestBase {
+public class SlaServiceTest extends MonitorSlaTestBase {
 
     @Autowired
     private SlaService slaService;

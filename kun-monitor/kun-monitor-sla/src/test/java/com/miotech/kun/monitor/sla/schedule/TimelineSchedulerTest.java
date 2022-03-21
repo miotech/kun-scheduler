@@ -1,6 +1,6 @@
 package com.miotech.kun.monitor.sla.schedule;
 
-import com.miotech.kun.monitor.sla.AppTestBase;
+import com.miotech.kun.monitor.sla.MonitorSlaTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
@@ -10,7 +10,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class TimelineSchedulerTest extends AppTestBase {
+public class TimelineSchedulerTest extends MonitorSlaTestBase {
 
     @SpyBean
     private TimelineScheduler timelineScheduler;

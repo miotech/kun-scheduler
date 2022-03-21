@@ -2,7 +2,7 @@ package com.miotech.kun.monitor.alert.notifyconfig.service;
 
 import com.miotech.kun.monitor.alert.common.dao.TaskNotifyConfigDao;
 import com.miotech.kun.monitor.alert.common.service.TaskNotifyConfigService;
-import com.miotech.kun.monitor.alert.AppTestBase;
+import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.alert.mocking.MockTaskNotifyConfigFactory;
 import com.miotech.kun.monitor.facade.model.alert.TaskNotifyConfig;
 import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
@@ -15,7 +15,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.*;
 
-public class TaskNotifyConfigServiceTest extends AppTestBase {
+public class TaskNotifyConfigServiceTest extends MonitorAlertTestBase {
     @Autowired
     private TaskNotifyConfigService taskNotifyConfigService;
 

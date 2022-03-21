@@ -27,11 +27,6 @@ public class ExecuteTargetServiceTest extends DatabaseTestBase {
         super.configuration();
     }
 
-    @Override
-    protected boolean usePostgres() {
-        return true;
-    }
-
     @BeforeEach
     public void init() {
         databaseOperator.update("truncate table kun_wf_target RESTART IDENTITY");

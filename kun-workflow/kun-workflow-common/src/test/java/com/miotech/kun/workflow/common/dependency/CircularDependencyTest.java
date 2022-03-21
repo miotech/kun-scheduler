@@ -40,11 +40,6 @@ public class CircularDependencyTest extends CommonTestBase {
     private OperatorDao operatorDao;
 
     @Override
-    protected boolean usePostgres() {
-        return true;
-    }
-
-    @Override
     protected void configuration() {
         super.configuration();
         bind(MetadataServiceFacade.class, mock(MetadataServiceFacade.class));

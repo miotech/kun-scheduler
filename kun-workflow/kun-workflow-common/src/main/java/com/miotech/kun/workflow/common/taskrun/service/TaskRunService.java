@@ -295,7 +295,7 @@ public class TaskRunService {
     public TaskRunGanttChartVO getTaskRunGantt(Long taskRunId, Integer upstreamTraceTime_hours) {
         TaskRun taskRun = findTaskRun(taskRunId);
         List<TaskRun> result = new ArrayList<>();
-        List<Long> upstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId, postgresEnable());
+        List<Long> upstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId);
         if (!upstreamTaskRunIds.isEmpty()) {
             List<TaskRun> upstreamTaskRunList = taskRunDao.fetchTaskRunsByIds(upstreamTaskRunIds)
                     .stream()
@@ -316,7 +316,7 @@ public class TaskRunService {
             result.addAll(upstreamTaskRunList);
         }
         result.add(taskRun);
-        List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, postgresEnable());
+        List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
         if (!downstreamTaskRunIds.isEmpty()) {
             List<TaskRun> downstreamTaskRunList = taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
                     .stream()
@@ -609,10 +609,4 @@ public class TaskRunService {
         vo.setFailedUpstreamTaskRuns(failedUpstreamTaskRuns);
         return vo;
     }
-
-    private boolean postgresEnable() {
-        String datasourceUrl = props.getString("datasource.jdbcUrl", "");
-        return datasourceUrl.contains("postgres");
-    }
-
 }

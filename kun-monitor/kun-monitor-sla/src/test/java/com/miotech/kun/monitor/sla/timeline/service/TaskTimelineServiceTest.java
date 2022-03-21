@@ -10,7 +10,7 @@ import com.miotech.kun.dataplatform.web.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
 import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
-import com.miotech.kun.monitor.sla.AppTestBase;
+import com.miotech.kun.monitor.sla.MonitorSlaTestBase;
 import com.miotech.kun.monitor.sla.common.dao.TaskTimelineDao;
 import com.miotech.kun.monitor.sla.common.service.SlaService;
 import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
@@ -28,7 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertTrue;
 
-public class TaskTimelineServiceTest extends AppTestBase {
+public class TaskTimelineServiceTest extends MonitorSlaTestBase {
 
     @Autowired
     private TaskTimelineService taskTimelineService;

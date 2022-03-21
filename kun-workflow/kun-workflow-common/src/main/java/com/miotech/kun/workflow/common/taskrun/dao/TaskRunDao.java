@@ -5,7 +5,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.math.Stats;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
@@ -40,7 +39,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -757,25 +755,6 @@ public class TaskRunDao {
         return dbOperator.fetchAll(recursiveSql, rs -> rs.getLong(1), taskRunId);
     }
 
-    public List<Long> fetchDownStreamTaskRunIdsRecursive(Long taskRunId, boolean postgres) {
-        if (postgres) {
-            return fetchDownStreamTaskRunIdsRecursive(taskRunId);
-        }
-        Set<Long> downStreamTaskRunIds = new HashSet<>();
-        List<Long> taskRunIds = Arrays.asList(taskRunId);
-        while (taskRunIds.size() != 0) {
-            List<Long> downStream = fetchDownStreamTaskRunIds(taskRunIds);
-            List<Long> nextTaskRunIds = new ArrayList<>();
-            downStream.forEach(x -> {
-                if (downStreamTaskRunIds.add(x)) {
-                    nextTaskRunIds.add(x);
-                }
-            });
-            taskRunIds = nextTaskRunIds;
-        }
-        return downStreamTaskRunIds.stream().collect(Collectors.toList());
-    }
-
     /**
      * Fetch downstream taskRunIds with the given taskRunId
      *
@@ -807,26 +786,6 @@ public class TaskRunDao {
                 .getSQL();
         return dbOperator.fetchAll(dependencySQL, rs -> rs.getLong(1), taskRunIds.toArray());
     }
-
-    public List<Long> fetchUpStreamTaskRunIdsRecursive(Long taskRunId, boolean postgres) {
-        if (postgres) {
-            return fetchUpStreamTaskRunIdsRecursive(taskRunId);
-        }
-        Set<Long> upStreamTaskRunIds = new HashSet<>();
-        List<Long> taskRunIds = Arrays.asList(taskRunId);
-        while (taskRunIds.size() != 0) {
-            List<Long> downStream = fetchUpStreamTaskRunIds(taskRunIds);
-            List<Long> nextTaskRunIds = new ArrayList<>();
-            downStream.forEach(x -> {
-                if (upStreamTaskRunIds.add(x)) {
-                    nextTaskRunIds.add(x);
-                }
-            });
-            taskRunIds = nextTaskRunIds;
-        }
-        return upStreamTaskRunIds.stream().collect(Collectors.toList());
-    }
-
 
     /**
      * Recursively fetch all upstream taskRunIds with the given taskRunId

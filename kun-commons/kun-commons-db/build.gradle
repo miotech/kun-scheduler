@@ -9,7 +9,7 @@ dependencies {
 
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16' // Only add if you're using the Bolt driver
 
-    testRuntimeOnly "com.h2database:h2"
     testImplementation "org.testcontainers:elasticsearch"
+    testImplementation "org.testcontainers:postgresql"
     testImplementation project(":kun-commons:kun-commons-testing")
 }

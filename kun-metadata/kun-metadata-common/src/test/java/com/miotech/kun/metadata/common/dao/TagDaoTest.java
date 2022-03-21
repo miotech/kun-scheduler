@@ -7,7 +7,6 @@ import com.miotech.kun.metadata.common.factory.MockDatasetTagFactory;
 import com.miotech.kun.metadata.core.model.dataset.DatasetTag;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
@@ -25,11 +24,6 @@ public class TagDaoTest extends DatabaseTestBase {
 
     @Inject
     private TagDao tagDao;
-
-    @Override
-    protected boolean usePostgres() {
-        return true;
-    }
 
     @AfterEach
     @Override

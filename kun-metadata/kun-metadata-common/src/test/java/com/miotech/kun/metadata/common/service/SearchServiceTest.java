@@ -35,11 +35,6 @@ class SearchServiceTest extends DatabaseTestBase {
     @Inject
     private DatabaseOperator databaseOperator;
 
-    @Override
-    protected boolean usePostgres() {
-        return true;
-    }
- 
     @Test
     void test_search_Content_limit() {
         SearchedInfo save1 = save(1L,"test-1", ResourceType.GLOSSARY, "ddd-sss", "zhang-san");

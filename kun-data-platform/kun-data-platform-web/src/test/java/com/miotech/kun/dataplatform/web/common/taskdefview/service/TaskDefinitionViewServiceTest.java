@@ -3,7 +3,7 @@ package com.miotech.kun.dataplatform.web.common.taskdefview.service;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.PageResult;
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TaskDefinitionViewServiceTest extends AppTestBase {
+public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
 
     @Autowired
     TaskDefinitionDao taskDefinitionDao;

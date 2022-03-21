@@ -11,7 +11,7 @@ public class Unsafe {
 
     static synchronized void setInjector(Injector injector) {
         checkNotNull(injector, "injector should not be null.");
-        inj.compareAndSet(null, injector);
+        inj.set(injector);
     }
 
     public static synchronized Injector getInjector() {

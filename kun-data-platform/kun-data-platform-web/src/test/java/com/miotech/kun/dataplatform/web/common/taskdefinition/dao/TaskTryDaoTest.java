@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.taskdefinition.dao;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskTry;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TaskTryDaoTest extends AppTestBase {
+public class TaskTryDaoTest extends DataPlatformTestBase {
 
     @Autowired
     private TaskTryDao taskTryDao;

@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.datastore.service;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
@@ -18,7 +18,7 @@ import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
 @WithMockTestUser
-public class DatasetServiceTest extends AppTestBase {
+public class DatasetServiceTest extends DataPlatformTestBase {
 
     @Autowired
     private DatasetService datasetService;

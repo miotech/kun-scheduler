@@ -46,7 +46,7 @@ public class DualWriteOperatorTest extends DatabaseTestBase {
     private DatabaseOperator dbOperator;
 
     @Override
-    protected void setFlayWayLocation() {
+    protected void setFlywayLocation() {
         flywayLocation = "sql/";
     }
 

@@ -288,8 +288,7 @@ public class TaskManager {
     }
 
     private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus, List<TaskRunStatus> filterStatus) {
-        boolean usePostgres = postgresEnable();
-        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
+        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
         logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
         if (taskRunStatus.isTermState()) {
             OffsetDateTime termAt = DateTimeUtils.now();
@@ -303,11 +302,6 @@ public class TaskManager {
 
     private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
         return updateDownStreamStatus(taskRunId, taskRunStatus, new ArrayList<>());
-    }
-
-    private boolean postgresEnable() {
-        String datasourceUrl = props.getString("datasource.jdbcUrl", "");
-        return datasourceUrl.contains("postgres");
     }
 
     private class TaskRunReadyCheckEvent {

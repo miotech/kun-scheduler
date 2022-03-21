@@ -3,7 +3,7 @@ package com.miotech.kun.dataplatform.web.common.backfill.service;
 import com.google.common.collect.Maps;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
 import com.miotech.kun.dataplatform.web.common.backfill.dao.BackfillDao;
@@ -36,7 +36,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
 @WithMockTestUser
-public class BackfillServiceTest extends AppTestBase {
+public class BackfillServiceTest extends DataPlatformTestBase {
     @Autowired
     private BackfillService backfillService;
 

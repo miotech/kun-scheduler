@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.taskdefinition.service;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskRunFactory;
@@ -43,7 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
 @WithMockTestUser
-public class TaskDefinitionServiceTest extends AppTestBase {
+public class TaskDefinitionServiceTest extends DataPlatformTestBase {
 
     @Autowired
     private TaskDefinitionService taskDefinitionService;
@@ -82,7 +82,6 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         taskDefinitionService.create(taskDefinitionProps);
         CreateTaskDefinitionRequest taskDefinitionPropsDuplicate = new CreateTaskDefinitionRequest("test", TEST_TEMPLATE);
         assertThrows(IllegalArgumentException.class,() -> taskDefinitionService.create(taskDefinitionPropsDuplicate));
-
     }
 
     @Test

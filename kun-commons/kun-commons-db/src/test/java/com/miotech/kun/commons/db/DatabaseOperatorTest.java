@@ -18,7 +18,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     private DatabaseOperator operator;
 
     @Override
-    protected void setFlayWayLocation() {
+    protected void setFlywayLocation() {
         flywayLocation = "sql/";
     }
 

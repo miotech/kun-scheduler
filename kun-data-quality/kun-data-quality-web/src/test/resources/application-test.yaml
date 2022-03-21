@@ -9,14 +9,6 @@ workflow:
   variableNamespace: dataplatform
 
 spring:
-  datasource:
-    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
-    username: sa
-    password:
-    driverClassName: org.h2.Driver
-    hikari:
-      connection-init-sql: CREATE DOMAIN IF NOT EXISTS  "JSONB" AS TEXT
-
   session:
     jdbc:
       initialize-schema: always
@@ -30,5 +22,3 @@ spring:
     schemas: public
     baselineOnMigrate: true
     baselineVersion: 0
-
-

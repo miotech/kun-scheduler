@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.exception;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-public class ControllerExceptionHandlerTest extends AppTestBase {
+public class ControllerExceptionHandlerTest extends DataPlatformTestBase {
 
     @Autowired
     private MockMvc mockMvc;

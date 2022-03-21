@@ -11,5 +11,4 @@ dependencies {
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
-    testRuntimeOnly "com.h2database:h2"
 }

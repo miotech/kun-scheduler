@@ -8,7 +8,6 @@ dependencies {
     implementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     implementation 'org.testcontainers:junit-jupiter:1.16.2'
     implementation "org.mockito:mockito-core:3.3.3"
-    implementation "com.h2database:h2"
     implementation ("org.mock-server:mockserver-netty:3.10.8") {
         exclude group: 'xerces', module: 'xerces'
         exclude group: 'xerces', module: 'xercesImpl'
@@ -17,5 +16,8 @@ dependencies {
     implementation "org.testcontainers:testcontainers"
     implementation "org.testcontainers:postgresql"
     implementation 'org.postgresql:postgresql'
+    implementation "org.testcontainers:neo4j"
+
     implementation 'org.springframework.boot:spring-boot-starter-test:2.4.2'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc:2.4.2'
 }

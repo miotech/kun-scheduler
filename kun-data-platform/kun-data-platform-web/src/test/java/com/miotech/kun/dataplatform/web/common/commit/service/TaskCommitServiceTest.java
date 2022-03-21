@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.commit.service;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitStatus;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WithMockTestUser
-public class TaskCommitServiceTest extends AppTestBase {
+public class TaskCommitServiceTest extends DataPlatformTestBase {
 
     @Autowired
     private TaskCommitService taskCommitService;
