@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
+import com.miotech.kun.common.model.PageInfo;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import lombok.Data;
 
@@ -11,7 +12,7 @@ import java.util.List;
  * @created: 2020/6/18
  */
 @Data
-public class SearchResult {
+public class SearchPage extends PageInfo {
 
     private List<SearchedInfo> searchedInfoList = new ArrayList<>();
 

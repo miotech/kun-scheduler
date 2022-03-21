@@ -17,10 +17,9 @@ import java.util.stream.Collectors;
  * @create: 2022-03-08 10:16
  **/
 
-public class UniversalSearchRequest implements Serializable {
+public class UniversalSearchRequest  extends PageInfo implements Serializable {
     private List<SearchFilterOption> searchFilterOptions = Lists.newArrayList();
     private Set<ResourceType> resourceTypes= Sets.newHashSet(ResourceType.values());
-    private Integer limitNum = 100;
 
 
     public List<SearchFilterOption> getSearchFilterOptions() {
@@ -40,13 +39,5 @@ public class UniversalSearchRequest implements Serializable {
     }
     public void setSearchFilterOptions(List<SearchFilterOption> searchFilterOptions) {
         this.searchFilterOptions = searchFilterOptions;
-    }
-
-    public Integer getLimitNum() {
-        return limitNum;
-    }
-
-    public void setLimitNum(Integer limitNum) {
-        this.limitNum = limitNum;
     }
 }

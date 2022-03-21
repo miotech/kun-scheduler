@@ -22,7 +22,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class UniversalSearchTest extends DatabaseTestBase {
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
+public class UniversalSearchDaoTest extends DatabaseTestBase {
 
     @Inject
     private UniversalSearchDao universalSearchDao;
@@ -40,8 +43,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .collect(Collectors.toList());
         UniversalSearchRequest request1 = new UniversalSearchRequest();
         request1.setSearchFilterOptions(searchFilterOptionList1);
-        String options = new SearchOptionJoiner().add(request1.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList1 = universalSearchDao.search(options, request1.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList1 = universalSearchDao.search(searchFilterOptionList1, request1.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList1.size(), Is.is(3));
 //        one content
         List<SearchFilterOption> searchFilterOptionList2 = Arrays.stream(new String[]{"test"})
@@ -51,8 +53,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .collect(Collectors.toList());
         UniversalSearchRequest request2 = new UniversalSearchRequest();
         request2.setSearchFilterOptions(searchFilterOptionList2);
-        String optionsString2 = new SearchOptionJoiner().add(request2.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList2 = universalSearchDao.search(optionsString2, request2.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList2 = universalSearchDao.search(searchFilterOptionList2, request2.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList2.size(), Is.is(1));
         MatcherAssert.assertThat(searchedInfoList2.get(0).getGid(), Is.is(1L));
 //    a part content
@@ -63,8 +64,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .collect(Collectors.toList());
         UniversalSearchRequest request3 = new UniversalSearchRequest();
         request3.setSearchFilterOptions(searchFilterOptionList3);
-        String optionsString3 = new SearchOptionJoiner().add(request3.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList3 = universalSearchDao.search(optionsString3, request2.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList3 = universalSearchDao.search(searchFilterOptionList3, request2.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList3.size(), Is.is(2));
         MatcherAssert.assertThat(searchedInfoList3.get(0).getGid(), Is.is(2L));
         MatcherAssert.assertThat(searchedInfoList3.get(1).getGid(), Is.is(3L));
@@ -86,8 +86,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .collect(Collectors.toList());
         UniversalSearchRequest request1 = new UniversalSearchRequest();
         request1.setSearchFilterOptions(searchFilterOptionList1);
-        String options = new SearchOptionJoiner().add(request1.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList1 = universalSearchDao.search(options, request1.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList1 = universalSearchDao.search(searchFilterOptionList1, request1.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList1.size(), Is.is(3));
         MatcherAssert.assertThat(searchedInfoList1.get(0).getGid(), Is.is(1L));
         MatcherAssert.assertThat(searchedInfoList1.get(1).getGid(), Is.is(3L));
@@ -101,8 +100,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .collect(Collectors.toList());
         UniversalSearchRequest request2 = new UniversalSearchRequest();
         request2.setSearchFilterOptions(searchFilterOptionList2);
-        String optionsString = new SearchOptionJoiner().add(request2.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList2 = universalSearchDao.search(optionsString, request2.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList2 = universalSearchDao.search(searchFilterOptionList2, request2.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList2.size(), Is.is(3));
 
 
@@ -137,8 +135,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .withDeleted(false).build();
         universalSearchDao.save(glossarySearchedInfo);
         UniversalSearchRequest request = getUniversalSearchRequest(new String[]{keyword});
-        String optionsString = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList = universalSearchDao.search(optionsString, request.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList.size(), Is.is(1));
         SearchedInfo searchedInfo = searchedInfoList.get(0);
         MatcherAssert.assertThat(searchedInfo.getGid(), Is.is(glossarySearchedInfo.getGid()));
@@ -167,8 +164,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .withDeleted(false).build();
         universalSearchDao.save(datasetSearchedInfo);
         UniversalSearchRequest request = getUniversalSearchRequest(new String[]{keyword});
-        String optionsString = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList = universalSearchDao.search(optionsString, request.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList.size(), Is.is(1));
         SearchedInfo searchedInfo = searchedInfoList.get(0);
         MatcherAssert.assertThat(searchedInfo.getGid(), Is.is(datasetSearchedInfo.getGid()));
@@ -199,8 +195,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
         universalSearchDao.save(beforeInfo);
         String[] strings = {keyword};
         UniversalSearchRequest request = getUniversalSearchRequest(strings);
-        String options = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList = universalSearchDao.search(options, request.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList.size(), Is.is(1));
         SearchedInfo searchedInfo = searchedInfoList.get(0);
         MatcherAssert.assertThat(searchedInfo.getGid(), Is.is(beforeInfo.getGid()));
@@ -226,7 +221,7 @@ public class UniversalSearchTest extends DatabaseTestBase {
         universalSearchDao.update(afterInfo);
 
         String optionsString = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> afterSearchedInfoList = universalSearchDao.search(optionsString, request.getResourceTypeNames(), 10);
+        List<SearchedInfo> afterSearchedInfoList = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(afterSearchedInfoList.size(), Is.is(1));
         SearchedInfo afterSearchedInfo = afterSearchedInfoList.get(0);
         MatcherAssert.assertThat(afterSearchedInfo.getGid(), Is.is(afterSearchedInfo.getGid()));
@@ -276,11 +271,48 @@ public class UniversalSearchTest extends DatabaseTestBase {
                 .withDeleted(false).build();
         universalSearchDao.save(datasetSearchedInfo);
         UniversalSearchRequest request = getUniversalSearchRequest(new String[]{keyword});
-        String optionsString = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchedInfoList = universalSearchDao.search(optionsString, request.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoList = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoList.size(), Is.is(1));
         universalSearchDao.remove(datasetSearchedInfo.getResourceType(), datasetSearchedInfo.getGid());
-        List<SearchedInfo> searchedInfoListRemove = universalSearchDao.search(optionsString, request.getResourceTypeNames(), 10);
+        List<SearchedInfo> searchedInfoListRemove = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), 1,10);
         MatcherAssert.assertThat(searchedInfoListRemove.size(), Is.is(0));
+    }
+
+    @Test
+    void test_search_filter_symbol() {
+        String keyword = "'''！！test特殊符号@¥#%%#…………#……";
+        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBilder()
+                .withDatabaseName("test")
+                .withDatasourceAttrs("hive-attr")
+                .withDatasourceType("hive")
+                .withTags("test,dev,search")
+                .withOwners("test person")
+                .withHighWatermark(DateTimeUtils.now())
+                .withDatasourceName("hive-test")
+                .build();
+        SearchedInfo datasetSearchedInfo = SearchedInfo.Builder.newBuilder()
+                .withGid(1L)
+                .withResourceType(ResourceType.GLOSSARY)
+                .withName("test" + "_" + keyword)
+                .withDescription("description search test")
+                .withResourceAttribute(resourceAttribute)
+                .withDeleted(false).build();
+        universalSearchDao.save(datasetSearchedInfo);
+        UniversalSearchRequest request = getUniversalSearchRequest(new String[]{keyword});
+        List<SearchedInfo> searchedInfoList = universalSearchDao.search(request.getSearchFilterOptions(),request.getResourceTypeNames(),1,10);
+        assertThat(searchedInfoList.size(), is(1));
+        SearchedInfo searchedInfo = searchedInfoList.get(0);
+        assertThat(searchedInfo.getGid(), is(datasetSearchedInfo.getGid()));
+        assertThat(searchedInfo.getResourceType(), is(datasetSearchedInfo.getResourceType()));
+
+        UniversalSearchRequest request2 = getUniversalSearchRequest(new String[]{datasetSearchedInfo.getName()});
+        List<SearchedInfo> searchedInfoList2 = universalSearchDao.search(request2.getSearchFilterOptions(),request2.getResourceTypeNames(),1,10);
+        assertThat(searchedInfoList2.size(), is(1));
+        SearchedInfo searchedInfo2 = searchedInfoList2.get(0);
+        assertThat(searchedInfo2.getGid(), is(datasetSearchedInfo.getGid()));
+        assertThat(searchedInfo2.getResourceType(), is(datasetSearchedInfo.getResourceType()));
+
+
+
     }
 }

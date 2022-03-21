@@ -26,7 +26,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -133,12 +132,12 @@ public class GlossaryService extends BaseSecurityService {
         searchAppService.removeGlossarySearchInfo(id);
     }
 
-    public SearchResult search(GlossaryBasicSearchRequest searchRequest) {
+    public SearchPage search(GlossaryBasicSearchRequest searchRequest) {
         Iterable<String> keywords = Splitter.on(" ").omitEmptyStrings().split(searchRequest.getKeyword());
         ArrayList<String> keywordList = Lists.newArrayList(keywords);
         String[] keywordArray = new String[keywordList.size()];
         keywordList.toArray(keywordArray);
-        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageSize(), keywordArray);
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageSize(), searchRequest.getPageNumber(), keywordArray);
         Stream<SearchedInfo> searchedInfoStream = universalSearchInfo.getSearchedInfoList().stream();
         Long currentId = searchRequest.getCurrentId();
         if (Objects.nonNull(currentId)) {
@@ -150,9 +149,12 @@ public class GlossaryService extends BaseSecurityService {
             searchedInfoStream = searchedInfoStream.filter(searchedInfo -> glossaryIds.contains(searchedInfo.getGid()));
         }
         List<SearchedInfo> collect = searchedInfoStream.collect(Collectors.toList());
-        SearchResult searchResult = new SearchResult();
-        searchResult.setSearchedInfoList(collect);
-        return searchResult;
+        SearchPage searchPage = new SearchPage();
+        searchPage.setSearchedInfoList(collect);
+        searchPage.setPageSize(universalSearchInfo.getPageSize());
+        searchPage.setPageSize(universalSearchInfo.getPageNumber());
+        searchPage.setPageSize(universalSearchInfo.getTotalCount());
+        return searchPage;
     }
 
     @Transactional(rollbackFor = Exception.class)

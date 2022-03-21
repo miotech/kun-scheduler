@@ -3,7 +3,6 @@ package com.miotech.kun.metadata.common.service;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.dao.UniversalSearchDao;
-import com.miotech.kun.metadata.common.utils.SearchOptionJoiner;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
@@ -36,9 +35,17 @@ public class SearchService {
 
     public UniversalSearchInfo search(UniversalSearchRequest request) {
         checked(request);
-        String optionsString = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchResult = universalSearchDao.search(optionsString, request.getResourceTypeNames(), request.getLimitNum());
+        Integer searchCount = universalSearchDao.searchCount(request.getSearchFilterOptions(), request.getResourceTypeNames());
         UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
+        universalSearchInfo.setPageNumber(request.getPageNumber());
+        universalSearchInfo.setPageNumber(request.getPageSize());
+        universalSearchInfo.setTotalCount(searchCount);
+        if (Objects.isNull(searchCount)||searchCount<=0){
+            logger.debug("count is 0");
+            return universalSearchInfo;
+        }
+        List<SearchedInfo> searchResult = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(),
+                request.getPageNumber(),request.getPageSize());
         universalSearchInfo.setSearchedInfoList(searchResult);
         return universalSearchInfo;
     }
