@@ -13,6 +13,7 @@ import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -37,6 +37,7 @@ import java.util.stream.Stream;
  * @created: 2020/6/17
  */
 @Service
+@Slf4j
 public class GlossaryService extends BaseSecurityService {
     @Value("${metadata.base-url:localhost:8084}")
     String url;
@@ -133,12 +134,12 @@ public class GlossaryService extends BaseSecurityService {
         searchAppService.removeGlossarySearchInfo(id);
     }
 
-    public SearchResult search(GlossaryBasicSearchRequest searchRequest) {
+    public SearchPage search(GlossaryBasicSearchRequest searchRequest) {
         Iterable<String> keywords = Splitter.on(" ").omitEmptyStrings().split(searchRequest.getKeyword());
         ArrayList<String> keywordList = Lists.newArrayList(keywords);
         String[] keywordArray = new String[keywordList.size()];
         keywordList.toArray(keywordArray);
-        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageSize(), keywordArray);
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageNumber(), searchRequest.getPageSize(), keywordArray);
         Stream<SearchedInfo> searchedInfoStream = universalSearchInfo.getSearchedInfoList().stream();
         Long currentId = searchRequest.getCurrentId();
         if (Objects.nonNull(currentId)) {
@@ -150,9 +151,12 @@ public class GlossaryService extends BaseSecurityService {
             searchedInfoStream = searchedInfoStream.filter(searchedInfo -> glossaryIds.contains(searchedInfo.getGid()));
         }
         List<SearchedInfo> collect = searchedInfoStream.collect(Collectors.toList());
-        SearchResult searchResult = new SearchResult();
-        searchResult.setSearchedInfoList(collect);
-        return searchResult;
+        SearchPage searchPage = new SearchPage();
+        searchPage.setSearchedInfoList(collect);
+        searchPage.setPageSize(universalSearchInfo.getPageSize());
+        searchPage.setPageSize(universalSearchInfo.getPageNumber());
+        searchPage.setTotalCount(universalSearchInfo.getTotalCount());
+        return searchPage;
     }
 
     @Transactional(rollbackFor = Exception.class)

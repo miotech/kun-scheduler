@@ -40,9 +40,9 @@ public class SearchController {
      */
     @RouteMapping(url = "/search/full", method = "GET")
     public UniversalSearchInfo fullSearch(@RequestBody String... keywords) {
-        logger.debug("SearchController fullTextSearch  keyword: {}", keywords);
+        logger.debug("SearchController fullTextSearch  keyword: {}", (Object[]) keywords);
         Preconditions.checkNotNull(keywords, " Invalid parameter `keywords`: found null object");
-        Preconditions.checkArgument(keywords.length>0, " Invalid parameter `keywords`: found empty object");
+        Preconditions.checkArgument(keywords.length > 0, " Invalid parameter `keywords`: found empty object");
         List<SearchFilterOption> searchFilterOptionList = Arrays.stream(keywords)
                 .map(s -> SearchFilterOption.Builder.newBuilder()
                         .withSearchContents(Sets.newHashSet(SearchContent.values()))
@@ -50,6 +50,7 @@ public class SearchController {
                 .collect(Collectors.toList());
         UniversalSearchRequest request = new UniversalSearchRequest();
         request.setSearchFilterOptions(searchFilterOptionList);
+        request.setPageSize(Integer.MAX_VALUE);
         return searchService.search(request);
     }
 
