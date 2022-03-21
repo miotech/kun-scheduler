@@ -36,8 +36,7 @@ public class SearchService {
 
     public UniversalSearchInfo search(UniversalSearchRequest request) {
         checked(request);
-        String optionsString = new SearchOptionJoiner().add(request.getSearchFilterOptions()).toString();
-        List<SearchedInfo> searchResult = universalSearchDao.search(optionsString, request.getResourceTypeNames(), request.getLimitNum());
+        List<SearchedInfo> searchResult = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(), request.getLimitNum());
         UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
         universalSearchInfo.setSearchedInfoList(searchResult);
         return universalSearchInfo;

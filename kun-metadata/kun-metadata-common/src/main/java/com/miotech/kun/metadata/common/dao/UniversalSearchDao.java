@@ -7,10 +7,11 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.metadata.common.service.SearchService;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
+import com.miotech.kun.metadata.common.utils.SearchOptionJoiner;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.search.ResourceAttribute;
+import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.curator.shaded.com.google.common.collect.ImmutableList;
@@ -20,8 +21,10 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * @program: kun
@@ -44,7 +47,7 @@ public class UniversalSearchDao {
     private static final String COLUMN_SEARCH_TS = "search_ts";
     private static final String COLUMN_UPDATE_TIME = "update_time";
     private static final String COLUMN_DELETED = "deleted";
-    private static final String COLUMN_RANK_FORMAT = "ts_rank_cd(search_ts , to_tsquery('%s')) AS rank";
+    private static final String COLUMN_RANK_FORMAT = "ts_rank_cd(search_ts , to_tsquery(?)) AS rank";
     private static final String COLUMN_SELECT = new StringJoiner(",")
             .add(COLUMN_GID).add(COLUMN_RESOURCE_TYPE).add(COLUMN_NAME).add(COLUMN_DESCRIPTION)
             .add(COLUMN_RESOURCE_ATTRIBUTE).add(COLUMN_DELETED).toString();
@@ -52,20 +55,17 @@ public class UniversalSearchDao {
             COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME, COLUMN_DELETED};
 
 
-    public List<SearchedInfo> search(String optionString, Set<String> resourceTypeSet, Integer limitNum) {
-        logger.debug("search options:optionsString:{},resource Type{},limit num{}",optionString,resourceTypeSet,limitNum);
-        String sql = DefaultSQLBuilder.newBuilder().select(COLUMN_SELECT, createRankColumn(optionString))
+    public List<SearchedInfo> search(List<SearchFilterOption> searchFilterOptionList, Set<String> resourceTypeSet, Integer limitNum) {
+        String optionsString = new SearchOptionJoiner().add(searchFilterOptionList).toString();
+        logger.debug("search options:optionsString:{},resource Type{},limit num{}", optionsString, resourceTypeSet, limitNum);
+        String sql = DefaultSQLBuilder.newBuilder().select(COLUMN_SELECT, COLUMN_RANK_FORMAT)
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(COLUMN_SEARCH_TS + " @@ to_tsquery(?) and resource_type in " + collectionToConditionSql(resourceTypeSet)).orderBy("rank desc").limit(limitNum).getSQL();
+                .where(COLUMN_SEARCH_TS + " @@ to_tsquery(?) and  resource_type in " + collectionToConditionSql(resourceTypeSet)+" and deleted =false ").orderBy("rank desc").limit(limitNum).getSQL();
         List<Object> params = Lists.newArrayList();
-        params.add(optionString);
+        params.add(optionsString);
+        params.add(optionsString);
         params.addAll(resourceTypeSet);
-        List<SearchedInfo> searchedInfos = dbOperator.fetchAll(sql, UniversalSearchMapper.INSTANCE, params.toArray());
-        return searchedInfos.stream().filter(searchedInfo -> !searchedInfo.isDeleted()).collect(Collectors.toList());
-    }
-
-    public static String createRankColumn(String optionString) {
-        return String.format(COLUMN_RANK_FORMAT, optionString);
+        return dbOperator.fetchAll(sql, UniversalSearchMapper.INSTANCE, params.toArray());
     }
 
     public void update(SearchedInfo searchedInfo) {
