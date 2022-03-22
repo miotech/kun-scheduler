@@ -3,7 +3,6 @@ package com.miotech.kun.metadata.common.service;
 import com.google.common.collect.Sets;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.common.dao.UniversalSearchDao;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
@@ -14,6 +13,8 @@ import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
+import com.shazam.shazamcrest.MatcherAssert;
+import org.hamcrest.core.Is;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -37,9 +38,9 @@ class SearchServiceTest extends DatabaseTestBase {
 
     @Test
     void test_search_Content_limit() {
-        SearchedInfo save1 = save(1L,"test-1", ResourceType.GLOSSARY, "ddd-sss", "zhang-san");
-        SearchedInfo save2 = save(2L,"bbb-2", ResourceType.GLOSSARY, "test-1", "zhang-san");
-        SearchedInfo save3 = save(3L,"ddd-3", ResourceType.DATASET, "ddd", "test-1");
+        SearchedInfo save1 = save(1L, "test-1", ResourceType.GLOSSARY, "ddd-sss", "zhang-san");
+        SearchedInfo save2 = save(2L, "bbb-2", ResourceType.GLOSSARY, "test-1", "zhang-san");
+        SearchedInfo save3 = save(3L, "ddd-3", ResourceType.DATASET, "ddd", "test-1");
 //        all content
         List<SearchFilterOption> searchFilterOptionList1 = Arrays.stream(new String[]{"test"})
                 .map(s -> SearchFilterOption.Builder.newBuilder()
@@ -66,7 +67,7 @@ class SearchServiceTest extends DatabaseTestBase {
 //    a part content
         List<SearchFilterOption> searchFilterOptionList3 = Arrays.stream(new String[]{"test"})
                 .map(s -> SearchFilterOption.Builder.newBuilder()
-                        .withSearchContents(Sets.newHashSet(SearchContent.ATTRIBUTE,SearchContent.DESCRIPTION))
+                        .withSearchContents(Sets.newHashSet(SearchContent.ATTRIBUTE, SearchContent.DESCRIPTION))
                         .withKeyword(s).build())
                 .collect(Collectors.toList());
         UniversalSearchRequest request3 = new UniversalSearchRequest();
@@ -79,14 +80,14 @@ class SearchServiceTest extends DatabaseTestBase {
 
     }
 
- 
+
     @Test
     void test_search_Search_Filter_Option() {
-        SearchedInfo save1 = save(1L,"test-1", ResourceType.GLOSSARY, "aaa-sss", "zhang-san");
-        SearchedInfo save2 = save(2L,"bbb-2", ResourceType.GLOSSARY, "test-1", "zhang-san");
-        SearchedInfo save3 = save(3L,"fff-3", ResourceType.DATASET, "ddd", "test-1");
+        SearchedInfo save1 = save(1L, "test-1", ResourceType.GLOSSARY, "aaa-sss", "zhang-san");
+        SearchedInfo save2 = save(2L, "bbb-2", ResourceType.GLOSSARY, "test-1", "zhang-san");
+        SearchedInfo save3 = save(3L, "fff-3", ResourceType.DATASET, "ddd", "test-1");
 
-        List<SearchFilterOption> searchFilterOptionList1 = Arrays.stream(new String[]{"test","ddd"})
+        List<SearchFilterOption> searchFilterOptionList1 = Arrays.stream(new String[]{"test", "ddd"})
                 .map(s -> SearchFilterOption.Builder.newBuilder()
                         .withSearchContents(Sets.newHashSet(SearchContent.values()))
                         .withSearchOperator(SearchOperator.OR)
@@ -101,7 +102,7 @@ class SearchServiceTest extends DatabaseTestBase {
         assertThat(searchedInfoList1.get(1).getGid(), is(3L));
         assertThat(searchedInfoList1.get(2).getGid(), is(2L));
 
-        List<SearchFilterOption> searchFilterOptionList2 = Arrays.stream(new String[]{"test","ddd"})
+        List<SearchFilterOption> searchFilterOptionList2 = Arrays.stream(new String[]{"test", "ddd"})
                 .map(s -> SearchFilterOption.Builder.newBuilder()
                         .withSearchContents(Sets.newHashSet(SearchContent.values()))
                         .withSearchOperator(SearchOperator.OR)
@@ -116,8 +117,8 @@ class SearchServiceTest extends DatabaseTestBase {
 
     }
 
-    private SearchedInfo save(Long gid,String name, ResourceType resourceType, String description, String raString) {
-        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBilder()
+    private SearchedInfo save(Long gid, String name, ResourceType resourceType, String description, String raString) {
+        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBuilder()
                 .withOwners(raString)
                 .build();
         SearchedInfo searchedInfo = SearchedInfo.Builder.newBuilder()
@@ -131,18 +132,17 @@ class SearchServiceTest extends DatabaseTestBase {
         searchService.saveOrUpdate(searchedInfo);
         return searchedInfo;
     }
- 
+
     @Test
     void test_search_simple_one() {
-        String keyword = "'kun";
-        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBilder()
-                .withDatabaseName("test")
-                .withDatasourceAttrs("hive-attr")
-                .withDatasourceType("hive")
+        String keyword = "kun";
+        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBuilder()
+                .withDatabase("test")
+                .withDatasource("hive-attr")
+                .withType("hive")
                 .withTags("test,dev,search")
                 .withOwners("test person")
-                .withHighWatermark(DateTimeUtils.now())
-                .withDatasourceName("hive-test")
+                .withSchema("hive-test")
                 .build();
         SearchedInfo datasetSearchedInfo = SearchedInfo.Builder.newBuilder()
                 .withGid(1L)
@@ -161,7 +161,39 @@ class SearchServiceTest extends DatabaseTestBase {
         assertThat(searchedInfo.getResourceType(), is(datasetSearchedInfo.getResourceType()));
 
     }
- 
+
+    @Test
+    public void test_search_blank() {
+        String keyword = null;
+        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBuilder()
+                .withDatabase("test")
+                .withDatasource("hive-attr")
+                .withType("hive")
+                .withTags("test,dev,search")
+                .withOwners("test person")
+                .withSchema("hive-test")
+                .build();
+        SearchedInfo datasetSearchedInfo = SearchedInfo.Builder.newBuilder()
+                .withGid(1L)
+                .withResourceType(ResourceType.GLOSSARY)
+                .withName("test" + "_" + keyword)
+                .withDescription("description search test")
+                .withResourceAttribute(resourceAttribute)
+                .withDeleted(false).build();
+        searchService.saveOrUpdate(datasetSearchedInfo);
+        UniversalSearchRequest request = getUniversalSearchRequest(new String[]{keyword});
+        UniversalSearchInfo search = searchService.noneKeywordPage(request);
+        assertThat(search.getPageNumber(), is(request.getPageNumber()));
+        assertThat(search.getPageSize(), is(request.getPageSize()));
+        assertThat(search.getTotalCount(), is(1));
+        List<SearchedInfo> searchedInfoList = search.getSearchedInfoList();
+        assertThat(searchedInfoList.size(), is(1));
+        SearchedInfo searchedInfo = searchedInfoList.get(0);
+        assertThat(searchedInfo.getGid(), is(datasetSearchedInfo.getGid()));
+        assertThat(searchedInfo.getResourceType(), is(datasetSearchedInfo.getResourceType()));
+
+    }
+
     @Test
     void test_save_glossary() {
         String keyword = "glossary";
@@ -182,17 +214,17 @@ class SearchServiceTest extends DatabaseTestBase {
         assertThat(searchedInfo.getResourceType(), is(glossarySearchedInfo.getResourceType()));
 
     }
+
     @Test
     void test_save_dataset() {
         String keyword = "kun";
-        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBilder()
-                .withDatabaseName("test")
-                .withDatasourceAttrs("hive-attr")
-                .withDatasourceType("hive")
+        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBuilder()
+                .withDatabase("test")
+                .withDatasource("hive-attr")
+                .withType("hive")
                 .withTags("test,dev,search")
                 .withOwners("test person")
-                .withHighWatermark(DateTimeUtils.now())
-                .withDatasourceName("hive-test")
+                .withSchema("hive-test")
                 .build();
         SearchedInfo datasetSearchedInfo = SearchedInfo.Builder.newBuilder()
                 .withGid(1L)
@@ -216,14 +248,13 @@ class SearchServiceTest extends DatabaseTestBase {
         Long globGid = 1L;
         ResourceType resourceType = ResourceType.DATASET;
         String keyword = "kun";
-        DataSetResourceAttribute beforeRs = DataSetResourceAttribute.Builder.newBilder()
-                .withDatabaseName("kun")
-                .withDatasourceAttrs("hive-attr")
-                .withDatasourceType("hive")
+        DataSetResourceAttribute beforeRs = DataSetResourceAttribute.Builder.newBuilder()
+                .withDatabase("kun")
+                .withDatasource("hive-attr")
+                .withSchema("hive")
                 .withTags("test,dev,search")
                 .withOwners("test person")
-                .withHighWatermark(DateTimeUtils.now())
-                .withDatasourceName("hive-test")
+                .withType("hive-test")
                 .build();
         SearchedInfo beforeInfo = SearchedInfo.Builder.newBuilder()
                 .withGid(globGid)
@@ -242,15 +273,13 @@ class SearchServiceTest extends DatabaseTestBase {
         assertThat(searchedInfo.getGid(), is(beforeInfo.getGid()));
         assertThat(searchedInfo.getResourceType(), is(beforeInfo.getResourceType()));
 
-        keyword = "update";
-        DataSetResourceAttribute afterRs = DataSetResourceAttribute.Builder.newBilder()
-                .withDatabaseName("kun")
-                .withDatasourceAttrs("hive-attr")
-                .withDatasourceType("hive")
+        DataSetResourceAttribute afterRs = DataSetResourceAttribute.Builder.newBuilder()
+                .withDatasource("kun")
+                .withDatabase("hive-attr")
+                .withSchema("hive")
                 .withTags("test")
                 .withOwners("update person")
-                .withHighWatermark(DateTimeUtils.now())
-                .withDatasourceName("hive-prod")
+                .withType("hive-prod")
                 .build();
         SearchedInfo afterInfo = SearchedInfo.Builder.newBuilder()
                 .withGid(globGid)
@@ -269,13 +298,12 @@ class SearchServiceTest extends DatabaseTestBase {
         DataSetResourceAttribute updateSearchAfter = (DataSetResourceAttribute) afterSearchedInfo.getResourceAttribute();
         assertThat(afterSearchedInfo.getResourceType(), is(afterSearchedInfo.getResourceType()));
         assertThat(afterSearchedInfo.getName(), is(afterSearchedInfo.getName()));
-        assertThat(afterSearchedInfo.getDescription(), is(afterSearchedInfo.getDescription()));
-        assertThat(updateSearchAfter.getOwners(), is(afterRs.getOwners()));
-        assertThat(updateSearchAfter.getDatabaseName(), is(afterRs.getDatabaseName()));
-        assertThat(updateSearchAfter.getDatasourceName(), is(afterRs.getDatasourceName()));
-        assertThat(updateSearchAfter.getDatasourceAttrs(), is(afterRs.getDatasourceAttrs()));
-        assertThat(updateSearchAfter.getTags(), is(afterRs.getTags()));
-        assertThat(updateSearchAfter.getHighWatermark(), is(afterRs.getHighWatermark()));
+        MatcherAssert.assertThat(updateSearchAfter.getOwners(), Is.is(afterRs.getOwners()));
+        MatcherAssert.assertThat(updateSearchAfter.getTags(), Is.is(afterRs.getTags()));
+        MatcherAssert.assertThat(updateSearchAfter.getDatabase(), Is.is(afterRs.getDatabase()));
+        MatcherAssert.assertThat(updateSearchAfter.getDatasource(), Is.is(afterRs.getDatasource()));
+        MatcherAssert.assertThat(updateSearchAfter.getType(), Is.is(afterRs.getType()));
+        MatcherAssert.assertThat(updateSearchAfter.getOwners(), Is.is(afterRs.getOwners()));
 
     }
 
@@ -290,18 +318,17 @@ class SearchServiceTest extends DatabaseTestBase {
         request.setSearchFilterOptions(searchFilterOptionList);
         return request;
     }
- 
+
     @Test
     void test_remove() {
         String keyword = "kun";
-        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBilder()
-                .withDatabaseName("kun")
-                .withDatasourceAttrs("hive-attr")
-                .withDatasourceType("hive")
+        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBuilder()
+                .withDatasource("kun")
+                .withDatabase("hive-attr")
+                .withSchema("hive")
                 .withTags("test,dev,search")
                 .withOwners("test person")
-                .withHighWatermark(DateTimeUtils.now())
-                .withDatasourceName("hive-test")
+                .withType("hive-test")
                 .build();
         SearchedInfo datasetSearchedInfo = SearchedInfo.Builder.newBuilder()
                 .withGid(1L)

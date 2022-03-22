@@ -39,21 +39,33 @@ public class SearchService {
         UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
         universalSearchInfo.setPageNumber(request.getPageNumber());
         universalSearchInfo.setPageNumber(request.getPageSize());
-        universalSearchInfo.setTotalCount(searchCount);
-        if (Objects.isNull(searchCount)||searchCount<=0){
+        if (Objects.isNull(searchCount) || searchCount <= 0) {
             logger.debug("count is 0");
+            universalSearchInfo.setTotalCount(0);
             return universalSearchInfo;
         }
+        universalSearchInfo.setTotalCount(searchCount);
         List<SearchedInfo> searchResult = universalSearchDao.search(request.getSearchFilterOptions(), request.getResourceTypeNames(),
-                request.getPageNumber(),request.getPageSize());
+                request.getPageNumber(), request.getPageSize());
         universalSearchInfo.setSearchedInfoList(searchResult);
+        return universalSearchInfo;
+    }
+
+    public UniversalSearchInfo noneKeywordPage(UniversalSearchRequest request) {
+        List<SearchedInfo> searchedInfoList = universalSearchDao.noneKeywordPage(request.getResourceTypeNames(), request.getPageNumber(), request.getPageSize());
+        UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
+        universalSearchInfo.setPageNumber(request.getPageNumber());
+        universalSearchInfo.setPageSize(request.getPageSize());
+        universalSearchInfo.setSearchedInfoList(searchedInfoList);
+        Integer searchCount = universalSearchDao.noneKeywordSearchCount(request.getResourceTypeNames());
+        universalSearchInfo.setTotalCount(searchCount);
         return universalSearchInfo;
     }
 
     private void checked(UniversalSearchRequest request) {
         List<SearchFilterOption> searchFilterOptions = request.getSearchFilterOptions();
         List<SearchFilterOption> collect = searchFilterOptions.stream()
-                .filter(searchFilterOption -> StringUtils.isNoneBlank(searchFilterOption.getKeyword()) &&
+                .filter(searchFilterOption -> StringUtils.isNotBlank(searchFilterOption.getKeyword()) &&
                         CollectionUtils.isNotEmpty(searchFilterOption.getSearchContents()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(collect)) {

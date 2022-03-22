@@ -1,15 +1,12 @@
 package com.miotech.kun.datadiscovery.testing;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
-import com.miotech.kun.metadata.core.model.constant.ResourceType;
-import com.miotech.kun.metadata.core.model.search.GlossaryResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
@@ -27,8 +24,10 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.miotech.kun.datadiscovery.testing.mockdata.MockSearchInfoFactory.mockSearchGlossary;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -612,92 +611,103 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThat(glossary2Basic1.getChildrenCount(), is(0));
         assertThat(glossary2Basic1.getDataSetCount(), is(assetList4.size()));
     }
-
-
-    @Test
-    void test_search() {
-        /**
-         *null->glossary->glossaryChild--->glossarySon1
-         *                           ｜
-         *                           ｜---> glossarySon2
-         */
+    /**
+     * null->glossary>glossaryChild--->glossarySon1
+     * ｜
+     * ｜---> glossarySon2
+     */
+    private Map<String, Glossary> mockSearchTree(String name1_1, String name2_1, String name3_1, String name3_2) {
 
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        List<Glossary> glossaries = Lists.newArrayList();
+        Map<String, Glossary> glossaries = Maps.newLinkedHashMap();
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList, "glossary");
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList, name1_1);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        glossaries.add(glossary);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList, "glossaryChild");
+        glossaries.put(glossary.getName(), glossary);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList, name2_1);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        glossaries.add(glossaryChild);
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList, "glossarySon1");
+        glossaries.put(glossaryChild.getName(), glossaryChild);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList, name3_1);
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        glossaries.add(glossarySon1);
-        GlossaryRequest glossaryRequestSon1 = createGlossaryRequestWithParent(glossaryChild.getId(), assetList, "glossarySon2");
+        glossaries.put(glossarySon1.getName(), glossarySon1);
+        GlossaryRequest glossaryRequestSon1 = createGlossaryRequestWithParent(glossaryChild.getId(), assetList, name3_2);
         Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon1);
-        glossaries.add(glossarySon2);
+        glossaries.put(glossarySon2.getName(), glossarySon2);
+        return glossaries;
+    }
 
+    @Test
+    public void test_search_filter_ids() {
+        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Glossary glossary = glossaries.get("glossary");
+        Glossary glossarySon1 = glossaries.get("glossarySon1");
+        String keyword2 = "glossary";
+        GlossaryBasicSearchRequest basicSearchRequest2 = new GlossaryBasicSearchRequest();
+        basicSearchRequest2.setKeyword(keyword2);
+        UniversalSearchInfo universalSearchInfo2 = mockSearchGlossary(glossaries.values(), keyword2);
+        ResponseEntity<UniversalSearchInfo> responseEntity2 = new ResponseEntity(universalSearchInfo2, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity2);
+        ArrayList<Long> longs2 = Lists.newArrayList(glossary.getId(), glossarySon1.getId());
+        basicSearchRequest2.setGlossaryIds(longs2);
+        SearchPage searchPage2 = glossaryService.search(basicSearchRequest2);
+        List<SearchedInfo> searchedInfoList2 = searchPage2.getSearchedInfoList();
+        assertThat(searchedInfoList2.size(), is(longs2.size()));
+        assertTrue(searchedInfoList2.stream().map(SearchedInfo::getGid).anyMatch(longs2::contains));
+    }
+
+    @Test
+    public void test_search_simple() {
+
+        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Glossary glossaryChild = glossaries.get("glossaryChild");
         String keyword1 = "ch";
         GlossaryBasicSearchRequest basicSearchRequest1 = new GlossaryBasicSearchRequest();
         basicSearchRequest1.setKeyword(keyword1);
-        mockSearch(glossaries, keyword1);
+        UniversalSearchInfo universalSearchInfo = mockSearchGlossary(glossaries.values(), keyword1);
+        ResponseEntity<UniversalSearchInfo> responseEntity = new ResponseEntity(universalSearchInfo, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity);
         SearchPage searchPage1 = glossaryService.search(basicSearchRequest1);
         List<SearchedInfo> searchedInfoList = searchPage1.getSearchedInfoList();
         assertThat(searchedInfoList.size(), is(1));
         assertThat(searchedInfoList.get(0).getGid(), is(glossaryChild.getId()));
+    }
 
-        String keyword2 = "glossary";
-        GlossaryBasicSearchRequest basicSearchRequest2 = new GlossaryBasicSearchRequest();
-        basicSearchRequest2.setKeyword(keyword2);
-        mockSearch(glossaries, keyword2);
-        ArrayList<Long> longs2 = Lists.newArrayList(glossary.getId(), glossarySon1.getId());
-        basicSearchRequest2.setGlossaryIds(longs2);
-        SearchPage searchPage2 = glossaryService.search(basicSearchRequest2);
-        String s = JSONUtils.toJsonString(RequestResult.success(searchPage2));
-        System.out.println("json:"+s);
-        List<SearchedInfo> searchedInfoList2 = searchPage2.getSearchedInfoList();
-        assertThat(searchedInfoList2.size(), is(longs2.size()));
-        assertTrue(searchedInfoList2.stream().map(SearchedInfo::getGid).anyMatch(longs2::contains));
-
-//        不会包含当前节点和当前节点下的子节点
+    @Test
+    public void test_filter_no_self() {
+        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Glossary glossaryChild = glossaries.get("glossaryChild");
         String keyword3 = "Child";
         GlossaryBasicSearchRequest basicSearchRequest3 = new GlossaryBasicSearchRequest();
         basicSearchRequest3.setKeyword(keyword3);
-        mockSearch(glossaries, keyword3);
+        UniversalSearchInfo universalSearchInfo3 = mockSearchGlossary(glossaries.values(), keyword3);
+        ResponseEntity<UniversalSearchInfo> responseEntity3 = new ResponseEntity(universalSearchInfo3, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity3);
         basicSearchRequest3.setCurrentId(glossaryChild.getId());
         SearchPage searchPage3 = glossaryService.search(basicSearchRequest3);
         List<SearchedInfo> searchedInfoList3 = searchPage3.getSearchedInfoList();
         assertThat(searchedInfoList3.size(), is(0));
-        String keyword4 = "glossa";
+    }
+
+    @Test
+    public void test_filter_no_child() {
+        //        不会包含当前节点和当前节点下的子节点
+        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Glossary glossaryChild = glossaries.get("glossaryChild");
+        Glossary glossary = glossaries.get("glossary");
+        String keyword4 = "glossary";
         GlossaryBasicSearchRequest basicSearchRequest4 = new GlossaryBasicSearchRequest();
         basicSearchRequest4.setKeyword(keyword4);
-        mockSearch(glossaries, keyword4);
+        UniversalSearchInfo universalSearchInfo4 = mockSearchGlossary(glossaries.values(), keyword4);
+        ResponseEntity<UniversalSearchInfo> responseEntity4 = new ResponseEntity(universalSearchInfo4, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity4);
         basicSearchRequest4.setCurrentId(glossaryChild.getId());
         SearchPage searchPage4 = glossaryService.search(basicSearchRequest4);
         List<SearchedInfo> searchedInfoList4 = searchPage4.getSearchedInfoList();
         assertThat(searchedInfoList4.size(), is(1));
         assertThat(searchedInfoList4.get(0).getGid(), is(glossary.getId()));
-
-
     }
 
-    private void mockSearch(List<Glossary> glossaryList, String keyword1) {
-        String upperCase = keyword1.toUpperCase();
-        List<SearchedInfo> collect = glossaryList.stream().map(glossary -> SearchedInfo.Builder.newBuilder()
-                        .withGid(glossary.getId())
-                        .withResourceType(ResourceType.GLOSSARY)
-                        .withName(glossary.getName())
-                        .withDescription(glossary.getDescription())
-                        .withResourceAttribute(new GlossaryResourceAttribute(glossary.getUpdateUser()))
-                        .build()).filter(searchedInfo -> searchedInfo.getName().toUpperCase().contains(upperCase)
-                        || searchedInfo.getDescription().toUpperCase().contains(upperCase))
-                .collect(Collectors.toList());
-        UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
-        universalSearchInfo.setSearchedInfoList(collect);
-        ResponseEntity<UniversalSearchInfo> responseEntity = new ResponseEntity(universalSearchInfo, HttpStatus.OK);
-        when(restTemplate.exchange(anyString(), any(), any(), (Class<UniversalSearchInfo>) any())).thenReturn(responseEntity);
-    }
+
 
 }

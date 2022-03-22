@@ -1,5 +1,7 @@
 package com.miotech.kun.metadata.common.utils;
 
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.core.model.constant.SearchOperator;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import org.apache.commons.collections4.CollectionUtils;
@@ -20,11 +22,17 @@ public final class SearchOptionJoiner {
 
     public SearchOptionJoiner add(SearchFilterOption searchFilterOption) {
         String keyword = escapeSql(searchFilterOption.getKeyword());
-        if (StringUtils.isBlank(keyword)){
+        if (StringUtils.isBlank(keyword)) {
             return this;
         }
+        Iterable<String> keywords = Splitter.on(" ").omitEmptyStrings().split(keyword);
+        ArrayList<String> keywordList = Lists.newArrayList(keywords);
+        String[] keywordArray = new String[keywordList.size()];
+        keywordList.toArray(keywordArray);
         String searchContentsString = searchFilterOption.getSearchContentsWeightString();
-        prepareBuilder(searchFilterOption.getSearchOperator()).append(keyword).append(":*").append(searchContentsString);
+        Arrays.stream(keywordArray).forEach(word -> prepareBuilder(searchFilterOption.getSearchOperator()).append(word).append(":*").append(searchContentsString));
+
+
         return this;
     }
 
@@ -35,14 +43,15 @@ public final class SearchOptionJoiner {
         searchFilterOptionList.forEach(this::add);
         return this;
     }
+
     public static String escapeSql(String str) {
         if (str == null) {
             return null;
         }
-        String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）+|{}【】‘；：”“’。，、？]";
+        String regEx = "[!&*|':<>]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
-        return m.replaceAll("").trim();
+        return m.replaceAll(" ").trim();
     }
 
     private StringBuilder prepareBuilder(SearchOperator searchOperator) {

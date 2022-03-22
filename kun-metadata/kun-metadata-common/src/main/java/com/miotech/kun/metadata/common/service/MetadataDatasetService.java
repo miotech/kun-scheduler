@@ -1,14 +1,18 @@
 package com.miotech.kun.metadata.common.service;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.search.DataSetResourceAttribute;
+import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.*;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import org.apache.commons.collections4.CollectionUtils;
@@ -16,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -27,12 +32,16 @@ public class MetadataDatasetService implements MetadataServiceFacade {
 
     private final MetadataDatasetDao metadataDatasetDao;
     private final DataSourceService dataSourceService;
+    private final SearchService searchService;
 
     @Inject
     public MetadataDatasetService(MetadataDatasetDao metadataDatasetDao,
-                                  DataSourceService dataSourceService) {
+                                  DataSourceService dataSourceService,
+                                  SearchService searchService
+    ) {
         this.metadataDatasetDao = metadataDatasetDao;
         this.dataSourceService = dataSourceService;
+        this.searchService = searchService;
     }
 
     /**
@@ -61,25 +70,27 @@ public class MetadataDatasetService implements MetadataServiceFacade {
     }
 
     public Dataset createDataSetIfNotExist(DataStore dataStore) {
-        logger.debug("fetching datasource by dataStore = {}",JSONUtils.toJsonString(dataStore));
+        logger.debug("fetching datasource by dataStore = {}", JSONUtils.toJsonString(dataStore));
         Long dataSourceId = getDataSourceIdByDatastore(dataStore);
-        if(dataSourceId == null){
+        if (dataSourceId == null) {
             throw new IllegalStateException("datasource not exist with datastore = " + JSONUtils.toJsonString(dataStore));
         }
         String locationInfo = dataStore.getLocationInfo();
         String dsi = dataSourceId + ":" + locationInfo;
-        logger.debug("fetching dataset by dsi = {}",dsi);
+        logger.debug("fetching dataset by dsi = {}", dsi);
         Dataset dataset = metadataDatasetDao.fetchDatasetByDSI(dsi);
         if (dataset != null) {
             return dataset;
         } else {
-            logger.debug("dataset with dsi = {} not exist,going to create dataset",dsi);
+            logger.debug("dataset with dsi = {} not exist,going to create dataset", dsi);
             return createDataSet(dataSourceId, dataStore);
         }
     }
 
-    public Dataset createDataSet(Dataset dataset) {
-        return metadataDatasetDao.createDataset(dataset);
+    public Dataset createDataSet(Dataset datasetInsert) {
+        Dataset dataset = metadataDatasetDao.createDataset(datasetInsert);
+        updateSearchDataSetInfo(dataset.getGid(), dataset.isDeleted());
+        return dataset;
     }
 
     public Dataset fetchDataSetByDSI(String dsi) {
@@ -103,7 +114,7 @@ public class MetadataDatasetService implements MetadataServiceFacade {
                 .withDatasourceId(dataSourceId)
                 .withDataStore(dataStore)
                 .build();
-        return metadataDatasetDao.createDataset(dataset);
+        return createDataSet(dataset);
     }
 
     private List<String> suggestTable(String databaseName, String prefix, String dataSourceType) {
@@ -158,6 +169,7 @@ public class MetadataDatasetService implements MetadataServiceFacade {
 
     public void updateDataset(Long id, DatasetUpdateRequest updateRequest) {
         metadataDatasetDao.updateDataset(id, updateRequest);
+        updateSearchDataSetInfo(id, false);
     }
 
     public DatasetFieldPageInfo searchDatasetFields(Long id, DatasetColumnSearchRequest searchRequest) {
@@ -166,5 +178,38 @@ public class MetadataDatasetService implements MetadataServiceFacade {
 
     public DatasetFieldInfo updateDatasetColumn(Long id, DatasetColumnUpdateRequest updateRequest) {
         return metadataDatasetDao.updateDatasetColumn(id, updateRequest);
+    }
+
+    private void updateSearchDataSetInfo(final Long gid, final Boolean deleted) {
+        if (deleted) {
+            SearchedInfo searchedInfoRemove = SearchedInfo.Builder.newBuilder()
+                    .withGid(gid)
+                    .withResourceType(ResourceType.DATASET)
+                    .build();
+            searchService.remove(searchedInfoRemove);
+            return;
+        }
+        DatasetDetail datasetDetail = getDatasetDetail(gid);
+        if (Objects.nonNull(datasetDetail)) {
+            DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder
+                    .newBuilder()
+                    .withDatasource(datasetDetail.getDatasource())
+                    .withDatabase(datasetDetail.getDatabase())
+                    .withSchema(datasetDetail.getSchema())
+                    .withType(datasetDetail.getType())
+                    .withOwners(Joiner.on(",").join(datasetDetail.getOwners()))
+                    .withTags(Joiner.on(",").join(datasetDetail.getTags()))
+                    .build();
+            SearchedInfo searchedInfoUpdate = SearchedInfo.Builder.newBuilder()
+                    .withGid(datasetDetail.getGid())
+                    .withResourceType(ResourceType.DATASET)
+                    .withName(datasetDetail.getName())
+                    .withDescription(datasetDetail.getDescription())
+                    .withResourceAttribute(resourceAttribute)
+                    .withDeleted(datasetDetail.getDeleted())
+                    .build();
+            searchService.saveOrUpdate(searchedInfoUpdate);
+        }
+
     }
 }

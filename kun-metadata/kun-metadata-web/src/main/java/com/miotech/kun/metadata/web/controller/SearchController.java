@@ -12,7 +12,7 @@ import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
-import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,15 +35,17 @@ public class SearchController {
     private SearchService searchService;
 
     /**
-     * @param keywords and
+     * @param keyword
      * @return UniversalSearchInfo
      */
     @RouteMapping(url = "/search/full", method = "GET")
-    public UniversalSearchInfo fullSearch(@RequestBody String... keywords) {
-        logger.debug("SearchController fullTextSearch  keyword: {}", (Object[]) keywords);
-        Preconditions.checkNotNull(keywords, " Invalid parameter `keywords`: found null object");
-        Preconditions.checkArgument(keywords.length > 0, " Invalid parameter `keywords`: found empty object");
-        List<SearchFilterOption> searchFilterOptionList = Arrays.stream(keywords)
+    public UniversalSearchInfo fullSearch(@RequestBody String keyword) {
+        logger.debug("SearchController fullTextSearch  keyword: {}", keyword);
+        if (StringUtils.isBlank(keyword)) {
+            UniversalSearchRequest request = new UniversalSearchRequest();
+            return searchService.noneKeywordPage(request);
+        }
+        List<SearchFilterOption> searchFilterOptionList = Arrays.stream(new String[]{keyword})
                 .map(s -> SearchFilterOption.Builder.newBuilder()
                         .withSearchContents(Sets.newHashSet(SearchContent.values()))
                         .withKeyword(s).build())
@@ -65,7 +67,14 @@ public class SearchController {
     public UniversalSearchInfo search(@RequestBody UniversalSearchRequest request) {
         logger.debug("SearchController search  request: {}", request);
         Preconditions.checkNotNull(request, " Invalid parameter `request`: found null object");
-        Preconditions.checkArgument(CollectionUtils.isNotEmpty(request.getSearchFilterOptions()), " searchFilterOptions is null or is the empty set");
+        String keywordJoin = request.getSearchFilterOptions()
+                .stream().map(SearchFilterOption::getKeyword)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.joining(""));
+        logger.debug("search keywordJoin:{}", keywordJoin);
+        if (StringUtils.isBlank(keywordJoin)) {
+            return searchService.noneKeywordPage(request);
+        }
         return searchService.search(request);
     }
 

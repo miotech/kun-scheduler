@@ -23,6 +23,7 @@ public class AppBasicConversionService  extends GenericConversionService {
     private void addBasicConverters(ConverterRegistry converterRegistry) {
         converterRegistry.addConverterFactory(new DatasetBasicInfoConvertFactory());
         converterRegistry.addConverterFactory(new GlossaryBaseInfoConvertFactory());
+        converterRegistry.addConverterFactory(new DatasetSearchInfoConvertFactory());
 
     }
 

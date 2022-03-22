@@ -45,7 +45,7 @@ public class DatasetController {
     }
 
     @GetMapping("/metadata/datasets")
-    public RequestResult<DatasetBasicPage> getDatasets(DatasetSearchRequest searchRequests) {
+    public RequestResult<DatasetBasicPage> getDatasets(BasicSearchRequest searchRequests) {
         return RequestResult.success(metadataService.fullTextSearch(searchRequests));
     }
 
