@@ -110,8 +110,6 @@ export default function DataDiscoveryListView() {
     allOwnerList,
     allTagList,
     allDsList,
-    allGlossaryList,
-
     datasetList,
 
     dataListFetchLoading,
@@ -124,8 +122,6 @@ export default function DataDiscoveryListView() {
       allOwnerList: state.dataDiscovery.allOwnerList,
       allTagList: state.dataDiscovery.allTagList,
       allDsList: state.dataDiscovery.allDsList,
-      allGlossaryList: state.dataDiscovery.allGlossaryList,
-
       datasetList: state.dataDiscovery.datasetList,
       dataListFetchLoading: state.dataDiscovery.dataListFetchLoading,
       databaseTypes: state.dataSettings.databaseTypeFieldMapList,
@@ -181,7 +177,6 @@ export default function DataDiscoveryListView() {
     dispatch.dataSettings.fetchDatabaseTypeList();
     dispatch.dataDiscovery.fetchAllDs('');
     dispatch.dataDiscovery.fetchAllDb(dsIdList);
-    dispatch.dataDiscovery.fetchAllGlossary();
   });
 
   useUpdateEffect(() => {
@@ -521,29 +516,6 @@ export default function DataDiscoveryListView() {
                   {allDatabaseTypes.map(option => (
                     <Option key={option.id} value={option.id}>
                       {option.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.glossary')}</div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={glossaryIdList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ glossaryIdList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allGlossaryList.map(glossary => (
-                    <Option key={glossary.id} value={glossary.id}>
-                      {glossary.name}
                     </Option>
                   ))}
                 </Select>

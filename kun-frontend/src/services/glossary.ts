@@ -75,7 +75,7 @@ export interface SearchAssetsServicePesp {
 
 export async function searchAssetsService(keyword: string) {
   return get<SearchAssetsServicePesp>('/metadata/datasets/search', {
-    query: { keyword },
+    query: { keyword, pageSize: 100, pageNum: 1 },
     prefix: DEFAULT_API_PREFIX,
   });
 }

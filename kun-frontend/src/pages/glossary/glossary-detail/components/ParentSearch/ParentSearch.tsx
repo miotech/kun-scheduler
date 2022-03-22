@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
-import { AutoComplete } from 'antd';
+import { Select } from 'antd';
 import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
 import { SearchGlossaryItem } from '@/rematch/models/glossary';
@@ -17,7 +17,7 @@ interface Props {
   setCurrentId: (id: string) => void;
 }
 
-const { Option } = AutoComplete;
+const { Option } = Select;
 
 export default memo(function ParentSearch({
   isEditting,
@@ -60,36 +60,35 @@ export default memo(function ParentSearch({
     };
   }, [debounceKeyword, disabledId, currentId]);
 
-  const handleChange = useCallback(v => {
+  const handleSearch = useCallback(v => {
     setKeyword(v);
   }, []);
 
   const handleSelect = useCallback(
     (v, option) => {
-      handleChange(v);
-      onChange({id: option.key,name:option.value});
+      onChange({ id: option.key, name: option.label });
     },
-    [handleChange, onChange],
+    [onChange],
   );
 
   const options = glossaryList.map(item => ({ value: item.name, id: item.gid, description: item.description }));
 
   if (isEditting) {
     return (
-      <AutoComplete
+      <Select
         className={styles.container}
         filterOption={false}
         onSelect={handleSelect}
-        onChange={handleChange}
-        value={keyword}
+        onSearch={handleSearch}
+        showSearch
         placeholder={t('common.searchContent')}
       >
         {options.map((item: any) => (
-          <Option key={item.id} value={item.value}>
+          <Option key={item.id} value={item.id} label={item.label}>
             <span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span>
           </Option>
         ))}
-      </AutoComplete>
+      </Select>
     );
   }
   return (

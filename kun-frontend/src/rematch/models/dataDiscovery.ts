@@ -7,13 +7,11 @@ import {
   searchAllDsService,
   fetchAllDbService,
 } from '@/services/dataDiscovery';
-import { searchGlossariesService } from '@/services/glossary';
 import { Pagination } from '@/definitions/common-types';
 import { DbType } from '@/definitions/Database.type';
 import { Dataset } from '@/definitions/Dataset.type';
 
 import { RootDispatch } from '../store';
-import { SearchGlossaryItem } from './glossary';
 
 export interface DataRange {
   startTime: number | null;
@@ -102,7 +100,6 @@ export interface DataDiscoveryState {
   allOwnerList: string[];
   allTagList: string[];
   allDsList: DsFilterItem[];
-  allGlossaryList: SearchGlossaryItem[];
 
   pagination: Pagination;
 
@@ -132,8 +129,6 @@ export const dataDiscovery = {
     allOwnerList: [],
     allTagList: [],
     allDsList: [],
-    allGlossaryList: [],
-
     pagination: {
       pageNumber: 1,
       pageSize: 25,
@@ -148,33 +143,21 @@ export const dataDiscovery = {
   } as DataDiscoveryState,
 
   reducers: {
-    updateState: (
-      state: DataDiscoveryState,
-      payload: { key: keyof DataDiscoveryState; value: any },
-    ) => ({
+    updateState: (state: DataDiscoveryState, payload: { key: keyof DataDiscoveryState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
     }),
-    batchUpdateState: (
-      state: DataDiscoveryState,
-      payload: Partial<DataDiscoveryState>,
-    ) => ({
+    batchUpdateState: (state: DataDiscoveryState, payload: Partial<DataDiscoveryState>) => ({
       ...state,
       ...payload,
     }),
-    updateFilterAndPaginationFromUrl: (
-      state: DataDiscoveryState,
-      payload: Partial<DataDiscoveryState>,
-    ) => {
+    updateFilterAndPaginationFromUrl: (state: DataDiscoveryState, payload: Partial<DataDiscoveryState>) => {
       return {
         ...state,
         ...payload,
       };
     },
-    updateFilter: (
-      state: DataDiscoveryState,
-      payload: { key: keyof DataDiscoveryState; value: any },
-    ) => ({
+    updateFilter: (state: DataDiscoveryState, payload: { key: keyof DataDiscoveryState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
       pagination: {
@@ -182,11 +165,9 @@ export const dataDiscovery = {
         pageNumber: 1,
       },
     }),
-    updateDataListFetchLoading: produce(
-      (draftState: DataDiscoveryState, payload: boolean) => {
-        draftState.dataListFetchLoading = payload;
-      },
-    ),
+    updateDataListFetchLoading: produce((draftState: DataDiscoveryState, payload: boolean) => {
+      draftState.dataListFetchLoading = payload;
+    }),
   },
 
   effects: (dispatch: RootDispatch) => {
@@ -239,16 +220,10 @@ export const dataDiscovery = {
         let watermarkStart: number | undefined;
         let watermarkEnd: number | undefined;
         if (watermarkMode === Mode.ABSOLUTE) {
-          if (
-            watermarkAbsoluteValue?.startTime &&
-            Number(watermarkAbsoluteValue.startTime)
-          ) {
+          if (watermarkAbsoluteValue?.startTime && Number(watermarkAbsoluteValue.startTime)) {
             watermarkStart = watermarkAbsoluteValue.startTime || undefined;
           }
-          if (
-            watermarkAbsoluteValue?.endTime &&
-            Number(watermarkAbsoluteValue.endTime)
-          ) {
+          if (watermarkAbsoluteValue?.endTime && Number(watermarkAbsoluteValue.endTime)) {
             watermarkEnd = watermarkAbsoluteValue.endTime || undefined;
           }
         }
@@ -348,19 +323,6 @@ export const dataDiscovery = {
             dispatch.dataDiscovery.updateState({
               key: 'allDbList',
               value: resp,
-            });
-          }
-        } catch (e) {
-          // do nothing
-        }
-      },
-      async fetchAllGlossary() {
-        try {
-          const resp = await searchGlossariesService('', 1000000);
-          if (resp) {
-            dispatch.dataDiscovery.updateState({
-              key: 'allGlossaryList',
-              value: resp.glossaries,
             });
           }
         } catch (e) {
