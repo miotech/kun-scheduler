@@ -128,11 +128,6 @@ public class LocalExecutorTest extends CommonTestBase {
     private EventCollector eventCollector;
 
     @Override
-    protected boolean usePostgres() {
-        return true;
-    }
-
-    @Override
     protected void configuration() {
         props = new Props();
         props.put("executor.env.resourceQueues", "default,test");

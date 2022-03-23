@@ -1,7 +1,7 @@
 package com.miotech.kun.dataplatform.web.common.deploy.service;
 
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 @WithMockTestUser
-public class DeployedTaskServiceTest extends AppTestBase {
+public class DeployedTaskServiceTest extends DataPlatformTestBase {
 
     @SpyBean
     private DeployedTaskService deployedTaskService;

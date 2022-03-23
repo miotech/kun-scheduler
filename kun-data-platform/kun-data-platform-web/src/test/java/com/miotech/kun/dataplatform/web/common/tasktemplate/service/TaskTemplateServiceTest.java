@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.tasktemplate.service;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.vo.TaskTemplateReqeustVO;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.vo.TaskTemplateVO;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
@@ -16,7 +16,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TaskTemplateServiceTest extends AppTestBase {
+public class TaskTemplateServiceTest extends DataPlatformTestBase {
 
     @Autowired
     private TaskTemplateService taskTemplateService;

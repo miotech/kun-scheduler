@@ -981,17 +981,12 @@ public class TaskDao {
     public static class TaskDependencyMapper implements ResultSetMapper<TaskDependency> {
         private final TaskDependencyFunctionProvider functionProvider;
 
-        private static TaskDependencyMapper instance;
-
         private TaskDependencyMapper(TaskDependencyFunctionProvider functionProvider) {
             this.functionProvider = functionProvider;
         }
 
         public static TaskDependencyMapper getInstance(TaskDependencyFunctionProvider functionProvider) {
-            if (instance == null) {
-                instance = new TaskDependencyMapper(functionProvider);
-            }
-            return instance;
+            return new TaskDependencyMapper(functionProvider);
         }
 
         @Override

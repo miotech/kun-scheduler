@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.deploy.dao;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.mocking.MockDeployFactory;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeploySearchRequest;
@@ -18,7 +18,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
-public class DeployDaoTest extends AppTestBase {
+public class DeployDaoTest extends DataPlatformTestBase {
 
     @Autowired
     private DeployDao deployDao;

@@ -1,6 +1,6 @@
 package com.miotech.kun.monitor.alert.service;
 
-import com.miotech.kun.monitor.alert.AppTestBase;
+import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.alert.common.service.TaskNotifyConfigService;
 import com.miotech.kun.monitor.facade.model.alert.TaskNotifyConfig;
 import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
@@ -12,7 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static org.mockito.Mockito.*;
 
-public class NotifyServiceTest extends AppTestBase {
+public class NotifyServiceTest extends MonitorAlertTestBase {
 
     @MockBean
     private EmailService emailService;

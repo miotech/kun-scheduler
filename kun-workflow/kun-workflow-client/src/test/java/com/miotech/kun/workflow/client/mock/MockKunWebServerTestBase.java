@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.client.mock;
 
+import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
@@ -18,8 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Neo4jContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 
-@Testcontainers
 public class MockKunWebServerTestBase extends GuiceTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(MockKunWebServerTestBase.class);
@@ -37,18 +36,26 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
 
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:6.0.8");
 
-    public static GenericContainer redis = getRedis();
+    protected static PostgreSQLContainer postgresContainer;
+    protected static Neo4jContainer neo4jContainer;
+    protected static GenericContainer redisContainer;
 
-    public static GenericContainer getRedis() {
-        GenericContainer redis = new GenericContainer(REDIS_IMAGE)
+    static {
+        // postgresql
+        postgresContainer = new PostgreSQLContainer<>(DatabaseTestBase.POSTGRES_IMAGE)
+                .withDatabaseName("kun");
+        postgresContainer.start();
+
+        // neo4j
+        neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
+                .withAdminPassword("Mi0tech2020");
+        neo4jContainer.start();
+
+        // redis
+        redisContainer = new GenericContainer(REDIS_IMAGE)
                 .withExposedPorts(6379);
-        redis.start();
-        return redis;
+        redisContainer.start();
     }
-
-    @Container
-    public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
-            .withAdminPassword("Mi0tech2020");
 
     private KunInfraWebServer webServer;
     private Props props;
@@ -104,13 +111,20 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     }
 
     private void fill(Props props) {
+        // postgresql
+        props.put("datasource.jdbcUrl", postgresContainer.getJdbcUrl() + "&stringtype=unspecified");
+        props.put("datasource.username", postgresContainer.getUsername());
+        props.put("datasource.password", postgresContainer.getPassword());
+        props.put("datasource.driverClassName", "org.postgresql.Driver");
+
+        // neo4j
         props.put("neo4j.uri", neo4jContainer.getBoltUrl());
         props.put("neo4j.username", "neo4j");
         props.put("neo4j.password", "Mi0tech2020");
 
-        String redisIp = redis.getHost();
-        logger.info("redisIp:" + redisIp);
-        props.put("rpc.registry", "redis://" + redisIp + ":" + redis.getMappedPort(6379));
+        // redis
+        String redisIp = redisContainer.getHost();
+        props.put("rpc.registry", "redis://" + redisIp + ":" + redisContainer.getMappedPort(6379));
         props.put("rpc.port", 9001);
     }
 

@@ -1,7 +1,7 @@
 package com.miotech.kun.monitor.sla.timeline.dao;
 
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.monitor.sla.AppTestBase;
+import com.miotech.kun.monitor.sla.MonitorSlaTestBase;
 import com.miotech.kun.monitor.sla.common.dao.TaskTimelineDao;
 import com.miotech.kun.monitor.sla.mocking.MockTaskTimelineFactory;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
@@ -15,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-public class TaskTimelineDaoTest extends AppTestBase {
+public class TaskTimelineDaoTest extends MonitorSlaTestBase {
 
     @Autowired
     private TaskTimelineDao taskTimelineDao;

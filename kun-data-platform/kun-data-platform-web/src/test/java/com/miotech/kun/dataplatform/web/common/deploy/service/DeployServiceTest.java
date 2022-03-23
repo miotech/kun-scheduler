@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.deploy.service;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployCommit;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 // TODO: figure out a solution to bootstrap Workflow facade related tests
 @Disabled
 @WithMockTestUser
-public class DeployServiceTest extends AppTestBase {
+public class DeployServiceTest extends DataPlatformTestBase {
 
     @Autowired
     private DeployService deployService;

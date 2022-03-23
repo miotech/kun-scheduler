@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.tasktemplate.dao;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.mocking.MockTaskTemplateFactory;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TaskTemplateDaoTest extends AppTestBase {
+public class TaskTemplateDaoTest extends DataPlatformTestBase {
 
     public static final String TEST_TEMPLATE = "SparkSQL";
 

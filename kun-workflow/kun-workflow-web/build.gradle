@@ -36,13 +36,9 @@ dependencies {
     implementation 'org.apache.commons:commons-collections4'
     implementation "org.neo4j:neo4j-ogm-core"
     implementation "org.postgresql:postgresql"
-    implementation "com.h2database:h2"
     implementation 'commons-fileupload:commons-fileupload'
     implementation 'redis.clients:jedis'
     implementation 'io.fabric8:kubernetes-client'
-
-
-
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
@@ -50,6 +46,7 @@ dependencies {
     testImplementation project(':kun-infra')
     testImplementation project(':kun-commons:kun-commons-web')
     testImplementation "org.testcontainers:neo4j"
+    testImplementation "org.testcontainers:postgresql"
     testImplementation 'org.apache.httpcomponents:httpclient'
     testImplementation "org.hamcrest:hamcrest"
     testImplementation 'com.squareup.okhttp3:okhttp'

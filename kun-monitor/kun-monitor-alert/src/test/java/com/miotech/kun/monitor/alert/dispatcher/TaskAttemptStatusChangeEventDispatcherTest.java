@@ -10,7 +10,7 @@ import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskTry;
 import com.miotech.kun.dataplatform.web.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskTryDao;
-import com.miotech.kun.monitor.alert.AppTestBase;
+import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.alert.common.service.TaskNotifyConfigService;
 import com.miotech.kun.monitor.alert.mocking.MockBackfillFactory;
 import com.miotech.kun.monitor.alert.mocking.MockTaskDefinitionFactory;
@@ -43,7 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @Import(TaskAttemptStatusChangeEventDispatcherTest.WorkflowEventDispatcherTestConfig.class)
-public class TaskAttemptStatusChangeEventDispatcherTest extends AppTestBase {
+public class TaskAttemptStatusChangeEventDispatcherTest extends MonitorAlertTestBase {
 
     public static class MockEventPubSub implements EventSubscriber {
         private EventReceiver receiver = null;

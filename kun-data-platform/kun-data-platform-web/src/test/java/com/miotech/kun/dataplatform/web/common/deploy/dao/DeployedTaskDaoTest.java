@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.deploy.dao;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.mocking.MockDeployedTaskFactory;
 import com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao;
@@ -21,7 +21,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class DeployedTaskDaoTest extends AppTestBase {
+public class DeployedTaskDaoTest extends DataPlatformTestBase {
 
     @Autowired
     private DeployedTaskDao deployedTaskDao;

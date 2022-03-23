@@ -57,16 +57,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
 
     @BeforeEach
     public void setUp() {
-        Props props = createProps();
-        ApplicationContext.init(props);
-    }
-
-    private Props createProps() {
-        Props props = new Props();
-        props.put("datasource.jdbcUrl", "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
-        props.put("datasource.username", "sa");
-        props.put("datasource.driverClassName", "org.h2.Driver");
-        return props;
+        ApplicationContext.init(new Props());
     }
 
     @Test

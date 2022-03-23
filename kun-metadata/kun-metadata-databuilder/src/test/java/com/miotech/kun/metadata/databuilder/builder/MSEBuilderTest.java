@@ -63,8 +63,7 @@ public class MSEBuilderTest extends DatabaseTestBase {
 
     @BeforeEach
     public void setUp() {
-        Props props = createProps();
-        ApplicationContext.init(props);
+        ApplicationContext.init(new Props());
     }
 
     @Test
@@ -127,13 +126,4 @@ public class MSEBuilderTest extends DatabaseTestBase {
         DatasetSnapshot datasetSnapshot = datasetSnapshots.get(0);
         assertThat(datasetSnapshot.getStatisticsSnapshot(), nullValue());
     }
-
-    private Props createProps() {
-        Props props = new Props();
-        props.put("datasource.jdbcUrl", "jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
-        props.put("datasource.username", "sa");
-        props.put("datasource.driverClassName", "org.h2.Driver");
-        return props;
-    }
-
 }

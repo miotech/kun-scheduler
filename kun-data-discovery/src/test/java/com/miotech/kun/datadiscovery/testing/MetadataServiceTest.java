@@ -1,6 +1,5 @@
 package com.miotech.kun.datadiscovery.testing;
 
-import com.miotech.kun.commons.testing.KunAppTestBase;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
@@ -43,7 +42,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doReturn;
 
-public class MetadataServiceTest extends KunAppTestBase {
+public class MetadataServiceTest extends DataDiscoveryTestBase {
 
     @Value("${metadata.base-url:localhost:8084}")
     private String url;

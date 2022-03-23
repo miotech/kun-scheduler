@@ -10,15 +10,11 @@ import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.Props;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.h2.tools.Server;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -26,39 +22,34 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-@Testcontainers
+import static com.miotech.kun.commons.utils.CloseableUtils.closeIfPossible;
+
 public abstract class DatabaseTestBase extends GuiceTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
+
+    public static final String POSTGRES_IMAGE = "postgres:12.3";
+
+    protected static PostgreSQLContainer postgres = startPostgres();
 
     private DataSource dataSource;
 
     private List<String> userTables;
 
-    private static final String POSTGRES_IMAGE = "postgres:12.3";
-
     protected String flywayLocation;
 
-    @Container
-    public static PostgreSQLContainer postgres = startPostgres();
-
-    protected boolean usePostgres() {
-        return false;
-    }
-
-    protected void setFlayWayLocation(){
+    protected void setFlywayLocation(){
         flywayLocation = "kun-infra/";
     }
 
-    public List<String> ignore() {
+    protected List<String> ignoredTables() {
         return ImmutableList.of("kun_mt_datasource_type", "kun_mt_dataset_field_mapping");
     }
-
 
     @Override
     protected void configuration() {
         super.configuration();
-        setFlayWayLocation();
-        addModules(new TestDatabaseModule(usePostgres()));
+        setFlywayLocation();
+        addModules(new TestDatabaseModule());
     }
 
     @BeforeEach
@@ -66,21 +57,23 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         // initialize database
         dataSource = injector.getInstance(DataSource.class);
         Props props = new Props();
-        if (!usePostgres()) {
-            props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
-        }
         DatabaseSetup setup = new DatabaseSetup(dataSource, props, flywayLocation);
         setup.start();
     }
 
-    public static PostgreSQLContainer startPostgres() {
-        PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
-        return postgres;
-    }
-
     @AfterEach
     public void tearDown() {
+        // clear all tables
         truncateAllTables();
+
+        // close datasource if necessary
+        closeIfPossible(dataSource);
+    }
+
+    private static PostgreSQLContainer startPostgres() {
+        PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
+        postgres.start();
+        return postgres;
     }
 
     private void truncateAllTables() {
@@ -101,7 +94,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
                     .getTables(null, null, "%", new String[]{"TABLE"});
             while (rs.next()) {
                 String tableName = rs.getString(3);
-                if (tableName.startsWith("kun_") && !ignore().contains(tableName)) {
+                if (tableName.startsWith("kun_") && !ignoredTables().contains(tableName)) {
                     tables.add(tableName);
                 }
             }
@@ -114,38 +107,14 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     }
 
     public static class TestDatabaseModule extends AbstractModule {
-
-        // start H2 web console
-        static {
-            try {
-                Server.createWebServer("-webPort", "8082", "-webDaemon").start();
-            } catch (SQLException e) {
-                ExceptionUtils.wrapAndThrow(e);
-            }
-        }
-
-        private Boolean usePostgres;
-
-        TestDatabaseModule(Boolean usePostgres) {
-            this.usePostgres = usePostgres;
-        }
-
         @Provides
         @Singleton
         public DataSource createDataSource() {
-            if (usePostgres) {
-                HikariConfig config = new HikariConfig();
-                config.setUsername(postgres.getUsername());
-                config.setPassword(postgres.getPassword());
-                config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
-                config.setDriverClassName("org.postgresql.Driver");
-                return new HikariDataSource(config);
-
-            }
             HikariConfig config = new HikariConfig();
-            config.setJdbcUrl("jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
-            config.setUsername("sa");
-            config.setDriverClassName("org.h2.Driver");
+            config.setUsername(postgres.getUsername());
+            config.setPassword(postgres.getPassword());
+            config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
+            config.setDriverClassName("org.postgresql.Driver");
             return new HikariDataSource(config);
         }
     }

@@ -5,7 +5,7 @@ import com.icegreen.greenmail.util.ServerSetupTest;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.web.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
-import com.miotech.kun.monitor.alert.AppTestBase;
+import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.facade.model.alert.EmailNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 @TestPropertySource(properties = {
         "notify.email.enabled=true"
 })
-public class EmailServiceTest extends AppTestBase {
+public class EmailServiceTest extends MonitorAlertTestBase {
 
     @RegisterExtension
     public final GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.ALL);

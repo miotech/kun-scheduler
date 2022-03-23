@@ -3,7 +3,6 @@ package com.miotech.kun.datadiscovery.testing;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.utils.JSONUtils;
-import com.miotech.kun.commons.testing.KunAppTestBase;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -39,7 +38,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
-public class GlossaryServiceTest extends KunAppTestBase {
+public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
     @MockBean
     WorkflowClient workflowClient;

@@ -27,11 +27,6 @@ public class UniversalSearchTest extends DatabaseTestBase {
     @Inject
     private UniversalSearchDao universalSearchDao;
 
-    @Override
-    protected boolean usePostgres() {
-        return true;
-    }
-
     @Test
     void test_search_Content_limit() {
         SearchedInfo save1 = save(1L, "test-1", ResourceType.GLOSSARY, "ddd-sss", "zhang-san");

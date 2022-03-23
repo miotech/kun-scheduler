@@ -15,7 +15,6 @@ import static org.hamcrest.Matchers.is;
 
 public class OperatorUploadTest extends MockKunWebServerTestBase {
 
-
     private WorkflowClient clientUtil;
 
     private OperatorUpload operatorUpload;

@@ -83,7 +83,6 @@ dependencies {
     implementation 'org.postgresql:postgresql'
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
     implementation 'com.googlecode.json-simple:json-simple'
-    implementation "com.h2database:h2"
     implementation 'redis.clients:jedis'
     implementation "org.flywaydb:flyway-core"
     implementation 'org.apache.commons:commons-email'
@@ -94,6 +93,7 @@ dependencies {
     }
     implementation 'org.neo4j:neo4j-jdbc-driver:3.5.1'
 
+    testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-monitor:kun-monitor-alert')
     testImplementation project(':kun-monitor:kun-monitor-sla')
     testImplementation ('org.springframework.boot:spring-boot-starter-test'){
@@ -102,6 +102,7 @@ dependencies {
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'org.jooq:joor-java-8'
     testImplementation "org.testcontainers:neo4j"
+    testImplementation "org.testcontainers:postgresql"
 }
 
 jacocoTestReport {

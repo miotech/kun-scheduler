@@ -669,8 +669,6 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Test
     public void fetchTaskRunsByFilter_withSorter_shouldSortAsExpected() {
         // Prepare
-
-        // Prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         List<Task> tagTaskList = new ArrayList<>();
         for (Task task : taskList) {
@@ -687,7 +685,6 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         prepareTaskRunsWithDependencyRelations(tagTaskList);
 
-
         // Process
         List<TaskRun> filteredTaskRunsWithStartTimeSorter = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
@@ -702,7 +699,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         // Validate
         assertArrayEquals(
-                new Long[]{4L, 1L, 2L, 3L},
+                new Long[]{1L, 2L, 3L, 4L},
                 filteredTaskRunsWithStartTimeSorter.stream().map(TaskRun::getId).toArray());
         assertArrayEquals(
                 new Long[]{4L, 3L, 2L, 1L},
@@ -1274,7 +1271,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
             taskRunDao.createTaskRun(taskRun);
         }
 
-        List<Long> fetchedUpstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunList.get(2).getId(), false);
+        List<Long> fetchedUpstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunList.get(2).getId());
 
         assertThat(new HashSet<>(fetchedUpstreamTaskRunIds), is(new HashSet<>(Arrays.asList(taskRunList.get(0).getId(), taskRunList.get(1).getId()))));
     }

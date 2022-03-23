@@ -51,11 +51,6 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
     @Inject
     private javax.sql.DataSource dataSource;
 
-    @Override
-    protected boolean usePostgres() {
-        return true;
-    }
-
     @AfterEach
     @Override
     public void tearDown() {

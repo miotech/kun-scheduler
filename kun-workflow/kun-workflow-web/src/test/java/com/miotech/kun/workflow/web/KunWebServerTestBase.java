@@ -21,11 +21,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
+import static com.miotech.kun.commons.testing.DatabaseTestBase.POSTGRES_IMAGE;
+import static com.miotech.kun.commons.utils.CloseableUtils.closeIfPossible;
 
 @Testcontainers
 public class KunWebServerTestBase extends GuiceTestBase {
@@ -34,7 +39,10 @@ public class KunWebServerTestBase extends GuiceTestBase {
 
     @Container
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
-            .withAdminPassword("Mi0tech2020");
+            .withoutAuthentication();
+
+    @Container
+    public static PostgreSQLContainer postgresContainer = new PostgreSQLContainer(POSTGRES_IMAGE);
 
     @Inject
     private KunInfraWebServer webServer;
@@ -44,6 +52,9 @@ public class KunWebServerTestBase extends GuiceTestBase {
 
     @Inject
     private Props props;
+
+    @Inject
+    private DataSource dataSource;
 
     @Override
     protected void configuration() {
@@ -69,6 +80,8 @@ public class KunWebServerTestBase extends GuiceTestBase {
 
     @AfterEach
     public void tearDown() {
+        // TODO: move these cleaning logic to a proper location
+        closeIfPossible(dataSource); // close HikariDatasource
         workerLifeCycleManager.shutdown();
         webServer.shutdown();
     }
@@ -127,9 +140,14 @@ public class KunWebServerTestBase extends GuiceTestBase {
     }
 
     private void fill(Props props) {
+        props.put("datasource.jdbcUrl", postgresContainer.getJdbcUrl() + "&stringtype=unspecified");
+        props.put("datasource.username", postgresContainer.getUsername());
+        props.put("datasource.password", postgresContainer.getPassword());
+        props.put("datasource.driverClassName", "org.postgresql.Driver");
+
         props.put("neo4j.uri", neo4jContainer.getBoltUrl());
-        props.put("neo4j.username", "neo4j");
-        props.put("neo4j.password", "Mi0tech2020");
+        props.put("neo4j.username", "dummy");
+        props.put("neo4j.password", "dummy");
     }
 
 }

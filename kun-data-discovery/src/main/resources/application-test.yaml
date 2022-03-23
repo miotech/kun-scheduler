@@ -12,6 +12,3 @@ spring:
 
 workflow:
   enable: false
-
-testsuite:
-  postgresImage: postgres:11.5

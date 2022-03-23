@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.commit.dao;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WithMockTestUser
-public class TaskCommitDaoTest extends AppTestBase {
+public class TaskCommitDaoTest extends DataPlatformTestBase {
 
     @Autowired
     private TaskCommitDao taskCommitDao;

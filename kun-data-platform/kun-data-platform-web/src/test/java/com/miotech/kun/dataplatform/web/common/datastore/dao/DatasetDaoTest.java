@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.datastore.dao;
 
-import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.mocking.MockDatasetFactory;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.web.model.datastore.TaskDataset;
@@ -15,7 +15,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 
 
-public class DatasetDaoTest extends AppTestBase {
+public class DatasetDaoTest extends DataPlatformTestBase {
 
     @Autowired
     private DatasetDao datasetDao;

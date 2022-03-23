@@ -115,7 +115,6 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     protected void configuration() {
         super.configuration();
         mock(TaskManager.class);
-
     }
 
     @BeforeEach

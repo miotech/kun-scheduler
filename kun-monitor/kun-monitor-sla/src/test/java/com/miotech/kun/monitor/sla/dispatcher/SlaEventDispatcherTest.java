@@ -6,7 +6,7 @@ import com.miotech.kun.commons.pubsub.event.EventReceiver;
 import com.miotech.kun.commons.pubsub.event.PrivateEvent;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.monitor.sla.AppTestBase;
+import com.miotech.kun.monitor.sla.MonitorSlaTestBase;
 import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
 import com.miotech.kun.monitor.facade.model.alert.SystemDefaultNotifierConfig;
 import com.miotech.kun.monitor.facade.model.alert.NotifierUserConfig;
@@ -29,7 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @Import(SlaEventDispatcherTest.SlaEventDispatcherTestConfig.class)
-public class SlaEventDispatcherTest extends AppTestBase {
+public class SlaEventDispatcherTest extends MonitorSlaTestBase {
 
     public static class MockEventPubSub implements EventSubscriber {
         private EventReceiver receiver = null;
