@@ -30,14 +30,24 @@ interface Props extends RouteComponentProps<MatchParams> {
   currentId?: string;
   setCurrentId: (id: string) => void;
   addChild: (child: {}, parentId: string, id?: string) => void;
+  editNodeName: (id: string, name: string) => void;
   deleteChild: (parentId: string, id: string) => void;
+  changeParent: (preParentId: string, currentParentId: string, id: string, child: {}) => void;
   onClose: () => void;
 }
 
 const { TextArea } = Input;
 const { confirm } = Modal;
 
-export default function GlossaryDetail({ currentId, addChild, deleteChild, setCurrentId, onClose }: Props) {
+export default function GlossaryDetail({
+  currentId,
+  addChild,
+  editNodeName,
+  deleteChild,
+  setCurrentId,
+  changeParent,
+  onClose,
+}: Props) {
   const t = useI18n();
   const history = useHistory();
 
@@ -117,7 +127,6 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
       ...detail,
       [key]: value,
     }));
-
   };
 
   const handleChangeName = useCallback(e => {
@@ -179,12 +188,17 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
       dispatch.glossary.editGlossary({ id, params }).then(resp => {
         diss();
         if (resp) {
+          const preParentId = currentGlossaryDetail?.parent?.id;
+          if (preParentId !== params.parentId) {
+            changeParent(preParentId, params.parentId, id, resp);
+          }
+          editNodeName(id, params.name);
           message.success(t('common.operateSuccess'));
           setIsEditing(false);
         }
       });
     },
-    [dispatch.glossary, t],
+    [dispatch.glossary, t, currentGlossaryDetail, changeParent, editNodeName],
   );
 
   const handleClickSave = useCallback(() => {

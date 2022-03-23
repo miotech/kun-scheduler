@@ -172,7 +172,7 @@ export const glossary = {
         searchGlossariesFlag += 1;
         const currentSearchGlossariesFlag = searchGlossariesFlag;
         try {
-          const resp = await searchGlossariesService(payload, 10);
+          const resp = await searchGlossariesService(payload, 30);
           if (currentSearchGlossariesFlag === searchGlossariesFlag && resp) {
             dispatch.glossary.updateState({
               key: 'autoSuggestGlossaryList',

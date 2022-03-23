@@ -48,7 +48,7 @@ export default memo(function ParentSearch({
     let ignore = false;
     const search = async () => {
       if (debounceKeyword) {
-        const resp = await searchGlossariesService(debounceKeyword, 10, currentId);
+        const resp = await searchGlossariesService(debounceKeyword, 30, currentId);
         if (resp && !ignore) {
           setGlossaryList(resp.searchedInfoList.filter(i => i.id !== disabledId));
         }
