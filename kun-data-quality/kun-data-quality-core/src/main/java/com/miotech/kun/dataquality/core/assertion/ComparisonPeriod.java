@@ -3,6 +3,7 @@ package com.miotech.kun.dataquality.core.assertion;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
 
 public class ComparisonPeriod {
 
@@ -10,6 +11,7 @@ public class ComparisonPeriod {
 
     @JsonCreator
     public ComparisonPeriod(@JsonProperty("daysAgo") int daysAgo) {
+        Preconditions.checkArgument(daysAgo >= 0, "`comparisonPeriod` must be greater than or equal to 0");
         this.daysAgo = daysAgo;
     }
 

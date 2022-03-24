@@ -28,11 +28,11 @@ public class AssertionRequest {
             case NOT_EQUALS:
                 return new NotEqualsAssertion(null, this.expectedValue);
             case ABSOLUTE:
-                return new AbsoluteAssertion(null, this.expectedValue, ComparisonPeriod.from(ComparisonPeriod.FixedPeriod.forValue(comparisonPeriod)));
+                return new AbsoluteAssertion(null, this.expectedValue, new ComparisonPeriod(this.comparisonPeriod));
             case RISE:
-                return new RiseAssertion(null, this.expectedValue, ComparisonPeriod.from(ComparisonPeriod.FixedPeriod.forValue(comparisonPeriod)));
+                return new RiseAssertion(null, this.expectedValue, new ComparisonPeriod(this.comparisonPeriod));
             case FALL:
-                return new FallAssertion(null, this.expectedValue, ComparisonPeriod.from(ComparisonPeriod.FixedPeriod.forValue(comparisonPeriod)));
+                return new FallAssertion(null, this.expectedValue, new ComparisonPeriod(this.comparisonPeriod));
             default:
                 throw new IllegalArgumentException("Invalid comparisonOperator: " + comparisonOperator);
         }
