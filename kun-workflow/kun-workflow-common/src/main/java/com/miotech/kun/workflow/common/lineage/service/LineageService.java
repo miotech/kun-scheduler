@@ -28,10 +28,10 @@ public class LineageService {
     private final LineageServiceFacade lineageFacade;
 
 
-    private  final TaskDao taskDao;
+    private final TaskDao taskDao;
 
     @Inject
-    public LineageService(MetadataServiceFacade metadataFacade, LineageServiceFacade lineageFacade,TaskDao taskDao) {
+    public LineageService(MetadataServiceFacade metadataFacade, LineageServiceFacade lineageFacade, TaskDao taskDao) {
         this.metadataFacade = metadataFacade;
         this.lineageFacade = lineageFacade;
         this.taskDao = taskDao;
@@ -117,7 +117,6 @@ public class LineageService {
     }
 
 
-
     /**
      * @param datasetGlobalId
      * @return set of downstream dataset nodes
@@ -185,18 +184,20 @@ public class LineageService {
         DatasetNode datasetNode = sourceNode.orElseThrow(() -> new EntityNotFoundException("dataset does not exists, id:" + datasetGid));
 
         if (StringUtils.containsAny(direction, "UPSTREAM", "BOTH")) {
-            Set<DatasetNode> upstreamDatasetNodes = fetchUpstreamDatasetNodes(datasetGid, depth);
+            Set<DatasetNode> upstreamDatasetNodes = fetchUpstreamDatasetNodes(datasetGid, depth + 1);
             tileDataSetNodeSet(upstreamDatasetNodes, upstreamNodes, 1, depth, true);
         }
         if (StringUtils.containsAny(direction, "DOWNSTREAM", "BOTH")) {
-            Set<DatasetNode> downstreamDatasetNodes = fetchDownstreamDatasetNodes(datasetGid, depth);
+            Set<DatasetNode> downstreamDatasetNodes = fetchDownstreamDatasetNodes(datasetGid, depth + 1);
             tileDataSetNodeSet(downstreamDatasetNodes, downstreamNodes, 1, depth, false);
         }
         Map<Long, Optional<Task>> idToTaskMap = getIdToTaskMap(upstreamNodes, downstreamNodes, datasetNode);
+        DatasetNodeInfo sourceNodeInfo = datasetNodeToInfo(datasetNode, idToTaskMap).cloneBuilder()
+                .withUpstreamDatasetCount(upstreamNodes.size()).withDownstreamDatasetCount(downstreamNodes.size()).build();
         return DatasetLineageInfo.newBuilder()
-                .withSourceNode(datasetNodeToInfo(datasetNode,idToTaskMap))
-                .withUpstreamNodes(datasetNodesToInfoList(upstreamNodes, idToTaskMap, direction))
-                .withDownstreamNodes(datasetNodesToInfoList(downstreamNodes, idToTaskMap, direction))
+                .withSourceNode(sourceNodeInfo)
+                .withUpstreamNodes(datasetNodesToInfoList(upstreamNodes, idToTaskMap))
+                .withDownstreamNodes(datasetNodesToInfoList(downstreamNodes, idToTaskMap))
                 .withQueryDepth(depth)
                 .build();
     }
@@ -216,7 +217,7 @@ public class LineageService {
         relatedTaskIds.addAll(sourceNode.getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));
     }
 
-    private List<DatasetNodeInfo> datasetNodesToInfoList(Set<DatasetNode> datasetNodes, Map<Long, Optional<Task>> idToTaskMap, String direction) {
+    private List<DatasetNodeInfo> datasetNodesToInfoList(Set<DatasetNode> datasetNodes, Map<Long, Optional<Task>> idToTaskMap) {
 
         return datasetNodes.stream()
                 .map(node -> this.datasetNodeToInfo(node, idToTaskMap))
@@ -233,11 +234,14 @@ public class LineageService {
         }
         currentDepth++;
         for (DatasetNode datasetNode : rootDateSetNodeSet) {
+            if (datasetNodes.contains(datasetNode)) {
+                break;
+            }
             datasetNodes.add(datasetNode);
             for (TaskNode taskNode : isUp ? datasetNode.getUpstreamTasks() : datasetNode.getDownstreamTasks()) {
                 Set<DatasetNode> nodeSet = isUp ? taskNode.getInlets() : taskNode.getOutlets();
                 if (CollectionUtils.isEmpty(nodeSet)) {
-                    return;
+                    break;
                 }
                 tileDataSetNodeSet(nodeSet, datasetNodes, currentDepth, depth, isUp);
             }
@@ -261,6 +265,9 @@ public class LineageService {
     }
 
     private int getCount(Set<TaskNode> upstreamTaskNodes, Function<TaskNode, Set<DatasetNode>> linkDatasetNode) {
-        return Math.toIntExact(upstreamTaskNodes.stream().map(linkDatasetNode).filter(Objects::nonNull).map(Set::size).count());
+        return Math.toIntExact(upstreamTaskNodes.stream()
+                .map(linkDatasetNode)
+                .filter(CollectionUtils::isNotEmpty)
+                .map(Set::size).mapToInt(Integer::new).sum());
     }
 }
