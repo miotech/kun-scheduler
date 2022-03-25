@@ -295,6 +295,7 @@ export default memo(
               canNode.attr('class', styles.nodeText).on('click', () => {
                 click(d);
               });
+              canNode.attr('id', `text${d.data.id}`);
             }
           });
           // 如果截断了, 需要在title中能hover出来
@@ -457,6 +458,9 @@ export default memo(
       };
     }, [dispatch.glossary, history, rootNode, onClose, updateGlossaryOrderApi]);
 
+    async function editNodeName(id, newName) {
+      d3.select(`[id=text${id}]`).text(newName);
+    }
     async function addChild(child, parentId, id) {
       if (!parentId) {
         await dispatch.glossary.fetchRootNodeChildGlossary();
@@ -467,15 +471,15 @@ export default memo(
         if (d && d.data.id === parentId) {
           if (d.data.children) {
             d.data.children.push(child);
-          } else {
-            d.data.childrenCount = 1;
-            d.data.children = [child];
-          }
-          updateCache(d);
-          d3.select(`[id=count${parentId}]`).text(d.data.children.length);
-
-          if (id) {
+            updateCache(d);
+            d3.select(`[id=count${parentId}]`).text(d.data.children.length);
             setCurrentIdCache(id);
+          } else {
+            dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
+              updateCache(d);
+              d3.select(`[id=count${parentId}]`).text(d.data.children.length);
+              setCurrentIdCache(id);
+            });
           }
         }
       });
@@ -495,6 +499,10 @@ export default memo(
       });
     }
 
+    function changeParent(preParentId, currentParentId, id, child) {
+      addChild(child, currentParentId, id);
+      deleteChild(preParentId, id);
+    }
     useEffect(() => {
       if (location?.query?.glossaryId) {
         setVisible(true);
@@ -538,7 +546,9 @@ export default memo(
         </div>
         <Drawer title="" width={800} placement="right" destroyOnClose onClose={onClose} mask={false} visible={visible}>
           <GlossaryDetail
+            changeParent={changeParent}
             addChild={addChild}
+            editNodeName={editNodeName}
             deleteChild={deleteChild}
             setCurrentId={setCurrentIdCache}
             onClose={onClose}
