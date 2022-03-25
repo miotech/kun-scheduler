@@ -55,7 +55,7 @@ public class SearchAppService {
         }).getBody();
     }
 
-    public UniversalSearchInfo searchGlossary(Integer limit,String... keywords) {
+    public UniversalSearchInfo searchGlossary(Integer pageNumber,Integer pageSize,String... keywords) {
         String fullUrl = url + "/search/options";
         List<SearchFilterOption> searchFilterOptionList = Arrays.stream(keywords)
                 .map(s -> SearchFilterOption.Builder.newBuilder()
@@ -65,7 +65,8 @@ public class SearchAppService {
         UniversalSearchRequest request = new UniversalSearchRequest();
         request.setResourceTypes(Sets.newHashSet(ResourceType.GLOSSARY));
         request.setSearchFilterOptions(searchFilterOptionList);
-        request.setLimitNum(limit);
+        request.setPageSize(pageSize);
+        request.setPageNumber(pageNumber);
         return  restTemplate.exchange(fullUrl, HttpMethod.POST, new HttpEntity<>(request), UniversalSearchInfo.class).getBody();
 
     }

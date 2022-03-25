@@ -643,8 +643,8 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         GlossaryBasicSearchRequest basicSearchRequest1 = new GlossaryBasicSearchRequest();
         basicSearchRequest1.setKeyword(keyword1);
         mockSearch(glossaries, keyword1);
-        SearchResult searchResult1 = glossaryService.search(basicSearchRequest1);
-        List<SearchedInfo> searchedInfoList = searchResult1.getSearchedInfoList();
+        SearchPage searchPage1 = glossaryService.search(basicSearchRequest1);
+        List<SearchedInfo> searchedInfoList = searchPage1.getSearchedInfoList();
         assertThat(searchedInfoList.size(), is(1));
         assertThat(searchedInfoList.get(0).getGid(), is(glossaryChild.getId()));
 
@@ -654,10 +654,10 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         mockSearch(glossaries, keyword2);
         ArrayList<Long> longs2 = Lists.newArrayList(glossary.getId(), glossarySon1.getId());
         basicSearchRequest2.setGlossaryIds(longs2);
-        SearchResult searchResult2 = glossaryService.search(basicSearchRequest2);
-        String s = JSONUtils.toJsonString(RequestResult.success(searchResult2));
+        SearchPage searchPage2 = glossaryService.search(basicSearchRequest2);
+        String s = JSONUtils.toJsonString(RequestResult.success(searchPage2));
         System.out.println("json:"+s);
-        List<SearchedInfo> searchedInfoList2 = searchResult2.getSearchedInfoList();
+        List<SearchedInfo> searchedInfoList2 = searchPage2.getSearchedInfoList();
         assertThat(searchedInfoList2.size(), is(longs2.size()));
         assertTrue(searchedInfoList2.stream().map(SearchedInfo::getGid).anyMatch(longs2::contains));
 
@@ -667,16 +667,16 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         basicSearchRequest3.setKeyword(keyword3);
         mockSearch(glossaries, keyword3);
         basicSearchRequest3.setCurrentId(glossaryChild.getId());
-        SearchResult searchResult3 = glossaryService.search(basicSearchRequest3);
-        List<SearchedInfo> searchedInfoList3 = searchResult3.getSearchedInfoList();
+        SearchPage searchPage3 = glossaryService.search(basicSearchRequest3);
+        List<SearchedInfo> searchedInfoList3 = searchPage3.getSearchedInfoList();
         assertThat(searchedInfoList3.size(), is(0));
         String keyword4 = "glossa";
         GlossaryBasicSearchRequest basicSearchRequest4 = new GlossaryBasicSearchRequest();
         basicSearchRequest4.setKeyword(keyword4);
         mockSearch(glossaries, keyword4);
         basicSearchRequest4.setCurrentId(glossaryChild.getId());
-        SearchResult searchResult4 = glossaryService.search(basicSearchRequest4);
-        List<SearchedInfo> searchedInfoList4 = searchResult4.getSearchedInfoList();
+        SearchPage searchPage4 = glossaryService.search(basicSearchRequest4);
+        List<SearchedInfo> searchedInfoList4 = searchPage4.getSearchedInfoList();
         assertThat(searchedInfoList4.size(), is(1));
         assertThat(searchedInfoList4.get(0).getGid(), is(glossary.getId()));
 
