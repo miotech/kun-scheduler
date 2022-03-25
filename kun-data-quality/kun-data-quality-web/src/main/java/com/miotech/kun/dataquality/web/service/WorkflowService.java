@@ -68,16 +68,16 @@ public class WorkflowService {
         return savedTask.getId();
     }
 
-    public TaskRun executeTask(Long caseId) {
+    public TaskRun executeExpectation(Long expectationId) {
 
-        Long taskId = expectationService.getTaskId(caseId);
+        Long taskId = expectationService.getTaskId(expectationId);
         if (taskId == null || taskId.equals(0L)) {
-            taskId = createTask(caseId);
+            taskId = createTask(expectationId);
         } else {
             try {
                 workflowClient.getTask(taskId);
             } catch (Exception e) {
-                taskId = createTask(caseId);
+                taskId = createTask(expectationId);
             }
         }
 
@@ -90,7 +90,7 @@ public class WorkflowService {
     public List<Long> executeTasks(List<Long> caseIds){
         List<Long> taskRunIdList = new ArrayList<>();
         for(Long id: caseIds){
-            TaskRun taskRun = executeTask(id);
+            TaskRun taskRun = executeExpectation(id);
             taskRunIdList.add(taskRun.getId());
         }
         return taskRunIdList;

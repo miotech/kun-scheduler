@@ -44,8 +44,10 @@ public class ExpectationDaoTest extends DataQualityTestBase {
         expectationDao.create(expectation);
 
         Expectation fetched = expectationDao.fetchById(expectation.getExpectationId());
-        assertThat(expectation, sameBeanAs(fetched).ignoring("dataset"));
+        assertThat(expectation, sameBeanAs(fetched).ignoring("dataset").ignoring("metrics").ignoring("assertion"));
         assertThat(expectation.getDataset().getGid(), is(fetched.getDataset().getGid()));
+        assertThat(expectation.getMetrics().getName(), is(fetched.getMetrics().getName()));
+        assertThat(expectation.getAssertion().getExpectedValue(), is(fetched.getAssertion().getExpectedValue()));
     }
 
     @Test

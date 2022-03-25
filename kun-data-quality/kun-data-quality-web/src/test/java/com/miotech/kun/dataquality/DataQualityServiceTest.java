@@ -162,6 +162,31 @@ public class DataQualityServiceTest extends DataQualityTestBase {
     }
 
     @Test
+    public void testUpdate() {
+        // prepare
+        Expectation spec = MockExpectationSpecFactory.create();
+        expectationDao.create(spec);
+        expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
+
+        // mock
+        doReturn(1L).when(datasetRepository).findDataSourceIdByGid(anyLong());
+        doNothing().when(workflowService).updateUpstreamTaskCheckType(anyLong(), any(CheckType.class));
+        DatasetBasic datasetBasic = MockDatasetBasicFactory.create();
+        doReturn(datasetBasic).when(datasetRepository).findBasic(anyLong());
+
+        // execute
+        ExpectationRequest expectationRequest = MockExpectationRequestFactory.create();
+        dataQualityService.updateExpectation(spec.getExpectationId(), expectationRequest);
+
+        // validate
+        ExpectationVO expectation = dataQualityService.getExpectation(spec.getExpectationId());
+        assertThat(expectation.getName(), is(expectationRequest.getName()));
+        assertThat(expectation.getDescription(), is(expectationRequest.getDescription()));
+        assertThat(expectation.getTypes(), containsInAnyOrder(expectationRequest.getTypes().toArray()));
+        verify(workflowService, times(1)).executeExpectation(spec.getExpectationId());
+    }
+
+    @Test
     public void testValidateSQL() {
         String database = "test_db";
         String table = "test_table";

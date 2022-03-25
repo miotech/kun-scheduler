@@ -54,7 +54,7 @@ public class DataQualityController {
     public void executeAllTasks() {
         //workflowService.executeTask(dataQualityService.getAllCaseId().get(0));
         for (Long caseId : dataQualityService.getAllCaseId()) {
-            workflowService.executeTask(caseId);
+            workflowService.executeExpectation(caseId);
         }
     }
 

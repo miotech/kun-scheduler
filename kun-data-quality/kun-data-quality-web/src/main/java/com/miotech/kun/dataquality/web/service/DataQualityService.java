@@ -1,5 +1,6 @@
 package com.miotech.kun.dataquality.web.service;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
@@ -127,7 +128,7 @@ public class DataQualityService extends BaseSecurityService {
         expectationDao.create(expectation);
         updateRelatedDataset(expectation.getExpectationId(), expectationRequest.getRelatedDatasetGids());
 
-        Long taskId = workflowService.executeTask(expectation.getExpectationId()).getTask().getId();
+        Long taskId = workflowService.executeExpectation(expectation.getExpectationId()).getTask().getId();
         expectationDao.updateTaskId(expectation.getExpectationId(), taskId);
 
         CheckType checkType = expectationRequest.getCheckType();
@@ -152,6 +153,13 @@ public class DataQualityService extends BaseSecurityService {
 
         CheckType checkType = expectationRequest.getCheckType();
         workflowService.updateUpstreamTaskCheckType(expectationRequest.getMetrics().getDatasetGid(), checkType);
+
+        runExpectation(id);
+    }
+
+    public void runExpectation(Long id) {
+        Preconditions.checkNotNull(id);
+        workflowService.executeExpectation(id);
     }
 
     private void updateRelatedDataset(Long id, List<Long> datasetIds) {
