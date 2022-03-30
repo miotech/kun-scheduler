@@ -502,16 +502,14 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         return results;
     }
 
-    public List<String> getUserByTaskId(Long wfTaskId) {
-        List<String> userList = new ArrayList<>();
+    public UserInfo getUserByTaskId(Long wfTaskId) {
         Optional<DeployedTask> taskOptional = deployedTaskDao.fetchByWorkflowTaskId(wfTaskId);
         if(taskOptional.isPresent()){
             Long userId = taskDefinitionService.find(taskOptional.get().getDefinitionId()).getOwner();
-            UserInfo userInfo = getUserById(userId);
-            if(userId != null)
-                userList.add(userInfo.getUsername());
+            return getUserById(userId);
         }
-        return userList;
+
+        return null;
     }
 
     @Override

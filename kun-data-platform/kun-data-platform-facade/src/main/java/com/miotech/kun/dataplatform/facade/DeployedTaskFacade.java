@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.facade;
 
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
+import com.miotech.kun.security.model.UserInfo;
 
 import java.util.List;
 import java.util.Map;
@@ -27,11 +28,11 @@ public interface DeployedTaskFacade {
     Optional<DeployedTask> findByWorkflowTaskId(Long workflowTaskId);
 
     /**
-     * Query username by workflowTaskId
+     * Query userinfo by workflowTaskId
      * @param workflowTaskId
-     * @return The list of username
+     * @return The info of user
      */
-    List<String> getUserByTaskId(Long workflowTaskId);
+    UserInfo getUserByTaskId(Long workflowTaskId);
 
     /**
      * Query by workflowTaskIds

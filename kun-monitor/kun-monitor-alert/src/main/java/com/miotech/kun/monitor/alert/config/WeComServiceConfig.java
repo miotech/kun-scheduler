@@ -1,7 +1,6 @@
 package com.miotech.kun.monitor.alert.config;
 
 import com.miotech.kun.monitor.alert.service.WeComService;
-import com.miotech.kun.monitor.alert.service.ZhongdaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,10 +29,10 @@ public class WeComServiceConfig {
     @Autowired
     private NotifyLinkConfig notifyLinkConfig;
 
-    @Bean
-    public ZhongdaService createZhongdaService() {
-        return new ZhongdaService(host, token, group, notifyLinkConfig);
-    }
+//    @Bean
+//    public ZhongdaService createZhongdaService() {
+//        return new ZhongdaService(host, token, group, notifyLinkConfig);
+//    }
 
     @Bean
     public WeComService createWecomService() {

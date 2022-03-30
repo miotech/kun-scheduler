@@ -45,6 +45,7 @@ public class UserRepository {
         user.setFirstName((String) nodeMap.get("firstName"));
         user.setLastName((String) nodeMap.get("lastName"));
         user.setEmail((String) nodeMap.get("email"));
+        user.setWeComId((String) nodeMap.get("weComId"));
         user.setAuthOrigin((String) nodeMap.get("authOrigin"));
         user.setCreateUser(getUsernameById((Long) nodeMap.get("createUser")));
         user.setCreateTime((Long) nodeMap.get("createTime"));
@@ -97,7 +98,7 @@ public class UserRepository {
     }
 
     public User addUser(UserRequest userRequest) {
-        String query = "CREATE (u:USER {id: ?, name: ?, email: ?, firstName: ?, lastName: ?, authOrigin: ?,  password: ?, createUser: ?, createTime: ?, updateUser: ?, updateTime: ?}) RETURN u";
+        String query = "CREATE (u:USER {id: ?, name: ?, email: ?, weComId: ?, firstName: ?, lastName: ?, authOrigin: ?,  password: ?, createUser: ?, createTime: ?, updateUser: ?, updateTime: ?}) RETURN u";
 
         Long id = IdGenerator.getInstance().nextId();
         return jdbcTemplate.query(query, rs -> {
@@ -110,6 +111,7 @@ public class UserRepository {
                 id,
                 userRequest.getUsername(),
                 userRequest.getEmail(),
+                userRequest.getWeComId(),
                 userRequest.getFirstName(),
                 userRequest.getLastName(),
                 userRequest.getAuthOriginInfo() == null ? null : userRequest.getAuthOriginInfo().getAuthType(),

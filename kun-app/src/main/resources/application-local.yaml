@@ -90,6 +90,16 @@ notify:
     # Your web link host url prefix in format of {PROTOCOL}://{HOST}[:PORT]. For instance, "https://kun.miotech.com", "http://127.0.0.1:12345", etc.
     prefix: ${NOTIFY_URL_LINK_PREFIX:http://localhost:9801}
 
+  wecom:
+    corpid: 123
+    corpsecret: abc
+    agentid: 1
+    chatid: 1
+    url:
+      get_token: https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=%s&corpsecret=%s
+      send-to-user: https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s
+      send-to-group: https://qyapi.weixin.qq.com/cgi-bin/appchat/send?access_token=%s
+
 data-dashboard:
   long-existing-threshold: 30
 
