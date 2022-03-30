@@ -17,11 +17,6 @@ export default function Glossary() {
   const childrenRef = useRef(null);
   const { selector, dispatch } = useRedux(state => state.glossary);
 
-  useEffect(() => {
-    if (!selector.glossaryData && !selector.fetchRootLoading) {
-      dispatch.glossary.fetchRootNodeChildGlossary();
-    }
-  }, [dispatch.glossary, selector.fetchRootLoading, selector.glossaryData]);
 
   const handleClickCreate = useCallback(() => {
     childrenRef.current.create();
