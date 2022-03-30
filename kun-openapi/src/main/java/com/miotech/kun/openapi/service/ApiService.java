@@ -1,9 +1,7 @@
 package com.miotech.kun.openapi.service;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.common.model.PageRequest;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.JwtUtils;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
@@ -27,6 +25,7 @@ import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.openapi.model.*;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
+import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,6 +53,9 @@ public class ApiService extends BaseSecurityService {
 
     @Autowired
     private DeployService deployService;
+
+    @Autowired
+    private WorkflowClient workflowClient;
 
     public String authenticate(UserRequest request) {
         UserInfo userInfo = getUserByUsername(request.getUsername());
@@ -163,6 +165,13 @@ public class ApiService extends BaseSecurityService {
         Deploy deploy = deployService.deployFast(request.getTaskId(),
                 new CommitRequest(request.getTaskId(), request.getMessage()));
         return deployService.convertVO(deploy);
+    }
+
+    public boolean changeTaskRunPriority(TaskRunPriorityChangeRequest request, String token) {
+        Long userId = setUserByToken(token);
+        Integer priority = request.getPriority();
+        Preconditions.checkArgument((priority > 0 && priority <= 5), "task run priority should be 1-5");
+        return workflowClient.changeTaskRunPriority(request.getTaskRunId(), request.getPriority());
     }
 
     private Long setUserByToken(String token) {
