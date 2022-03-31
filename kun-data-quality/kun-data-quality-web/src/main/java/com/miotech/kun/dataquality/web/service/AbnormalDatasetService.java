@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.CronUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +52,11 @@ public class AbnormalDatasetService {
         return abnormalDatasetRepository.fetchByScheduleAtAndStatusIsNull(scheduleAt);
     }
 
-    public boolean updateStatus(Long id, String status) {
-        return abnormalDatasetRepository.updateStatus(id, status);
+    public boolean updateStatus(Long id, TaskRun taskRun) {
+        TaskRunStatus taskRunStatus = taskRun.getStatus();
+        OffsetDateTime updateTime = taskRunStatus.isTermState() ? taskRun.getTermAt() : DateTimeUtils.now();
+        String status = taskRunStatus.isSuccess() ? "SUCCESS" : "FAILED";
+        return abnormalDatasetRepository.updateStatus(id, status, updateTime);
     }
 
     private String generateScheduleAt() {

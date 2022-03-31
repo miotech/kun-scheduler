@@ -4,7 +4,9 @@ import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunState;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,8 +30,13 @@ public class TaskRunStatusCheckScheduler {
         String now = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         List<AbnormalDataset> abnormalDatasets = abnormalDatasetService.fetchByScheduleAtAndStatusIsNull(now);
         for (AbnormalDataset abnormalDataset : abnormalDatasets) {
-            TaskRunState taskRunState = workflowClient.getTaskRunState(abnormalDataset.getTaskRunId());
-            abnormalDatasetService.updateStatus(abnormalDataset.getId(), taskRunState.getStatus().isSuccess() ? "SUCCESS" : "FAILED");
+            try {
+                TaskRun taskRun = workflowClient.getTaskRun(abnormalDataset.getTaskRunId());
+                abnormalDatasetService.updateStatus(abnormalDataset.getId(), taskRun);
+            } catch (Exception e) {
+                log.error("update abnormal dataset status failed.", e);
+            }
+
         }
     }
 
