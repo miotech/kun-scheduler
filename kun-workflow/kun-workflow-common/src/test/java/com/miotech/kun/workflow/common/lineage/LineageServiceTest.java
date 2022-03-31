@@ -160,7 +160,7 @@ public class LineageServiceTest extends CommonTestBase {
      *
      * dataset0----
      *            ｜ task0              task1
-     *            ｜--------->dataset2-------------->dataset3
+     *            ｜--------->dataset2-------------->dataset3--->task2
      *            ｜                           ｜
      * dataset1---                            ｜---->dataset4
      *
@@ -171,11 +171,14 @@ public class LineageServiceTest extends CommonTestBase {
         Operator mockOperator = MockOperatorFactory.createOperator();
         operatorDao.create(mockOperator);
 
+        TaskPropsVO taskPropsVO0 = MockTaskFactory.createTaskPropsVOWithOperator(mockOperator.getId());
+        Task mockTask0 = taskService.createTask(taskPropsVO0);
+
         TaskPropsVO taskPropsVO1 = MockTaskFactory.createTaskPropsVOWithOperator(mockOperator.getId());
-        Task mockTask0 = taskService.createTask(taskPropsVO1);
+        Task mockTask1 = taskService.createTask(taskPropsVO1);
 
         TaskPropsVO taskPropsVO2 = MockTaskFactory.createTaskPropsVOWithOperator(mockOperator.getId());
-        Task mockTask1 = taskService.createTask(taskPropsVO2);
+        Task mockTask2 = taskService.createTask(taskPropsVO2);
 
 
         DatasetNode   datasetNode0=new DatasetNode(0L,"dataset0");
@@ -193,12 +196,18 @@ public class LineageServiceTest extends CommonTestBase {
         taskNode1.addOutlet(datasetNode3);
         taskNode1.addOutlet(datasetNode4);
 
+        TaskNode taskNode2=new TaskNode(mockTask2.getId(),mockTask2.getName());
+        taskNode2.addInlet(datasetNode3);
+
         datasetNode0.setAsInputOfTask(taskNode0);
         datasetNode1.setAsInputOfTask(taskNode0);
         datasetNode2.setAsOutputOfTask(taskNode0);
+
         datasetNode2.setAsInputOfTask(taskNode1);
         datasetNode3.setAsOutputOfTask(taskNode1);
         datasetNode4.setAsOutputOfTask(taskNode1);
+
+        datasetNode3.setAsInputOfTask(taskNode2);
 
         Set<DatasetNode> downDatasetNodeSet = new LinkedHashSet<>();
         downDatasetNodeSet.add(datasetNode2);
@@ -280,7 +289,6 @@ public class LineageServiceTest extends CommonTestBase {
         assertThat(sourceNode.getGid(),is(datasetNode0.getGid()));
         assertThat(sourceNode.getDownstreamTasks().size(),is(datasetNode0.getDownstreamTasks().size()));
         assertThat(sourceNode.getUpstreamTasks().size(),is(datasetNode0.getUpstreamTasks().size()));
-        assertThat(sourceNode.getDownstreamDatasetCount(),is(1));
         assertThat(sourceNode.getUpstreamDatasetCount(),is(0));
     }
 

@@ -85,7 +85,7 @@ public class LineageAppService {
     }
 
     private void addDownstreamEdges(DatasetLineageInfo datasetLineageInfo, LineageGraph lineageGraph, DatasetNodeInfo centerNode, Map<Long, LineageVertex> vertexIdMap) {
-        if (CollectionUtils.isEmpty(datasetLineageInfo.getUpstreamNodes())){
+        if (CollectionUtils.isEmpty(datasetLineageInfo.getDownstreamNodes())){
             return;
         }
         List<LineageEdge> downstreamEdges = datasetLineageInfo.getDownstreamNodes().stream()
