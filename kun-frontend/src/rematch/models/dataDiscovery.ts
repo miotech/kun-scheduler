@@ -50,7 +50,7 @@ export interface SearchParams {
 }
 
 export interface SearchParamsObj {
-  searchContent?: string;
+  keyword?: string;
   watermarkStart?: number;
   watermarkEnd?: number;
   ownerList?: string[];
@@ -59,7 +59,6 @@ export interface SearchParamsObj {
   dsIdList?: string[];
   dbList?: string[];
   glossaryIdList?: string[];
-  displayDeleted?: boolean;
 
   sortKey: string | null;
   sortOrder: 'asc' | 'desc' | null;
@@ -215,7 +214,6 @@ export const dataDiscovery = {
           watermarkAbsoluteValue,
           watermarkQuickeValue,
           pagination,
-          displayDeleted,
         } = payload;
         let watermarkStart: number | undefined;
         let watermarkEnd: number | undefined;
@@ -267,7 +265,7 @@ export const dataDiscovery = {
         }
 
         const searchParams: SearchParamsObj = {
-          searchContent,
+          keyword: searchContent,
           watermarkStart,
           watermarkEnd,
           ownerList,
@@ -278,7 +276,6 @@ export const dataDiscovery = {
           glossaryIdList,
           sortOrder,
           sortKey,
-          displayDeleted: !!displayDeleted,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;
