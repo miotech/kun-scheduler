@@ -41,7 +41,7 @@ public class WorkerImageServiceTest extends DatabaseTestBase {
                 .build();
         WorkerImage savedNewImage  = workerImageService.saveWorkerImage(newImage);
 
-        workerImageService.setActiveVersion(savedNewImage.getId());
+        workerImageService.setActiveVersion(savedNewImage.getId() , savedNewImage.getImageName());
 
         //verify
         WorkerImage currentActive = workerImageService.fetchActiveImage("test");

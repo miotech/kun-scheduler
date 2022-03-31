@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import lombok.Builder;
-import lombok.Data;
 
 @Builder
 public class Dataset {

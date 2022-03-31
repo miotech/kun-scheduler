@@ -1,25 +1,30 @@
 package com.miotech.kun.dataquality.web.event;
 
-import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
+import com.miotech.kun.dataquality.core.hooks.DataQualityCheckHook;
+import com.miotech.kun.dataquality.core.model.DataQualityContext;
+import com.miotech.kun.dataquality.core.model.OperatorHookParams;
+import com.miotech.kun.dataquality.core.model.ValidateResult;
 import com.miotech.kun.dataquality.web.model.entity.CaseRun;
-import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
-import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
-import com.miotech.kun.dataquality.web.service.TaskAttemptFinishedEventHandlerManager;
-import com.miotech.kun.dataquality.web.service.WorkflowService;
+import com.miotech.kun.dataquality.web.service.*;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -30,7 +35,7 @@ public class Subscriber {
     private EventSubscriber workflowEventSubscriber;
 
     @Autowired
-    DataQualityRepository dataQualityRepository;
+    DataQualityService dataQualityService;
 
     @Autowired
     WorkflowService workflowService;
@@ -44,6 +49,18 @@ public class Subscriber {
 
     @Autowired
     private TaskAttemptFinishedEventHandlerManager taskAttemptFinishedEventHandlerManager;
+
+    @Autowired
+    private MetadataClient metadataClient;
+
+    @Autowired
+    private OperatorHookParams operatorHookParams;
+
+    @Value("${data-quality.hooks.operator-check-hook.classname}")
+    private String operatorHookClass;
+
+    @Autowired
+    private DataQualityCheckHook dataQualityCheckHook;
 
     @PostConstruct
     private void onDispatcherConstructed() {
@@ -67,31 +84,14 @@ public class Subscriber {
 
     private void handleTaskCheckEvent(TaskAttemptCheckEvent taskAttemptCheckEvent) {
         Long taskAttemptId = taskAttemptCheckEvent.getTaskAttemptId();
+        Long taskRunId = taskAttemptCheckEvent.getTaskRunId();
         log.info("start dq test for task attempt: " + taskAttemptId);
         List<Long> datasetIds = taskAttemptCheckEvent.getOutDataSetIds();
-        if (datasetIds.isEmpty()) {
-            return;
+        int caseRunNum = executeDatasetsTestCase(datasetIds, taskRunId, taskAttemptId);
+        //no case to run , is considered to be success
+        if (caseRunNum == 0) {
+            sendDataQualityEvent(taskRunId, true);
         }
-        log.info("get dq cases for datasetIds: " + taskAttemptCheckEvent.getOutDataSetIds());
-        List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
-        if (caseIds.isEmpty()) {
-            log.debug("no test case for taskAttemptId = {} ",taskAttemptId);
-            CheckResultEvent event = new CheckResultEvent(taskAttemptCheckEvent.getTaskRunId(), true);
-            sendDataQualityEvent(event);
-            return;
-        }
-        log.info("run dq test case: " + caseIds);
-        List<Long> caseRunIdList = workflowService.executeTasks(caseIds);
-        List<CaseRun> caseRunList = new ArrayList<>();
-        for (int i = 0; i < caseRunIdList.size(); i++) {
-            CaseRun caseRun = new CaseRun();
-            caseRun.setCaseRunId(caseRunIdList.get(i));
-            caseRun.setTaskRunId(taskAttemptCheckEvent.getTaskRunId());
-            caseRun.setTaskAttemptId(taskAttemptId);
-            caseRun.setCaseId(caseIds.get(i));
-            caseRunList.add(caseRun);
-        }
-        dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);
     }
 
     private void handleTaskRunCreatedEvent(TaskRunCreatedEvent event) {
@@ -99,8 +99,46 @@ public class Subscriber {
         abnormalDatasetService.handleTaskRunCreatedEvent(event);
     }
 
-    private void sendDataQualityEvent(CheckResultEvent event) {
+    private void sendDataQualityEvent(Long taskRunId, Boolean checkStatus) {
+        CheckResultEvent event = new CheckResultEvent(taskRunId, checkStatus);
         log.info("send checkResult event = {} to infra", event);
         publisher.publish(event);
+    }
+
+    private Integer executeDatasetsTestCase(List<Long> datasetIds, Long taskRunId, Long taskAttemptId) {
+        if (datasetIds == null) {
+            return 0;
+        }
+        int caseRunNum = 0;
+        List<Dataset> datasetList = metadataClient.fetchDatasetsByIds(datasetIds);
+        for (Dataset dataset : datasetList) {
+            Long datasetId = dataset.getGid();
+            List<Long> caseIds = dataQualityService.getWorkflowTasksByDatasetId(datasetId); // set dataset and version to task config // run dataquality task with config }
+            Map<String, Object> taskConfig = new HashMap<>();
+            taskConfig.put("validate-dataset", JSONUtils.toJsonString(dataset));
+            taskConfig.put("operator-hook-class", operatorHookClass);
+            taskConfig.put("operator-hook-params", JSONUtils.toJsonString(operatorHookParams.getParams()));
+            if (caseIds.size() == 0) {
+                DataQualityContext context = new DataQualityContext(dataset, null, ValidateResult.SUCCESS);
+                dataQualityCheckHook.afterAll(context);
+            }
+            log.info("going to execute cases : {} for dataset : {} ", caseIds, datasetId);
+            List<Long> caseRunIdList = workflowService.executeTasks(caseIds, taskConfig);
+            List<CaseRun> caseRunList = new ArrayList<>();
+            for (int i = 0; i < caseRunIdList.size(); i++) {
+                CaseRun caseRun = new CaseRun();
+                caseRun.setValidateDatasetId(datasetId);
+                caseRun.setCaseRunId(caseRunIdList.get(i));
+                caseRun.setTaskRunId(taskRunId);
+                caseRun.setTaskAttemptId(taskAttemptId);
+                caseRun.setCaseId(caseIds.get(i));
+                caseRunList.add(caseRun);
+            }
+            caseRunNum += caseRunList.size();
+            log.info("sava case : {} to database", caseRunNum);
+            dataQualityService.insertCaseRunWithTaskRun(caseRunList);
+        }
+        return caseRunNum;
+
     }
 }

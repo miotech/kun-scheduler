@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
+import com.miotech.kun.commons.utils.HdfsFileSystem;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;

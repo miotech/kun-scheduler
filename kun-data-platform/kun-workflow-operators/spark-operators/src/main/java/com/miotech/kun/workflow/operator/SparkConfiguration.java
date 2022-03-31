@@ -70,6 +70,13 @@ public class SparkConfiguration {
     public static final String SPARK_SQL_JAR_DEFAULT_VALUE = "${ dataplatform.spark.sql.jar }";
     public static final String SPARK_ENTRY_CLASS = "class";
 
+    //data lake
+    public static final String SPARK_DATA_LAKE_PACKAGES = "spark.datalake.packges";
+    public static final String SPARK_DATA_LAKE_DEFAULT_PACKAGES = "${ dataplatform.datalake.packges }";
+    public static final String SPARK_SERIALIZER = "spark.serializer";
+    public static final String SPARK_DEFAULT_SERIALIZER = "${ dataplatform.spark.serializer }";
+    public static final String SPARK_SQL_EXTENSIONS = "spark.sql.extensions";
+    public static final String SPARK_DEFAULT_SQL_EXTENSIONS = "${ dataplatform.spark.sql.extensions }";
 
     public static final String SPARK_YARN_HOST = "yarnHost";
     public static final String SPARK_BASE_COMMAND = "sparkBaseCmd";

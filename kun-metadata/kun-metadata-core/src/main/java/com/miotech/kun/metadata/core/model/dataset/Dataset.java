@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.core.model.dataset;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -18,7 +20,7 @@ public class Dataset implements Serializable {
 
     private final DataStore dataStore;
 
-    private final boolean deleted;
+    private final Boolean deleted;
 
     private final List<DatasetField> fields;
 
@@ -40,7 +42,7 @@ public class Dataset implements Serializable {
         return dataStore;
     }
 
-    public boolean isDeleted() {
+    public Boolean isDeleted() {
         return deleted;
     }
 
@@ -67,8 +69,15 @@ public class Dataset implements Serializable {
         return dataStore.getDatabaseName();
     }
 
-    public Dataset(Long gid, Long datasourceId, String name, DataStore dataStore, boolean deleted,
-                   List<DatasetField> fields, List<FieldStatistics> fieldStatistics, TableStatistics tableStatistics) {
+    @JsonCreator
+    public Dataset(@JsonProperty("gid") Long gid,
+                   @JsonProperty("datasourceId") Long datasourceId,
+                   @JsonProperty("name") String name,
+                   @JsonProperty("dataStore") DataStore dataStore,
+                   @JsonProperty("deleted") Boolean deleted,
+                   @JsonProperty("fields") List<DatasetField> fields,
+                   @JsonProperty("fieldStatistics") List<FieldStatistics> fieldStatistics,
+                   @JsonProperty("tableStatistics") TableStatistics tableStatistics) {
         this.gid = gid;
         this.datasourceId = datasourceId;
         this.name = name;
@@ -95,12 +104,23 @@ public class Dataset implements Serializable {
                 .withTableStatistics(tableStatistics);
     }
 
+    @Override
+    public String toString() {
+        return "Dataset{" +
+                "gid=" + gid +
+                ", datasourceId=" + datasourceId +
+                ", name='" + name + '\'' +
+                ", dataStore=" + dataStore +
+                ", deleted=" + deleted +
+                '}';
+    }
+
     public static final class Builder {
         private Long gid;
         private Long datasourceId;
         private String name;
         private DataStore dataStore;
-        private boolean deleted;
+        private Boolean deleted;
         private List<DatasetField> fields;
         private List<FieldStatistics> fieldStatistics;
         private TableStatistics tableStatistics;
@@ -128,7 +148,7 @@ public class Dataset implements Serializable {
             return this;
         }
 
-        public Builder withDeleted(boolean deleted) {
+        public Builder withDeleted(Boolean deleted) {
             this.deleted = deleted;
             return this;
         }

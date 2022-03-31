@@ -13,6 +13,7 @@ import com.miotech.kun.dataquality.core.expectation.Dataset;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.bo.ExpectationsRequest;
 import com.miotech.kun.dataquality.web.model.entity.*;
@@ -39,7 +40,7 @@ public class ExpectationDao {
     public static final String CASE_RUN_TABLE = "kun_dq_case_run";
     public static final String CASE_RUN_MODEL = "caserun";
     private static final List<String> COLUMNS = ImmutableList.of("id", "name", "types", "description", "method", "metrics_config", "assertion_config", "trigger",
-            "dataset_gid", "task_id", "is_blocking", "create_time", "update_time", "create_user", "update_user");
+            "dataset_gid", "task_id", "case_type", "create_time", "update_time", "create_user", "update_user");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -64,7 +65,7 @@ public class ExpectationDao {
                 spec.getTrigger().name(),
                 spec.getDataset().getGid(),
                 spec.getTaskId(),
-                spec.isBlocking(),
+                spec.getCaseType().name(),
                 spec.getCreateTime(),
                 spec.getUpdateTime(),
                 spec.getCreateUser(),
@@ -104,7 +105,7 @@ public class ExpectationDao {
                         "metrics_config",
                         "assertion_config",
                         "trigger",
-                        "is_blocking",
+                        "case_type",
                         "update_time",
                         "update_user")
                 .asPrepared()
@@ -118,7 +119,7 @@ public class ExpectationDao {
                 JSONUtils.toJsonString(expectation.getMetrics()),
                 JSONUtils.toJsonString(expectation.getAssertion()),
                 expectation.getTrigger().name(),
-                expectation.isBlocking(),
+                expectation.getCaseType().name(),
                 expectation.getUpdateTime(),
                 expectation.getUpdateUser(),
                 id);
@@ -233,7 +234,7 @@ public class ExpectationDao {
 
     public ExpectationBasic fetchCaseBasicByTaskId(Long taskId) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("id", "name", "task_id", "is_blocking")
+                .select("id", "name", "task_id", "case_type")
                 .from(TABLE_NAME)
                 .where("task_id = ?")
                 .getSQL();
@@ -244,7 +245,7 @@ public class ExpectationDao {
                 expectationBasic.setId(rs.getLong("id"));
                 expectationBasic.setName(rs.getString("name"));
                 expectationBasic.setTaskId(rs.getLong("task_id"));
-                expectationBasic.setIsBlocking(rs.getBoolean("is_blocking"));
+                expectationBasic.setCaseType(CaseType.valueOf(rs.getString("case_type")));
             } else {
                 return null;
             }
@@ -252,26 +253,20 @@ public class ExpectationDao {
         }, taskId);
     }
 
-    public DataQualityStatus validateTaskAttemptTestCase(Long taskAttemptId) {
+    public List<CaseResult> fetchValidateResult(Long taskAttemptId, List<CaseType> caseTypeList) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("status")
+                .select("status","case_type")
                 .from(CASE_RUN_TABLE, CASE_RUN_MODEL)
                 .join("inner", "kun_dq_expectation", "kde")
                 .on("kde.id = " + CASE_RUN_MODEL + ".case_id")
-                .where(CASE_RUN_MODEL + ".task_attempt_id = ? and kde.is_blocking = ?")
+                .where(CASE_RUN_MODEL + ".task_attempt_id = ? and kde.case_type in ( " + StringUtils.repeat("?", ",", caseTypeList.size()) + " )" +
+                        "and kde.dataset_gid = " + CASE_RUN_MODEL + ".validate_dataset_id")
                 .asPrepared()
                 .getSQL();
-        List<String> caseRunStatusList = jdbcTemplate.queryForList(sql, String.class, taskAttemptId, true);
-        boolean allSuccess = true;
-        for (String caseRunStatus : caseRunStatusList) {
-            if (caseRunStatus.equals(DataQualityStatus.FAILED.name())) {
-                return DataQualityStatus.FAILED;
-            }
-            if (caseRunStatus.equals(DataQualityStatus.CREATED.name())) {
-                allSuccess = false;
-            }
-        }
-        return allSuccess ? DataQualityStatus.SUCCESS : DataQualityStatus.CREATED;
+        List<Object> params = new ArrayList<>();
+        params.add(taskAttemptId);
+        params.addAll(caseTypeList.stream().map(Enum::name).collect(Collectors.toList()));
+        return jdbcTemplate.query(sql, CheckResultMapper.INSTANCE, params.toArray());
     }
 
     public ExpectationBasics getExpectationBasics(ExpectationsRequest request) {
@@ -282,7 +277,7 @@ public class ExpectationDao {
                         "kde.types as case_types",
                         "kde.description as case_desc",
                         "kde.task_id as case_task_id",
-                        "kde.is_blocking as case_is_blocking",
+                        "kde.case_type as case_case_type",
                         "kde.create_time as create_time",
                         "kde.update_time as update_time",
                         "kde.dataset_gid as primary_dataset_id")
@@ -311,7 +306,7 @@ public class ExpectationDao {
                 expectationBasic.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
                 expectationBasic.setDescription(rs.getString("case_desc"));
                 expectationBasic.setTaskId(rs.getLong("case_task_id"));
-                expectationBasic.setIsBlocking(rs.getBoolean("case_is_blocking"));
+                expectationBasic.setCaseType(CaseType.valueOf(rs.getString("case_case_type")));
                 expectationBasic.setCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")));
                 expectationBasic.setUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")));
                 Long primaryDatasetId = rs.getLong("primary_dataset_id");
@@ -363,12 +358,22 @@ public class ExpectationDao {
                     .withTrigger(Expectation.ExpectationTrigger.valueOf(rs.getString("trigger")))
                     .withDataset(Dataset.builder().gid(rs.getLong("dataset_gid")).build())
                     .withTaskId(rs.getLong("task_id"))
-                    .withIsBlocking(rs.getBoolean("is_blocking"))
+                    .withCaseType(CaseType.valueOf(rs.getString("case_type")))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
                     .withCreateUser(rs.getString("create_user"))
                     .withUpdateUser(rs.getString("update_user"))
                     .build();
+        }
+    }
+
+    public static class CheckResultMapper implements RowMapper<CaseResult>{
+
+        public static final CheckResultMapper INSTANCE = new CheckResultMapper();
+
+        @Override
+        public CaseResult mapRow(ResultSet rs, int rowNum) throws SQLException {
+            return new CaseResult(DataQualityStatus.valueOf(rs.getString("status")),CaseType.valueOf(rs.getString("case_type")));
         }
     }
 

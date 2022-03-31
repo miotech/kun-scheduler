@@ -19,7 +19,6 @@ public class FallAssertion extends VolatilityAssertion {
         double expected = Double.parseDouble(getExpectedValue());
         double current = Double.parseDouble(currentValue.getValue());
         double baseline = Double.parseDouble(benchmarkValue.getValue());
-
         double volatility = ((current - baseline) / baseline) * 100;
         return volatility <= 0 && volatility <= expected;
     }

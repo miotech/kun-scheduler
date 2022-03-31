@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.commons.utils.CustomDateTimeDeserializer;
 import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
@@ -37,6 +38,6 @@ public class ExpectationBasic {
 
     private Boolean isPrimary;
 
-    private Boolean isBlocking;
+    private CaseType caseType;
 
 }

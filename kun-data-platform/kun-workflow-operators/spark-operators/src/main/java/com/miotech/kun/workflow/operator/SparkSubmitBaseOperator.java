@@ -5,6 +5,11 @@ import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.miotech.kun.commons.utils.HdfsFileSystem;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
+import org.apache.hadoop.conf.Configuration;
+import java.io.IOException;
 
 import java.util.*;
 
@@ -14,6 +19,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkSubmitBaseOperator.class);
     private SparkOperatorUtils sparkOperatorUtils = new SparkOperatorUtils();
+    private final String WAREHOUSE_URL = "warehouseUrl";//todo read from config file
 
 
     public abstract List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs);
@@ -45,6 +51,9 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
         String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
         String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
+        String configDataLakePackages = SparkConfiguration.getString(context, SPARK_DATA_LAKE_PACKAGES);
+        String sparkSqlExtensions = SparkConfiguration.getString(context, SPARK_SQL_EXTENSIONS);
+        String sparkSerializer = SparkConfiguration.getString(context, SPARK_SERIALIZER);
 
         List<String> jars = new ArrayList<>();
         if (sparkConf.containsKey("spark.jars")) {
@@ -54,6 +63,16 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
             jars.add(configLineageJarPath);
             sparkConf.put("spark.sql.queryExecutionListeners", "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
         }
+        if (!Strings.isNullOrEmpty(configDataLakePackages)) {
+            jars.addAll(Arrays.asList(configDataLakePackages.split(",")));
+        }
+        if (!Strings.isNullOrEmpty(sparkSqlExtensions)) {
+            sparkConf.put(SPARK_SQL_EXTENSIONS, sparkSqlExtensions);
+        }
+        if (!Strings.isNullOrEmpty(sparkSerializer)) {
+            sparkConf.put(SPARK_SERIALIZER, sparkSerializer);
+        }
+
         if (!jars.isEmpty()) {
             sparkConf.put("spark.jars", String.join(",", jars));
         }
@@ -105,14 +124,85 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         if (finalStatus) {
             try {
                 SparkOperatorUtils.waitForSeconds(10);
+                logger.debug("going to analysis lineage...");
                 TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
-                if (taskAttemptReport != null)
+                if (taskAttemptReport != null) {
                     report(taskAttemptReport);
+                }
+                logger.debug("point output dataset to validated version if necessary");
+                pointToLatestValidatedVersion(taskAttemptReport.getOutlets(), context.getConfig());
             } catch (Exception e) {
-                logger.error("Failed to parse lineage: {}", e);
+                logger.error("Failed after finish: {}", e);
             }
         }
         return finalStatus;
+    }
+
+    private void pointToLatestValidatedVersion(List<DataStore> outputs, Config config) throws Exception {
+        HdfsFileSystem hdfsFileSystem = initFileSystem(config);
+        for (DataStore output : outputs) {
+            if (!output.getType().equals(DataStoreType.HIVE_TABLE)) {
+                continue;
+            }
+            String database = output.getDatabaseName();
+            String table = output.getName();
+            logger.debug("going to get latest version for database : {}, table :{}", database, table);
+            String latestVersion = getLatestVersion(hdfsFileSystem, database, table);
+            if (latestVersion != null) {
+                logger.debug("database: {} table : {} latest version is {}", database, table);
+                pointToValidatedVersion(hdfsFileSystem, database, table, latestVersion);
+            }
+        }
+    }
+
+    private HdfsFileSystem initFileSystem(Config config) throws Exception {
+        logger.debug("config is {}", config);
+        Configuration conf = new Configuration();
+
+        String configS3AccessKey = config.getString(CONF_S3_ACCESS_KEY);
+        if (!Strings.isNullOrEmpty(configS3AccessKey)) {
+            conf.set("fs.s3a.access.key", configS3AccessKey);
+        }
+        String configS3SecretKey = config.getString(CONF_S3_SECRET_KEY);
+        if (!Strings.isNullOrEmpty(configS3SecretKey)) {
+            conf.set("fs.s3a.secret.key", configS3SecretKey);
+        }
+
+        conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+
+        return new HdfsFileSystem(WAREHOUSE_URL, conf);
+    }
+
+    //read latest validated commit from .hooide
+    private String getLatestVersion(HdfsFileSystem hdfsFileSystem, String database, String table) throws IOException {
+        String path = "/" + database + "/" + table + "/.hoodie";
+        logger.debug("getting latest version from path :{} ", path);
+        List<String> files = hdfsFileSystem.getFilesInDir(path);
+        String latestVersion = null;
+        for (String fileName : files) {
+            String suffix = fileName.substring(fileName.lastIndexOf(".") + 1);
+            if (suffix.equals("commit")) {
+                String version = getVersion(fileName);
+                if (latestVersion == null || version.compareTo(latestVersion) > 0) {
+                    latestVersion = version;
+                }
+            }
+        }
+        return latestVersion;
+    }
+
+    private String getVersion(String file) {
+        logger.debug("commit  file is : {}", file);
+        return file.substring(0, file.lastIndexOf("."));
+    }
+
+    private void pointToValidatedVersion(HdfsFileSystem hdfsFileSystem, String database, String table, String version) throws IOException {
+        String path = "/" + database + "/" + table + "/.hoodie";
+        String latest = version + ".commit";
+        String validating = version + ".validating";
+        logger.debug("rename {} to {}", latest, validating);
+        hdfsFileSystem.renameFiles(path + "/" + latest, path + "/" + validating);
     }
 
     @Override

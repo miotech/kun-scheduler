@@ -1,5 +1,6 @@
 package com.miotech.kun.dataquality.web.model.entity;
 
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.web.model.bo.AssertionRequest;
 import com.miotech.kun.dataquality.web.model.bo.MetricsRequest;
 import lombok.Data;
@@ -39,7 +40,7 @@ public class ExpectationVO extends ExpectationBasic {
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
         private Boolean isPrimary;
-        private Boolean isBlocking;
+        private CaseType caseType;
 
         private Builder() {
         }
@@ -104,8 +105,8 @@ public class ExpectationVO extends ExpectationBasic {
             return this;
         }
 
-        public Builder withIsBlocking(Boolean isBlocking) {
-            this.isBlocking = isBlocking;
+        public Builder withCaseType(CaseType caseType) {
+            this.caseType = caseType;
             return this;
         }
 
@@ -123,7 +124,7 @@ public class ExpectationVO extends ExpectationBasic {
             expectationVO.setCreateTime(createTime);
             expectationVO.setUpdateTime(updateTime);
             expectationVO.setIsPrimary(isPrimary);
-            expectationVO.setIsBlocking(isBlocking);
+            expectationVO.setCaseType(caseType);
             return expectationVO;
         }
     }

@@ -34,10 +34,7 @@ public class DataQualityRepository extends BaseRepository {
 
     public static final String CASE_RUN_MODEL = "caserun";
 
-    public static final List<String> caseRunCols = ImmutableList.of("case_run_id", "task_run_id", "case_id", "status", "task_attempt_id");
-
-    public static final List<String> caseCols = ImmutableList.of("id", "name", "description", "task_id", "template_id", "execution_string"
-            , "types", "create_user", "create_time", "update_user", "update_time", "primary_dataset_id", "is_blocking");
+    public static final List<String> caseRunCols = ImmutableList.of("case_run_id", "task_run_id", "case_id", "status", "task_attempt_id", "validate_version", "validate_dataset_id");
 
 
     @Autowired
@@ -114,6 +111,8 @@ public class DataQualityRepository extends BaseRepository {
                 ps.setLong(3, caseRunList.get(i).getCaseId());
                 ps.setString(4, DataQualityStatus.CREATED.name());
                 ps.setLong(5, caseRunList.get(i).getTaskAttemptId());
+                ps.setString(6, caseRunList.get(i).getValidateVersion());
+                ps.setLong(7, caseRunList.get(i).getValidateDatasetId());
             }
 
             @Override
@@ -125,6 +124,10 @@ public class DataQualityRepository extends BaseRepository {
 
     public void updateCaseRunStatus(long caseRunId, boolean status) {
         DataQualityStatus dataQualityStatus = status ? DataQualityStatus.SUCCESS : DataQualityStatus.FAILED;
+        updateCaseRunStatus(caseRunId,dataQualityStatus);
+    }
+
+    public void updateCaseRunStatus(long caseRunId, DataQualityStatus dataQualityStatus) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(CASE_RUN_TABLE)
                 .set("status")
@@ -192,6 +195,20 @@ public class DataQualityRepository extends BaseRepository {
         }, datasetIds.toArray());
     }
 
+    public List<Long> getWorkflowTasksByDatasetId(Long datasetId) {
+
+        String sql = "select distinct(case_id) from kun_dq_case_associated_dataset where dataset_id = ?";
+
+        return jdbcTemplate.query(sql, rs -> {
+            List<Long> caseIds = new ArrayList<>();
+            while (rs.next()) {
+                Long caseId = rs.getLong("case_id");
+                caseIds.add(caseId);
+            }
+            return caseIds;
+        }, datasetId);
+    }
+
 
     public static class CaseRunMapper implements RowMapper<CaseRun> {
 
@@ -205,7 +222,8 @@ public class DataQualityRepository extends BaseRepository {
             caseRun.setCaseRunId(rs.getLong("case_run_id"));
             caseRun.setTaskRunId(rs.getLong("task_run_id"));
             caseRun.setTaskAttemptId(rs.getLong("task_attempt_id"));
-            caseRun.setStatus(rs.getString("status"));
+            caseRun.setStatus(DataQualityStatus.valueOf(rs.getString("status")));
+            caseRun.setValidateDatasetId(rs.getLong("validate_dataset_id"));
             return caseRun;
         }
     }

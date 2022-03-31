@@ -3,6 +3,7 @@ package com.miotech.kun.dataquality;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.dataquality.mock.MockDatasetBasicFactory;
@@ -10,18 +11,19 @@ import com.miotech.kun.dataquality.mock.MockExpectationFactory;
 import com.miotech.kun.dataquality.mock.MockValidationResultFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
+import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.bo.ExpectationsRequest;
-import com.miotech.kun.dataquality.web.model.entity.DataQualityHistoryRecords;
-import com.miotech.kun.dataquality.web.model.entity.DatasetBasic;
-import com.miotech.kun.dataquality.web.model.entity.ExpectationBasic;
-import com.miotech.kun.dataquality.web.model.entity.ExpectationBasics;
+import com.miotech.kun.dataquality.web.model.entity.*;
+import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,6 +40,9 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @SpyBean
     private DatasetRepository datasetRepository;
+
+    @Autowired
+    private DataQualityRepository dataQualityRepository;
 
     @Test
     public void testCreateThenFetch() {
@@ -158,6 +163,52 @@ public class ExpectationDaoTest extends DataQualityTestBase {
         assertThat(fetched.getDataset().getGid(), is(expectation.getDataset().getGid()));
         assertThat(fetched.getMetrics().getName(), is(expectation.getMetrics().getName()));
         assertThat(fetched.getAssertion().getExpectedValue(), is(expectation.getAssertion().getExpectedValue()));
+    }
+
+    @Test
+    public void fetchValidateResult_should_only_contains_specified_type() {
+        //prepare
+        Long taskRunId = 1l;
+        Long taskAttemptId = 2l;
+        List<CaseRun> caseRunList = new ArrayList<>();
+        //prepare three case
+        //1:type:block 2: type:using_latest 3:skip
+        Expectation expectation1 = MockExpectationFactory.create()
+                .cloneBuilder()
+                .withCaseType(CaseType.BLOCK)
+                .build();
+        Expectation expectation2 = MockExpectationFactory.create()
+                .cloneBuilder()
+                .withCaseType(CaseType.FINAL_SUCCESS)
+                .build();
+        Expectation expectation3 = MockExpectationFactory.create()
+                .cloneBuilder()
+                .withCaseType(CaseType.SKIP)
+                .build();
+        List<Expectation> expectationList = Lists.newArrayList(expectation1,expectation2,expectation3);
+        for (Expectation expectation : expectationList){
+            expectationDao.create(expectation);
+            CaseRun caseRun = new CaseRun();
+            caseRun.setCaseRunId(IdGenerator.getInstance().nextId());
+            caseRun.setTaskRunId(taskRunId);
+            caseRun.setTaskAttemptId(taskAttemptId);
+            caseRun.setValidateVersion("V1");
+            caseRun.setCaseId(expectation.getExpectationId());
+            caseRun.setValidateDatasetId(expectation.getDataset().getGid());
+            caseRun.setStatus(DataQualityStatus.SUCCESS);
+            caseRunList.add(caseRun);
+        }
+
+
+        dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);
+
+        List<CaseResult> caseResultList = expectationDao.fetchValidateResult(taskAttemptId, org.assertj.core.util.Lists.newArrayList(CaseType.BLOCK,CaseType.FINAL_SUCCESS));
+
+        //verify
+        assertThat(caseResultList.size(), is(2));
+        List<CaseType> caseTypeList = caseResultList.stream().map(CaseResult::getCaseType).collect(Collectors.toList());
+        assertThat(caseTypeList,containsInAnyOrder(CaseType.BLOCK,CaseType.FINAL_SUCCESS));
+
     }
 
 }

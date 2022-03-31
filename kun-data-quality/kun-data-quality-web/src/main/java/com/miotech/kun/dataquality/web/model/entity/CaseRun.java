@@ -1,5 +1,6 @@
 package com.miotech.kun.dataquality.web.model.entity;
 
+import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import lombok.Data;
 
 
@@ -14,7 +15,11 @@ public class CaseRun {
 
     private Long caseId;
 
-    private String status;
+    private DataQualityStatus status;
 
     private Long taskAttemptId;
+
+    private Long validateDatasetId;
+
+    private String validateVersion;
 }

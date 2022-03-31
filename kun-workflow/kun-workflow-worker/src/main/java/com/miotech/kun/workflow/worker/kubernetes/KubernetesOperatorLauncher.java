@@ -153,7 +153,7 @@ public class KubernetesOperatorLauncher {
                     try {
                         OperatorReport operatorReport = new OperatorReport();
                         operatorReport.copyFromReport(operator.getReport().get());
-                        processReport(command.getTaskRunId(), operatorReport);
+                        onSuccess(command.getTaskRunId(), operatorReport);
                     } catch (Throwable e) {
                         logger.error("process operator report failed", e);
                     }
@@ -200,7 +200,7 @@ public class KubernetesOperatorLauncher {
     }
 
 
-    private void processReport(Long taskRunId, OperatorReport report) {
+    private void onSuccess(Long taskRunId, OperatorReport report) {
         logger.debug("Update task's inlets/outlets. taskRunId={}, inlets={}, outlets={}",
                 taskRunId, report.getInlets(), report.getOutlets());
         taskRunDao.updateTaskRunInletsOutlets(taskRunId,
@@ -209,5 +209,6 @@ public class KubernetesOperatorLauncher {
         lineageService.updateTaskLineage(taskRun.getTask(), report.getInlets(), report.getOutlets());
 
     }
+
 
 }

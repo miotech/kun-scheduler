@@ -5,7 +5,7 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.lineage.*;
-import com.miotech.kun.workflow.operator.HdfsFileSystem;
+import com.miotech.kun.commons.utils.HdfsFileSystem;
 import com.miotech.kun.workflow.operator.SparkConfiguration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -147,6 +147,7 @@ public class SparkOperatorResolver implements Resolver {
         switch (type) {
             case "hive":
             case "parquet":
+            case "hudi":
                 dataStore = toHive(splineSource);
                 break;
             case "mongodb":

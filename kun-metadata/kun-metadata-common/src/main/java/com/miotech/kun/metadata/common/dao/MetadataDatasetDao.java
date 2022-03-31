@@ -72,15 +72,7 @@ public class MetadataDatasetDao {
      * @return dataset wrapped by optional object
      */
     public Optional<Dataset> fetchDatasetByGid(long gid) {
-        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
-        String sql = sqlBuilder.select(DATASET_COLUMNS)
-                .from(DATASET_TABLE_NAME)
-                .where("gid = ?")
-                .getSQL();
-        logger.debug("Fetching dataset with gid: {}", gid);
-        logger.debug("Dataset query sql: {}", sql);
-        Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, gid);
-        logger.debug("Fetched dataset: {} with gid = {}", fetchedDataset, gid);
+        Dataset fetchedDataset = fetchBasicDatasetByGid(gid);
 
         if (fetchedDataset == null) {
             return Optional.ofNullable(null);
@@ -97,6 +89,34 @@ public class MetadataDatasetDao {
                 .withFields(fields).build();
 
         return Optional.ofNullable(dataset);
+    }
+
+    public Dataset fetchBasicDatasetByGid(long gid) {
+        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
+        String sql = sqlBuilder.select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("gid = ?")
+                .getSQL();
+        logger.debug("Fetching dataset with gid: {}", gid);
+        logger.debug("Dataset query sql: {}", sql);
+        Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, gid);
+        logger.debug("Fetched dataset: {} with gid = {}", fetchedDataset, gid);
+        return fetchedDataset;
+    }
+
+    public List<Dataset> fetchBasicDatasetByGids(List<Long> gids) {
+        if(gids.size() == 0){
+            return new ArrayList<>();
+        }
+        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
+        String sql = sqlBuilder.select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("gid in (" + StringUtils.repeat("?", ",", gids.size()) + " )")
+                .getSQL();
+        logger.debug("Fetching dataset with gids: {}", gids);
+        logger.debug("Dataset query sql: {}", sql);
+        List<Dataset> fetchedDatasets = dbOperator.fetchAll(sql, MetadataDatasetMapper.INSTANCE, gids.toArray());
+        return fetchedDatasets;
     }
 
     public Dataset createDataset(Dataset dataset) {

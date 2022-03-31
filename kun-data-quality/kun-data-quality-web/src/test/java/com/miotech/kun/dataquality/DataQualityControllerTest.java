@@ -95,7 +95,6 @@ public class DataQualityControllerTest extends DataQualityTestBase {
 
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create();
         doReturn(datasetBasic).when(datasetRepository).findBasic(expectationRequest.getMetrics().getDatasetGid());
-
         String findByIdUrl = "/kun/api/v1/data-quality/" + expectationId;
         MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(findByIdUrl).contentType(MediaType.APPLICATION_JSON)).andReturn();
         MockHttpServletResponse response = mvcResult.getResponse();
@@ -143,7 +142,7 @@ public class DataQualityControllerTest extends DataQualityTestBase {
         assertThat(expectationBasic.getName(), is(expectationRequest.getName()));
         assertThat(expectationBasic.getTypes(), is(expectationRequest.getTypes()));
         assertThat(expectationBasic.getDescription(), is(expectationRequest.getDescription()));
-        assertThat(expectationBasic.getIsBlocking(), is(expectationRequest.isBlocking()));
+        assertThat(expectationBasic.getCaseType(), is(expectationRequest.getCaseType()));
     }
 
     @Test

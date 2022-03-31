@@ -12,6 +12,7 @@ dependencies {
         exclude group: 'xerces', module: 'xerces'
         exclude group: 'xerces', module: 'xercesImpl'
     }
+    implementation 'io.netty:netty-all:4.1.75.Final'
     implementation "org.mock-server:mockserver-client-java:3.10.8"
     implementation "org.testcontainers:testcontainers"
     implementation "org.testcontainers:postgresql"

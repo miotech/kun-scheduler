@@ -231,6 +231,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                 sendCheckSuccessEvent(taskAttempt.getId());
                 break;
             case WAIT_EVENT:
+            case WAIT_EVENT_PASS:
                 break;
             default:
                 throw new IllegalArgumentException("illegal check type");

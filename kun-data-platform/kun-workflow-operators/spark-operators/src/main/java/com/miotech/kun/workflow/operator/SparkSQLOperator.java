@@ -83,7 +83,10 @@ public class SparkSQLOperator extends KunOperator {
                 .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
                 .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY)
                 .define(SPARK_YARN_HOST, ConfigDef.Type.STRING, SPARK_YARN_HOST_DEFAULT_VALUE, true, "Yarn host to submit application, in the format `ip:port`", SPARK_YARN_HOST)
-                .define(SPARK_APPLICATION, ConfigDef.Type.STRING, SPARK_SQL_JAR_DEFAULT_VALUE, true, "application class name for java application", SPARK_APPLICATION);
+                .define(SPARK_APPLICATION, ConfigDef.Type.STRING, SPARK_SQL_JAR_DEFAULT_VALUE, true, "application class name for java application", SPARK_APPLICATION)
+                .define(SPARK_DATA_LAKE_PACKAGES, ConfigDef.Type.STRING, SPARK_DATA_LAKE_DEFAULT_PACKAGES, true, "data lake dependencies", SPARK_DATA_LAKE_PACKAGES)
+                .define(SPARK_SQL_EXTENSIONS, ConfigDef.Type.STRING, SPARK_DEFAULT_SQL_EXTENSIONS, true, "spark sql extensions", SPARK_SQL_EXTENSIONS)
+                .define(SPARK_SERIALIZER, ConfigDef.Type.STRING, SPARK_DEFAULT_SERIALIZER, true, "spark serializer", SPARK_SERIALIZER);
     }
 
     @Override
@@ -107,7 +110,10 @@ public class SparkSQLOperator extends KunOperator {
                 .addConfig(CONF_LINEAGE_OUTPUT_PATH, config.getString(CONF_LINEAGE_OUTPUT_PATH))
                 .addConfig(CONF_LINEAGE_JAR_PATH, config.getString(CONF_LINEAGE_JAR_PATH))
                 .addConfig(CONF_S3_ACCESS_KEY, config.getString(CONF_S3_ACCESS_KEY))
-                .addConfig(CONF_S3_SECRET_KEY, config.getString(CONF_S3_SECRET_KEY));
+                .addConfig(CONF_S3_SECRET_KEY, config.getString(CONF_S3_SECRET_KEY))
+                .addConfig(SPARK_DATA_LAKE_PACKAGES, config.getString(SPARK_DATA_LAKE_PACKAGES))
+                .addConfig(SPARK_SQL_EXTENSIONS, config.getString(SPARK_SQL_EXTENSIONS))
+                .addConfig(SPARK_SERIALIZER, config.getString(SPARK_SERIALIZER));
         return builder.build();
     }
 

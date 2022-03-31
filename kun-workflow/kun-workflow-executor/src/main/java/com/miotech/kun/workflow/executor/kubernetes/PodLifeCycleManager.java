@@ -66,7 +66,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
                 .build();
         List<WorkerImage> workerImageList = workerImageService.fetchWorkerImage(imageFilter).getRecords();
         if(workerImageList.size() > 0){
-            workerImageService.setActiveVersion(workerImageList.get(0).getId());
+            WorkerImage workerImage = workerImageList.get(0);
+            workerImageService.setActiveVersion(workerImage.getId(),workerImage.getImageName());
         }
     }
 
