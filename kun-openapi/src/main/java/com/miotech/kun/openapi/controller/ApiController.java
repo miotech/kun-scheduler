@@ -1,11 +1,8 @@
 package com.miotech.kun.openapi.controller;
 
-import com.miotech.kun.common.model.PageRequest;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.commons.utils.JwtUtils;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
-import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionVO;
 import com.miotech.kun.openapi.model.*;
 import com.miotech.kun.openapi.service.ApiService;
 import com.miotech.kun.workflow.client.model.PaginationResult;
@@ -79,5 +76,11 @@ public class ApiController {
     public RequestResult<DeployVO> deployTask(@RequestBody TaskCommitRequest request,
                                               @RequestHeader("Authorization") String token) {
         return RequestResult.success(apiService.deployTask(request, token));
+    }
+
+    @PostMapping("/taskrun/changePriority")
+    public RequestResult<Object> changeTaskRunPriority(@RequestBody TaskRunPriorityChangeRequest request,
+                                                       @RequestHeader("Authorization") String token) {
+        return RequestResult.success(apiService.changeTaskRunPriority(request, token));
     }
 }
