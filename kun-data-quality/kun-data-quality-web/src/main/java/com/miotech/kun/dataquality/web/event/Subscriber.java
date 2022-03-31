@@ -6,11 +6,10 @@ import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.dataquality.web.model.entity.CaseRun;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
-import com.miotech.kun.dataquality.web.service.TaskAttemptFinishedEventHandlerManager;
+import com.miotech.kun.dataquality.web.service.EventHandlerManager;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
-import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +42,7 @@ public class Subscriber {
     EventPublisher publisher;
 
     @Autowired
-    private TaskAttemptFinishedEventHandlerManager taskAttemptFinishedEventHandlerManager;
+    private EventHandlerManager eventHandlerManager;
 
     @PostConstruct
     private void onDispatcherConstructed() {
@@ -52,16 +51,14 @@ public class Subscriber {
 
     private void doSubscribe() {
         workflowEventSubscriber.subscribe(event -> {
-            if (event instanceof TaskAttemptFinishedEvent) {
-                TaskAttemptFinishedEvent taskAttemptFinishedEvent = (TaskAttemptFinishedEvent) event;
-                taskAttemptFinishedEventHandlerManager.handle(taskAttemptFinishedEvent);
-            }
             if (event instanceof TaskAttemptCheckEvent) {
                 handleTaskCheckEvent((TaskAttemptCheckEvent) event);
             }
             if (event instanceof TaskRunCreatedEvent) {
                 handleTaskRunCreatedEvent((TaskRunCreatedEvent) event);
             }
+
+            eventHandlerManager.handle(event);
         });
     }
 
