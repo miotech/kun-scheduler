@@ -9,7 +9,7 @@ public class NotEqualsAssertion extends FixedValueAssertion {
     @JsonCreator
     public NotEqualsAssertion(@JsonProperty("expectedType") String expectedType,
                               @JsonProperty("expectedValue") String expectedValue) {
-        super(expectedType, expectedValue, ComparisonOperator.EQUALS);
+        super(expectedType, expectedValue, ComparisonOperator.NOT_EQUALS);
     }
 
     @Override
