@@ -32,6 +32,8 @@ public class UserRequest {
 
     String email;
 
+    String weComId;
+
     Long createUser;
 
     Long createTime;

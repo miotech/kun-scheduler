@@ -6,11 +6,12 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Set;
 
 @Data
 public class UserInfo implements Serializable {
+
+    private static final long serialVersionUID = -6013170276960874830L;
 
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
@@ -30,6 +31,8 @@ public class UserInfo implements Serializable {
     private String lastName;
 
     private String email;
+
+    private String weComId;
 
     private Long userGroupId;
 

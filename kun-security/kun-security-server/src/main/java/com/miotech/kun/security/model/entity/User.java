@@ -29,6 +29,8 @@ public class User {
 
     String email;
 
+    String weComId;
+
     String createUser;
 
     Long createTime;

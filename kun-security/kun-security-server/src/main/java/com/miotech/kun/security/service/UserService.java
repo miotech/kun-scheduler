@@ -2,6 +2,7 @@ package com.miotech.kun.security.service;
 
 import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.model.bo.UserExtensionInformation;
 import com.miotech.kun.security.model.bo.UserRequest;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
@@ -22,6 +23,9 @@ import java.util.List;
 public class UserService extends BaseSecurityService {
 
     @Autowired
+    private UserSystem userSystem;
+
+    @Autowired
     UserRepository userRepository;
 
     @Autowired
@@ -35,6 +39,13 @@ public class UserService extends BaseSecurityService {
         if (StringUtils.isNotBlank(userRequest.getPassword())) {
             userRequest.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         }
+
+        UserExtensionInformation extensionInformation = userSystem.getExtensionInformation(userRequest.getUsername());
+        if (extensionInformation != null) {
+            userRequest.setEmail(extensionInformation.getEmail());
+            userRequest.setWeComId(extensionInformation.getWeComId());
+        }
+
         return userRepository.addUser(userRequest);
     }
 
