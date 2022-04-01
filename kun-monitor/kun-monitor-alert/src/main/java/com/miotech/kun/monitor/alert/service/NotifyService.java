@@ -9,16 +9,21 @@ import com.miotech.kun.monitor.alert.constant.NotifierTypeNameConstants;
 import com.miotech.kun.monitor.facade.model.alert.*;
 import com.miotech.kun.monitor.alert.notifier.EmailNotifier;
 import com.miotech.kun.monitor.alert.notifier.WeComNotifier;
+import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class NotifyService implements NotifyFacade {
+public class NotifyService extends BaseSecurityService implements NotifyFacade {
 
     private static final String EMAIL_SUBJECT = "SLA ALERT";
 
@@ -36,6 +41,21 @@ public class NotifyService implements NotifyFacade {
 
     public void notify(Long workflowTaskId, String msg) {
         notify(workflowTaskId, null, msg, true, null);
+    }
+
+    @Override
+    public void notify(List<String> usernames, String msg) {
+        if (CollectionUtils.isEmpty(usernames)) {
+            return;
+        }
+
+        List<String> weComUserIds = usernames.stream()
+                .map(username -> getUserByUsername(username))
+                .filter(userInfo -> userInfo != null)
+                .map(UserInfo::getWeComId)
+                .filter(weComId -> StringUtils.isNotBlank(weComId))
+                .collect(Collectors.toList());
+        weComService.sendMessage(weComUserIds, msg);
     }
 
     public void notify(Long workflowTaskId, Event event, String msg, boolean matchIgnore, TaskRunStatus taskRunStatus) {

@@ -333,6 +333,20 @@ public class ExpectationDao {
         return null;
     }
 
+    public Expectation fetchByTaskId(Long taskId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(COLUMNS.toArray(new String[0]))
+                .from(TABLE_NAME)
+                .where("task_id = ?")
+                .getSQL();
+
+        try {
+            return jdbcTemplate.queryForObject(sql, ExpectationRowMapper.INSTANCE, taskId);
+        } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
+            return null;
+        }
+    }
+
     public static class ExpectationRowMapper implements RowMapper<Expectation> {
         public static final ExpectationDao.ExpectationRowMapper INSTANCE = new ExpectationDao.ExpectationRowMapper();
 

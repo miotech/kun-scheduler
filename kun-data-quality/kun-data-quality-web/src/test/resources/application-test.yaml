@@ -22,3 +22,18 @@ spring:
     schemas: public
     baselineOnMigrate: true
     baselineVersion: 0
+
+notify:
+  systemDefault:
+    triggerType: ON_FAIL
+    userConfigJson: '[{"notifierType": "WECOM"}]'
+  email:
+    smtpHost: 0.0.0.0
+    smtpPort: 25
+    smtpUsername: kun-robot
+    smtpPassword: kun-robot-password
+    emailFrom: foo@bar.com
+    emailFromName: kun-robot
+  urlLink:
+    enabled: true
+    prefix: https://example.org

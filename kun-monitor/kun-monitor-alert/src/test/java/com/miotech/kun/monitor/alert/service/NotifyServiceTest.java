@@ -2,13 +2,19 @@ package com.miotech.kun.monitor.alert.service;
 
 import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.alert.common.service.TaskNotifyConfigService;
+import com.miotech.kun.monitor.alert.mocking.MockUserInfoFactory;
 import com.miotech.kun.monitor.facade.model.alert.TaskNotifyConfig;
 import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
+import com.miotech.kun.security.model.UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.client.RestTemplate;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -25,6 +31,9 @@ public class NotifyServiceTest extends MonitorAlertTestBase {
 
     @Autowired
     private NotifyService notifyService;
+
+    @MockBean
+    private RestTemplate restTemplate;
 
     @Test
     public void testNotify_useSystemDefaultConfig() {
@@ -45,6 +54,15 @@ public class NotifyServiceTest extends MonitorAlertTestBase {
 
         verify(weComService, times(1)).sendMessage(anyLong(), anyString());
 
+    }
+
+    @Test
+    public void testNotify_usernames_empty() {
+        List<String> usernames = Lists.emptyList();
+        String msg = "test msg";
+        notifyService.notify(usernames, msg);
+
+        verify(weComService, never()).sendMessage(anyList(), anyString());
     }
 
 }

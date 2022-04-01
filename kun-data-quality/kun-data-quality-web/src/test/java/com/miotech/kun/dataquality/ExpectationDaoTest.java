@@ -2,10 +2,11 @@ package com.miotech.kun.dataquality;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.dataquality.mock.MockDatasetBasicFactory;
-import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
+import com.miotech.kun.dataquality.mock.MockExpectationFactory;
 import com.miotech.kun.dataquality.mock.MockValidationResultFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
@@ -40,7 +41,7 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @Test
     public void testCreateThenFetch() {
-        Expectation expectation = MockExpectationSpecFactory.create();
+        Expectation expectation = MockExpectationFactory.create();
         expectationDao.create(expectation);
 
         Expectation fetched = expectationDao.fetchById(expectation.getExpectationId());
@@ -52,7 +53,7 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @Test
     public void testDelete() {
-        Expectation expectation = MockExpectationSpecFactory.create();
+        Expectation expectation = MockExpectationFactory.create();
         expectationDao.create(expectation);
 
         Expectation fetched = expectationDao.fetchById(expectation.getExpectationId());
@@ -65,7 +66,7 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @Test
     public void testUpdate() {
-        Expectation expectation = MockExpectationSpecFactory.create();
+        Expectation expectation = MockExpectationFactory.create();
         expectationDao.create(expectation);
 
         String newName = "new expectation name";
@@ -110,7 +111,7 @@ public class ExpectationDaoTest extends DataQualityTestBase {
     @Test
     public void testGetRelatedDatasets() {
         // prepare
-        Expectation spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationFactory.create();
         expectationDao.create(spec);
         expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
 
@@ -124,7 +125,7 @@ public class ExpectationDaoTest extends DataQualityTestBase {
 
     @Test
     public void testGetExpectationBasic() {
-        Expectation spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationFactory.create();
         expectationDao.create(spec);
         expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
 
@@ -138,6 +139,25 @@ public class ExpectationDaoTest extends DataQualityTestBase {
         assertThat(expectationBasic.getName(), is(spec.getName()));
         assertThat(expectationBasic.getUpdater(), is(spec.getUpdateUser()));
         assertThat(expectationBasic.getTaskId(), is(spec.getTaskId()));
+    }
+
+    @Test
+    public void testFetchByTaskId_empty() {
+        Long taskId = IdGenerator.getInstance().nextId();
+        Expectation expectation = expectationDao.fetchByTaskId(taskId);
+        assertThat(expectation, nullValue());
+    }
+
+    @Test
+    public void testFetchByTaskId() {
+        Expectation expectation = MockExpectationFactory.create();
+        expectationDao.create(expectation);
+
+        Expectation fetched = expectationDao.fetchByTaskId(expectation.getTaskId());
+        assertThat(fetched, sameBeanAs(expectation).ignoring("dataset").ignoring("metrics").ignoring("assertion"));
+        assertThat(fetched.getDataset().getGid(), is(expectation.getDataset().getGid()));
+        assertThat(fetched.getMetrics().getName(), is(expectation.getMetrics().getName()));
+        assertThat(fetched.getAssertion().getExpectedValue(), is(expectation.getAssertion().getExpectedValue()));
     }
 
 }

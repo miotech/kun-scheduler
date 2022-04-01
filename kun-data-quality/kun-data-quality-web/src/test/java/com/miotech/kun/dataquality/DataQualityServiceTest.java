@@ -151,7 +151,7 @@ public class DataQualityServiceTest extends DataQualityTestBase {
 
     @Test
     public void testDeleteExpectation() {
-        Expectation spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationFactory.create();
         expectationDao.create(spec);
         expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
 
@@ -164,7 +164,7 @@ public class DataQualityServiceTest extends DataQualityTestBase {
     @Test
     public void testUpdate() {
         // prepare
-        Expectation spec = MockExpectationSpecFactory.create();
+        Expectation spec = MockExpectationFactory.create();
         expectationDao.create(spec);
         expectationDao.createRelatedDataset(spec.getExpectationId(), ImmutableList.of(spec.getDataset().getGid()));
 

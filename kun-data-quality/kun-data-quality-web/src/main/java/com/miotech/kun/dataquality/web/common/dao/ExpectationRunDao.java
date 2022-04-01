@@ -57,6 +57,8 @@ public class ExpectationRunDao {
                 .select(COLUMNS.toArray(new String[0]))
                 .from(TABLE_NAME)
                 .where("expectation_id = ?")
+                .orderBy("id desc")
+                .limit(1)
                 .getSQL();
         return jdbcTemplate.queryForObject(sql, ExpectationRunRowMapper.INSTANCE, expectationId);
     }

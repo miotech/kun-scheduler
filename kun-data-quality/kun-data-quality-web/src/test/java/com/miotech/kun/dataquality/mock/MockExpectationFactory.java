@@ -12,9 +12,9 @@ import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 
-public class MockExpectationSpecFactory {
+public class MockExpectationFactory {
 
-    private MockExpectationSpecFactory() {
+    private MockExpectationFactory() {
     }
 
     public static Expectation create(Long datasetGid) {
@@ -30,6 +30,24 @@ public class MockExpectationSpecFactory {
                 .withTrigger(Expectation.ExpectationTrigger.SCHEDULED)
                 .withDataset(dataset)
                 .withTaskId(IdGenerator.getInstance().nextId())
+                .withIsBlocking(true)
+                .withCreateTime(DateTimeUtils.now())
+                .withUpdateTime(DateTimeUtils.now())
+                .withCreateUser("admin")
+                .withUpdateUser("admin")
+                .build();
+    }
+
+    public static Expectation createWithTaskId(Long taskId) {
+        return Expectation.newBuilder()
+                .withExpectationId(IdGenerator.getInstance().nextId())
+                .withName("Expectation Name")
+                .withDescription("Expectation Desc")
+                .withMethod(new JDBCExpectationMethod("select count(1) c from demo",
+                        ImmutableList.of(new JDBCExpectationAssertion("c", JDBCExpectationAssertion.ComparisonOperator.EQUALS, "=", "NUMBER", "0"))))
+                .withTrigger(Expectation.ExpectationTrigger.SCHEDULED)
+                .withDataset(Dataset.builder().gid(IdGenerator.getInstance().nextId()).dataSource(DataSource.newBuilder().withId(IdGenerator.getInstance().nextId()).build()).build())
+                .withTaskId(taskId)
                 .withIsBlocking(true)
                 .withCreateTime(DateTimeUtils.now())
                 .withUpdateTime(DateTimeUtils.now())

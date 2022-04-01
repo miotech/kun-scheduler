@@ -27,4 +27,8 @@ public class ExpectationService {
     public void updateTaskId(Long expectationId, Long taskId) {
         expectationDao.updateTaskId(expectationId, taskId);
     }
+
+    public Expectation fetchByTaskId(Long taskId) {
+        return expectationDao.fetchByTaskId(taskId);
+    }
 }
