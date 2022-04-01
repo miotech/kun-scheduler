@@ -6,6 +6,7 @@ import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.testing.KunAppTestBase;
 import com.miotech.kun.dataquality.mock.MockSubscriber;
+import com.miotech.kun.monitor.facade.alert.NotifyFacade;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.client.model.Operator;
@@ -89,5 +90,11 @@ public abstract class DataQualityTestBase extends KunAppTestBase {
         public EventPublisher getPublisher(){
             return new NopEventPublisher();
         }
+
+        @Bean
+        public NotifyFacade getNotifyFacade() {
+            return Mockito.mock(NotifyFacade.class);
+        }
+
     }
 }

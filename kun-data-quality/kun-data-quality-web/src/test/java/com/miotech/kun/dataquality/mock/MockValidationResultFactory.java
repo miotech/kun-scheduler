@@ -16,9 +16,13 @@ public class MockValidationResultFactory {
     }
 
     public static ValidationResult create(Long expectationId) {
+        return create(expectationId, false);
+    }
+
+    public static ValidationResult create(Long expectationId, boolean passed) {
         return ValidationResult.newBuilder()
                 .withExpectationId(expectationId)
-                .withPassed(false)
+                .withPassed(passed)
                 .withExecutionResult("error")
                 .withAssertionResults(ImmutableList.of(MockAssertionResultFactory.create()))
                 .withUpdateTime(DateTimeUtils.now())

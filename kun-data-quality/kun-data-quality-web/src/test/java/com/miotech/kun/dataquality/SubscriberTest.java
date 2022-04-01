@@ -8,7 +8,7 @@ import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.mock.MockExpectationRequestFactory;
-import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
+import com.miotech.kun.dataquality.mock.MockExpectationFactory;
 import com.miotech.kun.dataquality.mock.MockOperatorFactory;
 import com.miotech.kun.dataquality.mock.MockSubscriber;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
@@ -108,17 +108,17 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset2Id = IdGenerator.getInstance().nextId();
         Long dateset3Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationSpecFactory.create(dateset1Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset1Id);
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset1Id));
         //case3
-        Expectation expectation3 = MockExpectationSpecFactory.create(dateset2Id);
+        Expectation expectation3 = MockExpectationFactory.create(dateset2Id);
         Long case3Id = expectation3.getExpectationId();
         expectationDao.create(expectation3);
         expectationDao.createRelatedDataset(case3Id, Lists.newArrayList(dateset2Id));
@@ -173,12 +173,12 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset2Id);
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
@@ -224,12 +224,12 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset2Id);
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
@@ -272,12 +272,12 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset2Id);
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
@@ -336,12 +336,12 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationSpecFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationSpecFactory.create(dateset2Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset2Id);
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
@@ -384,7 +384,7 @@ public class SubscriberTest extends DataQualityTestBase {
     public void handleNonBlockingCaseFailed_should_not_send_event() {
         //prepare case
         Long datesetId = IdGenerator.getInstance().nextId();
-        Expectation expectation = MockExpectationSpecFactory.create(datesetId);
+        Expectation expectation = MockExpectationFactory.create(datesetId);
         Expectation nonBlockingExpectation = expectation.cloneBuilder().withIsBlocking(false).build();
         Long caseId = nonBlockingExpectation.getExpectationId();
         expectationDao.create(nonBlockingExpectation);

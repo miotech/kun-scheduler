@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -46,5 +49,14 @@ public class WeComServiceTest extends MonitorAlertTestBase {
         weComService.sendMessage(taskId, msg);
         verify(weComSender, times(1)).sendMessageToUsers(anyList(), anyString());
         verify(weComSender, times(1)).sendMessageToChat(anyString(), anyString());
+    }
+
+    @Test
+    public void sendMessage_user() {
+        List<String> weComUserIds = ImmutableList.of("user1", "user2");
+        String msg = "test msg";
+
+        weComService.sendMessage(weComUserIds, msg);
+        verify(weComSender, times(1)).sendMessageToUsers(anyList(), anyString());
     }
 }

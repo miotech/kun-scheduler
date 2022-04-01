@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -42,6 +43,11 @@ public class WeComService {
             sendMessage(taskAttemptStatusChangeEvent.getTaskId(), msg);
         }
     }
+
+    public void sendMessage(List<String> weComUserIds, String msg) {
+        weComSender.sendMessageToUsers(weComUserIds, msg);
+    }
+
 
     public void sendMessage(Long workflowTaskId, String msg) {
         try {

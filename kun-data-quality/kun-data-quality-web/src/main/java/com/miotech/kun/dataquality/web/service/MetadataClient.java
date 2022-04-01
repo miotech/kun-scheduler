@@ -1,5 +1,6 @@
 package com.miotech.kun.dataquality.web.service;
 
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,11 @@ public class MetadataClient {
         return restTemplate.exchange(fetchUrl, HttpMethod.GET, null,
                 new ParameterizedTypeReference<List<Long>>() {
                 }).getBody();
+    }
+
+    public DatasetDetail findById(Long id) {
+        String findByIdUrl = url + String.format("/dataset/%d", id);
+        return restTemplate.exchange(findByIdUrl, HttpMethod.GET, null, DatasetDetail.class).getBody();
     }
 
 }
