@@ -1,30 +1,43 @@
 package com.miotech.kun.metadata.common.service;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.connection.*;
+import com.miotech.kun.metadata.core.model.constant.SearchContent;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
+import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
+import com.miotech.kun.metadata.core.model.search.SearchedInfo;
+import com.miotech.kun.metadata.core.model.vo.*;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections4.CollectionUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,10 +55,22 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
     @Inject
     private MetadataDatasetService metadataDatasetService;
 
+    @Inject
+    private SearchService searchService;
+
+    @Inject
+    private javax.sql.DataSource dataSource;
+    @AfterEach
+    @Override
+    public void tearDown() {
+        super.tearDown();
+        ((HikariDataSource) dataSource).close();
+    }
+
     @BeforeEach
     public void clearThenInit() {
         // Clear kun_mt_datasource_type, because flyway initializes some data
-        dbOperator.update("TRUNCATE TABLE kun_mt_datasource_type");
+//        dbOperator.update("TRUNCATE TABLE kun_mt_datasource_type");
     }
 
     @Test
@@ -297,8 +322,8 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         //prepare
         String tableName = "UpperCaseTable";
         ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "hive", hiveServerConnectionInfo, DatasourceType.HIVE, null);
-        dataSourceDao.create(dataSource);
+        DataSource hive = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
+        dataSourceDao.create(hive);
         DataStore dataStore = MockDatasetFactory.createDataStore("Hive", "test", tableName);
         Dataset dataset = metadataDatasetService.createDataSetIfNotExist(dataStore);
 
@@ -321,6 +346,38 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
                 dbOperator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, name, type) VALUES(?, ?, ?)", dataset.getGid(), field.getName(), field.getFieldType().getType().toValue());
             }
         }
+    }
+    @Test
+    public void test_updateSearchInfo() {
+        // Prepare
+        Dataset dataset1 = MockDatasetFactory.createDataset("test-1");
+        Dataset dataset2 = MockDatasetFactory.createDataset("test-2");
+        Dataset dataSetR1 = metadataDatasetService.createDataSet(dataset1);
+        Dataset dataSetR2 = metadataDatasetService.createDataSet(dataset2);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
+                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
+                .build(), DatasourceType.HIVE, ImmutableList.of());
+        dataSourceDao.create(dataSource);
+        ArrayList<String> owners = Lists.newArrayList("test-user", "dev-user");
+        ArrayList<String> tags = Lists.newArrayList("hive", "test");
+        metadataDatasetService.updateDataset(dataSetR1.getGid(), MockDatasetFactory.createDatasetUpdateRequest(dataSetR1.getGid(), owners, tags));
+        metadataDatasetService.updateDataset(dataSetR2.getGid(), MockDatasetFactory.createDatasetUpdateRequest(dataSetR2.getGid(), owners, tags));
+
+
+        List<SearchFilterOption> searchFilterOptionList = Arrays.stream(new String[]{"test"})
+                .map(s -> SearchFilterOption.Builder.newBuilder()
+                        .withSearchContents(Sets.newHashSet(SearchContent.values()))
+                        .withKeyword(s).build())
+                .collect(Collectors.toList());
+        UniversalSearchRequest request = new UniversalSearchRequest();
+        request.setSearchFilterOptions(searchFilterOptionList);
+        UniversalSearchInfo search = searchService.search(request);
+        assertThat(search,is(notNullValue()));
+        List<SearchedInfo> searchedInfoList = search.getSearchedInfoList();
+        assertThat(searchedInfoList,is(notNullValue()));
+        assertThat(searchedInfoList.size(),is(2));
+
+
     }
 
 }

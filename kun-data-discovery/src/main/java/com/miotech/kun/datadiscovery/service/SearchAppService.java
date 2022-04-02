@@ -2,16 +2,17 @@ package com.miotech.kun.datadiscovery.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
 import com.miotech.kun.metadata.core.model.search.GlossaryResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
-import com.miotech.kun.metadata.core.model.vo.DatasetBasicSearch;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanInfoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -43,32 +44,47 @@ public class SearchAppService {
     RestTemplate restTemplate;
 
     /**
-     * @param keywords and
+     * @param keyword and
      * @return UniversalSearchInfo
      */
-    public UniversalSearchInfo fullSearch(String... keywords) {
+    public UniversalSearchInfo fullSearch(String keyword) {
         String fullUrl = url + "/search/full";
         log.debug("Request url : " + fullUrl);
-        UriComponents comp = UriComponentsBuilder.fromHttpUrl(fullUrl).queryParam("keywords", (Object[]) keywords).build();
+        UriComponents comp = UriComponentsBuilder.fromHttpUrl(fullUrl).queryParam("keyword", keyword).build();
         fullUrl = comp.toString();
         return restTemplate.exchange(fullUrl, HttpMethod.GET, null, new ParameterizedTypeReference<UniversalSearchInfo>() {
         }).getBody();
     }
 
-    public UniversalSearchInfo searchGlossary(Integer pageNumber,Integer pageSize,String... keywords) {
+    public UniversalSearchInfo searchGlossary(Integer pageNumber, Integer pageSize, String keyword) {
+        return getUniversalSearchInfo(ResourceType.GLOSSARY, pageNumber, pageSize, keyword);
+
+    }
+
+    public UniversalSearchInfo searchDataSet(Integer pageNumber, Integer pageSize, String keyword) {
+        return getUniversalSearchInfo(ResourceType.DATASET, pageNumber, pageSize, keyword);
+    }
+
+    public UniversalSearchInfo getUniversalSearchInfo(ResourceType dataset, Integer pageNumber, Integer pageSize, String keyword) {
         String fullUrl = url + "/search/options";
-        List<SearchFilterOption> searchFilterOptionList = Arrays.stream(keywords)
+        ResourceType type = dataset;
+        UniversalSearchRequest request = getUniversalSearchRequest(pageNumber, pageSize, keyword, type);
+        return restTemplate.exchange(fullUrl, HttpMethod.POST, new HttpEntity<>(request), new ParameterizedTypeReference<UniversalSearchInfo>() {
+        }).getBody();
+    }
+
+    private UniversalSearchRequest getUniversalSearchRequest(Integer pageNumber, Integer pageSize, String keyword, ResourceType type) {
+        List<SearchFilterOption> searchFilterOptionList = Arrays.stream(new String[]{keyword})
                 .map(s -> SearchFilterOption.Builder.newBuilder()
                         .withSearchContents(Sets.newHashSet(SearchContent.values()))
                         .withKeyword(s).build())
                 .collect(Collectors.toList());
         UniversalSearchRequest request = new UniversalSearchRequest();
-        request.setResourceTypes(Sets.newHashSet(ResourceType.GLOSSARY));
+        request.setResourceTypes(Sets.newHashSet(type));
         request.setSearchFilterOptions(searchFilterOptionList);
         request.setPageSize(pageSize);
         request.setPageNumber(pageNumber);
-        return  restTemplate.exchange(fullUrl, HttpMethod.POST, new HttpEntity<>(request), UniversalSearchInfo.class).getBody();
-
+        return request;
     }
 
 

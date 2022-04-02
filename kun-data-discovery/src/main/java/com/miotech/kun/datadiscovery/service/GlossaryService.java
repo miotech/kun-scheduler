@@ -135,11 +135,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public SearchPage search(GlossaryBasicSearchRequest searchRequest) {
-        Iterable<String> keywords = Splitter.on(" ").omitEmptyStrings().split(searchRequest.getKeyword());
-        ArrayList<String> keywordList = Lists.newArrayList(keywords);
-        String[] keywordArray = new String[keywordList.size()];
-        keywordList.toArray(keywordArray);
-        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageNumber(), searchRequest.getPageSize(), keywordArray);
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageNumber(), searchRequest.getPageSize(), searchRequest.getKeyword());
         Stream<SearchedInfo> searchedInfoStream = universalSearchInfo.getSearchedInfoList().stream();
         Long currentId = searchRequest.getCurrentId();
         if (Objects.nonNull(currentId)) {

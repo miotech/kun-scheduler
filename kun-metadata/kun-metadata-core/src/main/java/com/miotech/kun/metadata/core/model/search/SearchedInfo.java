@@ -2,6 +2,8 @@ package com.miotech.kun.metadata.core.model.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 
 import java.io.Serializable;
@@ -43,13 +45,16 @@ public class SearchedInfo implements Serializable {
     public boolean isDeleted() {
         return deleted;
     }
+
     @JsonCreator
     public SearchedInfo(
-            @JsonProperty("gid")  Long gid,
+            @JsonProperty("gid") Long gid,
             @JsonProperty("resourceType") ResourceType resourceType,
             @JsonProperty("name") String name,
             @JsonProperty("description") String description,
-            @JsonProperty("resourceAttribute")ResourceAttribute resourceAttribute,
+            @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "resourceType", visible = true)
+            @JsonProperty("resourceAttribute")
+                    ResourceAttribute resourceAttribute,
             @JsonProperty("deleted") boolean deleted) {
         this.gid = gid;
         this.resourceType = resourceType;

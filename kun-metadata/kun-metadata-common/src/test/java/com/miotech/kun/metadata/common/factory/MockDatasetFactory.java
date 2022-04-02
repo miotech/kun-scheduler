@@ -6,9 +6,11 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.miotech.kun.metadata.core.model.vo.DatasetUpdateRequest;
 import com.miotech.kun.workflow.core.model.lineage.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +29,7 @@ public class MockDatasetFactory {
         return createDataset(IdGenerator.getInstance().nextId(), "dataset:" + random, dataSourceId, name, null, "Hive");
     }
 
-    public static Dataset createDatasetWithDatabase(long dataSourceId, String datasetName,String databaseName) {
+    public static Dataset createDatasetWithDatabase(long dataSourceId, String datasetName, String databaseName) {
         String random = UUID.randomUUID().toString();
         return createDataset(IdGenerator.getInstance().nextId(), datasetName, dataSourceId, databaseName, null, "Hive");
     }
@@ -58,6 +60,11 @@ public class MockDatasetFactory {
         long gid = IdGenerator.getInstance().nextId();
         return createDataset(gid, name);
     }
+
+    public static DatasetUpdateRequest createDatasetUpdateRequest(Long gid, ArrayList<String> owners, ArrayList<String> tags) {
+        return new DatasetUpdateRequest("test" + gid, owners, tags);
+    }
+
 
     public static Dataset createDatasetWithDataSourceId(long dataSourceId) {
         return createDatasetWithFields(dataSourceId, Lists.newArrayList());

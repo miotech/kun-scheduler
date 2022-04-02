@@ -2,9 +2,6 @@ package com.miotech.kun.metadata.core.model.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.model.constant.ResourceType;
-
-import java.time.OffsetDateTime;
 
 /**
  * @program: kun
@@ -13,101 +10,94 @@ import java.time.OffsetDateTime;
  * @create: 2022-03-08 10:11
  **/
 public class DataSetResourceAttribute extends ResourceAttribute {
-    private String datasourceName;
-    private String databaseName;
+    private String datasource;
+
+    private String database;
+
+    private String schema;
+
+    private String type;
+
     private String tags;
-    private OffsetDateTime highWatermark;
-    private String datasourceType;
-    private String datasourceAttrs;
-@JsonCreator
-    public DataSetResourceAttribute(
-        @JsonProperty("owners")   String owners,
-        @JsonProperty("datasourceName")  String datasourceName,
-        @JsonProperty("databaseName")  String databaseName,
-        @JsonProperty("tags")  String tags,
-        @JsonProperty("highWatermark") OffsetDateTime highWatermark,
-        @JsonProperty("datasourceType") String datasourceType,
-        @JsonProperty("datasourceAttrs") String datasourceAttrs) {
-        super(owners);
-        this.datasourceName = datasourceName;
-        this.databaseName = databaseName;
-        this.tags = tags;
-        this.highWatermark = highWatermark;
-        this.datasourceType = datasourceType;
-        this.datasourceAttrs = datasourceAttrs;
+
+    public String getDatasource() {
+        return datasource;
     }
 
-    public String getDatasourceName() {
-        return datasourceName;
+    public String getDatabase() {
+        return database;
     }
 
-    public String getDatabaseName() {
-        return databaseName;
+    public String getSchema() {
+        return schema;
     }
+
+    public String getType() {
+        return type;
+    }
+
 
     public String getTags() {
         return tags;
     }
 
-    public OffsetDateTime getHighWatermark() {
-        return highWatermark;
-    }
-
-    public String getDatasourceType() {
-        return datasourceType;
-    }
-
-    public String getDatasourceAttrs() {
-        return datasourceAttrs;
+    @JsonCreator
+    public DataSetResourceAttribute(
+            @JsonProperty("datasource") String datasource,
+            @JsonProperty("database") String database,
+            @JsonProperty("schema") String schema,
+            @JsonProperty("type") String type,
+            @JsonProperty("owners") String owners,
+            @JsonProperty("tags") String tags) {
+        super(owners);
+        this.datasource = datasource;
+        this.database = database;
+        this.schema = schema;
+        this.type = type;
+        this.tags = tags;
     }
 
 
     public static final class Builder {
-        private String datasourceName;
-        private String databaseName;
-        private String tags;
-        private OffsetDateTime highWatermark;
-        private String datasourceType;
-        private String datasourceAttrs;
+        private String datasource;
+        private String database;
+        private String schema;
+        private String type;
         private String owners;
+        private String tags;
 
         private Builder() {
         }
 
-        public static Builder newBilder() {
+        public static Builder newBuilder() {
             return new Builder();
         }
 
-        public Builder withDatasourceName(String datasourceName) {
-            this.datasourceName = datasourceName;
+        public Builder withDatasource(String datasource) {
+            this.datasource = datasource;
             return this;
         }
 
-        public Builder withDatabaseName(String databaseName) {
-            this.databaseName = databaseName;
+        public Builder withDatabase(String database) {
+            this.database = database;
             return this;
         }
+
+        public Builder withSchema(String schema) {
+            this.schema = schema;
+            return this;
+        }
+
+        public Builder withType(String type) {
+            this.type = type;
+            return this;
+        }
+
 
         public Builder withTags(String tags) {
             this.tags = tags;
             return this;
         }
-
-        public Builder withHighWatermark(OffsetDateTime highWatermark) {
-            this.highWatermark = highWatermark;
-            return this;
-        }
-
-        public Builder withDatasourceType(String datasourceType) {
-            this.datasourceType = datasourceType;
-            return this;
-        }
-
-        public Builder withDatasourceAttrs(String datasourceAttrs) {
-            this.datasourceAttrs = datasourceAttrs;
-            return this;
-        }
-
 
         public Builder withOwners(String owners) {
             this.owners = owners;
@@ -115,8 +105,7 @@ public class DataSetResourceAttribute extends ResourceAttribute {
         }
 
         public DataSetResourceAttribute build() {
-            return new DataSetResourceAttribute(owners, datasourceName, databaseName, tags,
-                    highWatermark, datasourceType, datasourceAttrs);
+            return new DataSetResourceAttribute(datasource, database, schema, type, owners, tags);
         }
     }
 }
