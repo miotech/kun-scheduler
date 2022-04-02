@@ -210,8 +210,8 @@ public class DataQualityRepository extends BaseRepository {
                 .from("kun_mt_dataset kmd")
                 .join("inner", "kun_mt_datasource", "kmds").on("kmd.datasource_id = kmds.id")
                 .join("inner", "kun_mt_datasource_attrs", "kmda").on("kmda.datasource_id = kmd.datasource_id")
-                .join("left", "kun_mt_glossary_to_dataset_ref", "kmgtdr").on("kmd.gid = kmgtdr.dataset_id")
-                .join("left", "kun_mt_glossary", "kmg").on("kmg.id = kmgtdr.glossary_id")
+                .join("left", "kun_mt_glossary_to_dataset_ref", "kmgtdr").on("kmd.gid = kmgtdr.dataset_id and kmgtdr.deleted =false")
+                .join("left", "kun_mt_glossary", "kmg").on("kmg.id = kmgtdr.glossary_id and kmg.deleted =false")
                 .where("kmd.gid = ?")
                 .groupBy("kmd.name, kmd.database_name, kmda.name")
                 .getSQL();
