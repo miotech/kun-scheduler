@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useHistory, Link } from 'umi';
-import { Input, Select, Table, Tag, Spin, Checkbox } from 'antd';
+import { Input, Table, Tag, Spin } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
@@ -17,7 +17,7 @@ import {
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
 import { Mode, SearchParams, QueryObj } from '@/rematch/models/dataDiscovery';
-import { Dataset, Watermark, GlossaryItem, UpstreamTask } from '@/definitions/Dataset.type';
+import { Dataset, GlossaryItem, UpstreamTask } from '@/definitions/Dataset.type';
 
 import color from '@/styles/color';
 
@@ -26,14 +26,11 @@ import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
 
 import Card from '@/components/Card/Card';
-import { watermarkFormatter } from '@/utils/glossaryUtiles';
 import getEllipsisString from '@/utils/getEllipsisString';
-import TimeSelect from './components/TimeSelect/TimeSelect';
 
 import styles from './index.less';
 
 const { Search } = Input;
-const { Option } = Select;
 
 const orderMap = {
   descend: 'desc',
@@ -99,32 +96,19 @@ export default function DataDiscoveryListView() {
     sortOrder,
     pageNumber,
     pageSize,
-    displayDeleted,
   } = query as QueryObj;
 
   const dispatch = useDispatch<RootDispatch>();
   const {
     pagination,
-
-    allDbList,
-    allOwnerList,
-    allTagList,
-    allDsList,
     datasetList,
 
     dataListFetchLoading,
-    databaseTypes,
   } = useSelector(
     (state: RootState) => ({
       pagination: state.dataDiscovery.pagination,
-
-      allDbList: state.dataDiscovery.allDbList,
-      allOwnerList: state.dataDiscovery.allOwnerList,
-      allTagList: state.dataDiscovery.allTagList,
-      allDsList: state.dataDiscovery.allDsList,
       datasetList: state.dataDiscovery.datasetList,
       dataListFetchLoading: state.dataDiscovery.dataListFetchLoading,
-      databaseTypes: state.dataSettings.databaseTypeFieldMapList,
     }),
     shallowEqual,
   );
@@ -143,7 +127,6 @@ export default function DataDiscoveryListView() {
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
-      displayDeleted,
       sortKey,
       sortOrder,
       pagination: {
@@ -167,27 +150,15 @@ export default function DataDiscoveryListView() {
     sortOrder,
     pageSize,
     pageNumber,
-    displayDeleted,
   ]);
 
   useMount(() => {
     fetchDatasets();
-    dispatch.dataDiscovery.fetchAllOwnerList();
-    dispatch.dataDiscovery.fetchAllTagList();
-    dispatch.dataSettings.fetchDatabaseTypeList();
-    dispatch.dataDiscovery.fetchAllDs('');
-    dispatch.dataDiscovery.fetchAllDb(dsIdList);
   });
 
   useUpdateEffect(() => {
     fetchDatasets();
   }, [fetchDatasets]);
-
-  useUpdateEffect(() => {
-    dispatch.dataDiscovery.fetchAllDb({
-      dataSourceIds: dsIdList,
-    });
-  }, [dsIdList]);
 
   const setFilterQuery = useCallback(
     (obj, shouldChangePageNum = true) => {
@@ -207,36 +178,6 @@ export default function DataDiscoveryListView() {
     [setFilterQuery],
   );
 
-  const handleChangeWatermarkMode = useCallback(
-    mode => {
-      setFilterQuery({ watermarkMode: mode });
-    },
-    [setFilterQuery],
-  );
-
-  const timeSelectValue = useMemo(
-    () =>
-      watermarkMode === Mode.ABSOLUTE
-        ? {
-            startTime: watermarkAbsoluteValue?.startTime ? Number(watermarkAbsoluteValue.startTime) : null,
-            endTime: watermarkAbsoluteValue?.endTime ? Number(watermarkAbsoluteValue.endTime) : null,
-          }
-        : watermarkQuickeValue,
-    [watermarkMode, watermarkAbsoluteValue, watermarkQuickeValue],
-  );
-
-  const handleChangeWatermarkValue = useCallback(
-    (v, mode) => {
-      if (mode === Mode.ABSOLUTE) {
-        setFilterQuery({ watermarkAbsoluteValue: v });
-      }
-      if (mode === Mode.QUICK) {
-        setFilterQuery({ watermarkQuickeValue: v });
-      }
-    },
-    [setFilterQuery],
-  );
-
   const columns: ColumnProps<Dataset>[] = useMemo(
     () =>
       [
@@ -245,7 +186,6 @@ export default function DataDiscoveryListView() {
           dataIndex: 'name',
           key: 'name',
           fixed: 'left',
-          sorter: true,
           width: 170,
           defaultSortOrder: sortKey === 'name' ? getOrder(sortOrder) : undefined,
           render: (name: string) => <span className={styles.nameLink}>{name}</span>,
@@ -254,7 +194,6 @@ export default function DataDiscoveryListView() {
           title: t('dataDiscovery.datasetsTable.header.database'),
           dataIndex: 'database',
           key: 'databaseName',
-          sorter: true,
           width: 80,
           defaultSortOrder: sortKey === 'databaseName' ? getOrder(sortOrder) : undefined,
         },
@@ -262,7 +201,6 @@ export default function DataDiscoveryListView() {
           title: t('dataDiscovery.datasetsTable.header.datasource'),
           dataIndex: 'datasource',
           key: 'datasourceName',
-          sorter: true,
           width: 120,
           defaultSortOrder: sortKey === 'datasourceName' ? getOrder(sortOrder) : undefined,
         },
@@ -270,18 +208,8 @@ export default function DataDiscoveryListView() {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
           dataIndex: 'type',
           key: 'type',
-          sorter: true,
           width: 80,
           defaultSortOrder: sortKey === 'type' ? getOrder(sortOrder) : undefined,
-        },
-        {
-          title: t('dataDiscovery.datasetsTable.header.watermark'),
-          dataIndex: 'highWatermark',
-          key: 'highWatermark',
-          sorter: true,
-          defaultSortOrder: sortKey === 'highWatermark' ? getOrder(sortOrder) : undefined,
-          width: 150,
-          render: (watermark: Watermark) => watermarkFormatter(watermark.time),
         },
         {
           title: t('dataDiscovery.datasetsTable.header.glossary'),
@@ -402,11 +330,6 @@ export default function DataDiscoveryListView() {
     [handleChangePage, handleChangePageSize, pageNumber, pageSize, pagination.totalCount],
   );
 
-  const allDatabaseTypes = databaseTypes.map(item => ({
-    name: item.type,
-    id: item.id,
-  }));
-
   const handleChangeTable = useCallback(
     (_pagination, _filters, sorter, extra) => {
       const { columnKey, order } = sorter;
@@ -440,147 +363,6 @@ export default function DataDiscoveryListView() {
           />
         </div>
         <div className={styles.tableArea}>
-          <div className={styles.filterRow}>
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.waterMark')}</div>
-              <div>
-                <TimeSelect
-                  mode={watermarkMode || Mode.ABSOLUTE}
-                  onModeChange={handleChangeWatermarkMode}
-                  value={timeSelectValue}
-                  onChange={handleChangeWatermarkValue}
-                />
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.datasource')}</div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={dsIdList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ dsIdList: v, dbList: [] });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allDsList.map(option => (
-                    <Option key={option.id} value={option.id}>
-                      {option.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.db')}</div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={dbList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ dbList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allDbList.map(db => (
-                    <Option key={db.name} value={db.name}>
-                      {db.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.dbtype')}</div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={dsTypeList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ dsTypeList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allDatabaseTypes.map(option => (
-                    <Option key={option.id} value={option.id}>
-                      {option.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.owners')}</div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={ownerList}
-                  mode="multiple"
-                  size="large"
-                  onChange={v => {
-                    setFilterQuery({ ownerList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allOwnerList.map(option => (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{t('dataDiscovery.tags')}</div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={tagList}
-                  mode="multiple"
-                  size="large"
-                  onChange={v => {
-                    setFilterQuery({ tagList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allTagList.map(option => (
-                    <Option key={option} value={option}>
-                      {option}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>{/* Placeholder */}</div>
-              <div className={styles.filterItemCheckbox}>
-                <Checkbox
-                  checked={displayDeleted}
-                  onChange={() => {
-                    setFilterQuery({ displayDeleted: !displayDeleted });
-                  }}
-                >
-                  {t('dataDiscovery.datasetsTable.header.showDeleted')}
-                </Checkbox>
-              </div>
-            </div>
-          </div>
-
           <div className={styles.resultRow}>
             {t('dataDiscovery.datasetsTable.resultCount', {
               count: pagination.totalCount ?? 0,
