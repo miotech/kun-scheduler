@@ -27,14 +27,15 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
             caseRunIdList.add(IdGenerator.getInstance().nextId());
         }
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
-        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId,1);
+        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
         List<CaseRun> caseRunList = new ArrayList<>();
-        for(int i = 0;i<caseRunIdList.size();i++){
+        for (int i = 0; i < caseRunIdList.size(); i++) {
             CaseRun caseRun = new CaseRun();
             caseRun.setCaseRunId(caseRunIdList.get(i));
             caseRun.setTaskRunId(taskRunId);
             caseRun.setTaskAttemptId(taskAttemptId);
             caseRun.setCaseId(IdGenerator.getInstance().nextId());
+            caseRun.setValidateDatasetId(IdGenerator.getInstance().nextId());
             caseRunList.add(caseRun);
         }
         dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);

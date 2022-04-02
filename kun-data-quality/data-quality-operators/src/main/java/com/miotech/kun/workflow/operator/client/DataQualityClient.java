@@ -14,6 +14,7 @@ import com.miotech.kun.dataquality.core.expectation.Dataset;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
@@ -39,7 +40,7 @@ public class DataQualityClient {
     private static final String EXPECTATION_RUN_TABLE_NAME = "kun_dq_expectation_run";
     private static final String EXPECTATION_METRICS_COLLECTION_TABLE_NAME = "kun_dq_metrics_collection";
     private static final List<String> EXPECTATION_COLUMNS = ImmutableList.of("id", "name", "types", "description", "method",
-            "metrics_config", "assertion_config", "trigger", "dataset_gid", "task_id", "is_blocking", "create_time",
+            "metrics_config", "assertion_config", "trigger", "dataset_gid", "task_id", "case_type", "create_time",
             "update_time", "create_user", "update_user");
     private static final List<String> EXPECTATION_RUN_INSERT_COLUMNS = ImmutableList.of("id", "expectation_id", "passed", "execution_result",
             "assertion_result", "continuous_failing_count", "update_time");
@@ -73,7 +74,7 @@ public class DataQualityClient {
                         .withAssertion(JSONUtils.jsonToObject(rs.getString("assertion_config"), Assertion.class))
                         .withTrigger(Expectation.ExpectationTrigger.valueOf(rs.getString("trigger")))
                         .withTaskId(rs.getLong("task_id"))
-                        .withIsBlocking(rs.getBoolean("is_blocking"))
+                        .withCaseType(CaseType.valueOf(rs.getString("case_type")))
                         .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")))
                         .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
                         .withCreateUser(rs.getString("create_user"))

@@ -46,6 +46,27 @@ public class MetadataDatasetService implements MetadataServiceFacade {
         return metadataDatasetDao.fetchDatasetByGid(gid);
     }
 
+    /**
+     *
+     * @param gid
+     * @return a dataset not contains any static info
+     */
+    public Dataset fetBasicDatasetByGid(Long gid){
+        Preconditions.checkNotNull(gid, "Argument `gid` cannot be null");
+        return metadataDatasetDao.fetchBasicDatasetByGid(gid);
+    }
+
+    /**
+     *
+     * @param datasetIds
+     * @return a dataset list not contains any static info
+     */
+    public List<Dataset> fetchBasicDatasetList(List<Long> datasetIds){
+        Preconditions.checkNotNull(datasetIds, "Argument `dataset` cannot be null");
+        return metadataDatasetDao.fetchBasicDatasetByGids(datasetIds);
+    }
+
+
     public List<String> suggestDatabase(String prefix) {
         return suggestDatabase(prefix, DEFAULT_SUGGEST_DATASOURCE_TYPE);
     }

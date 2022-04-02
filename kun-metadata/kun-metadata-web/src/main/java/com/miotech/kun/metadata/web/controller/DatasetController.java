@@ -180,6 +180,27 @@ public class DatasetController {
     }
 
     /**
+     * get dataset basic info
+     * @param id
+     * @return
+     */
+    @RouteMapping(url = "/dataset/basic/{id}", method = "GET")
+    public Dataset getBasicDataset(@RouteVariable Long id){
+        return datasetService.fetBasicDatasetByGid(id);
+    }
+
+    /**
+     * get dataset basick  list
+     * @param idList
+     * @return
+     */
+    @RouteMapping(url = "/dataset/basic/id_list", method = "POST")
+    public List<Dataset> getBasicDatasetList(@RequestBody List<Long> idList){
+
+        return datasetService.fetchBasicDatasetList(idList);
+    }
+
+    /**
      * update dataset
      * @param id
      * @param updateRequest

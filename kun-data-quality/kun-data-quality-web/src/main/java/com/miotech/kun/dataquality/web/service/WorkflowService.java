@@ -1,6 +1,8 @@
 package com.miotech.kun.dataquality.web.service;
 
 import com.miotech.kun.common.constant.DataQualityConstant;
+import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.core.model.OperatorHookParams;
 import com.miotech.kun.dataquality.web.common.service.ExpectationService;
 import com.miotech.kun.dataquality.web.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.WorkflowApiException;
@@ -12,6 +14,7 @@ import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +22,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Jie Chen
@@ -43,6 +48,12 @@ public class WorkflowService {
 
     @Value("${workflow.enabled:true}")
     Boolean workflowEnable;
+
+    @Value("${data-quality.hooks.operator-check-hook.classname}")
+    private String operatorHookClass;
+
+    @Autowired
+    private OperatorHookParams operatorHookParams;
 
     @Autowired
     MetadataClient metadataClient;
@@ -69,6 +80,15 @@ public class WorkflowService {
     }
 
     public TaskRun executeExpectation(Long expectationId) {
+        Expectation expectation = expectationService.fetchById(expectationId);
+        Map<String, Object> taskConfig = new HashMap<>();
+        taskConfig.put("validate-dataset", expectation.getDataset().getGid());
+        taskConfig.put("operator-hook-class", operatorHookClass);
+        taskConfig.put("operator-hook-params", JSONUtils.toJsonString(operatorHookParams.getParams()));
+        return executeExpectation(expectationId, taskConfig);
+    }
+
+    public TaskRun executeExpectation(Long expectationId, Map<String, Object> taskConfig) {
 
         Long taskId = expectationService.getTaskId(expectationId);
         if (taskId == null || taskId.equals(0L)) {
@@ -81,16 +101,20 @@ public class WorkflowService {
             }
         }
 
-        TaskRun taskRun = workflowClient.executeTask(taskId, null);
+        TaskRun taskRun = workflowClient.executeTask(taskId, taskConfig);
         log.info("Execute task " + taskId + " taskRun " + taskRun.getId());
 
         return taskRun;
     }
 
-    public List<Long> executeTasks(List<Long> caseIds){
+    public List<Long> executeTasks(List<Long> caseIds) {
+        return executeTasks(caseIds, null);
+    }
+
+    public List<Long> executeTasks(List<Long> caseIds, Map<String, Object> taskConfig) {
         List<Long> taskRunIdList = new ArrayList<>();
-        for(Long id: caseIds){
-            TaskRun taskRun = executeExpectation(id);
+        for (Long id : caseIds) {
+            TaskRun taskRun = executeExpectation(id, taskConfig);
             taskRunIdList.add(taskRun.getId());
         }
         return taskRunIdList;
@@ -115,7 +139,7 @@ public class WorkflowService {
         }
     }
 
-    public void updateUpstreamTaskCheckType(Long dataSetId, CheckType checkType){
+    public void updateUpstreamTaskCheckType(Long dataSetId, CheckType checkType) {
         List<Long> upstreamTaskIds = metadataClient.fetchUpstreamTaskIds(dataSetId);
         for (Long upstreamTaskId : upstreamTaskIds) {
             Task task = Task.newBuilder()

@@ -37,3 +37,23 @@ notify:
   urlLink:
     enabled: true
     prefix: https://example.org
+
+data-quality:
+  workflow:
+    task:
+      cron: 0 0 0 * * ?
+  daily:
+    start: 0 0 1 * * ?
+  hooks:
+    check-hook:
+      classname: com.miotech.kun.dataquality.web.hook.HudiDataQualityCheckHook
+      params:
+        warehouse-url: warehourse
+        access-key: accesskey
+        secrey-key: secreykey
+    operator-check-hook:
+      classname: com.miotech.kun.workflow.operator.hook.HudiDataQualityCheckOperatorHook
+      params:
+        warehouse-url: warehourse
+        access-key: accesskey
+        secrey-key: secreykey

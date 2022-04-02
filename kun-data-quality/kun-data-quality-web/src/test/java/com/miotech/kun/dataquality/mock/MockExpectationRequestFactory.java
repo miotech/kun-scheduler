@@ -1,6 +1,7 @@
 package com.miotech.kun.dataquality.mock;
 
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.web.model.bo.AssertionRequest;
 import com.miotech.kun.dataquality.web.model.bo.ExpectationRequest;
 import com.miotech.kun.dataquality.web.model.bo.MetricsRequest;
@@ -24,7 +25,7 @@ public class MockExpectationRequestFactory {
                 .metrics(metricsRequest)
                 .assertion(assertionRequest)
                 .relatedDatasetGids(ImmutableList.of(datasetGid))
-                .isBlocking(false)
+                .caseType(CaseType.SKIP)
                 .build();
     }
 
@@ -38,7 +39,7 @@ public class MockExpectationRequestFactory {
                 .metrics(metricsRequest)
                 .assertion(assertionRequest)
                 .relatedDatasetGids(relatedTableIds)
-                .isBlocking(false)
+                .caseType(CaseType.SKIP)
                 .build();
     }
 

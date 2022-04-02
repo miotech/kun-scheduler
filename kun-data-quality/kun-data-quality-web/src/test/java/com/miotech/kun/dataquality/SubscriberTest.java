@@ -16,9 +16,8 @@ import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.bo.ExpectationRequest;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
-import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
-import com.miotech.kun.dataquality.web.service.DataQualityService;
-import com.miotech.kun.dataquality.web.service.WorkflowService;
+import com.miotech.kun.dataquality.web.service.*;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
@@ -26,6 +25,7 @@ import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
+import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -36,10 +36,16 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import com.miotech.kun.dataquality.core.hooks.DataQualityCheckHook;
+import com.miotech.kun.dataquality.core.model.DataQualityContext;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -76,8 +82,14 @@ public class SubscriberTest extends DataQualityTestBase {
     @SpyBean
     private DatasetRepository datasetRepository;
 
+    @MockBean
+    private MetadataClient metadataClient;
+
+    @MockBean
+    private DataQualityCheckHook checkHook;
+
     @BeforeEach
-    public void mock() {
+    public void mock() throws IOException {
         doAnswer(invocation -> {
             Long taskId = invocation.getArgument(0, Long.class);
             TaskRun taskRun = TaskRun.newBuilder().withTask(Task.newBuilder().withId(taskId).build())
@@ -98,6 +110,30 @@ public class SubscriberTest extends DataQualityTestBase {
         doReturn(Optional.of(MockOperatorFactory.createOperator())).when(workflowClient).getOperator(anyString());
 
         doReturn(MockOperatorFactory.createOperator()).when(workflowClient).getOperator(anyLong());
+
+        doAnswer(invocation -> {
+            Long datasetId = invocation.getArgument(0,Long.class);
+            Dataset dataset = Dataset.newBuilder()
+                    .withGid(datasetId)
+                    .withName("table" + datasetId)
+                    .withDataStore(new HiveTableStore("hdfs://warehouse/database/table","database","table" + datasetId))
+                    .build();
+            return dataset;
+        }).when(metadataClient).fetchDatasetById(anyLong());
+
+        doAnswer(invocation -> {
+            List<Long> datasetIds = invocation.getArgument(0,List.class);
+            List<Dataset> datasetList = datasetIds.stream().map(datasetId ->
+                Dataset.newBuilder()
+                        .withGid(datasetId)
+                        .withName("table" + datasetId)
+                        .withDataStore(new HiveTableStore("hdfs://warehouse/database/table","database","table" + datasetId))
+                        .build()
+            ).collect(Collectors.toList());
+            return datasetList;
+        }).when(metadataClient).fetchDatasetsByIds(anyList());
+
+        doReturn(true).when(checkHook).afterAll(any(DataQualityContext.class));
     }
 
     @Test
@@ -133,8 +169,8 @@ public class SubscriberTest extends DataQualityTestBase {
         eventSubscriber.receiveEvent(event);
 
         //verify
-        verify(workflowService).executeTasks(captor.capture());
-        List<Long> caseIds = captor.getValue();
+        verify(workflowService,times(2)).executeTasks(captor.capture(),anyMap());
+        List<Long> caseIds = captor.getAllValues().stream().flatMap(Collection::stream).collect(Collectors.toList());
         assertThat(caseIds, hasSize(2));
         assertThat(caseIds, containsInAnyOrder(case1Id, case2Id));
 
@@ -190,13 +226,6 @@ public class SubscriberTest extends DataQualityTestBase {
         TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(taskAttemptId, taskRunId, new ArrayList<>(), outputDateSets);
         eventSubscriber.receiveEvent(event);
 
-        //verify
-        ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
-        verify(workflowService).executeTasks(captor.capture());
-        List<Long> caseIds = captor.getValue();
-        assertThat(caseIds, hasSize(2));
-        assertThat(caseIds, containsInAnyOrder(case1Id, case2Id));
-
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), true);
@@ -219,12 +248,13 @@ public class SubscriberTest extends DataQualityTestBase {
     }
 
     @Test
-    public void handleOneCaseFailed_should_send_failed_event() {
+    public void handleBlockCaseFailed_should_send_failed_event() {
         //prepare case
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id).cloneBuilder()
+                .withCaseType(CaseType.BLOCK).build();
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
@@ -241,20 +271,17 @@ public class SubscriberTest extends DataQualityTestBase {
         TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(taskAttemptId, taskRunId, new ArrayList<>(), outputDateSets);
         eventSubscriber.receiveEvent(event);
 
-        //verify
-        ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
-        verify(workflowService).executeTasks(captor.capture());
-        List<Long> caseIds = captor.getValue();
-        assertThat(caseIds, hasSize(2));
-        assertThat(caseIds, containsInAnyOrder(case1Id, case2Id));
 
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), false);
         TaskAttemptFinishedEvent failedEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectation1.getTaskId(),
                 caseRunIds.get(0), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
-
         eventSubscriber.receiveEvent(failedEvent);
+        dataQualityRepository.updateCaseRunStatus(caseRunIds.get(1), true);
+        TaskAttemptFinishedEvent successEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectation2.getTaskId(),
+                caseRunIds.get(1), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
+        eventSubscriber.receiveEvent(successEvent);
 
         //verify
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
@@ -272,12 +299,14 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id).cloneBuilder()
+                .withCaseType(CaseType.BLOCK).build();
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationFactory.create(dateset2Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset2Id).cloneBuilder()
+                .withCaseType(CaseType.FINAL_SUCCESS).build();
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
@@ -288,13 +317,6 @@ public class SubscriberTest extends DataQualityTestBase {
         List<Long> outputDateSets = Lists.newArrayList(dateset1Id, dateset2Id);
         TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(taskAttemptId, taskRunId, new ArrayList<>(), outputDateSets);
         eventSubscriber.receiveEvent(event);
-
-        //verify
-        ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
-        verify(workflowService).executeTasks(captor.capture());
-        List<Long> caseIds = captor.getValue();
-        assertThat(caseIds, hasSize(2));
-        assertThat(caseIds, containsInAnyOrder(case1Id, case2Id));
 
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
@@ -328,6 +350,10 @@ public class SubscriberTest extends DataQualityTestBase {
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         verify(publisher, times(1)).publish(eventCaptor.capture());
 
+        CheckResultEvent checkResultEvent = (CheckResultEvent) eventCaptor.getValue();
+        assertThat(checkResultEvent.getCheckStatus(), is(true));
+        assertThat(checkResultEvent.getTaskRunId(), is(taskRunId));
+
     }
 
     @Test
@@ -336,12 +362,14 @@ public class SubscriberTest extends DataQualityTestBase {
         Long dateset1Id = IdGenerator.getInstance().nextId();
         Long dateset2Id = IdGenerator.getInstance().nextId();
         //case1
-        Expectation expectation1 = MockExpectationFactory.create(dateset1Id);
+        Expectation expectation1 = MockExpectationFactory.create(dateset1Id).cloneBuilder()
+                .withCaseType(CaseType.BLOCK).build();
         Long case1Id = expectation1.getExpectationId();
         expectationDao.create(expectation1);
         expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset1Id));
         //case2
-        Expectation expectation2 = MockExpectationFactory.create(dateset2Id);
+        Expectation expectation2 = MockExpectationFactory.create(dateset2Id).cloneBuilder()
+                .withCaseType(CaseType.FINAL_SUCCESS).build();
         Long case2Id = expectation2.getExpectationId();
         expectationDao.create(expectation2);
         expectationDao.createRelatedDataset(case2Id, Lists.newArrayList(dateset2Id));
@@ -352,13 +380,6 @@ public class SubscriberTest extends DataQualityTestBase {
         List<Long> outputDateSets = Lists.newArrayList(dateset1Id, dateset2Id);
         TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(taskAttemptId, taskRunId, new ArrayList<>(), outputDateSets);
         eventSubscriber.receiveEvent(event);
-
-        //verify
-        ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
-        verify(workflowService).executeTasks(captor.capture());
-        List<Long> caseIds = captor.getValue();
-        assertThat(caseIds, hasSize(2));
-        assertThat(caseIds, containsInAnyOrder(case1Id, case2Id));
 
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
@@ -381,40 +402,50 @@ public class SubscriberTest extends DataQualityTestBase {
     }
 
     @Test
-    public void handleNonBlockingCaseFailed_should_not_send_event() {
+    public void onlyNonBlockingCaseFailed_should_send_success_event() {
         //prepare case
-        Long datesetId = IdGenerator.getInstance().nextId();
-        Expectation expectation = MockExpectationFactory.create(datesetId);
-        Expectation nonBlockingExpectation = expectation.cloneBuilder().withIsBlocking(false).build();
+        Long dateset1Id = IdGenerator.getInstance().nextId();
+        Long dateset2Id = IdGenerator.getInstance().nextId();
+        Expectation expectation = MockExpectationFactory.create(dateset1Id);
+        Expectation nonBlockingExpectation = expectation.cloneBuilder().withCaseType(CaseType.SKIP).build();
         Long caseId = nonBlockingExpectation.getExpectationId();
         expectationDao.create(nonBlockingExpectation);
-        expectationDao.createRelatedDataset(caseId, Lists.newArrayList(datesetId));
+        expectationDao.createRelatedDataset(caseId, Lists.newArrayList(dateset1Id));
+        //case1
+        Expectation expectation1 = MockExpectationFactory.create(dateset2Id).cloneBuilder()
+                .withCaseType(CaseType.BLOCK).build();
+        Long case1Id = expectation1.getExpectationId();
+        expectationDao.create(expectation1);
+        expectationDao.createRelatedDataset(case1Id, Lists.newArrayList(dateset2Id));
 
         //prepare check event
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
-        List<Long> outputDateSets = Lists.newArrayList(datesetId);
+        List<Long> outputDateSets = Lists.newArrayList(dateset1Id,dateset2Id);
         TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(taskAttemptId, taskRunId, new ArrayList<>(), outputDateSets);
         eventSubscriber.receiveEvent(event);
 
-        //verify
-        ArgumentCaptor<List<Long>> captor = ArgumentCaptor.forClass(List.class);
-        verify(workflowService).executeTasks(captor.capture());
-        List<Long> caseIds = captor.getValue();
-        assertThat(caseIds, hasSize(1));
 
         //prepare finished event
         List<Long> caseRunIds = dataQualityRepository.fetchCaseRunsByTaskRunId(taskRunId);
         dataQualityRepository.updateCaseRunStatus(caseRunIds.get(0), false);
         TaskAttemptFinishedEvent failedEvent = new TaskAttemptFinishedEvent(taskAttemptId, nonBlockingExpectation.getTaskId(),
                 caseRunIds.get(0), TaskRunStatus.FAILED, new ArrayList<>(), new ArrayList<>());
-
         eventSubscriber.receiveEvent(failedEvent);
+
+        dataQualityRepository.updateCaseRunStatus(caseRunIds.get(1), true);
+        TaskAttemptFinishedEvent successEvent = new TaskAttemptFinishedEvent(taskAttemptId, expectation1.getTaskId(),
+                caseRunIds.get(1), TaskRunStatus.SUCCESS, new ArrayList<>(), new ArrayList<>());
+
+        eventSubscriber.receiveEvent(successEvent);
 
         //verify
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        verify(publisher, times(0)).publish(eventCaptor.capture());
+        verify(publisher).publish(eventCaptor.capture());
 
+        CheckResultEvent checkResultEvent = (CheckResultEvent) eventCaptor.getValue();
+        assertThat(checkResultEvent.getCheckStatus(), is(true));
+        assertThat(checkResultEvent.getTaskRunId(), is(taskRunId));
     }
 
     @Test

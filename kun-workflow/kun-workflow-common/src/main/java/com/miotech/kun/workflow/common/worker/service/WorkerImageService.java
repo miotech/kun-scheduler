@@ -38,9 +38,19 @@ public class WorkerImageService {
                 .build();
     }
 
-    public synchronized Boolean setActiveVersion(Long imageId) {
-        Boolean result = workerImageDao.setActiveVersion(imageId);
+    public synchronized Boolean setActiveVersion(Long imageId, String imageName) {
+        Boolean result = workerImageDao.setActiveVersion(imageId, imageName);
         return result;
+    }
+
+    public synchronized Boolean setActiveVersion(Long imageId) {
+        WorkerImageFilter imageFilter = WorkerImageFilter.newBuilder()
+                .withId(imageId)
+                .withPage(0)
+                .withPageSize(1)
+                .build();
+        WorkerImage workerImage = workerImageDao.fetchWorkerImage(imageFilter).get(0);
+        return setActiveVersion(imageId, workerImage.getImageName());
     }
 
     /**

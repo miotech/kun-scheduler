@@ -28,7 +28,7 @@ public class Expectation {
 
     private final Dataset dataset;
 
-    private final boolean isBlocking;
+    private final CaseType caseType;
 
     private final OffsetDateTime createTime;
 
@@ -40,7 +40,7 @@ public class Expectation {
 
     public Expectation(Long expectationId, String name, List<String> types, String description, ExpectationMethod method,
                        ExpectationTrigger trigger, Metrics metrics, Assertion assertion, Long taskId, Dataset dataset,
-                       boolean isBlocking, OffsetDateTime createTime, OffsetDateTime updateTime, String createUser, String updateUser) {
+                       CaseType caseType, OffsetDateTime createTime, OffsetDateTime updateTime, String createUser, String updateUser) {
         this.expectationId = expectationId;
         this.name = name;
         this.types = types;
@@ -51,7 +51,7 @@ public class Expectation {
         this.assertion = assertion;
         this.taskId = taskId;
         this.dataset = dataset;
-        this.isBlocking = isBlocking;
+        this.caseType = caseType;
         this.createTime = createTime;
         this.updateTime = updateTime;
         this.createUser = createUser;
@@ -98,8 +98,8 @@ public class Expectation {
         return dataset;
     }
 
-    public boolean isBlocking() {
-        return isBlocking;
+    public CaseType getCaseType() {
+        return caseType;
     }
 
     public OffsetDateTime getCreateTime() {
@@ -138,7 +138,7 @@ public class Expectation {
                 .withTrigger(this.trigger)
                 .withTaskId(this.taskId)
                 .withDataset(this.dataset)
-                .withIsBlocking(this.isBlocking)
+                .withCaseType(this.caseType)
                 .withCreateTime(this.createTime)
                 .withUpdateTime(this.updateTime)
                 .withCreateUser(this.createUser)
@@ -156,7 +156,7 @@ public class Expectation {
         private Assertion assertion;
         private Long taskId;
         private Dataset dataset;
-        private boolean isBlocking;
+        private CaseType caseType;
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
         private String createUser;
@@ -215,8 +215,8 @@ public class Expectation {
             return this;
         }
 
-        public Builder withIsBlocking(boolean isBlocking) {
-            this.isBlocking = isBlocking;
+        public Builder withCaseType(CaseType caseType) {
+            this.caseType = caseType;
             return this;
         }
 
@@ -242,7 +242,7 @@ public class Expectation {
 
         public Expectation build() {
             return new Expectation(expectationId, name, types, description, method, trigger, metrics, assertion,
-                    taskId, dataset, isBlocking, createTime, updateTime, createUser, updateUser);
+                    taskId, dataset, caseType, createTime, updateTime, createUser, updateUser);
         }
     }
 }

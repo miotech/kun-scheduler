@@ -2,6 +2,7 @@ package com.miotech.kun.dataquality.web.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.TemplateType;
@@ -90,7 +91,6 @@ public class DataQualityService extends BaseSecurityService {
     public ExpectationVO getExpectation(Long id) {
         Expectation expectation = expectationDao.fetchById(id);
         List<DatasetBasic> relatedDatasets = expectationDao.getRelatedDatasets(id);
-
         return ExpectationVO.newBuilder()
                 .withId(expectation.getExpectationId())
                 .withName(expectation.getName())
@@ -99,7 +99,7 @@ public class DataQualityService extends BaseSecurityService {
                 .withMetrics(MetricsRequest.convertFrom(expectation.getMetrics()))
                 .withAssertion(AssertionRequest.convertFrom(expectation.getAssertion()))
                 .withRelatedTables(relatedDatasets)
-                .withIsBlocking(expectation.isBlocking())
+                .withCaseType(expectation.getCaseType())
                 .build();
     }
 
@@ -124,6 +124,9 @@ public class DataQualityService extends BaseSecurityService {
         String currentUsername = getCurrentUsername();
         Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
 
+        if(expectationRequest.getCaseType() == null){
+            expectationRequest.setCaseType(CaseType.SKIP);
+        }
         Expectation expectation = expectationRequest.convertTo(dataSourceId, currentUsername);
         expectationDao.create(expectation);
         updateRelatedDataset(expectation.getExpectationId(), expectationRequest.getRelatedDatasetGids());
@@ -145,8 +148,11 @@ public class DataQualityService extends BaseSecurityService {
     @Transactional(rollbackFor = Exception.class)
     public void updateExpectation(Long id, ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
-
         Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
+
+        if(expectationRequest.getCaseType() == null){
+            expectationRequest.setCaseType(CaseType.SKIP);
+        }
         Expectation expectation = expectationRequest.convertTo(dataSourceId, currentUsername);
         expectationDao.updateById(id, expectation);
         updateRelatedDataset(id, expectationRequest.getRelatedDatasetGids());
@@ -160,6 +166,22 @@ public class DataQualityService extends BaseSecurityService {
     public void runExpectation(Long id) {
         Preconditions.checkNotNull(id);
         workflowService.executeExpectation(id);
+    }
+
+    public List<Long> getWorkflowTasksByDatasetId(Long datasetId){
+        return dataQualityRepository.getWorkflowTasksByDatasetId(datasetId);
+    }
+
+    public void insertCaseRunWithTaskRun(List<CaseRun> caseRunList){
+        dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);
+    }
+
+    public void updateCaseRunStatus(CaseRun caseRun){
+        dataQualityRepository.updateCaseRunStatus(caseRun.getCaseRunId(),caseRun.getStatus());
+    }
+
+    public CaseRun fetchCaseRunByCaseRunId(long caseRunId) {
+        return dataQualityRepository.fetchCaseRunByCaseRunId(caseRunId);
     }
 
     private void updateRelatedDataset(Long id, List<Long> datasetIds) {

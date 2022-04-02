@@ -10,6 +10,7 @@ import com.miotech.kun.dataquality.core.expectation.JDBCExpectationAssertion;
 import com.miotech.kun.dataquality.core.expectation.JDBCExpectationMethod;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
+import com.miotech.kun.dataquality.core.expectation.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 
 public class MockExpectationFactory {
@@ -30,7 +31,7 @@ public class MockExpectationFactory {
                 .withTrigger(Expectation.ExpectationTrigger.SCHEDULED)
                 .withDataset(dataset)
                 .withTaskId(IdGenerator.getInstance().nextId())
-                .withIsBlocking(true)
+                .withCaseType(CaseType.SKIP)
                 .withCreateTime(DateTimeUtils.now())
                 .withUpdateTime(DateTimeUtils.now())
                 .withCreateUser("admin")
@@ -48,7 +49,7 @@ public class MockExpectationFactory {
                 .withTrigger(Expectation.ExpectationTrigger.SCHEDULED)
                 .withDataset(Dataset.builder().gid(IdGenerator.getInstance().nextId()).dataSource(DataSource.newBuilder().withId(IdGenerator.getInstance().nextId()).build()).build())
                 .withTaskId(taskId)
-                .withIsBlocking(true)
+                .withCaseType(CaseType.BLOCK)
                 .withCreateTime(DateTimeUtils.now())
                 .withUpdateTime(DateTimeUtils.now())
                 .withCreateUser("admin")

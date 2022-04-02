@@ -2,6 +2,7 @@ package com.miotech.kun.dataquality.web.model.bo;
 
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Dataset;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
@@ -30,7 +31,7 @@ public class ExpectationRequest {
 
     private List<Long> relatedDatasetGids;
 
-    private boolean isBlocking;
+    private CaseType caseType;
 
     public Expectation convertTo(Long dataSourceId, String currentUsername) {
         Dataset dataset = Dataset.builder()
@@ -48,7 +49,7 @@ public class ExpectationRequest {
                 .withAssertion(this.assertion.convertTo())
                 .withTrigger(DATASET_UPDATED)
                 .withDataset(dataset)
-                .withIsBlocking(this.isBlocking)
+                .withCaseType(this.caseType)
                 .withCreateTime(now)
                 .withUpdateTime(now)
                 .withCreateUser(currentUsername)
@@ -57,11 +58,14 @@ public class ExpectationRequest {
     }
 
     public CheckType getCheckType() {
-        CheckType checkType = CheckType.SKIP;
-        if (this.isBlocking) {
-            checkType = CheckType.WAIT_EVENT;
+        switch (caseType){
+            case BLOCK:
+                return CheckType.WAIT_EVENT_PASS;
+            case FINAL_SUCCESS:
+                return CheckType.WAIT_EVENT;
+            default:
+                return CheckType.SKIP;
         }
-        return checkType;
     }
 
 }

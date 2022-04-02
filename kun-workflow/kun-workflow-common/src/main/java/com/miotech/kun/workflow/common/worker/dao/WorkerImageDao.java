@@ -56,6 +56,7 @@ public class WorkerImageDao {
     /**
      * fetch worker image with filter
      * order by id desc
+     *
      * @param filter
      * @return
      */
@@ -95,11 +96,11 @@ public class WorkerImageDao {
         return dbOperator.fetchAll(sql, WorkerImageMapper.WORKER_IMAGE_INSTANCE, params.toArray());
     }
 
-    public Boolean setActiveVersion(Long imageId) {
+    public Boolean setActiveVersion(Long imageId, String imageName) {
         String cancelActive = DefaultSQLBuilder.newBuilder()
                 .update(WORKER_IMAGE_TABLE)
                 .set("active")
-                .where("active = ?")
+                .where("active = ? and image_name = ?")
                 .asPrepared()
                 .getSQL();
         String setActive = DefaultSQLBuilder.newBuilder()
@@ -110,7 +111,7 @@ public class WorkerImageDao {
                 .getSQL();
 
         return dbOperator.transaction(() -> {
-            dbOperator.update(cancelActive, false, true);
+            dbOperator.update(cancelActive, false, true, imageName);
             return dbOperator.update(setActive, true, imageId) == 1;
         });
     }

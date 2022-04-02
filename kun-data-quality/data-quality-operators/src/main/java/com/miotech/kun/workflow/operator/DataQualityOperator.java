@@ -10,8 +10,12 @@ import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
+import com.miotech.kun.dataquality.core.model.OperatorHookParams;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
+import com.miotech.kun.dataquality.core.hooks.DataQualityCheckOperationHook;
+import com.miotech.kun.dataquality.core.model.DataQualityOperatorContext;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -31,6 +35,8 @@ public class DataQualityOperator extends KunOperator {
     private Long caseId;
     private Long caseRunId;
     private DataQualityClient dataQualityClient;
+    private DataQualityOperatorContext dataQualityContext;
+    private DataQualityCheckOperationHook operationHook;
 
     @Override
     public void init() {
@@ -52,6 +58,19 @@ public class DataQualityOperator extends KunOperator {
         }
         caseId = Long.valueOf(caseIdStr);
         caseRunId = context.getTaskRunId();
+
+        String datasetJson = config.getString(VALIDATE_DATASET);
+        logger.debug("trigger dataset is " + datasetJson);
+        Dataset triggerDataset = JSONUtils.jsonToObject(datasetJson, Dataset.class);
+        logger.debug("building data quality operator context with dataset {}", triggerDataset.getGid());
+        dataQualityContext = DataQualityOperatorContext.newBuilder()
+                .withDataset(triggerDataset)
+                .build();
+        String className = config.getString(OPERATOR_HOOK_CLASS);
+        OperatorHookParams hookParams = new OperatorHookParams();
+        hookParams.setParams(JSONUtils.jsonStringToStringMap(config.getString(OPERATOR_HOOK_PARAMS)));
+        operationHook = initHook(className, hookParams);
+
     }
 
     @Override
@@ -66,7 +85,10 @@ public class DataQualityOperator extends KunOperator {
             Assertion assertion = expectation.getAssertion();
             logger.info("assertion: {}", JSONUtils.toJsonString(assertion));
 
+            beforeExecute();
             MetricsCollectedResult<String> currentMetricsCollectedResult = metrics.collect();
+            afterExecute();
+
             dataQualityClient.recordMetricsCollectedResult(expectation.getExpectationId(), currentMetricsCollectedResult);
             logger.info("metrics: {} collection completed, result: {}", JSONUtils.toJsonString(metrics),
                     JSONUtils.toJsonString(currentMetricsCollectedResult));
@@ -103,12 +125,52 @@ public class DataQualityOperator extends KunOperator {
                 .define(METADATA_DATASOURCE_DIRVER_CLASS, ConfigDef.Type.STRING, true, "datasource driver class", METADATA_DATASOURCE_DIRVER_CLASS)
                 .define(DATAQUALITY_CASE_ID, ConfigDef.Type.STRING, true, "data quality case id", DATAQUALITY_CASE_ID)
                 .define(INFRA_BASE_URL, ConfigDef.Type.STRING, true, "infra base url", INFRA_BASE_URL)
-                ;
+                .define(VALIDATE_DATASET, ConfigDef.Type.STRING, true, "validate dataset", VALIDATE_DATASET)
+                .define(OPERATOR_HOOK_CLASS, ConfigDef.Type.STRING, true, "operator hook class", OPERATOR_HOOK_CLASS)
+                .define(OPERATOR_HOOK_PARAMS, ConfigDef.Type.STRING, true, "operator hook params", OPERATOR_HOOK_PARAMS);
     }
 
     @Override
     public Resolver getResolver() {
         return new NopResolver();
+    }
+
+    private DataQualityCheckOperationHook initHook(String className, OperatorHookParams hookParams) {
+        if (className == null) {
+            return null;
+        }
+        try {
+            logger.debug("using {} for operator hook", className);
+            Class clazz = Class.forName(className);
+            DataQualityCheckOperationHook hook = (DataQualityCheckOperationHook) clazz.
+                    getDeclaredConstructor().newInstance();
+            logger.debug("init hook with params:{}", hookParams);
+            hook.initialize(hookParams);
+            return hook;
+        } catch (Exception e) {
+            logger.error("could not create data quality operator check hook", e);
+            return null;
+        }
+    }
+
+    private void beforeExecute() {
+        if (operationHook != null) {
+            try {
+                operationHook.before(dataQualityContext);
+            } catch (Exception e) {
+                logger.error("hook before execute failed", e);
+            }
+        }
+    }
+
+    private void afterExecute() {
+        if (operationHook != null) {
+            try {
+                operationHook.after(dataQualityContext);
+            } catch (Exception e) {
+                logger.error("hook after execute failed", e);
+            }
+        }
     }
 
 }
