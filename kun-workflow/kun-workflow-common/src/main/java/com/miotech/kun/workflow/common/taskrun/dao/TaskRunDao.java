@@ -51,7 +51,7 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "term_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
     private static final List<String> taskRunPropsCols = ImmutableList.of("id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "created_at", "updated_at", "queue_name", "priority", "target");
 
     private static final String TASK_RUN_STAT_MODEL_NAME = "task_run_stat";
@@ -403,6 +403,7 @@ public class TaskRunDao {
                     taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
+                    taskRun.getTermAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
@@ -488,6 +489,7 @@ public class TaskRunDao {
                     taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
+                    taskRun.getTermAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
@@ -541,6 +543,7 @@ public class TaskRunDao {
                     taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
+                    taskRun.getTermAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
@@ -1931,6 +1934,7 @@ public class TaskRunDao {
                     .withQueuedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_queued_at")))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
+                    .withTermAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_term_at")))
                     .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_created_at")))
                     .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_updated_at")))
                     .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))

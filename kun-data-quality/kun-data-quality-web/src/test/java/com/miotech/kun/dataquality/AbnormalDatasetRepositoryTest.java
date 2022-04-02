@@ -3,6 +3,7 @@ package com.miotech.kun.dataquality;
 import com.miotech.kun.dataquality.mock.MockAbnormalDatasetFactory;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import com.miotech.kun.dataquality.web.persistence.AbnormalDatasetRepository;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,7 +33,7 @@ public class AbnormalDatasetRepositoryTest extends DataQualityTestBase {
 
     @Test
     public void testUpdateStatus_notExist() {
-        boolean result = abnormalDatasetRepository.updateStatus(1L, "SUCCESS");
+        boolean result = abnormalDatasetRepository.updateStatus(1L, "SUCCESS", DateTimeUtils.now());
         assertFalse(result);
     }
 
@@ -44,7 +45,7 @@ public class AbnormalDatasetRepositoryTest extends DataQualityTestBase {
 
         List<AbnormalDataset> abnormalDatasets = abnormalDatasetRepository.fetchAll();
         assertThat(abnormalDatasets.size(), is(1));
-        boolean result = abnormalDatasetRepository.updateStatus(abnormalDatasets.get(0).getId(), "SUCCESS");
+        boolean result = abnormalDatasetRepository.updateStatus(abnormalDatasets.get(0).getId(), "SUCCESS", DateTimeUtils.now());
         assertTrue(result);
     }
 

@@ -2,9 +2,12 @@ package com.miotech.kun.dataquality;
 
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.mock.MockAbnormalDatasetFactory;
+import com.miotech.kun.dataquality.mock.MockTaskRunFactory;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import com.miotech.kun.dataquality.web.persistence.AbnormalDatasetRepository;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
+import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -54,7 +57,8 @@ public class AbnormalDatasetServiceTest extends DataQualityTestBase {
 
     @Test
     public void testUpdateStatus_notExist() {
-        boolean result = abnormalDatasetService.updateStatus(1L, "SUCCESS");
+        TaskRun taskRun = MockTaskRunFactory.create(TaskRunStatus.SUCCESS);
+        boolean result = abnormalDatasetService.updateStatus(1L, taskRun);
         assertFalse(result);
     }
 
@@ -67,7 +71,8 @@ public class AbnormalDatasetServiceTest extends DataQualityTestBase {
 
         List<AbnormalDataset> abnormalDatasets = abnormalDatasetRepository.fetchAll();
         assertThat(abnormalDatasets.size(), is(1));
-        boolean result = abnormalDatasetService.updateStatus(abnormalDatasets.get(0).getId(), "SUCCESS");
+        TaskRun taskRun = MockTaskRunFactory.create(TaskRunStatus.SUCCESS);
+        boolean result = abnormalDatasetService.updateStatus(abnormalDatasets.get(0).getId(), taskRun);
         assertTrue(result);
     }
 

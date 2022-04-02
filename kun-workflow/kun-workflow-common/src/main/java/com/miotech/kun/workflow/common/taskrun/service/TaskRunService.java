@@ -602,6 +602,7 @@ public class TaskRunService {
         vo.setQueuedAt(taskRun.getQueuedAt());
         vo.setStartAt(taskRun.getStartAt());
         vo.setEndAt(taskRun.getEndAt());
+        vo.setTermAt(taskRun.getTermAt());
         vo.setCreatedAt(taskRun.getCreatedAt());
         vo.setUpdatedAt(taskRun.getUpdatedAt());
         vo.setConfig(taskRun.getConfig());

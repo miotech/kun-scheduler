@@ -37,6 +37,8 @@ public class TaskRun {
 
     private final OffsetDateTime endAt;
 
+    private final OffsetDateTime termAt;
+
     private final OffsetDateTime createdAt;
 
     private final OffsetDateTime updatedAt;
@@ -91,6 +93,10 @@ public class TaskRun {
         return endAt;
     }
 
+    public OffsetDateTime getTermAt() {
+        return termAt;
+    }
+
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
@@ -136,7 +142,7 @@ public class TaskRun {
     }
 
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime queuedAt,
-                   OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                   OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime termAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                    List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
                    ScheduleType scheduledType, String queueName, Integer priority, ExecuteTarget executeTarget, List<TaskRunCondition> taskRunConditions) {
         checkNotNull(task, "task should not be null.");
@@ -148,6 +154,7 @@ public class TaskRun {
         this.queuedAt = queuedAt;
         this.startAt = startAt;
         this.endAt = endAt;
+        this.termAt = termAt;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.inlets = inlets;
@@ -175,6 +182,7 @@ public class TaskRun {
                 .withQueuedAt(queuedAt)
                 .withStartAt(startAt)
                 .withEndAt(endAt)
+                .withTermAt(termAt)
                 .withInlets(inlets)
                 .withOutlets(outlets)
                 .withCreatedAt(createdAt)
@@ -200,6 +208,7 @@ public class TaskRun {
                 ", queuedAt=" + queuedAt +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
+                ", termAt=" + termAt +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 ", inlets=" + inlets +
@@ -222,6 +231,7 @@ public class TaskRun {
         private OffsetDateTime queuedAt;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
+        private OffsetDateTime termAt;
         private OffsetDateTime createdAt;
         private OffsetDateTime updatedAt;
         private List<DataStore> inlets;
@@ -274,6 +284,11 @@ public class TaskRun {
 
         public TaskRunBuilder withEndAt(OffsetDateTime endAt) {
             this.endAt = endAt;
+            return this;
+        }
+
+        public TaskRunBuilder withTermAt(OffsetDateTime termAt) {
+            this.termAt = termAt;
             return this;
         }
 
@@ -332,7 +347,7 @@ public class TaskRun {
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, createdAt, updatedAt, inlets,
+            return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, termAt, createdAt, updatedAt, inlets,
                     outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget, taskRunConditions);
         }
     }

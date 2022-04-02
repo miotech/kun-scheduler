@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Repository
@@ -40,14 +41,14 @@ public class AbnormalDatasetRepository {
                 abnormalDataset.getScheduleAt());
     }
 
-    public boolean updateStatus(Long id, String status) {
+    public boolean updateStatus(Long id, String status, OffsetDateTime updateTime) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(TABLE_NAME)
                 .set("status", "update_time")
                 .where("id = ?")
                 .asPrepared()
                 .getSQL();
-        int updatedRows = jdbcTemplate.update(sql, status, DateTimeUtils.now(), id);
+        int updatedRows = jdbcTemplate.update(sql, status, updateTime, id);
         return updatedRows == 1;
     }
 

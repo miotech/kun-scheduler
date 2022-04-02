@@ -38,6 +38,8 @@ public class TaskRunVO {
 
     private OffsetDateTime endAt;
 
+    private OffsetDateTime termAt;
+
     private OffsetDateTime createdAt;
 
     private OffsetDateTime updatedAt;
@@ -127,6 +129,14 @@ public class TaskRunVO {
 
     public void setEndAt(OffsetDateTime endAt) {
         this.endAt = endAt;
+    }
+
+    public OffsetDateTime getTermAt() {
+        return termAt;
+    }
+
+    public void setTermAt(OffsetDateTime termAt) {
+        this.termAt = termAt;
     }
 
     public List<TaskAttemptProps> getAttempts() {

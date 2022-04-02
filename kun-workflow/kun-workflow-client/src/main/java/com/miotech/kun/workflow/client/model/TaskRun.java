@@ -48,6 +48,10 @@ public class TaskRun {
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private OffsetDateTime termAt;
+
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime createdAt;
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
@@ -138,6 +142,14 @@ public class TaskRun {
         return endAt;
     }
 
+    public OffsetDateTime getTermAt() {
+        return termAt;
+    }
+
+    public void setTermAt(OffsetDateTime termAt) {
+        this.termAt = termAt;
+    }
+
     public void setEndAt(OffsetDateTime endAt) {
         this.endAt = endAt;
     }
@@ -211,6 +223,8 @@ public class TaskRun {
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime endAt;
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+        private OffsetDateTime termAt;
+        @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime createdAt;
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime updatedAt;
@@ -278,6 +292,11 @@ public class TaskRun {
             return this;
         }
 
+        public Builder withTermAt(OffsetDateTime termAt) {
+            this.termAt = termAt;
+            return this;
+        }
+
         public Builder withCreatedAt(OffsetDateTime createdAt) {
             this.createdAt = createdAt;
             return this;
@@ -330,6 +349,7 @@ public class TaskRun {
             taskRunVO.setQueuedAt(queuedAt);
             taskRunVO.setStartAt(startAt);
             taskRunVO.setEndAt(endAt);
+            taskRunVO.setTermAt(termAt);
             taskRunVO.setAttempts(attempts);
             taskRunVO.setFailedUpstreamTaskRuns(failedUpstreamTaskRuns);
             taskRunVO.setDependencyTaskRunIds(dependencyTaskRunIds);
