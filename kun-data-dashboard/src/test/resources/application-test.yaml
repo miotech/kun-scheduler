@@ -1,0 +1,61 @@
+testenv: true
+
+server:
+  port: ${SERVER_PORT:8088}
+
+workflow:
+  enabled: false
+  baseUrl: ${WORKFLOW_URL:}
+  variableNamespace: dataplatform
+
+data-discovery:
+  baseUrl: https://kun-dev.miotech.com
+
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
+
+  session:
+    jdbc:
+      initialize-schema: always
+      table-name: kun_user_session
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:webapp_sql
+    table: flyway_kun_webapp_schema_history
+    schemas: public
+    baselineOnMigrate: true
+    baselineVersion: 0
+
+notify:
+  systemDefault:
+    triggerType: ON_FAIL
+    userConfigJson: '[{"notifierType": "WECOM"}]'
+  email:
+    smtpHost: 0.0.0.0
+    smtpPort: 25
+    smtpUsername: kun-robot
+    smtpPassword: kun-robot-password
+    emailFrom: foo@bar.com
+    emailFromName: kun-robot
+  urlLink:
+    enabled: true
+    prefix: https://example.org
+  wecom:
+    corpid: 123
+    corpsecret: abc
+    agentid: 1
+    chatid: 1
+    url:
+      get_token: https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=%s&corpsecret=%s
+      send-to-user: https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=%s
+      send-to-chat: https://qyapi.weixin.qq.com/cgi-bin/appchat/send?access_token=%s
+
+spark:
+  thrift-server:
+    enabled: false
+    url:
+    username:
+    password:
