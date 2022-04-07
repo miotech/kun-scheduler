@@ -35,10 +35,13 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class KunWorkflowServerModule extends AppModule {
+    private static final Logger logger = LoggerFactory.getLogger(KunWorkflowServerModule.class);
 
     private final Props props;
 
@@ -57,13 +60,7 @@ public class KunWorkflowServerModule extends AppModule {
             bind(AbstractQueueManager.class).to(LocalQueueManage.class);
             bind(WorkerMonitor.class).to(LocalProcessMonitor.class);
         } else if (env.equals("kubernetes")) {
-            String masterUrl = props.get("executor.env.url");
-            String token = props.getString("executor.env.oauthToken");
-            Config config = new ConfigBuilder().withMasterUrl(masterUrl)
-                    .withCaCertFile(props.getString("executor.env.caCertFile"))
-                    .withOauthToken(token)
-                    .build();
-            KubernetesClient client = new DefaultKubernetesClient(config);
+            KubernetesClient client = new DefaultKubernetesClient(kubernetesConfig());
             bind(KubernetesClient.class).toInstance(client);
             bind(AbstractQueueManager.class).to(KubernetesResourceManager.class);
             bind(WorkerMonitor.class).to(PodEventMonitor.class);
@@ -100,6 +97,21 @@ public class KunWorkflowServerModule extends AppModule {
         return new NopEventSubscriber();
     }
 
+    private Config kubernetesConfig() {
+        String masterUrl = props.get("executor.env.url");
+        String oauthToken = props.get("executor.env.oauthToken");
+        String caCertFile = props.get("executor.env.caCertFile");
 
-
+        if (masterUrl != null && oauthToken != null && caCertFile != null) {
+            logger.info("Interact with k8s cluster using oauth authentication.");
+            return new ConfigBuilder()
+                    .withMasterUrl(masterUrl)
+                    .withOauthToken(oauthToken)
+                    .withCaCertFile(caCertFile)
+                    .build();
+        } else {
+            logger.info("Interact with k8s cluster using rbac authentication.");
+            return Config.autoConfigure(null);
+        }
+    }
 }
