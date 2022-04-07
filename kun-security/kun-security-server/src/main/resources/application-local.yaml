@@ -13,7 +13,7 @@ spring:
   session:
     datasource:
       driver-class-name: org.postgresql.Driver
-      url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun_security
+      url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
       username: ${DB_PG_USERNAME}
       password: ${DB_PG_PASSWORD}
     jdbc:

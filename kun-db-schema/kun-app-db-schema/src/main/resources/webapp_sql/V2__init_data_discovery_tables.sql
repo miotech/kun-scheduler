@@ -148,10 +148,4 @@ create table if not exists kun_dq_case_metrics
 
 -- V14__drop_useless_security_table.sql
 
-drop table if exists kun_user;
-
-drop table if exists kun_user_session_attributes;
-
-drop table if exists kun_user_session;
-
 -- V15__enhance_dq_case_metrics.sql
