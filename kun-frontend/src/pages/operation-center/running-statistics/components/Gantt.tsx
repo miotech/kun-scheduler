@@ -4,14 +4,15 @@ import React, { memo, useMemo, useCallback } from 'react';
 import moment from 'moment';
 import ReactTooltip from 'react-tooltip';
 import ReactDOMServer from 'react-dom/server';
-import { Tasks, TaskState } from '@/definitions/Gantt.type';
+import { Tasks } from '@/definitions/Gantt.type';
 import useI18n from '@/hooks/useI18n';
+import { Link } from 'umi';
 import style from './Gantt.less';
 import { TooltipHtml } from './TooltipHtml';
 
 interface OwnProps {
   data: Tasks;
-  setTask: (task?: TaskState) => void;
+  taskRunId: String | null;
 }
 
 // 求时间中间隔多少h
@@ -30,7 +31,7 @@ function getIntervalMinutes(startDate: string, endDate: string) {
 
 export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
   const t = useI18n();
-  const { data, setTask } = props;
+  const { data, taskRunId } = props;
   const { earliestTime, latestTime, infoList } = data;
   const toolBarStartTime = useMemo(() => moment(earliestTime).format('YYYY-MM-DD, HH:00:00'), [earliestTime]); // 坐标轴开始时间
   // 时间轴有多少格
@@ -88,6 +89,7 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
           runWidth,
           status: item.status,
           taskRunId: item.taskRunId,
+          taskId: item.taskId,
           averageWidth: item.averageRunningTime ? parseInt(item.averageRunningTime / 60, 10) : 0,
           name: item.name,
         };
@@ -128,7 +130,6 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
               <div
                 key={item.taskRunId}
                 onMouseMove={e => onMouseMove(e, item)}
-                onClick={() => setTask({ taskRunId: item.taskRunId, taskName: item.name })}
                 className={style.barCon}
                 style={{ transform: `translateX(${item.waitLeft}px)` }}
                 data-tip={ReactDOMServer.renderToString(<TooltipHtml t={t} />)}
@@ -144,9 +145,17 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
                   className={style.average}
                   style={{ width: `${item.averageWidth}px`, transform: `translateX(${item.waitWidth}px)` }}
                 />
-                <div className={style.name} data-id="name">
+                <Link
+                  to={`/operation-center/running-statistics?taskRunId=${item.taskRunId}&taskName=${item.name}`}
+                  className={style.name}
+                  style={{ color: item.taskRunId === taskRunId && '#000' }}
+                  data-id="name"
+                >
                   {item.name}
-                </div>
+                </Link>
+                <Link to={`/operation-center/task-run-id/${item.taskRunId}`}>
+                  &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
+                </Link>
               </div>
             </div>
           );

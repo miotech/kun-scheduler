@@ -1,7 +1,7 @@
 import React, { memo, SyntheticEvent, useCallback, useState } from 'react';
 import { DatePicker, Button, Select } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import { Filters, TaskState } from '@/definitions/Gantt.type';
+import { Filters } from '@/definitions/Gantt.type';
 import useI18n from '@/hooks/useI18n';
 
 import moment, { Moment } from 'moment';
@@ -9,8 +9,6 @@ import css from './ViewFilters.less';
 
 interface OwnProps {
   filters: Filters;
-  task: TaskState | undefined;
-  setTask: (task?: TaskState) => void;
   updateFilters: (params: Filters) => void;
   onClickRefresh: (ev: SyntheticEvent) => any;
   refreshBtnLoading?: boolean;
@@ -23,7 +21,7 @@ const { Option } = Select;
 export const ViewFilters: React.FC<Props> = memo(function ViewFilters(props) {
   const t = useI18n();
 
-  const { updateFilters, onClickRefresh, refreshBtnLoading = false, task, setTask } = props;
+  const { updateFilters, onClickRefresh, refreshBtnLoading = false } = props;
   const [dates, setDates] = useState([]);
   const disabledDate = useCallback(
     (current: any) => {
@@ -67,11 +65,11 @@ export const ViewFilters: React.FC<Props> = memo(function ViewFilters(props) {
       <div className={css.filterOption}>
         {/* type  of time */}
         <div className={css.timeTypeWrapper}>
-          <Select defaultValue="createdAt" style={{ width: 100 }} onChange={handleChange}>
-            <Option value="createdAt">created-at</Option>
-            <Option value="queuedAt">queued-at</Option>
-            <Option value="startAt">start-at</Option>
-            <Option value="endAt">end-at</Option>
+          <Select defaultValue="createdAt" style={{ width: 200 }} onChange={handleChange}>
+            <Option value="createdAt">{t('operationCenter.runningStatistics.task.created')}</Option>
+            <Option value="queuedAt">{t('operationCenter.runningStatistics.task.queued')}</Option>
+            <Option value="startAt">{t('operationCenter.runningStatistics.task.start')}</Option>
+            <Option value="endAt">{t('operationCenter.runningStatistics.task.end')}</Option>
           </Select>
         </div>
         {/* running  time range */}
@@ -101,22 +99,12 @@ export const ViewFilters: React.FC<Props> = memo(function ViewFilters(props) {
             showTime
             format="YYYY/MM/DD HH:mm:ss"
             disabledDate={disabledDate}
+            defaultValue={[moment().startOf('day'), moment().endOf('day')]}
             onCalendarChange={val => setDates(val)}
             // @ts-ignore
             onChange={handleTimeRangeFilterChange}
           />
         </div>
-        {task?.taskName && (
-          <div className={css.taskWrapper}>
-            <Select
-              defaultValue={task && task.taskName}
-              style={{ width: 180 }}
-              onClear={() => setTask()}
-              placeholder="上下游关系的任务名称"
-              allowClear
-            />
-          </div>
-        )}
       </div>
       <div className={css.right}>
         <div className={css.tips}>

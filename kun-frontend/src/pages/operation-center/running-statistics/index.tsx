@@ -1,6 +1,8 @@
-import React, { memo, useEffect, useState, useCallback } from 'react';
+import React, { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { queryGanttTasks } from '@/services/gantt';
-import { Filters, TaskState } from '@/definitions/Gantt.type';
+import { useHistory } from 'umi';
+
+import { Filters } from '@/definitions/Gantt.type';
 import { useRequest } from 'ahooks';
 import moment from 'moment';
 import { Card } from 'antd';
@@ -15,8 +17,9 @@ interface OwnProps {}
 type Props = OwnProps;
 
 export const RunningStatistics: React.FC<Props> = memo(function RunningStatistics() {
+  const history = useHistory();
+  const query = useMemo(() => (history.location as any)?.query ?? {}, [history.location]);
   const [filters, setFilters] = useState<Filters>({});
-  const [task, setTask] = useState<TaskState>();
   const { data, loading, run } = useRequest(queryGanttTasks, {
     manual: true,
   });
@@ -42,13 +45,13 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
 
   const fetchUpstreamTask = useCallback(() => {
     const params = {
-      taskRunId: task && task.taskRunId,
+      taskRunId: query && query.taskRunId,
     };
     run(params);
-  }, [task, run]);
+  }, [query, run]);
 
   const onClickRefresh = () => {
-    if (task && task.taskRunId) {
+    if (query && query.taskRunId) {
       fetchUpstreamTask();
     } else {
       fetchTask();
@@ -62,19 +65,17 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
   };
 
   useEffect(() => {
-    if (task && task.taskRunId) {
+    if (query && query.taskRunId) {
       fetchUpstreamTask();
     } else {
       fetchTask();
     }
-  }, [task, fetchTask, fetchUpstreamTask]);
+  }, [query, fetchTask, fetchUpstreamTask]);
 
   return (
     <div className={style.MainContent}>
       <ViewFilters
         filters={filters}
-        task={task}
-        setTask={setTask}
         onClickRefresh={onClickRefresh}
         updateFilters={updateFilters}
         refreshBtnLoading={loading}
@@ -86,7 +87,7 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
           </div>
         </Card>
       )}
-      {data && !loading && <Gantt data={data} setTask={setTask} />}
+      {data && !loading && <Gantt data={data} taskRunId={query.taskRunId} />}
     </div>
   );
 });
