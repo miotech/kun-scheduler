@@ -18,11 +18,11 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SearchPage extends PageInfo {
+public class SearchPage<T> extends PageInfo {
 
-    private List<SearchedInfo> searchedInfoList = new ArrayList<>();
+    private List<T> searchedInfoList = new ArrayList<>();
 
-    public void add(SearchedInfo searchedInfo) {
-        searchedInfoList.add(searchedInfo);
+    public void add(T t) {
+        searchedInfoList.add(t);
     }
 }

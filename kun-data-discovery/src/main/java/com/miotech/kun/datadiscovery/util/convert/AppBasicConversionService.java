@@ -11,7 +11,7 @@ import org.springframework.lang.Nullable;
  * @author: zemin  huang
  * @create: 2022-02-24 14:29
  **/
-public class AppBasicConversionService  extends GenericConversionService {
+public class AppBasicConversionService extends GenericConversionService {
 
     @Nullable
     private static volatile AppBasicConversionService sharedInstance;
@@ -24,6 +24,7 @@ public class AppBasicConversionService  extends GenericConversionService {
         converterRegistry.addConverterFactory(new DatasetBasicInfoConvertFactory());
         converterRegistry.addConverterFactory(new GlossaryBaseInfoConvertFactory());
         converterRegistry.addConverterFactory(new DatasetSearchInfoConvertFactory());
+        converterRegistry.addConverterFactory(new GlossarySearchConvertFactory());
 
     }
 
