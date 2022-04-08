@@ -35,10 +35,13 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+
+import static org.apache.commons.lang3.StringUtils.*;
 
 public class KunWorkflowServerModule extends AppModule {
     private static final Logger logger = LoggerFactory.getLogger(KunWorkflowServerModule.class);
@@ -102,7 +105,7 @@ public class KunWorkflowServerModule extends AppModule {
         String oauthToken = props.get("executor.env.oauthToken");
         String caCertFile = props.get("executor.env.caCertFile");
 
-        if (masterUrl != null && oauthToken != null && caCertFile != null) {
+        if (isNotEmpty(masterUrl) && isNotEmpty(oauthToken) && isNotEmpty(caCertFile)) {
             logger.info("Interact with k8s cluster using oauth authentication.");
             return new ConfigBuilder()
                     .withMasterUrl(masterUrl)
