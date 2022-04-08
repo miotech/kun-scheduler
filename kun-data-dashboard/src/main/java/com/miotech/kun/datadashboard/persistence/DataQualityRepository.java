@@ -9,6 +9,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
 import com.miotech.kun.datadashboard.model.entity.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -145,6 +146,10 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     private Map<Long, List<AbnormalCase>> getCases(List<Long> datasetGids) {
+        if (CollectionUtils.isEmpty(datasetGids)) {
+            return Maps.newHashMap();
+        }
+
         String sql = "select kde.id, kde.name, kder.continuous_failing_count, kde.create_user, kde.dataset_gid, kder.assertion_result, kder.update_time " +
                 "from " +
                 "(select expectation_id, update_time, continuous_failing_count, assertion_result, ROW_NUMBER() OVER (PARTITION BY expectation_id ORDER BY update_time desc) AS row_number from kun_dq_expectation_run) kder " +
@@ -179,6 +184,10 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     private Map<Long, List<AbnormalTask>> getFailedTask(List<Long> datasetGids) {
+        if (CollectionUtils.isEmpty(datasetGids)) {
+            return Maps.newHashMap();
+        }
+
         String sql = "select kdad.task_id, kdad.task_name, kdad.task_run_id, kdad.update_time, kdad.dataset_gid " +
                 "from (select task_id, task_name, task_run_id, update_time, dataset_gid, status, row_number() over(partition by dataset_gid order by update_time desc) as rn from kun_dq_abnormal_dataset where status is not null " +
                 "and dataset_gid in " + toColumnSql(datasetGids.size()) + " " + ") kdad " +

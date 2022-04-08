@@ -25,6 +25,11 @@ dependencies {
     implementation 'com.google.code.gson:gson'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'org.springdoc:springdoc-openapi-ui'
+
+    testImplementation project(':kun-commons:kun-commons-testing')
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:postgresql"
 }
 
 test {
