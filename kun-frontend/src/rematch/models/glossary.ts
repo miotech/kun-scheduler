@@ -10,8 +10,7 @@ import {
   EditGlossaryReqBody,
   addGlossaryService,
 } from '@/services/glossary';
-import { deepFirstSearch, deleteNodeFromParent, addNodeToParent } from '@/utils/glossaryUtiles';
-import { RootDispatch, RootState } from '../store';
+import { RootDispatch } from '../store';
 
 export interface GlossaryChild {
   id: string;
@@ -38,6 +37,7 @@ export interface SearchGlossaryItem {
   resourceAttribute: {
     owners: string;
   };
+  ancestryGlossaryList: GlossaryChild[]
   deleted: false;
 }
 

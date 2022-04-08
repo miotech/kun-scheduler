@@ -312,19 +312,12 @@ export default function GlossaryDetail({
       {inputtingDetail.ancestryGlossaryList && (
         <div className={styles.path}>
           {inputtingDetail.ancestryGlossaryList.map((item: GlossaryChild, index: number) => {
-            if (index !== 0) {
               return (
                 <span className={styles.pathName} onClick={() => setCurrentId(item.id)}>
-                  {' '}
-                  -{'>'} {item.name}
+                   {' '}
+                   {index !== 0 && '->'} {item.name}
                 </span>
               );
-            }
-            return (
-              <span className={styles.pathName} onClick={() => setCurrentId(item.id)}>
-                {item.name}
-              </span>
-            );
           })}
         </div>
       )}

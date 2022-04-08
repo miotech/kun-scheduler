@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef,useMemo } from 'react';
+import React, { useEffect, useCallback, useRef, useMemo } from 'react';
 import { history } from 'umi';
 import { Button } from 'antd';
 
@@ -22,6 +22,10 @@ export default function Glossary() {
     childrenRef.current.create();
   }, []);
 
+  const setCurrentId = useCallback((id: string) => {
+    childrenRef.current.setCurrentId(id);
+
+  }, []);
   return (
     <div className={styles.page}>
       <Card className={styles.titleRow}>
@@ -36,7 +40,7 @@ export default function Glossary() {
         </Button>
       </Card>
       <div className={styles.autosuggestInputContainer}>
-        <AutosuggestInput />
+        <AutosuggestInput setCurrentId={setCurrentId} />
       </div>
 
       <Card className={styles.glossaryTreeContainer}>

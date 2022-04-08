@@ -25,7 +25,7 @@ export default memo(
   forwardRef(function GlossaryTree({ rootNode }: Props, ref) {
     const history = useHistory();
     const location = useLocation();
-    const { dispatch } = useRedux(() => {});
+    const { dispatch } = useRedux(() => { });
 
     const [visible, setVisible] = useState(false);
     const [currentId, setCurrentId] = useState();
@@ -43,6 +43,10 @@ export default memo(
         setVisible(true);
         setCurrentIdCache();
       },
+      setCurrentId: (id: string) => {
+        setVisible(true);
+        setCurrentIdCache(id);
+      }
     }));
 
     const updateTreeCache = useCallback(() => {
