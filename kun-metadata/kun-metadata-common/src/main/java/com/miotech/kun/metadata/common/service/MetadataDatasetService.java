@@ -56,21 +56,19 @@ public class MetadataDatasetService implements MetadataServiceFacade {
     }
 
     /**
-     *
      * @param gid
      * @return a dataset not contains any static info
      */
-    public Dataset fetBasicDatasetByGid(Long gid){
+    public Dataset fetBasicDatasetByGid(Long gid) {
         Preconditions.checkNotNull(gid, "Argument `gid` cannot be null");
         return metadataDatasetDao.fetchBasicDatasetByGid(gid);
     }
 
     /**
-     *
      * @param datasetIds
      * @return a dataset list not contains any static info
      */
-    public List<Dataset> fetchBasicDatasetList(List<Long> datasetIds){
+    public List<Dataset> fetchBasicDatasetList(List<Long> datasetIds) {
         Preconditions.checkNotNull(datasetIds, "Argument `dataset` cannot be null");
         return metadataDatasetDao.fetchBasicDatasetByGids(datasetIds);
     }
@@ -202,6 +200,7 @@ public class MetadataDatasetService implements MetadataServiceFacade {
     }
 
     private void updateSearchDataSetInfo(final Long gid, final Boolean deleted) {
+        logger.debug("update SearchDataSetInfo gid:{},deleted:{}", gid, deleted);
         if (deleted) {
             SearchedInfo searchedInfoRemove = SearchedInfo.Builder.newBuilder()
                     .withGid(gid)
@@ -211,6 +210,7 @@ public class MetadataDatasetService implements MetadataServiceFacade {
             return;
         }
         DatasetDetail datasetDetail = getDatasetDetail(gid);
+        logger.debug("update,gid:{}: datasetDetail:{}", gid, datasetDetail);
         if (Objects.nonNull(datasetDetail)) {
             DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder
                     .newBuilder()

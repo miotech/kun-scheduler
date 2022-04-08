@@ -105,7 +105,7 @@ public class MetadataDatasetDao {
     }
 
     public List<Dataset> fetchBasicDatasetByGids(List<Long> gids) {
-        if(gids.size() == 0){
+        if (gids.size() == 0) {
             return new ArrayList<>();
         }
         SQLBuilder sqlBuilder = new DefaultSQLBuilder();
@@ -451,14 +451,17 @@ public class MetadataDatasetDao {
         String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, high_watermark, low_watermark";
 
         sql = sql + whereClause + groupByClause;
-        return dbOperator.fetchOne(sql, rs -> {
-            DatasetDetail dataset = new DatasetDetail();
-            setDatasetBasicField(dataset, rs);
-            dataset.setRowCount(getRowCount(id));
-            dataset.setDeleted(rs.getBoolean("deleted"));
+        DatasetDetail datasetDetail = dbOperator.fetchOne(sql, rs -> {
+            DatasetDetail detail = new DatasetDetail();
+            setDatasetBasicField(detail, rs);
+            detail.setDeleted(rs.getBoolean("deleted"));
 
-            return dataset;
+            return detail;
         }, id);
+        if (Objects.nonNull(datasetDetail)) {
+            datasetDetail.setRowCount(getRowCount(id));
+        }
+        return datasetDetail;
     }
 
     public Long getRowCount(Long gid) {

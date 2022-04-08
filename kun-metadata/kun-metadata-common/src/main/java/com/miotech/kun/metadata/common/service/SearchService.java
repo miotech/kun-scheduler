@@ -75,6 +75,7 @@ public class SearchService {
     }
 
     public void saveOrUpdate(SearchedInfo searchedInfo) {
+        logger.debug("search saveOrUpdate:type:{},id:{},name:{}",searchedInfo.getResourceType(), searchedInfo.getGid(),searchedInfo.getName());
         if (Objects.isNull(universalSearchDao.find(searchedInfo.getResourceType(), searchedInfo.getGid()))) {
             universalSearchDao.save(searchedInfo);
         } else {
@@ -83,6 +84,8 @@ public class SearchService {
     }
 
     public void remove(SearchedInfo searchedInfo) {
+        logger.debug("search remove:type:{},id:{},name:{}",searchedInfo.getResourceType(), searchedInfo.getGid());
+
         universalSearchDao.remove(searchedInfo.getResourceType(), searchedInfo.getGid());
 
     }

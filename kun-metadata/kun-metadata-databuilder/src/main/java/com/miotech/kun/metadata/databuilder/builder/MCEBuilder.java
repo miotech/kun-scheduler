@@ -180,6 +180,7 @@ public class MCEBuilder {
     private void updateDatasetStatus(boolean existed, long gid) {
         if (existed) {
             int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ? AND deleted is true", gid);
+            operator.update("UPDATE kun_mt_universal_search SET deleted = false WHERE gid = ? AND resource_type='DATASET' AND deleted is true", gid);
             if (updateRowCount == 1) {
                 // 记录MANAGED事件
                 operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.MANAGED.name(), DateTimeUtils.now());
@@ -190,6 +191,7 @@ public class MCEBuilder {
             }
 
             int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ? AND deleted is false", gid);
+            operator.update("UPDATE kun_mt_universal_search SET deleted = true WHERE gid = ? AND resource_type='DATASET' AND deleted is false", gid);
             if (updateRowCount == 1) {
                 // 记录DELETED事件
                 operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.DELETED.name(), DateTimeUtils.now());
