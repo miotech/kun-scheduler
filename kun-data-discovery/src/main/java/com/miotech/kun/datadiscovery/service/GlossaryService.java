@@ -1,6 +1,5 @@
 package com.miotech.kun.datadiscovery.service;
 
-import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
@@ -26,9 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -78,9 +75,23 @@ public class GlossaryService extends BaseSecurityService {
         glossaryRequest.setCreateTime(now);
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
+        if (haveDuplicateName(null, glossaryRequest.getParentId(), glossaryRequest.getName())) {
+            log.warn("A glossary with the same name is not allowed at the same level  name parent id:{},name:{}", glossaryRequest.getParentId(), glossaryRequest.getName());
+            throw new RuntimeException("A glossary with the same name is not allowed at the same level  name:" + glossaryRequest.getName());
+        }
         Long gid = glossaryRepository.insert(glossaryRequest);
         searchAppService.saveOrUpdateGlossarySearchInfo(getGlossaryBasicInfo(gid));
         return gid;
+    }
+
+    private boolean haveDuplicateName(Long currentId, Long parentId, String name) {
+        List<GlossaryBasicInfo> glossaryBasicInfos = fetchChildrenBasicList(parentId);
+        Stream<GlossaryBasicInfo> stream = glossaryBasicInfos.stream();
+        if (Objects.nonNull(currentId)) {
+            stream = stream.filter(glossaryBasicInfo -> !currentId.equals(glossaryBasicInfo.getId()));
+        }
+        return stream.map(GlossaryBasicInfo::getName).anyMatch(name::equals);
+
     }
 
     public List<GlossaryBasicInfo> fetchChildrenBasicList(Long parentId) {
@@ -118,11 +129,42 @@ public class GlossaryService extends BaseSecurityService {
         return glossary;
     }
 
+    public Map<Long, List<GlossaryBasicInfo>> findAncestryList(Collection<Long> collectionId) {
+        Map<Long, List<GlossaryBasicInfo>> listMap = new HashMap<>();
+        List<GlossaryBasicInfo> ancestryList = glossaryRepository.findAncestryList(collectionId);
+        Map<Long, GlossaryBasicInfo> map = ancestryList.stream().collect(Collectors.toMap(GlossaryBasicInfo::getId, v -> v, (v1, v2) -> v1));
+        for (Long aLong : collectionId) {
+            List<GlossaryBasicInfo> glossaryBasicInfoList = new ArrayList<>();
+            fillAncestryList(map, aLong, glossaryBasicInfoList);
+            Collections.reverse(glossaryBasicInfoList);
+            listMap.put(aLong, glossaryBasicInfoList);
+        }
+        return listMap;
+    }
+
+
+    private void fillAncestryList(Map<Long, GlossaryBasicInfo> map, Long id, List<GlossaryBasicInfo> glossaryBasicInfoList) {
+        if (Objects.isNull(id)) {
+            return;
+        }
+        GlossaryBasicInfo glossaryBasicInfo = map.get(id);
+        if (Objects.isNull(glossaryBasicInfo)) {
+            return;
+        }
+        glossaryBasicInfoList.add(glossaryBasicInfo);
+        Long parentId = glossaryBasicInfo.getParentId();
+        fillAncestryList(map, parentId, glossaryBasicInfoList);
+
+    }
 
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
         OffsetDateTime now = DateTimeUtils.now();
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
+        if (haveDuplicateName(id, glossaryRequest.getParentId(), glossaryRequest.getName())) {
+            log.warn("A glossary with the same name is not allowed at the same level  name parent id:{},name:{}", glossaryRequest.getParentId(), glossaryRequest.getName());
+            throw new RuntimeException("A glossary with the same name is not allowed at the same level  name:" + glossaryRequest.getName());
+        }
         glossaryRepository.update(id, glossaryRequest);
         Glossary glossary = fetchGlossary(id);
         searchAppService.saveOrUpdateGlossarySearchInfo(glossary);
@@ -134,7 +176,7 @@ public class GlossaryService extends BaseSecurityService {
         searchAppService.removeGlossarySearchInfo(id);
     }
 
-    public SearchPage search(GlossaryBasicSearchRequest searchRequest) {
+    public SearchPage<GlossarySearchedInfo> search(GlossaryBasicSearchRequest searchRequest) {
         UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageNumber(), searchRequest.getPageSize(), searchRequest.getKeyword());
         Stream<SearchedInfo> searchedInfoStream = universalSearchInfo.getSearchedInfoList().stream();
         Long currentId = searchRequest.getCurrentId();
@@ -147,12 +189,20 @@ public class GlossaryService extends BaseSecurityService {
             searchedInfoStream = searchedInfoStream.filter(searchedInfo -> glossaryIds.contains(searchedInfo.getGid()));
         }
         List<SearchedInfo> collect = searchedInfoStream.collect(Collectors.toList());
-        SearchPage searchPage = new SearchPage();
-        searchPage.setSearchedInfoList(collect);
+        List<GlossarySearchedInfo> glossarySearchedInfos = getGlossarySearchedInfos(collect);
+        SearchPage<GlossarySearchedInfo> searchPage = new SearchPage<>();
+        searchPage.setSearchedInfoList(glossarySearchedInfos);
         searchPage.setPageSize(universalSearchInfo.getPageSize());
         searchPage.setPageSize(universalSearchInfo.getPageNumber());
         searchPage.setTotalCount(universalSearchInfo.getTotalCount());
         return searchPage;
+    }
+
+
+    private List<GlossarySearchedInfo> getGlossarySearchedInfos(List<SearchedInfo> searchedInfoList) {
+        Set<Long> set = searchedInfoList.stream().map(SearchedInfo::getGid).collect(Collectors.toSet());
+        Map<Long, List<GlossaryBasicInfo>> ancestryGlossaryMap = findAncestryList(set);
+        return searchedInfoList.stream().map(searchedInfo -> AppBasicConversionService.getSharedInstance().convert(searchedInfo, GlossarySearchedInfo.class)).filter(Objects::nonNull).peek(glossarySearchedInfo -> glossarySearchedInfo.setAncestryGlossaryList(ancestryGlossaryMap.get(glossarySearchedInfo.getGid()))).collect(Collectors.toList());
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -165,6 +215,7 @@ public class GlossaryService extends BaseSecurityService {
     private Long copy(GlossaryBasicInfo oldGlossaryBasicInfo) {
         Long newGlossaryId = copySelf(oldGlossaryBasicInfo);
         List<GlossaryBasicInfo> oldChildren = fetchChildrenBasicList(oldGlossaryBasicInfo.getId());
+        Collections.reverse(oldChildren);
         if (CollectionUtils.isNotEmpty(oldChildren)) {
             oldChildren.forEach(glossary -> {
                 glossary.setParentId(newGlossaryId);
@@ -208,11 +259,7 @@ public class GlossaryService extends BaseSecurityService {
         };
         ResponseEntity<List<DatasetBasicInfo>> responseEntity = restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(glossaryToDataSetIdList), typeRef);
         List<DatasetBasicInfo> datasetBasicInfos = responseEntity.getBody();
-        return Objects.requireNonNull(datasetBasicInfos)
-                .stream()
-                .filter(Objects::nonNull)
-                .map(datasetBasicInfo -> AppBasicConversionService.getSharedInstance().convert(datasetBasicInfo, Asset.class))
-                .collect(Collectors.toList());
+        return Objects.requireNonNull(datasetBasicInfos).stream().filter(Objects::nonNull).map(datasetBasicInfo -> AppBasicConversionService.getSharedInstance().convert(datasetBasicInfo, Asset.class)).collect(Collectors.toList());
     }
 
 

@@ -7,7 +7,6 @@ import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
-import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -56,7 +55,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_getParentIdIsNull() {
         Long parentId = null;
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
         Long reParentId = glossaryService.getParentId(glossary.getId());
@@ -67,20 +66,20 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_getParentIdNotNull() {
         Long parentId = null;
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
         Long reChildParentId = glossaryService.getParentId(glossaryChild.getId());
         assertThat(reChildParentId, is(glossary.getId()));
 
     }
 
-    private GlossaryRequest createGlossaryRequestWithParent(Long parentId, ImmutableList<Long> assetList) {
+    private GlossaryRequest createGlossaryRequestWithParent(Long parentId, String name, ImmutableList<Long> assetList) {
         GlossaryRequest glossaryRequest = new GlossaryRequest();
         glossaryRequest.setParentId(parentId);
-        glossaryRequest.setName("glossary");
+        glossaryRequest.setName(name);
         glossaryRequest.setDescription("test  node");
         glossaryRequest.setAssetIds(assetList);
         return glossaryRequest;
@@ -99,7 +98,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     @Test
     void test_addGlossary() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
 
@@ -116,15 +115,15 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     @Test
     void test_getGlossariesByDataset() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null, "glossary1", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         glossaryService.createGlossary(glossaryRequest);
 
-        GlossaryRequest glossary2Request = createGlossaryRequestWithParent(null, assetList);
+        GlossaryRequest glossary2Request = createGlossaryRequestWithParent(null, "glossary2", assetList);
         mockDatasetBasicInfoList(glossary2Request.getAssetIds());
         glossaryService.createGlossary(glossary2Request);
 
-        GlossaryRequest glossary3Request = createGlossaryRequestWithParent(null, assetList);
+        GlossaryRequest glossary3Request = createGlossaryRequestWithParent(null, "glossary3", assetList);
         mockDatasetBasicInfoList(glossary3Request.getAssetIds());
         Glossary glossary3 = glossaryService.createGlossary(glossary3Request);
 //        create time desc
@@ -138,9 +137,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     }
 
     private void mockDatasetBasicInfoList(List<Long> assetIds) {
-        List<DatasetBasicInfo> collect = assetIds.stream()
-                .map(id -> getDatasetBasicInfo(id, "testName" + id))
-                .collect(Collectors.toList());
+        List<DatasetBasicInfo> collect = assetIds.stream().map(id -> getDatasetBasicInfo(id, "testName" + id)).collect(Collectors.toList());
         ResponseEntity<List<DatasetBasicInfo>> responseEntity = new ResponseEntity(collect, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), any(), any(), (ParameterizedTypeReference<List<DatasetBasicInfo>>) any())).thenReturn(responseEntity);
     }
@@ -161,7 +158,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_copy_parentIsNull() {
         Long parentId = null;
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
 
@@ -183,7 +180,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_update_basic_info() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
 //        update name
@@ -208,7 +205,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_update_assetList() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
 //        update asset
@@ -238,11 +235,12 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_update_basic_move_parent_down() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary1", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossary2Request = createGlossaryRequestWithParent(parentId, "glossary2", assetList);
+        Glossary glossary2 = glossaryService.createGlossary(glossary2Request);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
 
         /**
@@ -281,16 +279,17 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_update_throw_Exption() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary1", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
+        GlossaryRequest glossaryRequestSon3 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon3", assetList);
+        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon3);
 
         GlossaryRequest glossaryRequestUpdate = new GlossaryRequest();
 
@@ -315,15 +314,20 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_delete() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossary2Request = createGlossaryRequestWithParent(parentId, "glossary2", assetList);
+        Glossary glossary2 = glossaryService.createGlossary(glossary2Request);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
+        GlossaryRequest glossaryRequestSon3 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon3", assetList);
+        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon3);
+
 
 //        test son node
         glossaryService.delete(glossarySon3.getId());
@@ -355,16 +359,20 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_update_basic_move_parent_up() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossary2Request = createGlossaryRequestWithParent(parentId, "glossary2", assetList);
+        Glossary glossary2 = glossaryService.createGlossary(glossary2Request);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
+        GlossaryRequest glossaryRequestSon3 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon3", assetList);
+        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon3);
+
         GlossaryChildren glossaryChChildrenBefore = glossaryService.fetchGlossaryChildren(glossaryChild.getId());
 
         assertThat(glossaryChChildrenBefore.getChildren().size(), is(3));
@@ -409,16 +417,19 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     void test_update_basic_move_parent_null() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossary2Request = createGlossaryRequestWithParent(parentId, "glossary2", assetList);
+        Glossary glossary2 = glossaryService.createGlossary(glossary2Request);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
+        GlossaryRequest glossaryRequestSon3 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon3", assetList);
+        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon3);
         GlossaryChildren glossaryChChildrenBefore = glossaryService.fetchGlossaryChildren(null);
 
         assertThat(glossaryChChildrenBefore.getChildren().size(), is(2));
@@ -467,16 +478,15 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
-        Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryRequest glossaryRequestSon1 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
+        Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon1);
+        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
 
         Glossary glossaryCopy = glossaryService.copy(glossaryChild.getId());
 //        test self info
@@ -492,8 +502,16 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         List<GlossaryBasicInfo> glossaryBasicChildInfoList = glossaryService.fetchChildrenBasicList(glossaryChild.getId());
         List<GlossaryBasicInfo> glossaryCopyChildBasicInfoList = glossaryService.fetchChildrenBasicList(glossaryCopy.getId());
         assertThat(glossaryBasicChildInfoList.size(), is(glossaryCopyChildBasicInfoList.size()));
-        Glossary son1 = glossaryService.fetchGlossary(glossaryBasicChildInfoList.get(0).getId());
-        Glossary copySon1 = glossaryService.fetchGlossary(glossaryCopyChildBasicInfoList.get(0).getId());
+        Glossary son2 = glossaryService.fetchGlossary(glossaryBasicChildInfoList.get(0).getId());
+        Glossary copySon2 = glossaryService.fetchGlossary(glossaryCopyChildBasicInfoList.get(0).getId());
+        assertThat(copySon2.getId(), is(not(son2.getId())));
+        assertThat(copySon2.getName(), is(GlossaryService.getCopyName(son2.getName())));
+        assertThat(copySon2.getDescription(), is(son2.getDescription()));
+        assertThat(copySon2.getAssets().size(), is(son2.getAssets().size()));
+        assertThat(copySon2.getAncestryGlossaryList().size(), is(son2.getAncestryGlossaryList().size()));
+        assertThat(copySon2.getParentId(), is(not(son2.getParentId())));
+        Glossary son1 = glossaryService.fetchGlossary(glossaryBasicChildInfoList.get(1).getId());
+        Glossary copySon1 = glossaryService.fetchGlossary(glossaryCopyChildBasicInfoList.get(1).getId());
         assertThat(copySon1.getId(), is(not(son1.getId())));
         assertThat(copySon1.getName(), is(GlossaryService.getCopyName(son1.getName())));
         assertThat(copySon1.getDescription(), is(son1.getDescription()));
@@ -508,7 +526,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     public void test_fetchChildrenBasicList_parent_null() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
         List<GlossaryBasicInfo> glossaryBasicChildInfoList = glossaryService.fetchChildrenBasicList(parentId);
@@ -528,14 +546,15 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
          */
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
         Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
 
         List<GlossaryBasicInfo> ancestryGlossaryList = glossarySon2.getAncestryGlossaryList();
         assertThat(ancestryGlossaryList.size(), is(2));
@@ -558,22 +577,22 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
         ImmutableList<Long> assetList1 = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest1 = createGlossaryRequestWithParent(parentId, assetList1);
+        GlossaryRequest glossaryRequest1 = createGlossaryRequestWithParent(parentId, "glossary1", assetList1);
         mockDatasetBasicInfoList(glossaryRequest1.getAssetIds());
         Glossary glossary1 = glossaryService.createGlossary(glossaryRequest1);
 
         ImmutableList<Long> assetList2 = ImmutableList.of(4L, 5L, 6L);
-        GlossaryRequest glossaryRequest2 = createGlossaryRequestWithParent(glossary1.getId(), assetList2);
+        GlossaryRequest glossaryRequest2 = createGlossaryRequestWithParent(glossary1.getId(), "glossary2", assetList2);
         mockDatasetBasicInfoList(glossaryRequest2.getAssetIds());
         Glossary glossary2 = glossaryService.createGlossary(glossaryRequest2);
 
         ImmutableList<Long> assetList3 = ImmutableList.of(7L, 8L);
-        GlossaryRequest glossaryRequest3 = createGlossaryRequestWithParent(glossary2.getId(), assetList3);
+        GlossaryRequest glossaryRequest3 = createGlossaryRequestWithParent(glossary2.getId(), "glossarySon1", assetList3);
         mockDatasetBasicInfoList(glossaryRequest3.getAssetIds());
         Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequest3);
 
         ImmutableList<Long> assetList4 = ImmutableList.of(1L, 5L, 8L);
-        GlossaryRequest glossaryRequest4 = createGlossaryRequestWithParent(glossary2.getId(), assetList4);
+        GlossaryRequest glossaryRequest4 = createGlossaryRequestWithParent(glossary2.getId(), "glossarySon2", assetList4);
         mockDatasetBasicInfoList(glossaryRequest4.getAssetIds());
         Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequest4);
 //        testing
@@ -611,12 +630,13 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThat(glossary2Basic1.getChildrenCount(), is(0));
         assertThat(glossary2Basic1.getDataSetCount(), is(assetList4.size()));
     }
+
     /**
      * null->glossary>glossaryChild--->glossarySon1
      * ｜
      * ｜---> glossarySon2
      */
-    private Map<String, Glossary> mockSearchTree(String name1_1, String name2_1, String name3_1, String name3_2) {
+    private Map<String, Glossary> mockTreeMap(String name1_1, String name2_1, String name3_1, String name3_2) {
 
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Map<String, Glossary> glossaries = Maps.newLinkedHashMap();
@@ -639,27 +659,27 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
     @Test
     public void test_search_filter_ids() {
-        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
         Glossary glossary = glossaries.get("glossary");
         Glossary glossarySon1 = glossaries.get("glossarySon1");
-        String keyword2 = "glossary";
-        GlossaryBasicSearchRequest basicSearchRequest2 = new GlossaryBasicSearchRequest();
-        basicSearchRequest2.setKeyword(keyword2);
-        UniversalSearchInfo universalSearchInfo2 = mockSearchGlossary(glossaries.values(), keyword2);
-        ResponseEntity<UniversalSearchInfo> responseEntity2 = new ResponseEntity(universalSearchInfo2, HttpStatus.OK);
+        String keyword = "glossary";
+        UniversalSearchInfo universalSearchInfo = mockSearchGlossary(glossaries.values(), keyword);
+        ResponseEntity<UniversalSearchInfo> responseEntity2 = new ResponseEntity(universalSearchInfo, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity2);
+        GlossaryBasicSearchRequest basicSearchRequest = new GlossaryBasicSearchRequest();
+        basicSearchRequest.setKeyword(keyword);
         ArrayList<Long> longs2 = Lists.newArrayList(glossary.getId(), glossarySon1.getId());
-        basicSearchRequest2.setGlossaryIds(longs2);
-        SearchPage searchPage2 = glossaryService.search(basicSearchRequest2);
-        List<SearchedInfo> searchedInfoList2 = searchPage2.getSearchedInfoList();
-        assertThat(searchedInfoList2.size(), is(longs2.size()));
-        assertTrue(searchedInfoList2.stream().map(SearchedInfo::getGid).anyMatch(longs2::contains));
+        basicSearchRequest.setGlossaryIds(longs2);
+        SearchPage<GlossarySearchedInfo> searchPage = glossaryService.search(basicSearchRequest);
+        List<GlossarySearchedInfo> searchedInfoList = searchPage.getSearchedInfoList();
+        assertThat(searchedInfoList.size(), is(longs2.size()));
+        assertTrue(searchedInfoList.stream().map(GlossarySearchedInfo::getGid).anyMatch(longs2::contains));
     }
 
     @Test
     public void test_search_simple() {
 
-        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
         Glossary glossaryChild = glossaries.get("glossaryChild");
         String keyword1 = "ch";
         GlossaryBasicSearchRequest basicSearchRequest1 = new GlossaryBasicSearchRequest();
@@ -667,15 +687,15 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         UniversalSearchInfo universalSearchInfo = mockSearchGlossary(glossaries.values(), keyword1);
         ResponseEntity<UniversalSearchInfo> responseEntity = new ResponseEntity(universalSearchInfo, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity);
-        SearchPage searchPage1 = glossaryService.search(basicSearchRequest1);
-        List<SearchedInfo> searchedInfoList = searchPage1.getSearchedInfoList();
+        SearchPage<GlossarySearchedInfo> searchPage1 = glossaryService.search(basicSearchRequest1);
+        List<GlossarySearchedInfo> searchedInfoList = searchPage1.getSearchedInfoList();
         assertThat(searchedInfoList.size(), is(1));
         assertThat(searchedInfoList.get(0).getGid(), is(glossaryChild.getId()));
     }
 
     @Test
     public void test_filter_no_self() {
-        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
         Glossary glossaryChild = glossaries.get("glossaryChild");
         String keyword3 = "Child";
         GlossaryBasicSearchRequest basicSearchRequest3 = new GlossaryBasicSearchRequest();
@@ -684,15 +704,15 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         ResponseEntity<UniversalSearchInfo> responseEntity3 = new ResponseEntity(universalSearchInfo3, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity3);
         basicSearchRequest3.setCurrentId(glossaryChild.getId());
-        SearchPage searchPage3 = glossaryService.search(basicSearchRequest3);
-        List<SearchedInfo> searchedInfoList3 = searchPage3.getSearchedInfoList();
+        SearchPage<GlossarySearchedInfo> searchPage3 = glossaryService.search(basicSearchRequest3);
+        List<GlossarySearchedInfo> searchedInfoList3 = searchPage3.getSearchedInfoList();
         assertThat(searchedInfoList3.size(), is(0));
     }
 
     @Test
     public void test_filter_no_child() {
         //        不会包含当前节点和当前节点下的子节点
-        Map<String, Glossary> glossaries = mockSearchTree("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
         Glossary glossaryChild = glossaries.get("glossaryChild");
         Glossary glossary = glossaries.get("glossary");
         String keyword4 = "glossary";
@@ -702,12 +722,78 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         ResponseEntity<UniversalSearchInfo> responseEntity4 = new ResponseEntity(universalSearchInfo4, HttpStatus.OK);
         when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity4);
         basicSearchRequest4.setCurrentId(glossaryChild.getId());
-        SearchPage searchPage4 = glossaryService.search(basicSearchRequest4);
-        List<SearchedInfo> searchedInfoList4 = searchPage4.getSearchedInfoList();
+        SearchPage<GlossarySearchedInfo> searchPage4 = glossaryService.search(basicSearchRequest4);
+        List<GlossarySearchedInfo> searchedInfoList4 = searchPage4.getSearchedInfoList();
         assertThat(searchedInfoList4.size(), is(1));
         assertThat(searchedInfoList4.get(0).getGid(), is(glossary.getId()));
     }
 
+    @Test
+    public void test_search_contains_ancestry_list() {
+        Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        String keyword = "glossary";
+        UniversalSearchInfo universalSearchInfo = mockSearchGlossary(glossaries.values(), keyword);
+        ResponseEntity<UniversalSearchInfo> responseEntity2 = new ResponseEntity(universalSearchInfo, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(), any(), any(ParameterizedTypeReference.class))).thenReturn(responseEntity2);
+        GlossaryBasicSearchRequest basicSearchRequest = new GlossaryBasicSearchRequest();
+        basicSearchRequest.setKeyword(keyword);
 
+        SearchPage<GlossarySearchedInfo> searchPage = glossaryService.search(basicSearchRequest);
+
+        List<GlossarySearchedInfo> searchedInfoList = searchPage.getSearchedInfoList();
+        assertThat(searchedInfoList.size(), is(glossaries.size()));
+        Map<String, GlossarySearchedInfo> collect = searchedInfoList.stream().collect(Collectors.toMap(GlossarySearchedInfo::getName, v -> v));
+        GlossarySearchedInfo glossary = collect.get("glossary");
+        assertThat(glossary.getAncestryGlossaryList().size(), is(1));
+        assertThat(glossary.getAncestryGlossaryList().get(0).getId(), is(glossaries.get("glossary").getId()));
+        GlossarySearchedInfo glossaryChild = collect.get("glossaryChild");
+        assertThat(glossaryChild.getAncestryGlossaryList().size(), is(2));
+        assertThat(glossaryChild.getAncestryGlossaryList().get(0).getId(), is(glossaries.get("glossary").getId()));
+        assertThat(glossaryChild.getAncestryGlossaryList().get(1).getId(), is(glossaries.get("glossaryChild").getId()));
+        GlossarySearchedInfo glossarySon1 = collect.get("glossarySon1");
+        assertThat(glossarySon1.getAncestryGlossaryList().size(), is(3));
+        assertThat(glossarySon1.getAncestryGlossaryList().get(0).getId(), is(glossaries.get("glossary").getId()));
+        assertThat(glossarySon1.getAncestryGlossaryList().get(1).getId(), is(glossaries.get("glossaryChild").getId()));
+        assertThat(glossarySon1.getAncestryGlossaryList().get(2).getId(), is(glossaries.get("glossarySon1").getId()));
+        GlossarySearchedInfo glossarySon2 = collect.get("glossarySon2");
+        assertThat(glossarySon2.getAncestryGlossaryList().size(), is(3));
+        assertThat(glossarySon2.getAncestryGlossaryList().get(0).getId(), is(glossaries.get("glossary").getId()));
+        assertThat(glossarySon2.getAncestryGlossaryList().get(1).getId(), is(glossaries.get("glossaryChild").getId()));
+        assertThat(glossarySon2.getAncestryGlossaryList().get(2).getId(), is(glossaries.get("glossarySon2").getId()));
+    }
+
+    @Test
+    public void test_haveDuplicateName() {
+        Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+//       create
+        String name = "glossary";
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null, assetList, name);
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        assertThrows("A glossary with the same name is not allowed at the same level  name:" + name, RuntimeException.class, () -> glossaryService.createGlossary(glossaryRequest));
+//       udpate
+        GlossaryRequest glossaryUpdateRequest = createGlossaryRequestWithParent(null, assetList, name);
+        glossaryUpdateRequest.setDescription("test update");
+        Glossary glossary = glossaries.get(name);
+        Glossary glossaryUpdate = glossaryService.update(glossary.getId(), glossaryUpdateRequest);
+        assertThat(glossaryUpdate.getId(), is(glossary.getId()));
+
+        Glossary glossarySon2 = glossaries.get("glossarySon2");
+        String newName = "glossarySon1";//exist
+        GlossaryRequest glossaryUpdateRequest2 = createGlossaryRequestWithParent(glossarySon2.getParentId(), assetList, newName);
+        glossaryUpdateRequest.setDescription("test update");
+        assertThrows("A glossary with the same name is not allowed at the same level  name:" + newName, RuntimeException.class, () -> glossaryService.update(glossarySon2.getId(), glossaryUpdateRequest2));
+//
+//      move
+
+        Glossary glossarySon1 = glossaries.get("glossarySon1");
+        Glossary glossaryChild = glossaries.get("glossaryChild");
+        String glossarySon1NewName = "glossaryChild";//exist
+        GlossaryRequest glossaryUpdateRequest3 = createGlossaryRequestWithParent(glossaryChild.getParentId(), assetList, glossarySon1NewName);
+        glossaryUpdateRequest.setDescription("test update");
+        assertThrows("A glossary with the same name is not allowed at the same level  name:" + newName, RuntimeException.class, () -> glossaryService.update(glossarySon1.getId(), glossaryUpdateRequest3));
+
+
+    }
 
 }

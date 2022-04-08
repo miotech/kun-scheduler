@@ -22,28 +22,28 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class GlossaryBasicInfo {
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     private String name;
 
     private String description;
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long prevId;
 
-    String createUser;
+    private String createUser;
 
     @JsonSerialize(using = CustomDateTimeSerializer.class)
-    OffsetDateTime createTime;
+    private OffsetDateTime createTime;
 
-    String updateUser;
+    private String updateUser;
 
     @JsonSerialize(using = CustomDateTimeSerializer.class)
-    OffsetDateTime updateTime;
+    private OffsetDateTime updateTime;
 
     private boolean deleted;
 

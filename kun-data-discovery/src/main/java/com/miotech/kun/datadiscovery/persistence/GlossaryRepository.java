@@ -13,6 +13,7 @@ import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
 import com.miotech.kun.datadiscovery.util.BasicMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -159,8 +160,8 @@ public class GlossaryRepository extends BaseRepository {
 
         jdbcTemplate.update(kmgSql,
                 glossaryId,
-                glossaryRequest.getName(),
-                glossaryRequest.getDescription(),
+                StringUtils.stripToEmpty(glossaryRequest.getName()),
+                StringUtils.stripToEmpty(glossaryRequest.getDescription()),
                 glossaryRequest.getParentId(),
                 createUser,
                 createTime,
@@ -208,8 +209,8 @@ public class GlossaryRepository extends BaseRepository {
     public void update(Long id, GlossaryRequest glossaryRequest) {
         GlossaryBasicInfo glossaryBaseInfo = findGlossaryBaseInfo(id);
         List<Object> sqlParams = new ArrayList<>();
-        sqlParams.add(glossaryRequest.getName());
-        sqlParams.add(glossaryRequest.getDescription());
+        sqlParams.add(StringUtils.stripToEmpty(glossaryRequest.getName()));
+        sqlParams.add(StringUtils.stripToEmpty(glossaryRequest.getDescription()));
         sqlParams.add(glossaryRequest.getUpdateUser());
         sqlParams.add(glossaryRequest.getUpdateTime());
         sqlParams.add(id);
@@ -507,6 +508,27 @@ public class GlossaryRepository extends BaseRepository {
         String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
         log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
         return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, id);
+    }
+
+    public List<GlossaryBasicInfo> findAncestryList(Collection<Long> collectionId) {
+        if (CollectionUtils.isEmpty(collectionId)) {
+            return Lists.newArrayList();
+        }
+        String tmpTableName = "tmp";
+        String tmpColumnList = "id,name ,parent_id ,prev_id,depth";
+
+        String optionsSql = DefaultSQLBuilder.newBuilder().select("id,name ,parent_id ,prev_id ,0 as depth ")
+                .from(TABLE_NAME_KUN_MT_GLOSSARY, ALIAS_KUN_MT_GLOSSARY).where("id in " + collectionToConditionSql(collectionId) + " and deleted=false").getSQL();
+        String withSql = DefaultSQLBuilder.newBuilder().select("wkmg.id,wkmg.name ,wkmg.parent_id,wkmg.prev_id ,depth+1 as depth ")
+                .from(TABLE_NAME_KUN_MT_GLOSSARY, "wkmg")
+                .join("inner", tmpTableName, "t")
+                .on("wkmg.id=t.parent_id")
+                .where("wkmg.deleted=false")
+                .getSQL();
+        String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).getSQL();
+        String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
+        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
+        return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, collectionId.toArray());
     }
 
 
