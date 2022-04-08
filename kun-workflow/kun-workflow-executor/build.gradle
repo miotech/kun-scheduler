@@ -22,6 +22,7 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'org.jooq:joor-java-8'
+    implementation 'com.google.inject.extensions:guice-assistedinject'
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")

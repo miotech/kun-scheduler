@@ -73,7 +73,6 @@ public class TaskService {
 
     private final BlockType DEFAULT_BLOCK_TYPE = BlockType.NONE;
 
-
     @Inject
     public TaskService(
             TaskDao taskDao,
@@ -186,6 +185,7 @@ public class TaskService {
                 .withRetries(vo.getRetries() == null ? task.getRetries() : vo.getRetries())
                 .withRetryDelay(vo.getRetryDelay() == null ? task.getRetryDelay() : vo.getRetryDelay())
                 .withCheckType(vo.getCheckType() == null ? task.getCheckType() : CheckType.valueOf(vo.getCheckType()))
+                .withExecutorLabel(vo.getExecutorLabel())
                 .build();
 
         // 4. perform update
@@ -221,6 +221,7 @@ public class TaskService {
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
                 .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
+                .withExecutorLabel(vo.getExecutorLabel())
                 .build();
 
         return fullUpdateTask(task);
@@ -432,6 +433,7 @@ public class TaskService {
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
                 .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
+                .withExecutorLabel(vo.getExecutorLabel())
                 .build();
     }
 

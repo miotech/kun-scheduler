@@ -34,9 +34,11 @@ public class TaskAttempt {
 
     private final Integer retryTimes;
 
+    private final String executorLabel;
+
     public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status,
                        String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName,Integer priority,
-                       Integer retryTimes) {
+                       Integer retryTimes, String executorLabel) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
@@ -49,6 +51,7 @@ public class TaskAttempt {
         this.queueName = queueName;
         this.priority = priority;
         this.retryTimes = retryTimes;
+        this.executorLabel = executorLabel;
     }
 
     public Long getId() {
@@ -100,6 +103,10 @@ public class TaskAttempt {
         return retryTimes;
     }
 
+    public String getExecutorLabel() {
+        return executorLabel;
+    }
+
     public static TaskAttempt.Builder newBuilder() {
         return new TaskAttempt.Builder();
     }
@@ -115,7 +122,8 @@ public class TaskAttempt {
                 .withEndAt(endAt)
                 .withQueueName(queueName)
                 .withPriority(priority)
-                .withRetryTimes(retryTimes);
+                .withRetryTimes(retryTimes)
+                .withExecutorLabel(executorLabel);
     }
 
     @Override
@@ -131,6 +139,7 @@ public class TaskAttempt {
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
                 ", retryTimes=" + retryTimes +
+                ", executorLabel=" + executorLabel +
                 '}';
     }
 
@@ -146,6 +155,7 @@ public class TaskAttempt {
         private String queueName;
         private Integer priority;
         private Integer retryTimes;
+        private String executorLabel;
 
         private Builder() {
         }
@@ -200,8 +210,13 @@ public class TaskAttempt {
             return this;
         }
 
+        public Builder withExecutorLabel(String executorLabel) {
+            this.executorLabel = executorLabel;
+            return this;
+        }
+
         public TaskAttempt build() {
-            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority,retryTimes);
+            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority,retryTimes, executorLabel);
         }
     }
 }

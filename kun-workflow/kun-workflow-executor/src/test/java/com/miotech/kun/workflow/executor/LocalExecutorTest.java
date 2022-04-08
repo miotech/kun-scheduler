@@ -70,6 +70,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.doAnswer;
 
+@Disabled
 public class LocalExecutorTest extends CommonTestBase {
 
     @Inject

@@ -51,7 +51,7 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "term_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "term_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target", "executor_label");
     private static final List<String> taskRunPropsCols = ImmutableList.of("id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "created_at", "updated_at", "queue_name", "priority", "target");
 
     private static final String TASK_RUN_STAT_MODEL_NAME = "task_run_stat";
@@ -60,7 +60,7 @@ public class TaskRunDao {
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
-    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority", "retry_times");
+    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority", "retry_times", "executor_label");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
@@ -412,7 +412,8 @@ public class TaskRunDao {
                     now,
                     taskRun.getQueueName(),
                     taskRun.getPriority(),
-                    JSONUtils.toJsonString(taskRun.getExecuteTarget())
+                    JSONUtils.toJsonString(taskRun.getExecuteTarget()),
+                    taskRun.getExecutorLabel()
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
@@ -498,7 +499,8 @@ public class TaskRunDao {
                     now,
                     taskRun.getQueueName(),
                     taskRun.getPriority(),
-                    JSONUtils.toJsonString(taskRun.getExecuteTarget())
+                    JSONUtils.toJsonString(taskRun.getExecuteTarget()),
+                    taskRun.getExecutorLabel()
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
@@ -553,6 +555,7 @@ public class TaskRunDao {
                     taskRun.getQueueName(),
                     taskRun.getPriority(),
                     JSONUtils.toJsonString(taskRun.getExecuteTarget()),
+                    taskRun.getExecutorLabel(),
                     taskRun.getId()
             );
 
@@ -1042,7 +1045,8 @@ public class TaskRunDao {
                 taskAttempt.getLogPath(),
                 taskAttempt.getQueueName(),
                 taskAttempt.getPriority(),
-                taskAttempt.getRetryTimes()
+                taskAttempt.getRetryTimes(),
+                taskAttempt.getExecutorLabel()
         );
         return taskAttempt;
     }
@@ -1071,6 +1075,7 @@ public class TaskRunDao {
                 taskAttempt.getQueueName(),
                 taskAttempt.getPriority(),
                 taskAttempt.getRetryTimes(),
+                taskAttempt.getExecutorLabel(),
                 taskAttempt.getId()
         );
         return taskAttempt;
@@ -1942,6 +1947,7 @@ public class TaskRunDao {
                     .withPriority(rs.getInt(TASK_RUN_MODEL_NAME + "_priority"))
                     .withExecuteTarget(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_target"),
                             ExecuteTarget.class, ExecuteTarget.newBuilder().build()))
+                    .withExecutorLabel(rs.getString(TASK_RUN_MODEL_NAME +  "_executor_label"))
                     .build();
         }
     }
@@ -1983,6 +1989,7 @@ public class TaskRunDao {
                     .withQueueName(rs.getString(column("queue_name", tableAlias)))
                     .withPriority(rs.getInt(column("priority", tableAlias)))
                     .withRetryTimes(rs.getInt(column("retry_times", tableAlias)))
+                    .withExecutorLabel(rs.getString(column("executor_label", tableAlias)))
                     .build();
         }
     }

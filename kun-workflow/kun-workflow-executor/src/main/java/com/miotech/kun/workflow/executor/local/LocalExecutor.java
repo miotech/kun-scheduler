@@ -14,13 +14,14 @@ import org.slf4j.LoggerFactory;
 public class LocalExecutor implements Executor {
 
     private final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
-    private final WorkerLifeCycleManager processLifeCycleManager;
-    private final AbstractQueueManager localQueueManager;
+    private final LocalProcessLifeCycleManager processLifeCycleManager;
+    private final LocalQueueManage localQueueManager;
 
     @Inject
-    public LocalExecutor(WorkerLifeCycleManager processLifeCycleManager, LocalQueueManage localQueueManage) {
+    public LocalExecutor(LocalProcessLifeCycleManager processLifeCycleManager, LocalQueueManage localQueueManage) {
         this.processLifeCycleManager = processLifeCycleManager;
         this.localQueueManager = localQueueManage;
+        logger.info("local executor initialize");
     }
 
     @Override

@@ -53,7 +53,7 @@ public class TaskDao {
 
     public static final String TASK_TAGS_MODEL_NAME = "task_tags";
 
-    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority","retries","retry_delay","check_type");
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority","retries","retry_delay","check_type","executor_label");
 
     private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
@@ -677,7 +677,8 @@ public class TaskDao {
                     task.getPriority(),
                     task.getRetries(),
                     task.getRetryDelay(),
-                    task.getCheckType().name()
+                    task.getCheckType().name(),
+                    task.getExecutorLabel()
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             // Update tags
@@ -714,6 +715,7 @@ public class TaskDao {
                     task.getRetries(),
                     task.getRetryDelay(),
                     task.getCheckType().name(),
+                    task.getExecutorLabel(),
                     task.getId()
             );
 
@@ -974,6 +976,7 @@ public class TaskDao {
                     .withRetries(rs.getInt(TASK_MODEL_NAME+"_retries"))
                     .withRetryDelay(rs.getInt(TASK_MODEL_NAME+"_retry_delay"))
                     .withCheckType(CheckType.valueOf(rs.getString(TASK_MODEL_NAME + "_check_type")))
+                    .withExecutorLabel(rs.getString(TASK_MODEL_NAME + "_executor_label"))
                     .build();
         }
     }

@@ -26,6 +26,7 @@ public class Task {
     //task retry delay,unit seconds
     private final Integer retryDelay;
     private final String checkType;
+    private final String executorLabel;
 
     public Task(Builder builder) {
         this.id = builder.id;
@@ -41,7 +42,7 @@ public class Task {
         this.retries = builder.retries;
         this.retryDelay = builder.retryDelay;
         this.checkType = builder.checkType;
-
+        this.executorLabel = builder.executorLabel;
     }
 
     public static Builder newBuilder() {
@@ -61,7 +62,8 @@ public class Task {
                 .withConfig(config)
                 .withQueueName(queueName)
                 .withReties(retries)
-                .withRetryDelay(retryDelay);
+                .withRetryDelay(retryDelay)
+                .withExecutorLabel(executorLabel);
     }
 
     public Long getId() { return id; }
@@ -110,6 +112,10 @@ public class Task {
         return checkType;
     }
 
+    public String getExecutorLabel() {
+        return executorLabel;
+    }
+
     @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
@@ -125,6 +131,7 @@ public class Task {
         private Integer retries;
         private Integer retryDelay;
         private String checkType;
+        private String executorLabel;
 
         private Builder() {
         }
@@ -194,8 +201,15 @@ public class Task {
             return this;
         }
 
+        public Builder withExecutorLabel(String executorLabel) {
+            this.executorLabel = executorLabel;
+            return this;
+        }
+
         public Task build() {
             return new Task(this);
         }
+
+
     }
 }

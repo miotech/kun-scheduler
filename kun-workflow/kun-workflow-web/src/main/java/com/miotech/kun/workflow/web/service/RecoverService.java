@@ -22,6 +22,7 @@ public class RecoverService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
+        logger.info("Recover Service running...");
         if (props.getBoolean("executor.enableRecover", true)) {
             executor.recover();
         }

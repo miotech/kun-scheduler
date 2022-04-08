@@ -33,6 +33,7 @@ public class LocalProcessMonitor implements WorkerMonitor, InitializingBean {
         this.localProcessBackend = localProcessBackend;
     }
 
+    @Override
     public void start() {
         logger.info("start process monitor...");
         timer.scheduleAtFixedRate(new PollingProcessStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);

@@ -20,7 +20,7 @@ public class MockQueueManager extends AbstractQueueManager {
 
     @Inject
     public MockQueueManager(Props props, MiscService miscService, EventBus eventBus) {
-        super(props, miscService, eventBus);
+        super(props, miscService, eventBus, "test");
     }
 
     @Override

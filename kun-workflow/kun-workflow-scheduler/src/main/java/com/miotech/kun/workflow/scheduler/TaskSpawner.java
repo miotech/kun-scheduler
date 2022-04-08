@@ -217,6 +217,7 @@ public class TaskSpawner implements InitializingBean {
                 .withFailedUpstreamTaskRunIds(resolveFailedUpstreamTaskRunIds(upstreamTaskRuns))
                 .withTaskRunConditions(taskRunConditions)
                 .withExecuteTarget(executeTarget)
+                .withExecutorLabel(task.getExecutorLabel())
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
         return taskRun;

@@ -155,6 +155,7 @@ public class TaskManager {
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
                 .withRetryTimes(0)
+                .withExecutorLabel(taskRun.getExecutorLabel())
                 .build();
         logger.debug("Created taskAttempt. taskAttemptId = {}", taskAttempt.getId());
 

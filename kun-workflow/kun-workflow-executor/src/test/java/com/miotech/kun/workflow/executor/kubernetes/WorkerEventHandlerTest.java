@@ -67,7 +67,7 @@ public class WorkerEventHandlerTest extends CommonTestBase {
         doReturn(mockFilter).when(mockFilter).withLabel(any(),any());
         doReturn(podList).when(mockFilter).list();
         doReturn(null).when(mockFilter).watch(any());
-        podEventMonitor = new PodEventMonitor(client,props);
+        podEventMonitor = new PodEventMonitor(client, props, "test");
         podEventMonitor.start();
         WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),
                 "kubernetes-" + taskAttempt.getId(), taskAttempt.getQueueName(), WorkerInstanceKind.KUBERNETES);
