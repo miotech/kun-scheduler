@@ -534,7 +534,11 @@ export default {
   'operationCenter.runningStatistics.averageRunningTime': '平均运行时长',
   'operationCenter.runningStatistics.task.waitTime': '任务等待时长',
   'operationCenter.runningStatistics.task.runningTime': '运行时长',
-
+  'operationCenter.runningStatistics.task.jumpToInstance': '跳转到任务实例',
+  'operationCenter.runningStatistics.task.created': '任务创建时间',
+  'operationCenter.runningStatistics.task.queued': '任务等待时间',
+  'operationCenter.runningStatistics.task.start': '任务开始时间',
+  'operationCenter.runningStatistics.task.end': '任务结束时间',
   'settings.variableSettings.title': '全局变量设置',
   'settings.variableSettings.key': '键',
   'settings.variableSettings.value': '值',

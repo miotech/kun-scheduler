@@ -31,8 +31,3 @@ export interface Filters {
   taskRunId?: string | null;
   name?: string | null;
 }
-
-export interface TaskState {
-  taskName: string;
-  taskRunId: string;
-}
