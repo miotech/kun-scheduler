@@ -153,7 +153,7 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
                 >
                   {item.name}
                 </Link>
-                <Link to={`/operation-center/task-run-id/${item.taskRunId}`}>
+                <Link to={`/operation-center/task-run-id/${item.taskRunId}`} target="_blank">
                   &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
                 </Link>
               </div>
