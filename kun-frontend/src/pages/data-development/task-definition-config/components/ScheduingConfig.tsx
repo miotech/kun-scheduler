@@ -4,7 +4,7 @@ import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 
 import { FormInstance } from 'antd/es/form';
-import { TaskDefinition, BlockType } from '@/definitions/TaskDefinition.type';
+import { TaskDefinition, BlockType, ExecutorLabel } from '@/definitions/TaskDefinition.type';
 import { FormListFieldData } from 'antd/es/form/FormList';
 import { FormListOperation } from 'antd/lib/form/FormList';
 
@@ -107,6 +107,27 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
     [t],
   );
 
+  const executorLabelOptions = useMemo(
+    () => [
+      {
+        label: ExecutorLabel.aws,
+        value: ExecutorLabel.aws,
+      },
+      {
+        label: ExecutorLabel.kun,
+        value: ExecutorLabel.kun,
+      },
+      {
+        label: ExecutorLabel.aliyun,
+        value: ExecutorLabel.aliyun,
+      },
+      {
+        label: ExecutorLabel.carbon,
+        value: ExecutorLabel.carbon,
+      },
+    ],
+    [],
+  );
   const renderOutputDatasetFields = (fields: FormListFieldData[], { add, remove }: FormListOperation) => {
     logger.debug('fields = %o', fields);
     return (
@@ -475,6 +496,29 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
               initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.blockType ?? BlockType.NONE}
             >
               <Select style={{ width: 200 }} options={blockOptions} />
+            </Form.Item>
+          </Col>
+        </Row>
+      </section>
+
+      <Divider />
+      <section data-tid="executorLabel-config">
+        <Row>
+          <Col flex="0 0 120px">
+            <span className={styles.sectionLabel}>
+              {/* Output Config */}
+              {t('dataDevelopment.definition.scheduleConfig.environment')}
+            </span>
+          </Col>
+          <Col flex="1 1">
+            <Form.Item
+              shouldUpdate
+              label={t('dataDevelopment.definition.scheduleConfig.executorLabel')}
+              name={['taskPayload', 'scheduleConfig', 'executorLabel']}
+              valuePropName="value"
+              initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.executorLabel}
+            >
+              <Select style={{ width: 200 }} options={executorLabelOptions} />
             </Form.Item>
           </Col>
         </Row>
