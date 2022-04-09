@@ -467,7 +467,7 @@ public class GlossaryRepository extends BaseRepository {
         String outSql = DefaultSQLBuilder.newBuilder()
                 .select("count(distinct kmgtdr.dataset_id) as dataset_count")
                 .from(tmpTableName).join("inner", TABLE_KUN_MT_GLOSSARY_TO_DATASET_REF, ALIAS_KUN_MT_GLOSSARY_TO_DATASET_REF)
-                .on("t.id=kmgtdr.glossary_id").getSQL();
+                .on("t.id=kmgtdr.glossary_id and kmgtdr.deleted is false").getSQL();
         String withRecursiveSql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
         String sql = String.format("(" + withRecursiveSql + ")" + "::int" + " as %s", linkTableAlias, columnAlias);
         log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
