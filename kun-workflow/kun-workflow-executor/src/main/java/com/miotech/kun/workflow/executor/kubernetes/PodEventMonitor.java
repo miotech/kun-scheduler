@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.google.inject.assistedinject.Assisted;
 import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
@@ -25,28 +26,31 @@ import java.util.concurrent.TimeUnit;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_WORKFLOW;
 
-@Singleton
-public class PodEventMonitor implements WorkerMonitor, InitializingBean {
+public class PodEventMonitor implements WorkerMonitor {
 
     private final Logger logger = LoggerFactory.getLogger(PodEventMonitor.class);
     private KubernetesClient kubernetesClient;
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
     private final long POLLING_PERIOD = 5 * 1000;
     private final Props props;
-
+    private final String name;
 
     @Inject
-    public PodEventMonitor(KubernetesClient kubernetesClient, Props props) {
+    public PodEventMonitor(@Assisted KubernetesClient kubernetesClient, Props props, @Assisted String name) {
         this.kubernetesClient = kubernetesClient;
         this.props = props;
+        this.name = name;
+        start();
+        logger.info("pod even monitor: {} initializing", name);
     }
 
+    @Override
     public void start() {
-        logger.info("start pod monitor...");
+        logger.info("start {} pod monitor...", name);
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new PollingPodsStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);
         kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env.namespace"))
+                .inNamespace(props.getString("executor.env."+name+".namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .watch(new PodStatusWatcher());
     }
@@ -66,11 +70,6 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
     @Override
     public void unRegisterAll() {
         registerHandlers.clear();
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        start();
     }
 
 
@@ -101,7 +100,7 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
         public void run() {
             try {
                 PodList podList = kubernetesClient.pods()
-                        .inNamespace(props.getString("executor.env.namespace"))
+                        .inNamespace(props.getString("executor.env."+name+".namespace"))
                         .withLabel(KUN_WORKFLOW).list();
                 logger.debug("fetch pod list from kubernetes size = {}, register size = {}", podList.getItems().size(), registerHandlers.size());
                 Set<Long> registerSet = new HashSet<>(registerHandlers.keySet());

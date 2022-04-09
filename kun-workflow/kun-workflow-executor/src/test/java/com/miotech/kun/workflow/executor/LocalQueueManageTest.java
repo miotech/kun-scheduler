@@ -17,6 +17,7 @@ import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ import static com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory.cr
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-
+@Disabled
 public class LocalQueueManageTest extends CommonTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(LocalQueueManageTest.class);

@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.executor.kubernetes;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.Assisted;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
@@ -17,23 +18,26 @@ import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.K
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.TASK_QUEUE;
 
 
-@Singleton
 public class KubernetesResourceManager extends AbstractQueueManager {
 
     private final Logger logger = LoggerFactory.getLogger(KubernetesResourceManager.class);
     private KubernetesClient client;
+    private final String name;
 
     @Inject
-    public KubernetesResourceManager(KubernetesClient client, Props props, MiscService miscService, EventBus eventBus) {
-        super(props, miscService, eventBus);
-        this.client = client;
+    public KubernetesResourceManager(@Assisted KubernetesClient kubernetesClient, Props props, MiscService miscService,
+                                     EventBus eventBus, @Assisted String name) {
+        super(props, miscService, eventBus, name);
+        this.client = kubernetesClient;
+        this.name = name;
+        logger.info("k8s resource manager: {} initializing", name);
     }
 
     @Override
     public Integer getCapacity(TaskAttemptQueue taskAttemptQueue) {
         ResourceQueue limitResource = taskAttemptQueue.getResourceQueue();
         ResourceQueue usedResource = getUsedResource(taskAttemptQueue.getName());
-        logger.debug("queue = {},has {} running pod ,limit = {}", taskAttemptQueue.getName(), usedResource.getWorkerNumbers(), limitResource.getWorkerNumbers());
+        logger.debug("{} k8s resources manager queue = {},has {} running pod ,limit = {}", name, taskAttemptQueue.getName(), usedResource.getWorkerNumbers(), limitResource.getWorkerNumbers());
         return limitResource.getWorkerNumbers() - usedResource.getWorkerNumbers() ;
     }
 
@@ -49,7 +53,7 @@ public class KubernetesResourceManager extends AbstractQueueManager {
 
     private ResourceQueue getUsedResource(String queueName) {
         PodList podList = client.pods()
-                .inNamespace(props.getString("executor.env.namespace"))
+                .inNamespace(props.getString("executor.env."+name+".namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(TASK_QUEUE, queueName)
                 .list();

@@ -33,7 +33,7 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
     public MockWorkerLifeCycleManager(TaskRunDao taskRunDao, MockWorkerMonitor workerMonitor,
                                       Props props, MiscService miscService, MockQueueManager queueManager,
                                       EventBus eventBus, EventSubscriber eventSubscriber) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber);
+        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber, "test");
         this.mockQueueManager = queueManager;
         this.mockWorkerMonitor = workerMonitor;
     }

@@ -88,4 +88,9 @@ public class MockWorkerMonitor implements WorkerMonitor {
     public boolean hasRegister(Long taskAttemptId){
         return registerHandlers.containsKey(taskAttemptId);
     }
+
+    @Override
+    public void start() {
+        
+    }
 }

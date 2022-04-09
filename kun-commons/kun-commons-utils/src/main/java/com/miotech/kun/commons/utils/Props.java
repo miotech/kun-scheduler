@@ -280,5 +280,18 @@ public class Props {
         return p;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        result.append("Props: ");
+        int i = 1;
+        for (Map<String, String> map : propertiesList) {
+            result.append("\n map ").append(i).append(" :");
+            for (Map.Entry e : map.entrySet()) {
+                result.append(e.getKey() + " " + e.getValue().toString() + "\n");
+            }
+        }
+        return result.toString();
+    }
 }
 

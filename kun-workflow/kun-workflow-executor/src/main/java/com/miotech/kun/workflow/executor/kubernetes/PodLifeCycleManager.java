@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.google.inject.assistedinject.Assisted;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.*;
 
-@Singleton
 public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(PodLifeCycleManager.class);
@@ -44,20 +43,19 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final String POD_LIB_DIR = "/server/lib";
     private final Integer DB_MAX_POOL = 1;
     private final Integer MINI_MUM_IDLE = 0;
+    private final String name;
 
     @Inject
-    public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
-                               KubernetesClient kubernetesClient, OperatorDao operatorDao, AbstractQueueManager queueManager,
-                               EventBus eventBus, EventSubscriber eventSubscriber, WorkerImageService workerImageService) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager, eventBus, eventSubscriber);
+    public PodLifeCycleManager(TaskRunDao taskRunDao, @Assisted PodEventMonitor workerMonitor, Props props, MiscService miscService,
+                               @Assisted KubernetesClient kubernetesClient, OperatorDao operatorDao, @Assisted KubernetesResourceManager KubernetesResourceManager,
+                               EventBus eventBus, EventSubscriber eventSubscriber, WorkerImageService workerImageService, @Assisted String name) {
+        super(taskRunDao, workerMonitor, props, miscService, KubernetesResourceManager, eventBus, eventSubscriber, name);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
         this.workerImageService = workerImageService;
-    }
+        this.name = name;
+        logger.info("k8s pod life cycle manager: {} initialize", name);
 
-    @Override
-    protected void init() {
-        super.init();
         //set active image to the latest one;
         WorkerImageFilter imageFilter = WorkerImageFilter.newBuilder()
                 .withName(POD_IMAGE_NAME)
@@ -73,9 +71,10 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public void startWorker(TaskAttempt taskAttempt) {
-        logger.info("going to start pod taskAttemptId = {}", taskAttempt.getId());
+        //logger.info("going to start pod taskAttemptId = {}", taskAttempt.getId());
+        logger.info("pod life cycle manager: {} start worker pod taskAttemptId = {}", name, taskAttempt.getId());
         kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env.namespace"))
+                .inNamespace(props.getString("executor.env."+name+".namespace"))
                 .create(buildPod(taskAttempt));
     }
 
@@ -83,7 +82,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     public Boolean stopWorker(Long taskAttemptId) {
         logger.info("going to stop pod taskAttemptId = {}", taskAttemptId);
         return kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env.namespace"))
+                .inNamespace(props.getString("executor.env."+name+".namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttemptId))
                 .delete();
@@ -91,8 +90,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public WorkerSnapshot getWorker(Long taskAttemptId) {
+        logger.info("pod life cycle manager: {} get worker", name);
         PodList podList = kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env.namespace"))
+                .inNamespace(props.getString("executor.env."+name+".namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttemptId))
                 .list();
@@ -111,7 +111,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         WorkerSnapshot workerSnapshot = getWorker(taskAttemptId);
         if (workerSnapshot != null && !workerSnapshot.getStatus().isFinished()) {
             return kubernetesClient.pods()
-                    .inNamespace(props.getString("executor.env.namespace"))
+                    .inNamespace(props.getString("executor.env."+name+".namespace"))
                     .withName(KUN_WORKFLOW + taskAttemptId)
                     .tailingLines(tailLines)
                     .getLog();
@@ -137,7 +137,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     public List<PodStatusSnapShot> getExistPodList() {
         PodList podList = kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env.namespace"))
+                .inNamespace(props.getString("executor.env."+name+".namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .list();
         return podList.getItems().stream().map(x ->
@@ -149,7 +149,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Pod pod = new Pod();
         ObjectMeta objectMeta = new ObjectMeta();
         objectMeta.setName(KUN_WORKFLOW + taskAttempt.getId());
-        objectMeta.setNamespace(props.getString("executor.env.namespace"));
+        objectMeta.setNamespace(props.getString("executor.env."+name+".namespace"));
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_WORKFLOW, null);
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
@@ -166,10 +166,10 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         PodSpec podSpec = new PodSpec();
         podSpec.setRestartPolicy("Never");
         podSpec.setContainers(Arrays.asList(buildContainer(taskAttempt)));
-        if (props.containsKey("executor.env.privateHub")) {
-            if (props.getBoolean("executor.env.privateHub.useSecret", false)) {
+        if (props.containsKey("executor.env."+name+".privateHub")) {
+            if (props.getBoolean("executor.env."+name+".privateHub.useSecret", false)) {
                 LocalObjectReference secret = new LocalObjectReferenceBuilder()
-                        .withName(props.getString("executor.env.privateHub.secert"))
+                        .withName(props.getString("executor.env."+name+".privateHub.secert"))
                         .build();
                 podSpec.setImagePullSecrets(Arrays.asList(secret));
             }
@@ -177,9 +177,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Volume nfsVolume = new VolumeBuilder()
                 .withPersistentVolumeClaim(
                         new PersistentVolumeClaimVolumeSourceBuilder()
-                                .withNewClaimName(props.getString("executor.env.nfsClaimName"))
+                                .withNewClaimName(props.getString("executor.env."+name+".nfsClaimName"))
                                 .build())
-                .withName(props.getString("executor.env.nfsName"))
+                .withName(props.getString("executor.env."+name+".nfsName"))
                 .build();
         List<Volume> volumeList = new ArrayList<>();
         volumeList.add(nfsVolume);
@@ -195,8 +195,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         String containerName = getContainerFromOperator(operatorId);
         WorkerImage workerImage = workerImageService.fetchActiveImage(POD_IMAGE_NAME);
         String imageName = POD_IMAGE_NAME + ":" + workerImage.getVersion();
-        if (props.containsKey("executor.env.privateHub")) {
-            imageName = props.getString("executor.env.privateHub.url") + "/" + imageName;
+        if (props.containsKey("executor.env."+name+".privateHub")) {
+            imageName = props.getString("executor.env."+name+".privateHub.url") + "/" + imageName;
         }
         container.setName(containerName);
         container.setImage(imageName);
@@ -204,13 +204,13 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         List<VolumeMount> mounts = new ArrayList<>();
         VolumeMount logMount = new VolumeMount();
         logMount.setMountPath(POD_WORK_DIR + "/logs");
-        logMount.setName(props.getString("executor.env.nfsName"));
-        logMount.setSubPath(props.getString("executor.env.logPath"));
+        logMount.setName(props.getString("executor.env."+name+".nfsName"));
+        logMount.setSubPath(props.getString("executor.env."+name+".logPath"));
         mounts.add(logMount);
         VolumeMount jarMount = new VolumeMount();
         jarMount.setMountPath(POD_LIB_DIR);
-        jarMount.setName(props.getString("executor.env.nfsName"));
-        jarMount.setSubPath(props.getString("executor.env.jarDirectory"));
+        jarMount.setName(props.getString("executor.env."+name+".nfsName"));
+        jarMount.setSubPath(props.getString("executor.env."+name+".jarDirectory"));
         ExecCommand command = buildExecCommand(taskAttempt);
         writeExecCommandToPVC(command);
         mounts.add(jarMount);

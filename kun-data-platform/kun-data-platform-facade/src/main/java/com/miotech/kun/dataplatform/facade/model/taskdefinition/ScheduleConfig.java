@@ -31,6 +31,8 @@ public class ScheduleConfig {
 
     private final String blockType;
 
+    private final String executorLabel;
+
     private ScheduleConfig(String type,
                            String cronExpr,
                            String timeZone,
@@ -40,7 +42,8 @@ public class ScheduleConfig {
                            Integer retries,
                            Integer retryDelay,
                            SlaConfig slaConfig,
-                           String blockType) {
+                           String blockType,
+                           String executorLabel) {
         this.type = type;
         this.cronExpr = cronExpr;
         this.timeZone = timeZone;
@@ -51,6 +54,7 @@ public class ScheduleConfig {
         this.retryDelay = retryDelay;
         this.slaConfig = slaConfig;
         this.blockType = blockType;
+        this.executorLabel = executorLabel;
     }
 
     public String getType() {
@@ -93,6 +97,10 @@ public class ScheduleConfig {
         return blockType;
     }
 
+    public String getExecutorLabel() {
+        return executorLabel;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -108,7 +116,8 @@ public class ScheduleConfig {
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
                 .withTimeZone(timeZone)
-                .withSlaConfig(slaConfig);
+                .withSlaConfig(slaConfig)
+                .withExecutorLabel(executorLabel);
     }
 
     public static final class Builder {
@@ -122,6 +131,7 @@ public class ScheduleConfig {
         private Integer retryDelay;
         private SlaConfig slaConfig;
         private String blockType;
+        private String executorLabel;
 
         private Builder() {
         }
@@ -175,9 +185,15 @@ public class ScheduleConfig {
             this.blockType = blockType;
             return this;
         }
+
+        public Builder withExecutorLabel(String executorLabel) {
+            this.executorLabel = executorLabel;
+            return this;
+        }
+
         public ScheduleConfig build() {
             return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets, retries,
-                    retryDelay, slaConfig, blockType);
+                    retryDelay, slaConfig, blockType, executorLabel);
         }
     }
 

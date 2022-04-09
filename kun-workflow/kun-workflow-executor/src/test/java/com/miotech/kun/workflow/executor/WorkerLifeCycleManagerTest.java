@@ -25,6 +25,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -34,6 +35,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
+@Disabled
 public class WorkerLifeCycleManagerTest extends CommonTestBase{
 
     @Inject

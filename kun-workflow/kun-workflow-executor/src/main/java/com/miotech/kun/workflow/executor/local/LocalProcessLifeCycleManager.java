@@ -39,11 +39,11 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
     private static final Integer GRACE_ABORT_TIME = 30;
 
     @Inject
-    public LocalProcessLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props,
-                                        MiscService miscService, AbstractQueueManager queueManager,
+    public LocalProcessLifeCycleManager(TaskRunDao taskRunDao, LocalProcessMonitor workerMonitor, Props props,
+                                        MiscService miscService, LocalQueueManage queueManager,
                                         OperatorDao operatorDao, LocalProcessBackend localProcessBackend,
                                         EventBus eventBus, EventSubscriber eventSubscriber) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber);
+        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber, "local");
         this.operatorDao = operatorDao;
         this.localProcessBackend = localProcessBackend;
     }

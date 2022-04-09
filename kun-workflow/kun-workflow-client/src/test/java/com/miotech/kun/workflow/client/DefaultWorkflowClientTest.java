@@ -101,6 +101,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         client.deleteTask(result.getId());
     }
 
+    @Disabled
     @Test
     public void executeTask_ok() {
         // prepare

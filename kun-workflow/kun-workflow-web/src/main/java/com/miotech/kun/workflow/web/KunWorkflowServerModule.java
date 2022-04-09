@@ -11,37 +11,21 @@ import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunStatistic;
-import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.pubsub.RedisEventPublisher;
 import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
-import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.TaskRunStateMachine;
-import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
-import com.miotech.kun.workflow.executor.WorkerMonitor;
-import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
-import com.miotech.kun.workflow.executor.kubernetes.KubernetesResourceManager;
-import com.miotech.kun.workflow.executor.kubernetes.PodEventMonitor;
-import com.miotech.kun.workflow.executor.kubernetes.PodLifeCycleManager;
-import com.miotech.kun.workflow.executor.local.LocalExecutor;
-import com.miotech.kun.workflow.executor.local.LocalProcessLifeCycleManager;
-import com.miotech.kun.workflow.executor.local.LocalProcessMonitor;
-import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
+import com.miotech.kun.workflow.web.module.DispatchExecutorModule;
+import com.miotech.kun.workflow.web.module.KubernetesExecutorModule;
+import com.miotech.kun.workflow.web.module.LocalExecutorModule;
 import com.miotech.kun.workflow.web.service.RecoverService;
 import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
-import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class KunWorkflowServerModule extends AppModule {
-    private static final Logger logger = LoggerFactory.getLogger(KunWorkflowServerModule.class);
 
     private final Props props;
 
@@ -55,18 +39,13 @@ public class KunWorkflowServerModule extends AppModule {
         super.configure();
         String env = props.getString("executor.env.name", "local");
         if (env.equals("local")) {
-            bind(Executor.class).to(LocalExecutor.class);
-            bind(WorkerLifeCycleManager.class).to(LocalProcessLifeCycleManager.class);
-            bind(AbstractQueueManager.class).to(LocalQueueManage.class);
-            bind(WorkerMonitor.class).to(LocalProcessMonitor.class);
+            install(new LocalExecutorModule(props));
         } else if (env.equals("kubernetes")) {
-            KubernetesClient client = new DefaultKubernetesClient(kubernetesConfig());
-            bind(KubernetesClient.class).toInstance(client);
-            bind(AbstractQueueManager.class).to(KubernetesResourceManager.class);
-            bind(WorkerMonitor.class).to(PodEventMonitor.class);
-            bind(WorkerLifeCycleManager.class).to(PodLifeCycleManager.class);
-            bind(Executor.class).to(KubernetesExecutor.class);
+            install(new KubernetesExecutorModule(props));
+        } else if (env.equals("dispatch")) {
+            install(new DispatchExecutorModule(props));
         }
+
         bind(EventBus.class).toInstance(new EventBus());
         bind(Scheduler.class).to(LocalScheduler.class);
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
@@ -97,21 +76,6 @@ public class KunWorkflowServerModule extends AppModule {
         return new NopEventSubscriber();
     }
 
-    private Config kubernetesConfig() {
-        String masterUrl = props.get("executor.env.url");
-        String oauthToken = props.get("executor.env.oauthToken");
-        String caCertFile = props.get("executor.env.caCertFile");
 
-        if (masterUrl != null && oauthToken != null && caCertFile != null) {
-            logger.info("Interact with k8s cluster using oauth authentication.");
-            return new ConfigBuilder()
-                    .withMasterUrl(masterUrl)
-                    .withOauthToken(oauthToken)
-                    .withCaCertFile(caCertFile)
-                    .build();
-        } else {
-            logger.info("Interact with k8s cluster using rbac authentication.");
-            return Config.autoConfigure(null);
-        }
-    }
+
 }

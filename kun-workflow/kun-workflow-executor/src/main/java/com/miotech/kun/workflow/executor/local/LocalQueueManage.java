@@ -23,7 +23,7 @@ public class LocalQueueManage extends AbstractQueueManager {
 
     @Inject
     public LocalQueueManage(Props props, MiscService miscService, LocalProcessBackend localProcessBackend, EventBus eventBus) {
-        super(props, miscService,eventBus);
+        super(props, miscService, eventBus, "local");
         this.localProcessBackend = localProcessBackend;
     }
 
@@ -31,7 +31,7 @@ public class LocalQueueManage extends AbstractQueueManager {
     public Integer getCapacity(TaskAttemptQueue taskAttemptQueue) {
         ResourceQueue limitResource = taskAttemptQueue.getResourceQueue();
         ResourceQueue usedResource = getUsedResource(taskAttemptQueue.getName());
-        logger.debug("queue = {},has {} running process ,limit = {}", taskAttemptQueue.getName(), usedResource.getWorkerNumbers(), limitResource.getWorkerNumbers());
+        //logger.debug("queue = {},has {} running process ,limit = {}", taskAttemptQueue.getName(), usedResource.getWorkerNumbers(), limitResource.getWorkerNumbers());
         return limitResource.getWorkerNumbers() - usedResource.getWorkerNumbers();
     }
 

@@ -30,6 +30,7 @@ public class KunInfraWebServer extends AbstractKunWebServer {
         Props props = PropsUtils.loadAppProps();
         props.addProps(PropsUtils.loadPropsFromEnv("INFRA"));
         // Redirect all std out and err messages into log4j
+        logger.info(props.toString());
         org.eclipse.jetty.util.log.Log.setLog(new JettyLog());
 
         /* Initialize Guice Injector */

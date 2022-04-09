@@ -13,7 +13,7 @@ public class TaskAttemptQueue {
     private Queue<TaskAttempt> queue;
     private final ResourceQueue resourceQueue;//队列资源容量
     private String name;
-    private static Logger logger = LoggerFactory.getLogger(LocalTaskAttemptQueue.class);
+    private static Logger logger = LoggerFactory.getLogger(TaskAttemptQueue.class);
 
     private Set<Long> dispatchedTaskAttempt = new HashSet<>();
 

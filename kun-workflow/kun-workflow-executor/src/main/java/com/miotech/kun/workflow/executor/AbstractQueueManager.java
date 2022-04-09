@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
+import com.google.inject.assistedinject.Assisted;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
@@ -29,16 +30,18 @@ public abstract class AbstractQueueManager {
     protected Props props;
     private final EventBus eventBus;
     private MiscService miscService;
+    private final String name;
 
-    public AbstractQueueManager(Props props, MiscService miscService ,EventBus eventBus) {
+    public AbstractQueueManager(Props props, MiscService miscService, EventBus eventBus, String name) {
         this.props = props;
         queueMap = new ConcurrentHashMap<>();
         this.miscService = miscService;
         this.eventBus = eventBus;
+        this.name = name;
     }
 
     public void init() {//根据配置文件初始化nameSpace资源配额
-        logger.debug("load resource configuration...");
+        logger.debug("{} queue manager load resource configuration...", name);
         List<ResourceQueue> resourceQueueList = loadResourceQueue();
         logger.debug("init taskAttempt Queue...");
         List<TaskAttemptQueue> taskAttemptQueueList = initTaskAttemptQueue(resourceQueueList);
@@ -57,10 +60,10 @@ public abstract class AbstractQueueManager {
     }
 
     public List<ResourceQueue> loadResourceQueue() {
-        List<String> queueNames = props.getStringList("executor.env.resourceQueues");
+        List<String> queueNames = props.getStringList("executor.env."+name+".resourceQueues");
         List<ResourceQueue> queueList = new ArrayList<>();
         for (String queueName : queueNames) {
-            String prefix = "executor.env.resourceQueues." + queueName;
+            String prefix = "executor.env."+name+".resourceQueues." + queueName;
             Integer cores = props.getInt(prefix + ".quota.cores", 0);
             Integer memory = props.getInt(prefix + ".quota.memory", 0);
             Integer workerNumbers = props.getInt(prefix + ".quota.workerNumbers", 0);
@@ -81,6 +84,7 @@ public abstract class AbstractQueueManager {
     public void submit(TaskAttempt taskAttempt) {
         lock.lock();
         try {
+            logger.info("{} submit task attempt {}", name, taskAttempt.getId());
             Preconditions.checkNotNull(taskAttempt.getQueueName(), "Invalid argument `queueName`: null");
             TaskAttemptQueue queue = queueMap.get(taskAttempt.getQueueName());
             if (queue == null) {

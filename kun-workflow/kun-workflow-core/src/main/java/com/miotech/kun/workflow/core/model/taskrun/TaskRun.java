@@ -61,6 +61,8 @@ public class TaskRun {
 
     private final List<TaskRunCondition> taskRunConditions;
 
+    private final String executorLabel;
+
     public Long getId() {
         return id;
     }
@@ -141,10 +143,15 @@ public class TaskRun {
         return taskRunConditions;
     }
 
+    public String getExecutorLabel() {
+        return executorLabel;
+    }
+
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime queuedAt,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime termAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                    List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
-                   ScheduleType scheduledType, String queueName, Integer priority, ExecuteTarget executeTarget, List<TaskRunCondition> taskRunConditions) {
+                   ScheduleType scheduledType, String queueName, Integer priority, ExecuteTarget executeTarget,
+                   List<TaskRunCondition> taskRunConditions, String executorLabel) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -166,6 +173,7 @@ public class TaskRun {
         this.priority = priority;
         this.executeTarget = executeTarget;
         this.taskRunConditions = taskRunConditions;
+        this.executorLabel = executorLabel;
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -193,7 +201,8 @@ public class TaskRun {
                 .withQueueName(queueName)
                 .withPriority(priority)
                 .withExecuteTarget(executeTarget)
-                .withTaskRunConditions(taskRunConditions);
+                .withTaskRunConditions(taskRunConditions)
+                .withExecutorLabel(executorLabel);
     }
 
     @Override
@@ -219,6 +228,7 @@ public class TaskRun {
                 ", queueName='" + queueName + '\'' +
                 ", executeTarget=" + executeTarget +
                 ", taskRunConditions=" + taskRunConditions +
+                ", executorLabel=" + executorLabel +
                 '}';
     }
 
@@ -243,6 +253,7 @@ public class TaskRun {
         private Integer priority;
         private ExecuteTarget executeTarget;
         private List<TaskRunCondition> taskRunConditions;
+        private String executorLabel;
 
         private TaskRunBuilder() {
         }
@@ -346,9 +357,15 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withExecutorLabel(String executorLabel) {
+            this.executorLabel = executorLabel;
+            return this;
+        }
+
         public TaskRun build() {
             return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, termAt, createdAt, updatedAt, inlets,
-                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget, taskRunConditions);
+                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget,
+                    taskRunConditions, executorLabel);
         }
     }
 }

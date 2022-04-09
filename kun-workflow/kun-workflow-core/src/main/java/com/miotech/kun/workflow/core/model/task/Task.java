@@ -53,6 +53,8 @@ public class Task {
 
     private final CheckType checkType;
 
+    private final String executorLabel;
+
     public Long getId() {
         return id;
     }
@@ -105,6 +107,10 @@ public class Task {
         return checkType;
     }
 
+    public String getExecutorLabel() {
+        return executorLabel;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
@@ -137,6 +143,7 @@ public class Task {
         this.retries = builder.retries;
         this.retryDelay = builder.retryDelay;
         this.checkType = builder.checkType;
+        this.executorLabel = builder.executorLabel;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -153,7 +160,8 @@ public class Task {
                 .withPriority(priority)
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
-                .withCheckType(checkType);
+                .withCheckType(checkType)
+                .withExecutorLabel(executorLabel);
     }
 
     public boolean shouldSchedule(Tick tick, OffsetDateTime currentTime) {
@@ -256,6 +264,7 @@ public class Task {
         private Integer retries;
         private Integer retryDelay;
         private CheckType checkType;
+        private String executorLabel;
 
         private TaskBuilder() {
         }
@@ -328,6 +337,11 @@ public class Task {
 
         public TaskBuilder withCheckType(CheckType checkType){
             this.checkType = checkType;
+            return this;
+        }
+
+        public TaskBuilder withExecutorLabel(String executorLabel) {
+            this.executorLabel = executorLabel;
             return this;
         }
 

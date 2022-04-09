@@ -17,6 +17,7 @@ import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
-public abstract class WorkerLifeCycleManager implements LifeCycleManager, InitializingBean {
+public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
     protected final WorkerMonitor workerMonitor;
@@ -39,11 +40,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     private final EventBus eventBus;
     private final EventSubscriber eventSubscriber;
     private Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
+    private final String name;
 
     public WorkerLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor,
                                   Props props, MiscService miscService,
                                   AbstractQueueManager queueManager, EventBus eventBus,
-                                  EventSubscriber eventSubscriber) {
+                                  EventSubscriber eventSubscriber, String name) {
         this.props = props;
         this.taskRunDao = taskRunDao;
         this.workerMonitor = workerMonitor;
@@ -51,16 +53,15 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         this.queueManager = queueManager;
         this.eventBus = eventBus;
         this.eventSubscriber = eventSubscriber;
+        this.name = name;
+        logger.info("{} worker life cycle manager initialize", name);
+        init();
     }
 
 
     /* ----------- public methods ------------ */
-    @Override
-    public void afterPropertiesSet() {
-        init();
-    }
 
-    protected void init() {
+    public void init() {
         queueManager.init();
         consumer.start();
         eventSubscriber.subscribe(event -> {
@@ -69,6 +70,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                 handleDataQualityEvent((CheckResultEvent) event);
             }
         });
+    }
+
+    public void run() {
+        init();
+        workerMonitor.start();
     }
 
     public void shutdown() {
@@ -83,16 +89,16 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     }
 
     public void recover() {
-        List<TaskAttempt> shouldRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
+        List<TaskAttempt> shouldRecoverAttemptList = fetchRecoverAttempts();
         List<WorkerInstance> instanceList = getRunningWorker();
-        logger.info("recover watch pods size = {}", instanceList.size());
+        logger.info("{} recover watch pods size = {}", name, instanceList.size());
         for (WorkerInstance workerInstance : instanceList) {
             workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
         }
         Set<Long> instanceSet = instanceList.stream().map(WorkerInstance::getTaskAttemptId).collect(Collectors.toSet());
         //filter taskAttempt which instance still running
         List<TaskAttempt> recoverAttemptList = shouldRecoverAttemptList.stream().filter(x -> !instanceSet.contains(x.getId())).collect(Collectors.toList());
-        logger.info("recover queued attempt size = {}", recoverAttemptList.size());
+        logger.info("{} recover queued attempt size = {}", name, recoverAttemptList.size());
         for (TaskAttempt taskAttempt : recoverAttemptList) {
             queueManager.submit(taskAttempt);
         }
@@ -184,6 +190,22 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
             sendExceptionEvent(taskAttemptId);
         }
     }
+
+    private List<TaskAttempt> fetchRecoverAttempts() {
+        List<TaskAttempt> shouldRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
+        List<String> executorLabels = Arrays.asList(StringUtils.split(props.getString("executor.env."+name+".label"), ","));
+        String defaultExecutorName = props.getString("executor.env.default");
+        for (TaskAttempt taskAttempt : shouldRecoverAttemptList) {
+            if (!name.equals(defaultExecutorName) && taskAttempt.getExecutorLabel() == null) {
+                shouldRecoverAttemptList.remove(taskAttempt);
+            }
+            if (!executorLabels.contains(taskAttempt.getExecutorLabel())) {
+                shouldRecoverAttemptList.remove(taskAttempt);
+            }
+        }
+        return shouldRecoverAttemptList;
+    }
+
 
     private void sendExceptionEvent(Long taskAttemptId) {
         TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.EXCEPTION, taskAttemptId);
@@ -336,6 +358,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     class TaskAttemptConsumer implements Runnable {
         @Override
         public void run() {
+            logger.info("{} life cycle manager - task attempt consumer start to run... ", name);
             while (true) {
                 if (Thread.currentThread().isInterrupted()) {
                     break;
@@ -348,7 +371,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                     }
                     for (TaskAttempt taskAttempt : readyToExecuteTaskAttemptList) {
                         try {
-                            logger.debug("take taskAttempt = {} from queue = {}", taskAttempt.getId(), taskAttempt.getQueueName());
+                            logger.debug("{} take taskAttempt = {} from queue = {}", name, taskAttempt.getId(), taskAttempt.getQueueName());
                             executeTaskAttempt(taskAttempt);
                         } catch (Exception e) {
                             logger.warn("take taskAttempt = {} failed", taskAttempt.getId(), e);
