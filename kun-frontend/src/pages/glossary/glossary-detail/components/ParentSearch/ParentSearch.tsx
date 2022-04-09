@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useState } from 'react';
 import { Select } from 'antd';
 import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
-import { SearchGlossaryItem } from '@/rematch/models/glossary';
+import { SearchGlossaryItem, GlossaryChild } from '@/rematch/models/glossary';
 import { searchGlossariesService } from '@/services/glossary';
 import { CopyOutlined } from '@ant-design/icons';
 
@@ -71,7 +71,7 @@ export default memo(function ParentSearch({
     [onChange],
   );
 
-  const options = glossaryList.map(item => ({ value: item.name, id: item.gid, description: item.description }));
+  const options = glossaryList.map(item => ({ value: item.name, id: item.gid, description: item.description, ancestryGlossaryList: item.ancestryGlossaryList }));
 
   if (isEditting) {
     return (
@@ -85,7 +85,15 @@ export default memo(function ParentSearch({
       >
         {options.map((item: any) => (
           <Option key={item.id} value={item.id} label={item.label}>
-            <span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span>
+            <div><span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span></div>
+            {item.ancestryGlossaryList && item.ancestryGlossaryList.map((idx: GlossaryChild, index: number) => {
+                return (
+                  <span className={styles.pathName} onClick={(e) => {e.stopPropagation();setCurrentId(idx.id);}}>
+                    {' '}
+                   {index !== 0 && '->'} {idx.name}
+                  </span>
+                );
+            })}
           </Option>
         ))}
       </Select>

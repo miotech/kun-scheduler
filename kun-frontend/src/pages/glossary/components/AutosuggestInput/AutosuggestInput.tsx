@@ -1,15 +1,16 @@
 import React, { memo, useCallback, useEffect } from 'react';
-import { useHistory } from 'umi';
 import { Select } from 'antd';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
+import { GlossaryChild } from '@/rematch/models/glossary';
 import styles from './AutosuggestInput.less';
 
 const { Option } = Select;
-
-export default memo(function AutosuggestInput() {
-  const history = useHistory();
+interface Props {
+  setCurrentId: (id: string) => void;
+}
+export default memo(function AutosuggestInput({ setCurrentId }: Props) {
   const t = useI18n();
 
   const { selector, dispatch } = useRedux(state => state.glossary);
@@ -33,13 +34,14 @@ export default memo(function AutosuggestInput() {
     value: item.name,
     id: item.gid,
     description: item.description,
+    ancestryGlossaryList: item.ancestryGlossaryList
   }));
 
   const handleSelect = useCallback(
     (v, option) => {
-      history.push(`/data-discovery/glossary?glossaryId=${option.key}`);
+      setCurrentId(option.value);
     },
-    [history],
+    [setCurrentId],
   );
 
   return (
@@ -53,7 +55,15 @@ export default memo(function AutosuggestInput() {
     >
       {options.map((item: any) => (
         <Option key={item.id} value={item.id}>
-          <span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span>
+          <div><span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span></div>
+          {item.ancestryGlossaryList && item.ancestryGlossaryList.map((idx: GlossaryChild, index: number) => {
+            return (
+              <span key={idx.id} className={styles.pathName} onClick={(e) => {e.stopPropagation();setCurrentId(idx.id);}}>
+                {' '}
+                {index !== 0 && '->'} {idx.name}
+              </span>
+            );
+          })}
         </Option>
       ))}
     </Select>
