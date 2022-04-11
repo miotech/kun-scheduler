@@ -11,7 +11,6 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
@@ -25,6 +24,7 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
+import com.miotech.kun.workflow.core.model.WorkerLogs;
 import com.miotech.kun.workflow.core.model.common.GanttChartTaskRunInfo;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStat;
@@ -53,8 +53,6 @@ public class TaskRunService {
 
     private final TaskRunDao taskRunDao;
 
-    private final ResourceLoader resourceLoader;
-
     private final Executor executor;
 
     private final Scheduler scheduler;
@@ -69,10 +67,9 @@ public class TaskRunService {
     private Props props;
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler,
+    public TaskRunService(TaskRunDao taskRunDao, Executor executor, Scheduler scheduler,
                           EventBus eventBus, Props props) {
         this.taskRunDao = taskRunDao;
-        this.resourceLoader = resourceLoader;
         this.executor = executor;
         this.scheduler = scheduler;
         this.eventBus = eventBus;
@@ -129,42 +126,10 @@ public class TaskRunService {
         }
 
         TaskAttemptProps taskAttempt = taskAttemptPropsOptional.get();
-        Resource resource;
-        int lineCount = 0;
-        if (endLineIndex != null && endLineIndex == Integer.MAX_VALUE) {
-            try {
-                logger.debug("trying to get worker log from executor");
-                Integer tailLines = startLineIndex == 0 ? Integer.MAX_VALUE : -startLineIndex;
-                String logs = executor.workerLog(taskAttempt.getId(), tailLines);
-                List<String> logList = coverLogsToList(logs);
-                lineCount = logList.size();
-                logger.debug("get logs from executor success,line count = {}", lineCount);
-                return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLineIndex, endLineIndex, logList);
-            } catch (RuntimeException e) {
-                //worker is not running,get log from log file
-            }
-        }
-        try {
-            resource = resourceLoader.getResource(taskAttempt.getLogPath());
-            lineCount = getLineCountOfFile(resource);
-
-        } catch (RuntimeException e) {
-            logger.warn("Cannot find or open log path for existing task attempt: {}", taskAttempt.getLogPath());
-            return TaskRunLogVOFactory.createLogNotFound(taskRunId, taskAttempt.getAttempt());
-        }
-
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
-            Triple<List<String>, Integer, Integer> result = readLinesFromLogFile(bufferedReader, lineCount, startLineIndex, endLineIndex);
-            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), result.getMiddle(), result.getRight(), result.getLeft());
-        } catch (IOException e) {
-            logger.error("Failed to get task attempt log: {}", taskAttempt.getLogPath(), e);
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        WorkerLogs workerLogs = executor.workerLog(taskAttempt.getId(),startLineIndex,endLineIndex);
+        return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), workerLogs.getStartLine(), workerLogs.getEndLine(), workerLogs.getLogs());
     }
 
-    private List<String> coverLogsToList(String logs) {
-        return Arrays.stream(logs.split("\n")).collect(Collectors.toList());
-    }
 
     private Optional<TaskAttemptProps> findTaskAttemptProps(long taskRunId, int attempt) {
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId);

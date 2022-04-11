@@ -18,6 +18,7 @@ import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -84,6 +85,7 @@ public class TaskServiceTest extends CommonTestBase {
     protected void configuration() {
         super.configuration();
         metadataDatasetService = mock(MetadataDatasetService.class);
+        bind(Executor.class,mock(Executor.class));
         bind(MetadataDatasetService.class, metadataDatasetService);
         bind(MetadataServiceFacade.class, MetadataDatasetService.class);
         bind(LineageServiceFacade.class, com.miotech.kun.metadata.common.service.LineageService.class);

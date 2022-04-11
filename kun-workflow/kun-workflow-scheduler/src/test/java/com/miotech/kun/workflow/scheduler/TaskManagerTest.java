@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.scheduler;
 
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -423,6 +424,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskManager.submit(taskRunList);
 
         awaitUntilAttemptDone(taskRun1.getId() + 1);
+        //wait event finish
+        Uninterruptibles.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
 
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).size(), is(1));
 
@@ -514,7 +517,9 @@ public class TaskManagerTest extends SchedulerTestBase {
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(taskRunList);
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptDone(taskRun3.getId() + 1);
+        //wait event finish
+        Uninterruptibles.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
 
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(1));
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).size(), is(2));
@@ -565,7 +570,9 @@ public class TaskManagerTest extends SchedulerTestBase {
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(taskRunList);
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptDone(taskRun3.getId() + 1);
+        //wait event finish
+        Uninterruptibles.sleepUninterruptibly(1000, TimeUnit.MILLISECONDS);
 
         //verify failed upstream taskRuns of taskRun 2 & 4
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(1));

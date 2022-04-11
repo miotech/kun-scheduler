@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.executor;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -56,7 +55,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         this.eventSubscriber = eventSubscriber;
         this.name = name;
         logger.info("{} worker life cycle manager initialize", name);
-        init();
     }
 
 
@@ -120,10 +118,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         return getWorkerLog(taskAttemptId, tailLines);
     }
 
-    public String logPathOfTaskAttempt(Long taskAttemptId) {
-        String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return String.format("file:logs/%s/%s", date, taskAttemptId);
-    }
 
     @Override
     public void stop(Long taskAttemptId) {
@@ -165,6 +159,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     protected abstract WorkerSnapshot getWorker(Long taskAttemptId);
 
     protected abstract String getWorkerLog(Long taskAttemptId, Integer tailLines);
+
+    protected String logPathOfTaskAttempt(Long taskAttemptId) {
+        String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return String.format("file:logs/%s/%s", date, taskAttemptId);
+    }
 
 
     /* ----------- private methods ------------ */

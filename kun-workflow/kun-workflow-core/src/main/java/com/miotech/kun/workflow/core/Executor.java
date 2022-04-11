@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.core;
 
 import com.miotech.kun.workflow.core.annotation.Internal;
+import com.miotech.kun.workflow.core.model.WorkerLogs;
 
 public interface Executor extends TaskAttemptExecutor, ResourceManager {
 
@@ -24,6 +25,11 @@ public interface Executor extends TaskAttemptExecutor, ResourceManager {
      *
      * @return
      */
-    public String workerLog(Long taskAttemptId, Integer tailLines);
+    public WorkerLogs workerLog(Long taskAttemptId, Integer startLine , Integer endLine);
+
+    /**
+     * upload operator
+     */
+    void uploadOperator(Long operatorId, String localFile);
 
 }

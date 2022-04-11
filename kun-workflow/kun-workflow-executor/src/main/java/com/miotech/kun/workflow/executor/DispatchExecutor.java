@@ -6,14 +6,14 @@ import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.model.WorkerLogs;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.executor.kubernetes.KubeExecutorConfig;
 import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
 import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutorFactory;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,11 +58,18 @@ public class DispatchExecutor implements Executor, InitializingBean {
         List<String> executorNames = Arrays.asList(StringUtils.split(props.getString("executor.env.executorName"), ","));
         for (String executorName : executorNames) {
             Config config = buildConfigFromProps(props, executorName);
-            KubernetesClient client = new DefaultKubernetesClient(config);
-            KubernetesExecutor executor = kubernetesExecutorFactory.create(client, executorName);
+            String storagePrefix = "executor.env." + executorName + ".storage";
+            Map<String, String> storageConfig = props.readValuesByPrefix(storagePrefix);
+            logger.debug("storage config is {}", storageConfig);
+            KubeExecutorConfig kubeExecutorConfig = KubeExecutorConfig.newBuilder()
+                    .withK8sClientConfig(config)
+                    .withStorageConfig(storageConfig)
+                    .build();
+            KubernetesExecutor executor = kubernetesExecutorFactory.create(kubeExecutorConfig, executorName);
+            executor.afterPropertiesSet();
             logger.info(executorName + " executor create success");
             executorManager.put(executorName, executor);
-            String[] labels = StringUtils.split(props.getString("executor.env."+executorName+".label"), ",");
+            String[] labels = StringUtils.split(props.getString("executor.env." + executorName + ".label"), ",");
             for (String label : labels) {
                 taskLabelToExecutorNameMap.put(label, executorName);
             }
@@ -93,7 +100,7 @@ public class DispatchExecutor implements Executor, InitializingBean {
 
     @Override
     public boolean reset() {
-        for(Map.Entry<String, Executor> entry : executorManager.entrySet()) {
+        for (Map.Entry<String, Executor> entry : executorManager.entrySet()) {
             logger.info("reset {} executor", entry.getKey());
             Executor executor = entry.getValue();
             executor.reset();
@@ -105,7 +112,7 @@ public class DispatchExecutor implements Executor, InitializingBean {
     @Override
     public boolean recover() {
         logger.info("dispatch executor recovering. current executor manager size {}", executorManager.size());
-        for(Map.Entry<String, Executor> entry : executorManager.entrySet()) {
+        for (Map.Entry<String, Executor> entry : executorManager.entrySet()) {
             logger.info("recover {} executor", entry.getKey());
             Executor executor = entry.getValue();
             executor.recover();
@@ -114,9 +121,18 @@ public class DispatchExecutor implements Executor, InitializingBean {
     }
 
     @Override
-    public String workerLog(Long taskAttemptId, Integer tailLines) {
+    public WorkerLogs workerLog(Long taskAttemptId, Integer startLine, Integer endLine) {
         Executor executor = findExecutor(taskAttemptId);
-        return executor.workerLog(taskAttemptId, tailLines);
+        return executor.workerLog(taskAttemptId, startLine, endLine);
+    }
+
+    @Override
+    public void uploadOperator(Long operatorId, String localFile) {
+        for (Map.Entry<String, Executor> entry : executorManager.entrySet()) {
+            logger.info("upload operator {} to executor {}", operatorId, entry.getKey());
+            Executor executor = entry.getValue();
+            executor.uploadOperator(operatorId, localFile);
+        }
     }
 
     @Override
@@ -153,22 +169,23 @@ public class DispatchExecutor implements Executor, InitializingBean {
 
     private Config buildConfigFromProps(Props props, String executorName) {
         ConfigBuilder configBuilder = new ConfigBuilder();
-        configBuilder.withMasterUrl(props.getString("executor.env."+executorName+".url"));
-        if (props.containsKey("executor.env."+executorName+".oauthToken")) {
-            configBuilder.withOauthToken(props.getString("executor.env."+executorName+".oauthToken"));
+        configBuilder.withMasterUrl(props.getString("executor.env." + executorName + ".url"));
+        if (props.containsKey("executor.env." + executorName + ".oauthToken")) {
+            configBuilder.withOauthToken(props.getString("executor.env." + executorName + ".oauthToken"));
         }
-        if (props.containsKey("executor.env."+executorName+".caCertFile")) {
-            configBuilder.withCaCertFile(props.getString("executor.env."+executorName+".caCertFile"));
+        if (props.containsKey("executor.env." + executorName + ".caCertFile")) {
+            configBuilder.withCaCertFile(props.getString("executor.env." + executorName + ".caCertFile"));
         }
-        if (props.containsKey("executor.env."+executorName+".caCert")) {
-            configBuilder.withCaCertData(props.getString("executor.env."+executorName+".caCert"));
+        if (props.containsKey("executor.env." + executorName + ".caCert")) {
+            configBuilder.withCaCertData(props.getString("executor.env." + executorName + ".caCert"));
         }
-        if (props.containsKey("executor.env."+executorName+".clientCert")) {
-            configBuilder.withClientCertData(props.getString("executor.env."+executorName+".clientCert"));
+        if (props.containsKey("executor.env." + executorName + ".clientCert")) {
+            configBuilder.withClientCertData(props.getString("executor.env." + executorName + ".clientCert"));
         }
-        if (props.containsKey("executor.env."+executorName+".clientKey")) {
-            configBuilder.withClientKeyData(props.getString("executor.env."+executorName+".clientKey"));
+        if (props.containsKey("executor.env." + executorName + ".clientKey")) {
+            configBuilder.withClientKeyData(props.getString("executor.env." + executorName + ".clientKey"));
         }
         return configBuilder.build();
     }
+
 }
