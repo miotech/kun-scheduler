@@ -33,7 +33,8 @@ public class UserController {
     @PostMapping("/disable/{id}")
     public RequestResult<IdVO> disableUser(@PathVariable("id") Long id) {
         IdVO idVO = new IdVO();
-        idVO.setId(userService.updateUserStatus(id, UserStatus.DISABLE));
+        userService.updateUserStatus(id, UserStatus.DISABLE);
+        idVO.setId(id);
         return RequestResult.success(idVO);
     }
 

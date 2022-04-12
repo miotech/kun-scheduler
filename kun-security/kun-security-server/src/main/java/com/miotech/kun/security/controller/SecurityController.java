@@ -45,6 +45,7 @@ public class SecurityController {
         Permissions permissions = permissionService.find(permissionRequest);
         userInfo.setPermissions(Sets.newHashSet(permissions.getPermissions().stream()
                 .map(Permission::toPermissionString).collect(Collectors.toList())));
+        userInfo.setPermissions(Sets.newHashSet());
         return RequestResult.success(userInfo);
     }
 }

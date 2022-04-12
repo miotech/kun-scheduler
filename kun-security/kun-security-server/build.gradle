@@ -10,7 +10,7 @@ bootJar {
 dependencies {
     implementation project(':kun-security:kun-security-common')
     implementation project(':kun-commons:kun-commons-utils')
-    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-app-common')
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -26,16 +26,17 @@ dependencies {
     implementation 'org.springframework.security:spring-security-saml2-service-provider'
     implementation 'org.springdoc:springdoc-openapi-ui'
     implementation 'org.neo4j:neo4j-jdbc-driver:3.5.1'
-    implementation 'org.liquigraph:liquigraph-spring-boot-starter:3.1.2'
     implementation 'org.postgresql:postgresql:42.2.12'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.google.code.gson:gson'
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
+
+    testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation enforcedPlatform('io.zonky.test.postgres:embedded-postgres-binaries-bom:11.6.0')
-    testImplementation 'io.zonky.test:embedded-database-spring-test:1.5.4'
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:postgresql"
 }

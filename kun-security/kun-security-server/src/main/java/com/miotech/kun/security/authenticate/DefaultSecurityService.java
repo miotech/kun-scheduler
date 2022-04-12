@@ -63,15 +63,7 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(adminUsername);
         userInfo.setPassword(adminPassword);
-        userInfo = getOrSave(userInfo);
-
-        //init root resource
-        Resource resource = getOrSaveResource();
-
-        //init miotech user group
-        UserGroup userGroup = getOrSaveUserGroup(resource.getId());
-        userInfo.setUserGroupId(userGroup.getId());
-        getOrSaveUserPermission(userInfo.getId(), userGroup.getId());
+        getOrSave(userInfo);
     }
 
     public void getOrSaveUserPermission(Long userId, Long userGroupId) {
@@ -88,7 +80,7 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
     }
 
     public UserInfo saveUser(UserInfo userInfo) {
-        UserRequest userRequest = modelConverter.convert2UserRequest(userInfo);
+        UserRequest userRequest = UserRequest.convertFrom(userInfo);
         User user = userService.addUser(userRequest);
         userInfo.setId(user.getId());
         if (IdUtils.isNotEmpty(userInfo.getUserGroupId())) {
@@ -118,9 +110,6 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
         UserInfo savedUserInfo = getUser(userInfo.getUsername());
         if (savedUserInfo == null) {
             SecurityContextHolder.setUserInfo(userInfo);
-            if (IdUtils.isEmpty(userInfo.getUserGroupId())) {
-                userInfo.setUserGroupId(getDefaultUserGroupId());
-            }
             savedUserInfo = saveUser(userInfo);
         }
         SecurityContextHolder.setUserInfo(savedUserInfo);

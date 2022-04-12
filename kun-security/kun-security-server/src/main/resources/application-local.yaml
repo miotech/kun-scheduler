@@ -5,10 +5,10 @@ spring:
   autoconfigure:
     exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
   datasource:
-    driver-class-name: org.neo4j.jdbc.bolt.BoltDriver
-    url: jdbc:neo4j:bolt://${DB_NEO4J_IP}:${DB_NEO4J_PORT}
-    username: ${DB_NEO4J_USERNAME}
-    password: ${DB_NEO4J_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
 
   session:
     datasource:
@@ -21,7 +21,14 @@ spring:
     timeout: 30d
 
   flyway:
-    enabled: false
+    enabled: true
+    clean-disabled: true
+    locations: classpath:security_sql
+    table: flyway_kun_security_schema_history
+    schemas: public
+    baselineOnMigrate: true
+    baselineVersion: 0
+    validate-on-migrate: false
 
   security:
     oauth2:
@@ -59,9 +66,6 @@ spring:
 security:
   auth:
     type: ${SECURITY_AUTH_TYPE:DAO}
-
-liquigraph:
-  change-log: classpath:security/db/migration/changelog.xml
 
 management:
   endpoints:

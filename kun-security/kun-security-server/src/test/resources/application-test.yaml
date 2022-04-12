@@ -1,0 +1,30 @@
+testenv: true
+
+server:
+  port: ${SERVER_PORT:8088}
+
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
+
+  session:
+    jdbc:
+      initialize-schema: always
+      table-name: kun_user_session
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:security_sql
+    table: flyway_kun_security_schema_history
+    schemas: public
+    baselineOnMigrate: true
+    baselineVersion: 0
+    validate-on-migrate: true
+
+security:
+  auth:
+    type: ${SECURITY_AUTH_TYPE:DAO}
+
+frontend:
+  url: ${KUN_ROOT_URL:http://localhost:8079}
