@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -192,15 +193,19 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     }
 
     private List<TaskAttempt> fetchRecoverAttempts() {
-        List<TaskAttempt> shouldRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
+        List<TaskAttempt> candidateRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
         List<String> executorLabels = Arrays.asList(StringUtils.split(props.getString("executor.env."+name+".label"), ","));
         String defaultExecutorName = props.getString("executor.env.default");
-        for (TaskAttempt taskAttempt : shouldRecoverAttemptList) {
-            if (!name.equals(defaultExecutorName) && taskAttempt.getExecutorLabel() == null) {
-                shouldRecoverAttemptList.remove(taskAttempt);
-            }
-            if (!executorLabels.contains(taskAttempt.getExecutorLabel())) {
-                shouldRecoverAttemptList.remove(taskAttempt);
+        List<TaskAttempt> shouldRecoverAttemptList = new ArrayList<>();
+        for (TaskAttempt taskAttempt : candidateRecoverAttemptList) {
+            if (taskAttempt.getExecutorLabel() == null) {
+                if (name.equals(defaultExecutorName)) {
+                    shouldRecoverAttemptList.add(taskAttempt);
+                }
+            } else {
+                if (executorLabels.contains(taskAttempt.getExecutorLabel())) {
+                    shouldRecoverAttemptList.add(taskAttempt);
+                }
             }
         }
         return shouldRecoverAttemptList;
