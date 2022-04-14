@@ -13,14 +13,16 @@ public class Props {
 
     private static final Logger logger = LoggerFactory.getLogger(Props.class);
 
-    private final List<Map<String, String>> propertiesList;
+    private final List<PropsProvider> propsProviderList;
+
+    private MapProps runTimeProps = new MapProps(new HashMap<>());
 
     public static Props fromProperties(Properties properties) {
         return new Props(properties);
     }
 
     public Props() {
-        propertiesList = new ArrayList<>();
+        propsProviderList = new ArrayList<>();
     }
 
     public Props(final Properties... properties) {
@@ -33,11 +35,10 @@ public class Props {
     /**
      * Create properties from maps of properties
      */
-    public Props(final Map<String, String>... props) {
+    public Props(final PropsProvider... providers) {
         this();
-        for (int i = props.length - 1; i >= 0; i--) {
-            Map<String, String> map = new HashMap<String, String>(props[i]);
-            propertiesList.add(map);
+        for (int i = providers.length - 1; i >= 0; i--) {
+            propsProviderList.add(providers[i]);
         }
     }
 
@@ -62,32 +63,43 @@ public class Props {
      * @param props
      */
     public void addProps(final Props props) {
-        for (int i = props.propertiesList.size() - 1; i >= 0; i--) {
-            propertiesList.add(0, props.propertiesList.get(i));
+        MapProps copyRunTime = runTimeProps;
+        propsProviderList.add(copyRunTime);
+        runTimeProps = new MapProps(new HashMap<>());
+        for (int i = 0; i < props.propsProviderList.size(); i++) {
+            propsProviderList.add(props.propsProviderList.get(i));
         }
+        propsProviderList.add(props.runTimeProps);
+    }
+
+    /**
+     * add propsProvider to last
+     *
+     * @param propsProvider
+     */
+    public void addPropsProvider(PropsProvider propsProvider) {
+        propsProviderList.add(propsProvider);
     }
 
     /**
      * Put object
      */
     public void put(final String key, final Object value) {
-        if (propertiesList.size() == 0) {
-            Map<String, String> propertiesMap = new HashMap<>();
-            propertiesMap.put(key, value.toString());
-            propertiesList.add(propertiesMap);
-        } else {
-            Map<String, String> propertiesMap = propertiesList.get(0);
-            propertiesMap.put(key, value.toString());
-        }
+        runTimeProps.put(key, value);
+
     }
 
     /**
      * Check key in propertiesMap
      */
-    public boolean containsKey(final Object key) {
-        for (Map<String, String> propertiesMap : propertiesList) {
-            String upCaseKey = key.toString().toUpperCase();
-            if (propertiesMap.containsKey(key) || propertiesMap.containsKey(upCaseKey)) {
+    public boolean containsKey(final String key) {
+        String trimKey = key.trim();
+        if (runTimeProps.containsKey(trimKey)) {
+            return true;
+        }
+        for (PropsProvider propsProvider : propsProviderList) {
+            String upCaseKey = trimKey.toUpperCase();
+            if (propsProvider.containsKey(trimKey) || propsProvider.containsKey(upCaseKey)) {
                 return true;
             }
         }
@@ -99,19 +111,8 @@ public class Props {
      *
      * @return
      */
-    public String get(final Object key) {
-        for (int i = 0; i < propertiesList.size(); i++) {
-            Map<String, String> propertiesMap = propertiesList.get(i);
-            if (propertiesMap.containsKey(key)) {
-                return propertiesMap.get(key);
-            }
-            String upCaseKey = key.toString().toUpperCase();
-            if (propertiesMap.containsKey(upCaseKey)) {
-                return propertiesMap.get(upCaseKey);
-            }
-        }
-        return null;
-
+    public String get(final String key) {
+        return getValue(key, String.class);
     }
 
     /**
@@ -143,7 +144,8 @@ public class Props {
      */
     public boolean getBoolean(final String key, final boolean defaultValue) {
         if (containsKey(key)) {
-            return "true".equalsIgnoreCase(get(key).trim());
+            return getValue(key, Boolean.class);
+//            return "true".equalsIgnoreCase(get(key).trim());
         } else {
             return defaultValue;
         }
@@ -155,7 +157,7 @@ public class Props {
      */
     public boolean getBoolean(final String key) {
         if (containsKey(key)) {
-            return "true".equalsIgnoreCase(get(key));
+            return getValue(key, Boolean.class);
         } else {
             throw new UndefinedPropertyException("Missing required property '" + key
                     + "'");
@@ -168,7 +170,7 @@ public class Props {
      */
     public long getLong(final String name, final long defaultValue) {
         if (containsKey(name)) {
-            return Long.parseLong(get(name));
+            return getValue(name, Long.class);
         } else {
             return defaultValue;
         }
@@ -181,7 +183,7 @@ public class Props {
      */
     public long getLong(final String name) {
         if (containsKey(name)) {
-            return Long.parseLong(get(name));
+            return getValue(name, Long.class);
         } else {
             throw new UndefinedPropertyException("Missing required property '" + name
                     + "'");
@@ -194,7 +196,7 @@ public class Props {
      */
     public int getInt(final String name, final int defaultValue) {
         if (containsKey(name)) {
-            return Integer.parseInt(get(name).trim());
+            return getValue(name, Integer.class);
         } else {
             return defaultValue;
         }
@@ -208,7 +210,7 @@ public class Props {
      */
     public int getInt(final String name) {
         if (containsKey(name)) {
-            return Integer.parseInt(get(name).trim());
+            return getValue(name, Integer.class);
         } else {
             throw new UndefinedPropertyException("Missing required property '" + name
                     + "'");
@@ -221,7 +223,7 @@ public class Props {
      */
     public double getDouble(final String name, final double defaultValue) {
         if (containsKey(name)) {
-            return Double.parseDouble(get(name).trim());
+            return getValue(name, Double.class);
         } else {
             return defaultValue;
         }
@@ -234,7 +236,7 @@ public class Props {
      */
     public double getDouble(final String name) {
         if (containsKey(name)) {
-            return Double.parseDouble(get(name).trim());
+            return getValue(name, Double.class);
         } else {
             throw new UndefinedPropertyException("Missing required property '" + name
                     + "'");
@@ -269,22 +271,31 @@ public class Props {
      * Returns a java.util.Properties file populated with the current Properties in here.
      */
     public Properties toProperties() {
+
         final Properties p = new Properties();
-        for (int i = propertiesList.size() - 1; i >= 0; i--) {
-            Map<String, String> propertiesMap = propertiesList.get(i);
-            for (final String key : propertiesMap.keySet()) {
+        for (int i = 0; i < propsProviderList.size(); i++) {
+            PropsProvider provider = propsProviderList.get(i);
+            Properties properties = provider.toProperties();
+            for (Object key : properties.keySet()) {
+                String keyStr = key.toString();
+                p.setProperty(keyStr, properties.getProperty(keyStr));
+            }
+
+        }
+        if (runTimeProps != null) {
+            for (final String key : runTimeProps.keySet()) {
                 p.setProperty(key, get(key));
             }
         }
-
         return p;
     }
 
+    @Deprecated
     public Set<String> ketSet() {
         Set<String> keys = new HashSet<>();
-        for (Map<String, String> propertiesMap : propertiesList) {
-            keys.addAll(propertiesMap.keySet());
-        }
+//        for (Map<String, String> propertiesMap : propertiesList) {
+//            keys.addAll(propertiesMap.keySet());
+//        }
         return keys;
     }
 
@@ -296,6 +307,7 @@ public class Props {
      * @param prefix filter keys with prefix
      * @return
      */
+    @Deprecated
     public Map<String, String> readValuesByPrefix(String prefix) {
         Map<String, String> result = new HashMap<>();
         Set<String> keys = ketSet();
@@ -308,16 +320,61 @@ public class Props {
         return result;
     }
 
+    /**
+     * Class T should have constructor with @JsonCreator
+     * or no args constructor with setter/getter method
+     *
+     * @param key
+     * @param valueType
+     * @param <T>
+     * @return
+     */
+    public <T> T getValue(String key, Class<T> valueType) {
+        key = key.trim();
+        if (runTimeProps.containsKey(key)) {
+            return runTimeProps.getValue(key, valueType);
+        }
+        for (int i = propsProviderList.size() - 1; i >= 0; i--) {
+            PropsProvider propsProvider = propsProviderList.get(i);
+            if (propsProvider.containsKey(key)) {
+                return propsProvider.getValue(key, valueType);
+            }
+            String upCaseKey = key.toUpperCase();
+            if (propsProvider.containsKey(upCaseKey)) {
+                return propsProvider.getValue(upCaseKey, valueType);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Class T should have constructor with @JsonCreator
+     * or no args constructor with setter/getter method
+     *
+     * @param key
+     * @param valueType
+     * @param <T>
+     * @return
+     */
+    public <T> List<T> getValueList(String key, Class<T> valueType) {
+        for (int i = propsProviderList.size() - 1; i >= 0; i--) {
+            PropsProvider propsProvider = propsProviderList.get(i);
+            if (propsProvider instanceof JsonProps) {
+                JsonProps jsonProps = (JsonProps) propsProvider;
+                return jsonProps.getValueList(key, valueType);
+            }
+        }
+        return null;
+    }
+
+
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
         result.append("Props: ");
         int i = 1;
-        for (Map<String, String> map : propertiesList) {
-            result.append("\n map ").append(i).append(" :");
-            for (Map.Entry e : map.entrySet()) {
-                result.append(e.getKey() + " " + e.getValue().toString() + "\n");
-            }
+        for (PropsProvider propsProvider : propsProviderList) {
+            result.append("\n provider ").append(i).append(" :").append(propsProvider.toString());
         }
         return result.toString();
     }

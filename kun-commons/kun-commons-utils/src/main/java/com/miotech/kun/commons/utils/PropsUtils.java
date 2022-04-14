@@ -1,10 +1,12 @@
 package com.miotech.kun.commons.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.InputStream;
@@ -28,20 +30,20 @@ public class PropsUtils {
 
     public static Props loadPropsFromResource(String resourceName) {
         logger.info("Loading props from {}", resourceName);
-        Yaml yaml = new Yaml();
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         InputStream inputStream = PropertyUtils.class
                 .getClassLoader()
                 .getResourceAsStream(resourceName);
-        Map<String, Object> yamlProps = yaml.load(inputStream);
-        Map<String, String> propertiesMap = new HashMap<>();
-        flatten(yamlProps)
-                .entrySet()
-                .forEach(x -> {
-                    String propValue = x.getValue() != null ? x.getValue().toString() : "";
-                    propValue = replaceValueFromEnvironment(propValue);
-                    propertiesMap.put(x.getKey(), propValue);
-                });
-        return new Props(propertiesMap);
+        mapper.findAndRegisterModules();
+        Props props = new Props();
+        try {
+            JsonNode jsonNode = mapper.readTree(inputStream);
+            PropsProvider propsProvider = new JsonProps(mapper,jsonNode);
+            props.addPropsProvider(propsProvider);
+        }catch (Exception e){
+            ExceptionUtils.wrapIfChecked(e);
+        }
+        return props;
     }
 
     public static String replaceValueFromEnvironment(String rawText) {
@@ -67,6 +69,11 @@ public class PropsUtils {
             }
         }
         return result;
+    }
+
+    public static void main(String args[]){
+       Props props  = loadPropsFromResource("application-local.yaml");
+
     }
 
     public static Props loadAppProps(String applicationConfName) {
@@ -144,7 +151,7 @@ public class PropsUtils {
     public static Props loadPropsFromEnv(String moduleName) {
         Map<String, String> systemEnv = EnvironmentUtils.getVariables();
         //filter kun env
-        Map<String, String> propertiesMap = new HashMap<>();
+        Map<String, Object> propertiesMap = new HashMap<>();
         systemEnv.entrySet().
                 forEach(x -> {
                     String key = x.getKey();
@@ -153,7 +160,10 @@ public class PropsUtils {
                         propertiesMap.put(convertKey(x.getKey(), moduleName), propValue);
                     }
                 });
-        return new Props(propertiesMap);
+        PropsProvider propsProvider = new MapProps(propertiesMap);
+        Props props = new Props();
+        props.addPropsProvider(propsProvider);
+        return props;
     }
 
     public static String convertKey(String envKey, String moduleName) {

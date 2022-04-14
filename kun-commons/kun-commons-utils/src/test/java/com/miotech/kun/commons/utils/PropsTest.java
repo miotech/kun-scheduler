@@ -1,13 +1,12 @@
 package com.miotech.kun.commons.utils;
 
+import com.miotech.kun.commons.utils.model.TestClass;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -20,7 +19,7 @@ public class PropsTest {
     public void testPutAndGetValue() {
         Props props = new Props();
         props.put("str", "sss");
-        props.put("int", "333");
+        props.put("int", 333);
         props.put("boolean", true);
         props.put("long", 435464567352l);
         props.put("double", 345654.456756);
@@ -62,16 +61,16 @@ public class PropsTest {
         //prepare original values
         Props props1 = new Props();
         props1.put("str", "sss");
-        props1.put("int", "333");
+        props1.put("int", 333);
         props1.put("boolean", true);
         props1.put("long", 435464567352l);
         props1.put("double", 345654.456756);
 
         //prepare new values
         Props props2 = new Props();
-        props1.put("str", "ttt");
-        props1.put("int", "222");
-        props1.put("boolean", false);
+        props2.put("str", "ttt");
+        props2.put("int", 222);
+        props2.put("boolean", false);
         //cover originalValues
         props1.addProps(props2);
 
@@ -88,7 +87,7 @@ public class PropsTest {
         //prepare original values
         Props props1 = new Props();
         props1.put("str", "sss");
-        props1.put("int", "333");
+        props1.put("int", 333);
         props1.put("boolean", true);
         props1.put("long", 435464567352l);
         props1.put("double", 345654.456756);
@@ -96,7 +95,7 @@ public class PropsTest {
         //prepare new values
         Props props2 = new Props();
         props1.put("str", "ttt");
-        props1.put("int", "222");
+        props1.put("int", 222);
         props1.put("boolean", false);
         //cover originalValues
         props1.addProps(props2);
@@ -115,20 +114,26 @@ public class PropsTest {
     @Test
     public void testCreatePropsWithMultiMaps_laterMapShouldCoverFront(){
         //prepare values
-        Map<String,String> map1 = new HashMap<>();
+        Map<String,Object> map1 = new HashMap<>();
         map1.put("str", "sss");
-        map1.put("int", "333");
+        map1.put("int", 333);
         map1.put("boolean", "true");
         map1.put("long", "435464567352");
         map1.put("double", "345654.456756");
-        Map<String,String> map2 = new HashMap<>();
+        Map<String,Object> map2 = new HashMap<>();
         map2.put("str", "ttt");
-        map2.put("int", "222");
+        map2.put("int", 222);
         map2.put("boolean", "false");
         map2.put("long", "435464567352");
         map2.put("double", "345654.456756");
 
-        Props props = new Props(map1,map2);
+        PropsProvider provider1 = new MapProps(map1);
+        PropsProvider provider2 = new MapProps(map2);
+
+        Props props = new Props();
+        props.addPropsProvider(provider1);
+        props.addPropsProvider(provider2);
+
         //verify
         assertThat(props.getString("str"), is("ttt"));
         assertThat(props.getInt("int"), is(222));
@@ -137,7 +142,7 @@ public class PropsTest {
         assertThat(props.getDouble("double"), is(345654.456756));
     }
 
-    @Test
+    @Disabled
     public void readByPrefix(){
         //prepare
         Props props = new Props();
@@ -156,5 +161,71 @@ public class PropsTest {
         assertThat(keys,hasSize(5));
         assertThat(keys,contains("1","2","3","4","5"));
     }
+
+    @Test
+    public void readByClassTypeTest(){
+        Props props = PropsUtils.loadPropsFromResource("application-test.yaml");
+
+        TestClass testClass = props.getValue("testSection1.TestClass",TestClass.class);
+
+        //verify
+        assertThat(testClass.getName(),is("class1"));
+        assertThat(testClass.getId(),is(1L));
+        assertThat(testClass.getDescribe(),is("test class 1"));
+    }
+
+    @Test
+    public void readListByClassTypeTest(){
+        Props props = PropsUtils.loadPropsFromResource("application-test.yaml");
+
+        List<TestClass> testClassList = props.getValueList("testSection1.TestClassList",TestClass.class);
+
+        TestClass testClass2 = new TestClass();
+        testClass2.setId(2l);
+        testClass2.setName("class2");
+        testClass2.setDescribe("test class 2");
+        TestClass testClass3 = new TestClass();
+        testClass3.setId(3l);
+        testClass3.setName("class3");
+        testClass3.setDescribe("test class 3");
+        TestClass testClass4 = new TestClass();
+        testClass4.setId(4l);
+        testClass4.setName("class4");
+        testClass4.setDescribe("test class 4");
+
+        //verify
+        assertThat(testClassList,hasSize(3));
+        assertThat(testClassList,containsInAnyOrder(testClass2,testClass3,testClass4));
+    }
+
+    @Test
+    public void toPropertiesTest(){
+        Props props = PropsUtils.loadPropsFromResource("application-test.yaml");
+        Properties properties = props.toProperties();
+
+        assertThat(properties.getProperty("testSection1.testKey1"),is("fileValue1"));
+        assertThat(properties.getProperty("testSection1.testKey2"),is("fileValue2"));
+        assertThat(properties.getProperty("testSection1.TestClass.name"),is("class1"));
+        assertThat(properties.getProperty("testSection1.TestClass.id"),is("1"));
+        assertThat(properties.getProperty("testSection1.TestClass.describe"),is("test class 1"));
+        assertThat(properties.getProperty("testSection2.testKey3"),is("fileValue3"));
+
+    }
+
+    @Test
+    public void testPutValueOverwrite(){
+        //prepare
+        Props props = PropsUtils.loadPropsFromResource("application-test.yaml");
+        props.put("testSection1.testKey1","putValue");
+        Properties properties = props.toProperties();
+
+        assertThat(properties.getProperty("testSection1.testKey1"),is("putValue"));
+        assertThat(properties.getProperty("testSection1.testKey2"),is("fileValue2"));
+        assertThat(properties.getProperty("testSection1.TestClass.name"),is("class1"));
+        assertThat(properties.getProperty("testSection1.TestClass.id"),is("1"));
+        assertThat(properties.getProperty("testSection1.TestClass.describe"),is("test class 1"));
+        assertThat(properties.getProperty("testSection2.testKey3"),is("fileValue3"));
+    }
+
 
 }

@@ -2,9 +2,11 @@ package com.miotech.kun.metadata.databuilder.operator;
 
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.MapProps;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.databuilder.builder.MCEBuilder;
+import com.miotech.kun.commons.utils.PropsProvider;
 import com.miotech.kun.metadata.core.model.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.databuilder.builder.MCEBuilder;
 import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.workflow.core.execution.*;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,9 +14,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.metadata.core.model.constant.OperatorKey.*;
@@ -100,16 +103,19 @@ public class MCEOperator extends KunOperator {
 
     private Props buildPropsFromVariable(OperatorContext operatorContext) {
         Props props = PropsBuilder.putConn(operatorContext);
+        Map<String,Object> map = new HashMap<>();
 
-        props.put(DEPLOY_MODE, operatorContext.getConfig().getString(DEPLOY_MODE));
-        props.put(DATASOURCE_ID, operatorContext.getConfig().getString(DATASOURCE_ID));
-        props.put(GID, operatorContext.getConfig().getString(GID));
-        props.put(MCE, operatorContext.getConfig().getString(MCE));
-        props.put(MSE_URL, operatorContext.getConfig().getString(MSE_URL));
+        map.put(DEPLOY_MODE, operatorContext.getConfig().getString(DEPLOY_MODE));
+        map.put(DATASOURCE_ID, operatorContext.getConfig().getString(DATASOURCE_ID));
+        map.put(GID, operatorContext.getConfig().getString(GID));
+        map.put(MCE, operatorContext.getConfig().getString(MCE));
+        map.put(MSE_URL, operatorContext.getConfig().getString(MSE_URL));
         List<String> whiteList = operatorContext.getConfig().getList(CATALOGER_WHITE_LIST);
         List<String> blackList = operatorContext.getConfig().getList(CATALOGER_BLACK_LIST);
-        props.put(CATALOGER_WHITE_LIST, whiteList.stream().collect(Collectors.joining(",")));
-        props.put(CATALOGER_BLACK_LIST, blackList.stream().collect(Collectors.joining(",")));
+        map.put(CATALOGER_WHITE_LIST, whiteList.stream().collect(Collectors.joining(",")));
+        map.put(CATALOGER_BLACK_LIST, blackList.stream().collect(Collectors.joining(",")));
+        PropsProvider runTimeProvider = new MapProps(map);
+        props.addPropsProvider(runTimeProvider);
         return props;
     }
 
