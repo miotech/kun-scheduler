@@ -97,11 +97,11 @@ public class TaskDefinitionDao {
             params.addAll(viewIds);
         }
 
-        List<Long> creatorIds = searchRequest.getCreatorIds();
-        if (!creatorIds.isEmpty()) {
+        List<Long> ownerIds = searchRequest.getOwnerIds();
+        if (!ownerIds.isEmpty()) {
             whereClause.append(" AND ");
-            whereClause.append(String.format(TASK_DEF_MODEL_NAME + ".creator in (%s)", com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", creatorIds.size())));
-            params.addAll(creatorIds);
+            whereClause.append(String.format(TASK_DEF_MODEL_NAME + ".owner in (%s)", com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", ownerIds.size())));
+            params.addAll(ownerIds);
         }
 
         if (StringUtils.isNoneBlank(searchRequest.getName())) {
