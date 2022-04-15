@@ -57,7 +57,7 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
         pageSize: 10,
         name: selector.filters.name,
         taskTemplateName: selector.filters.taskTemplateName || undefined,
-        creatorIds: selector.filters.creatorIds as any,
+        ownerIds: selector.filters.creatorIds as any,
         viewIds: undefined,
       });
     }

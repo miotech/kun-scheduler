@@ -25,7 +25,7 @@ export async function fetchAllTaskDefinitions(): ServiceRespPromise<TaskDefiniti
 
 export interface SearchTaskDefinitionReqParams {
   archived?: boolean;
-  creatorIds?: number[];
+  ownerIds?: number[];
   definitionIds?: number[];
   name?: string;
   pageNum?: number;
