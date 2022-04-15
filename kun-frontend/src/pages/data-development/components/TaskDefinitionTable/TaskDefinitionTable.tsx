@@ -93,7 +93,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       pageSize,
       name: filters.name,
       taskTemplateName: filters.taskTemplateName || undefined,
-      creatorIds: filters.creatorIds as any,
+      ownerIds: filters.creatorIds as any,
       viewIds: taskDefViewId != null ? [taskDefViewId] : undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,7 +106,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
         pageSize,
         name: filters.name,
         taskTemplateName: filters.taskTemplateName || undefined,
-        creatorIds: filters.creatorIds as any,
+        ownerIds: filters.creatorIds as any,
         viewIds: taskDefViewId != null ? [taskDefViewId] : undefined,
       });
       setPageNum(1);
