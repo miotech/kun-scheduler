@@ -124,7 +124,7 @@ public class YarnLoggerParser {
             return getLogContent(page);
         } catch (Exception e) {
             logger.error("Failed to fetch log from, {}", fetchLogUrl, e);
-            throw ExceptionUtils.wrapIfChecked(e);
+            return "WARN: Cannot get log file. Reason: fetch log url timeout.";
         }
     }
 
