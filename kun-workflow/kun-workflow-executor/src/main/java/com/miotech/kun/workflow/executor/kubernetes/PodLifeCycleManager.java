@@ -10,24 +10,20 @@ import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.worker.filter.WorkerImageFilter;
 import com.miotech.kun.workflow.common.worker.service.WorkerImageService;
+import com.miotech.kun.workflow.core.StorageManager;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerImage;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
-import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
-import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
-import com.miotech.kun.workflow.worker.JsonCodec;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,6 +35,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final KubernetesClient kubernetesClient;
     private final OperatorDao operatorDao;
     private final WorkerImageService workerImageService;
+    private final StorageManager storageManager;
     private final String POD_WORK_DIR = "/server/target";
     private final String POD_LIB_DIR = "/server/lib";
     private final Integer DB_MAX_POOL = 1;
@@ -48,12 +45,13 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, @Assisted PodEventMonitor workerMonitor, Props props, MiscService miscService,
                                @Assisted KubernetesClient kubernetesClient, OperatorDao operatorDao, @Assisted KubernetesResourceManager KubernetesResourceManager,
-                               EventBus eventBus, EventSubscriber eventSubscriber, WorkerImageService workerImageService, @Assisted String name) {
+                               EventBus eventBus, EventSubscriber eventSubscriber, WorkerImageService workerImageService, @Assisted String name , @Assisted StorageManager storageManager) {
         super(taskRunDao, workerMonitor, props, miscService, KubernetesResourceManager, eventBus, eventSubscriber, name);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
         this.workerImageService = workerImageService;
         this.name = name;
+        this.storageManager = storageManager;
         logger.info("k8s pod life cycle manager: {} initialize", name);
 
         //set active image to the latest one;
@@ -245,13 +243,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     private void writeExecCommandToPVC(ExecCommand execCommand) {
-        String filePath = POD_LIB_DIR + "/" + execCommand.getTaskAttemptId();
-        try {
-            File execCommandFile = new File(filePath);
-            JsonCodec.MAPPER.writeValue(execCommandFile, execCommand);
-        } catch (IOException e) {
-            logger.error("failed to write exec command to file = {} ", filePath, e);
-        }
+        storageManager.writeExecCommand(execCommand);
     }
 
     private void configDBEnv(List<EnvVar> envVarList) {

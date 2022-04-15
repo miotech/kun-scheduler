@@ -6,17 +6,14 @@ import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
-import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
-import com.miotech.kun.workflow.executor.kubernetes.KubernetesResourceManager;
-import com.miotech.kun.workflow.executor.kubernetes.PodEventMonitor;
-import com.miotech.kun.workflow.executor.kubernetes.PodLifeCycleManager;
+import com.miotech.kun.workflow.executor.kubernetes.*;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.apache.commons.lang3.StringUtils.*;
+
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import java.util.Map;
 
 public class KubernetesExecutorModule extends AppModule {
 
@@ -32,8 +29,13 @@ public class KubernetesExecutorModule extends AppModule {
     @Override
     protected void configure() {
         super.configure();
-        KubernetesClient client = new DefaultKubernetesClient(kubernetesConfig());
-        bind(KubernetesClient.class).toInstance(client);
+        String storagePrefix = "executor.env.storage";
+        Map<String, String> storageConfig = props.readValuesByPrefix(storagePrefix);
+        KubeExecutorConfig kubeExecutorConfig = KubeExecutorConfig.newBuilder()
+                .withK8sClientConfig(kubernetesConfig())
+                .withStorageConfig(storageConfig)
+                .build();
+        bind(KubeExecutorConfig.class).toInstance(kubeExecutorConfig);
         bind(AbstractQueueManager.class).to(KubernetesResourceManager.class);
         bind(WorkerMonitor.class).to(PodEventMonitor.class);
         bind(WorkerLifeCycleManager.class).to(PodLifeCycleManager.class);

@@ -15,6 +15,7 @@ import com.miotech.kun.workflow.common.resource.ResourceService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.vo.OperatorVO;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -57,6 +58,9 @@ public class OperatorService {
 
     @Inject
     private Props props;
+
+    @Inject
+    private Executor executor;
 
     private static final int PAGE_NUM_DEFAULT = 1;
 
@@ -163,7 +167,7 @@ public class OperatorService {
         Preconditions.checkArgument(uploadFiles.size() == 1, "Currently only one file supported");
         Operator operator = findOperator(operatorId);
         try {
-            FileItem uploadFie =  uploadFiles.get(0);
+            FileItem uploadFie = uploadFiles.get(0);
             String packagePath = generateOperatorPath(operator);
             Resource resource = resourceService.createResource(packagePath, uploadFie.getInputStream());
             operatorDao.updateById(operatorId, operator
@@ -172,6 +176,8 @@ public class OperatorService {
 
             // refresh operator cache
             refreshOperatorCache(operatorId);
+            logger.debug("upload operator {} to executor", operatorId);
+            executor.uploadOperator(operatorId, packagePath);
             return resource;
         } catch (IOException e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -217,8 +223,8 @@ public class OperatorService {
         }
     }
 
-    public Optional<Operator> fetchOperatorByName(String operatorName){
-        return  operatorDao.fetchByName(operatorName);
+    public Optional<Operator> fetchOperatorByName(String operatorName) {
+        return operatorDao.fetchByName(operatorName);
     }
 
     public Operator fullUpdateOperator(Long operatorId, OperatorPropsVO vo) {
@@ -432,10 +438,11 @@ public class OperatorService {
      * URLClassLoader caches jar file with url path by default
      * and not clear the cache after the connection is closed
      * add dataTime at the end of jar path to avoid use cache
+     *
      * @param operator
      * @return
      */
-    private String generateOperatorPath(Operator operator){
+    private String generateOperatorPath(Operator operator) {
         String libDirectory = "file:" + props.get(PROP_RESOURCE_LIBDIRECTORY);
         return String.join("/", libDirectory, operator.getId().toString(), operator.getName() + "_" + DateTimeUtils.now());
     }

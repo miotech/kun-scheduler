@@ -2,13 +2,18 @@ package com.miotech.kun.workflow.executor.local;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.model.WorkerLogs;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.executor.AbstractQueueManager;
-import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
+import com.miotech.kun.workflow.executor.storage.LocalStorageManager;
+import com.miotech.kun.workflow.executor.storage.StorageManagerFactory;
+import com.miotech.kun.workflow.executor.storage.StorageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 @Singleton
 public class LocalExecutor implements Executor {
@@ -16,11 +21,19 @@ public class LocalExecutor implements Executor {
     private final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
     private final LocalProcessLifeCycleManager processLifeCycleManager;
     private final LocalQueueManage localQueueManager;
+    private final LocalStorageManager localStorageManager;
 
     @Inject
-    public LocalExecutor(LocalProcessLifeCycleManager processLifeCycleManager, LocalQueueManage localQueueManage) {
+    public LocalExecutor(LocalProcessLifeCycleManager processLifeCycleManager,
+                         LocalQueueManage localQueueManage,
+                         StorageManagerFactory storageManagerFactory,
+                         Props props) {
         this.processLifeCycleManager = processLifeCycleManager;
         this.localQueueManager = localQueueManage;
+        localStorageManager = (LocalStorageManager) storageManagerFactory.createStorageManager(StorageType.LOCAL);
+        String storagePrefix = "executor.env.storage";
+        Map<String, String> storageConfig = props.readValuesByPrefix(storagePrefix);
+        localStorageManager.init(storageConfig);
         logger.info("local executor initialize");
     }
 
@@ -39,8 +52,13 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
-    public String workerLog(Long taskAttemptId, Integer tailLines) {
-        return processLifeCycleManager.getLog(taskAttemptId, tailLines);
+    public WorkerLogs workerLog(Long taskAttemptId, Integer startLine, Integer endLine) {
+        return localStorageManager.workerLog(taskAttemptId, startLine, endLine);
+    }
+
+    @Override
+    public void uploadOperator(Long operatorId, String localFile) {
+        //local executor not need to upload
     }
 
     @Override
@@ -63,8 +81,8 @@ public class LocalExecutor implements Executor {
         logger.info("submit taskAttemptId = {} to executor", taskAttempt.getId());
         try {
             processLifeCycleManager.start(taskAttempt);
-        }catch (Exception e){
-            logger.error("failed to start taskAttempt = {}",taskAttempt.getId(),e);
+        } catch (Exception e) {
+            logger.error("failed to start taskAttempt = {}", taskAttempt.getId(), e);
             return false;
         }
         return true;

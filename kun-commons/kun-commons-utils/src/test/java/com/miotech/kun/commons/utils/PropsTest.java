@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
-import static org.hamcrest.Matchers.containsInRelativeOrder;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class PropsTest {
@@ -135,6 +135,26 @@ public class PropsTest {
         assertThat(props.getBoolean("boolean"), is(false));
         assertThat(props.getLong("long"), is(435464567352l));
         assertThat(props.getDouble("double"), is(345654.456756));
+    }
+
+    @Test
+    public void readByPrefix(){
+        //prepare
+        Props props = new Props();
+        props.put("aaa.bbb.1","1");
+        props.put("aaa.bbb.2","2");
+        props.put("aaa.ccc.1","1");
+        props.put("aaa.ccc.2","2");
+        props.put("aaa.ccc.3","3");
+        props.put("aaa.ccc.4","4");
+        props.put("aaa.ccc.5","5");
+
+        Map<String,String> result = props.readValuesByPrefix("aaa.ccc");
+
+        //verify
+        Set<String> keys = result.keySet();
+        assertThat(keys,hasSize(5));
+        assertThat(keys,contains("1","2","3","4","5"));
     }
 
 }

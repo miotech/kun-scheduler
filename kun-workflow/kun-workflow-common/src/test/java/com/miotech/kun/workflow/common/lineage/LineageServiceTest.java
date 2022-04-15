@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
@@ -58,6 +59,7 @@ public class LineageServiceTest extends CommonTestBase {
     @Override
     protected void configuration() {
         super.configuration();
+        bind(Executor.class,mock(Executor.class));
         bind(LineageServiceFacade.class, Mockito.mock(LineageServiceFacade.class));
         bind(MetadataServiceFacade.class, Mockito.mock(MetadataServiceFacade.class));
         bind(Scheduler.class, Mockito.mock(Scheduler.class));

@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -38,6 +39,12 @@ public class OperatorServiceTest extends DatabaseTestBase {
     private TaskDao taskDao;
 
 
+
+    @Override
+    protected void configuration() {
+        super.configuration();
+        bind(Executor.class,mock(Executor.class));
+    }
 
     @Test
     public void testLoadOperator_success() {

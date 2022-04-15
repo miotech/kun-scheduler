@@ -11,6 +11,11 @@ executor:
       test:
         quota:
           workerNumbers: 2
+    storage:
+      logDir: ${LOG_DIR:/server/target/logs}
+      operatorDir: ${OPERATOR_DIR:/server/lib}
+      commandDir: ${COMMAND_DIR:/server/lib}
+      type: ${STORAGE_TYPE:LOCAL}
 
 resource:
   libDirectory: /tmp

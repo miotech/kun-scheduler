@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.common.task.vo.TaskDependencyVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -42,6 +43,7 @@ public class CircularDependencyTest extends CommonTestBase {
     @Override
     protected void configuration() {
         super.configuration();
+        bind(Executor.class,mock(Executor.class));
         bind(MetadataServiceFacade.class, mock(MetadataServiceFacade.class));
         bind(LineageServiceFacade.class, mock(LineageService.class));
         bind(Scheduler.class, mock(Scheduler.class));

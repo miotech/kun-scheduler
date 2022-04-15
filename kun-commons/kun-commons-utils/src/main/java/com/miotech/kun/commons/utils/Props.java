@@ -36,7 +36,7 @@ public class Props {
     public Props(final Map<String, String>... props) {
         this();
         for (int i = props.length - 1; i >= 0; i--) {
-            Map<String,String> map = new HashMap<String,String>(props[i]);
+            Map<String, String> map = new HashMap<String, String>(props[i]);
             propertiesList.add(map);
         }
     }
@@ -278,6 +278,34 @@ public class Props {
         }
 
         return p;
+    }
+
+    public Set<String> ketSet() {
+        Set<String> keys = new HashSet<>();
+        for (Map<String, String> propertiesMap : propertiesList) {
+            keys.addAll(propertiesMap.keySet());
+        }
+        return keys;
+    }
+
+    /**
+     * return a map with key/value contains in props,
+     * where key has given prefix
+     * the return key will take out prefix
+     *
+     * @param prefix filter keys with prefix
+     * @return
+     */
+    public Map<String, String> readValuesByPrefix(String prefix) {
+        Map<String, String> result = new HashMap<>();
+        Set<String> keys = ketSet();
+        for (String key : keys) {
+            if (key.startsWith(prefix) && key.length() > prefix.length()) {
+                String filterKey = key.substring(prefix.length() + 1);
+                result.put(filterKey, getString(key));
+            }
+        }
+        return result;
     }
 
     @Override

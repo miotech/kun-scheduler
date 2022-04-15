@@ -14,6 +14,7 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.common.variable.dao.VariableDao;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -115,6 +116,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     protected void configuration() {
         super.configuration();
         mock(TaskManager.class);
+        mock(Executor.class);
     }
 
     @BeforeEach
