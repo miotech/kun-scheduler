@@ -20,7 +20,7 @@ public class PermissionService extends BaseSecurityService {
     PermissionRepository permissionRepository;
 
     public Permissions find(HasPermissionRequest permissionRequest) {
-        return permissionRepository.find(permissionRequest);
+        return new Permissions();
     }
 
     public Permissions savePermission(SavePermissionRequest savePermissionRequest) {

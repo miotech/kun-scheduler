@@ -1,11 +1,10 @@
 package com.miotech.kun.security.service;
 
 import com.miotech.kun.security.common.UserStatus;
-import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.dao.UserDao;
 import com.miotech.kun.security.model.bo.UserExtensionInformation;
 import com.miotech.kun.security.model.bo.UserRequest;
 import com.miotech.kun.security.model.entity.User;
-import com.miotech.kun.security.persistence.UserRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +25,7 @@ public class UserService extends BaseSecurityService {
     private UserSystem userSystem;
 
     @Autowired
-    UserRepository userRepository;
+    private UserDao userDao;
 
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -46,22 +45,22 @@ public class UserService extends BaseSecurityService {
             userRequest.setWeComId(extensionInformation.getWeComId());
         }
 
-        return userRepository.addUser(userRequest);
+        return userDao.create(userRequest);
     }
 
-    public Long updateUserStatus(Long id, UserStatus userStatus) {
-        return userRepository.updateUserStatus(id, userStatus);
+    public void updateUserStatus(Long id, UserStatus userStatus) {
+        userDao.updateStatus(id, userStatus);
     }
 
     public User getUser(Long id) {
-        return userRepository.find(id);
+        return userDao.findById(id);
     }
 
     public User getUserByName(String name) {
-        return userRepository.findByName(name);
+        return userDao.findByUsername(name);
     }
 
     public List<User> getUsers() {
-        return userRepository.findAllUser();
+        return userDao.findAll();
     }
 }

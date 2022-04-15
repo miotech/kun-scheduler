@@ -1,10 +1,10 @@
 package com.miotech.kun.security.authenticate;
 
+import com.miotech.kun.security.dao.UserDao;
 import com.miotech.kun.security.model.bo.HasPermissionRequest;
 import com.miotech.kun.security.model.constant.EntityType;
 import com.miotech.kun.security.model.entity.Permissions;
 import com.miotech.kun.security.model.entity.User;
-import com.miotech.kun.security.persistence.UserRepository;
 import com.miotech.kun.security.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,14 +25,14 @@ import java.util.stream.Collectors;
 public class DefaultUserDetailsService implements UserDetailsService {
 
     @Autowired
-    UserRepository userRepository;
+    UserDao userDao;
 
     @Autowired
     PermissionService permissionService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByName(username);
+        User user = userDao.findByUsername(username);
         HasPermissionRequest hasPermissionRequest = HasPermissionRequest.builder()
                 .subjectId(user.getId())
                 .subjectType(EntityType.USER)
