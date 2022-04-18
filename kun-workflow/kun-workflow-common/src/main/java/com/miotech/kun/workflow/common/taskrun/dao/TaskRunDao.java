@@ -590,6 +590,30 @@ public class TaskRunDao {
 
     }
 
+    public void resetTaskRunTimestampToNull(List<Long> taskRunIds, String timestampName) {
+        if (taskRunIds == null || taskRunIds.size() == 0) {
+            return;
+        }
+
+        List<Long> taskAttemptIds = fetchAllLatestTaskAttemptIds(taskRunIds);
+
+        String updateTaskRunSql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .set(timestampName + "= null")
+                .where("id in (" + repeatJoin("?", ",", taskRunIds.size()) + ")")
+                .getSQL();
+        String updateTaskAttemptSql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .set(timestampName + "= null")
+                .where("id in (" + repeatJoin("?", ",", taskAttemptIds.size()) + ")")
+                .getSQL();
+        dbOperator.transaction(() -> {
+            dbOperator.update(updateTaskRunSql, taskRunIds.toArray());
+            dbOperator.update(updateTaskAttemptSql, taskAttemptIds.toArray());
+            return null;
+        });
+    }
+
     public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus) {
         updateAttemptStatusByTaskRunIds(taskRunIds, taskRunStatus, null);
     }

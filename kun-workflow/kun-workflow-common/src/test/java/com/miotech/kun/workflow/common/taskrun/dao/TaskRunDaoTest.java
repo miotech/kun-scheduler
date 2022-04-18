@@ -1294,4 +1294,27 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 new HashSet<>(fetchedTaskRunList.stream().map(TaskRun::getId).collect(Collectors.toList())));
         Assertions.assertEquals(taskRun1.getId(), fetchedTaskRunList.get(1).getDependentTaskRunIds().get(0));
     }
+
+    @Test
+    public void resetTaskRunTimestampToNull_shouldSuccess() {
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        taskDao.create(taskRun.getTask());
+        OffsetDateTime now = DateTimeUtils.now();
+        taskRunDao.updateAttemptStatusByTaskRunIds(Collections.singletonList(taskRun.getId()), TaskRunStatus.UPSTREAM_FAILED,
+                now, Collections.singletonList(TaskRunStatus.CREATED));
+
+        TaskRun fetchedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
+
+        assertThat(fetchedTaskRun.getTermAt(), is(now));
+
+        taskRunDao.updateAttemptStatusByTaskRunIds(Collections.singletonList(taskRun.getId()), TaskRunStatus.CREATED,
+                null, Collections.singletonList(TaskRunStatus.UPSTREAM_FAILED));
+
+        taskRunDao.resetTaskRunTimestampToNull(Collections.singletonList(taskRun.getId()), "term_at");
+        fetchedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
+        assertNull(fetchedTaskRun.getTermAt());
+    }
 }
