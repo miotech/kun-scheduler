@@ -1,13 +1,9 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.commons.utils.Props;
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
-import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.worker.filter.WorkerImageFilter;
 import com.miotech.kun.workflow.common.worker.service.WorkerImageService;
 import com.miotech.kun.workflow.core.StorageManager;
@@ -18,7 +14,6 @@ import com.miotech.kun.workflow.core.model.worker.WorkerImage;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
-import com.miotech.kun.workflow.executor.local.MiscService;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -33,27 +28,32 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(PodLifeCycleManager.class);
     private final KubernetesClient kubernetesClient;
-    private final OperatorDao operatorDao;
-    private final WorkerImageService workerImageService;
+    @Inject
+    private OperatorDao operatorDao;
+    @Inject
+    private WorkerImageService workerImageService;
     private final StorageManager storageManager;
     private final String POD_WORK_DIR = "/server/target";
     private final String POD_LIB_DIR = "/server/lib";
     private final Integer DB_MAX_POOL = 1;
     private final Integer MINI_MUM_IDLE = 0;
-    private final String name;
+    private final KubeConfig kubeConfig;
+    private final ImageHub imageHub;
 
-    @Inject
-    public PodLifeCycleManager(TaskRunDao taskRunDao, @Assisted PodEventMonitor workerMonitor, Props props, MiscService miscService,
-                               @Assisted KubernetesClient kubernetesClient, OperatorDao operatorDao, @Assisted KubernetesResourceManager KubernetesResourceManager,
-                               EventBus eventBus, EventSubscriber eventSubscriber, WorkerImageService workerImageService, @Assisted String name , @Assisted StorageManager storageManager) {
-        super(taskRunDao, workerMonitor, props, miscService, KubernetesResourceManager, eventBus, eventSubscriber, name);
+    public PodLifeCycleManager(KubeExecutorConfig kubeExecutorConfig,PodEventMonitor workerMonitor,
+                               KubernetesClient kubernetesClient, KubernetesResourceManager KubernetesResourceManager,
+                               String name , StorageManager storageManager) {
+        super(kubeExecutorConfig, workerMonitor, KubernetesResourceManager, name);
         this.kubernetesClient = kubernetesClient;
-        this.operatorDao = operatorDao;
-        this.workerImageService = workerImageService;
-        this.name = name;
         this.storageManager = storageManager;
+        this.kubeConfig = kubeExecutorConfig.getKubeConfig();
+        this.imageHub = kubeExecutorConfig.getPrivateHub();
         logger.info("k8s pod life cycle manager: {} initialize", name);
+    }
 
+    @Override
+    public void init(){
+        super.init();
         //set active image to the latest one;
         WorkerImageFilter imageFilter = WorkerImageFilter.newBuilder()
                 .withName(POD_IMAGE_NAME)
@@ -68,11 +68,16 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     @Override
+    protected void injectMembers(Injector injector) {
+        injector.injectMembers(this);
+    }
+
+    @Override
     public void startWorker(TaskAttempt taskAttempt) {
         //logger.info("going to start pod taskAttemptId = {}", taskAttempt.getId());
         logger.info("pod life cycle manager: {} start worker pod taskAttemptId = {}", name, taskAttempt.getId());
         kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env."+name+".namespace"))
+                .inNamespace(kubeConfig.getNamespace())
                 .create(buildPod(taskAttempt));
     }
 
@@ -80,7 +85,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     public Boolean stopWorker(Long taskAttemptId) {
         logger.info("going to stop pod taskAttemptId = {}", taskAttemptId);
         return kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env."+name+".namespace"))
+                .inNamespace(kubeConfig.getNamespace())
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttemptId))
                 .delete();
@@ -90,7 +95,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     public WorkerSnapshot getWorker(Long taskAttemptId) {
         logger.info("pod life cycle manager: {} get worker", name);
         PodList podList = kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env."+name+".namespace"))
+                .inNamespace(kubeConfig.getNamespace())
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttemptId))
                 .list();
@@ -109,7 +114,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         WorkerSnapshot workerSnapshot = getWorker(taskAttemptId);
         if (workerSnapshot != null && !workerSnapshot.getStatus().isFinished()) {
             return kubernetesClient.pods()
-                    .inNamespace(props.getString("executor.env."+name+".namespace"))
+                    .inNamespace(kubeConfig.getNamespace())
                     .withName(KUN_WORKFLOW + taskAttemptId)
                     .tailingLines(tailLines)
                     .getLog();
@@ -135,7 +140,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     public List<PodStatusSnapShot> getExistPodList() {
         PodList podList = kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env."+name+".namespace"))
+                .inNamespace(kubeConfig.getNamespace())
                 .withLabel(KUN_WORKFLOW)
                 .list();
         return podList.getItems().stream().map(x ->
@@ -147,7 +152,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Pod pod = new Pod();
         ObjectMeta objectMeta = new ObjectMeta();
         objectMeta.setName(KUN_WORKFLOW + taskAttempt.getId());
-        objectMeta.setNamespace(props.getString("executor.env."+name+".namespace"));
+        objectMeta.setNamespace(kubeConfig.getNamespace());
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_WORKFLOW, null);
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
@@ -164,10 +169,10 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         PodSpec podSpec = new PodSpec();
         podSpec.setRestartPolicy("Never");
         podSpec.setContainers(Arrays.asList(buildContainer(taskAttempt)));
-        if (props.containsKey("executor.env."+name+".privateHub")) {
-            if (props.getBoolean("executor.env."+name+".privateHub.useSecret", false)) {
+        if (imageHub != null) {
+            if (imageHub.getUseSecret()) {
                 LocalObjectReference secret = new LocalObjectReferenceBuilder()
-                        .withName(props.getString("executor.env."+name+".privateHub.secert"))
+                        .withName(imageHub.getSecret())
                         .build();
                 podSpec.setImagePullSecrets(Arrays.asList(secret));
             }
@@ -175,9 +180,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Volume nfsVolume = new VolumeBuilder()
                 .withPersistentVolumeClaim(
                         new PersistentVolumeClaimVolumeSourceBuilder()
-                                .withNewClaimName(props.getString("executor.env."+name+".nfsClaimName"))
+                                .withNewClaimName(kubeConfig.getNfsClaimName())
                                 .build())
-                .withName(props.getString("executor.env."+name+".nfsName"))
+                .withName(kubeConfig.getNfsName())
                 .build();
         List<Volume> volumeList = new ArrayList<>();
         volumeList.add(nfsVolume);
@@ -193,8 +198,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         String containerName = getContainerFromOperator(operatorId);
         WorkerImage workerImage = workerImageService.fetchActiveImage(POD_IMAGE_NAME);
         String imageName = POD_IMAGE_NAME + ":" + workerImage.getVersion();
-        if (props.containsKey("executor.env."+name+".privateHub")) {
-            imageName = props.getString("executor.env."+name+".privateHub.url") + "/" + imageName;
+        if (imageHub != null) {
+            imageName = imageHub.getUrl() + "/" + imageName;
         }
         container.setName(containerName);
         container.setImage(imageName);
@@ -202,13 +207,13 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         List<VolumeMount> mounts = new ArrayList<>();
         VolumeMount logMount = new VolumeMount();
         logMount.setMountPath(POD_WORK_DIR + "/logs");
-        logMount.setName(props.getString("executor.env."+name+".nfsName"));
-        logMount.setSubPath(props.getString("executor.env."+name+".logPath"));
+        logMount.setName(kubeConfig.getNfsName());
+        logMount.setSubPath(kubeConfig.getLogPath());
         mounts.add(logMount);
         VolumeMount jarMount = new VolumeMount();
         jarMount.setMountPath(POD_LIB_DIR);
-        jarMount.setName(props.getString("executor.env."+name+".nfsName"));
-        jarMount.setSubPath(props.getString("executor.env."+name+".jarDirectory"));
+        jarMount.setName(kubeConfig.getNfsName());
+        jarMount.setSubPath(kubeConfig.getJarDirectory());
         ExecCommand command = buildExecCommand(taskAttempt);
         writeExecCommandToPVC(command);
         mounts.add(jarMount);

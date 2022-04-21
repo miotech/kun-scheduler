@@ -13,16 +13,14 @@ public class Props {
 
     private static final Logger logger = LoggerFactory.getLogger(Props.class);
 
-    private final List<PropsProvider> propsProviderList;
-
-    private MapProps runTimeProps = new MapProps(new HashMap<>());
+    private final PropsProviderList propsProviderList;
 
     public static Props fromProperties(Properties properties) {
         return new Props(properties);
     }
 
     public Props() {
-        propsProviderList = new ArrayList<>();
+        propsProviderList = new PropsProviderList();
     }
 
     public Props(final Properties... properties) {
@@ -63,13 +61,9 @@ public class Props {
      * @param props
      */
     public void addProps(final Props props) {
-        MapProps copyRunTime = runTimeProps;
-        propsProviderList.add(copyRunTime);
-        runTimeProps = new MapProps(new HashMap<>());
-        for (int i = 0; i < props.propsProviderList.size(); i++) {
-            propsProviderList.add(props.propsProviderList.get(i));
+        for (int i = props.propsProviderList.size() - 1; i >= 0; i--) {
+            propsProviderList.add( props.propsProviderList.get(i));
         }
-        propsProviderList.add(props.runTimeProps);
     }
 
     /**
@@ -85,7 +79,7 @@ public class Props {
      * Put object
      */
     public void put(final String key, final Object value) {
-        runTimeProps.put(key, value);
+        propsProviderList.put(key, value);
 
     }
 
@@ -94,9 +88,6 @@ public class Props {
      */
     public boolean containsKey(final String key) {
         String trimKey = key.trim();
-        if (runTimeProps.containsKey(trimKey)) {
-            return true;
-        }
         for (PropsProvider propsProvider : propsProviderList) {
             String upCaseKey = trimKey.toUpperCase();
             if (propsProvider.containsKey(trimKey) || propsProvider.containsKey(upCaseKey)) {
@@ -145,7 +136,6 @@ public class Props {
     public boolean getBoolean(final String key, final boolean defaultValue) {
         if (containsKey(key)) {
             return getValue(key, Boolean.class);
-//            return "true".equalsIgnoreCase(get(key).trim());
         } else {
             return defaultValue;
         }
@@ -273,7 +263,7 @@ public class Props {
     public Properties toProperties() {
 
         final Properties p = new Properties();
-        for (int i = 0; i < propsProviderList.size(); i++) {
+        for (int i = propsProviderList.size() - 1; i >= 0; i--) {
             PropsProvider provider = propsProviderList.get(i);
             Properties properties = provider.toProperties();
             for (Object key : properties.keySet()) {
@@ -282,42 +272,7 @@ public class Props {
             }
 
         }
-        if (runTimeProps != null) {
-            for (final String key : runTimeProps.keySet()) {
-                p.setProperty(key, get(key));
-            }
-        }
         return p;
-    }
-
-    @Deprecated
-    public Set<String> ketSet() {
-        Set<String> keys = new HashSet<>();
-//        for (Map<String, String> propertiesMap : propertiesList) {
-//            keys.addAll(propertiesMap.keySet());
-//        }
-        return keys;
-    }
-
-    /**
-     * return a map with key/value contains in props,
-     * where key has given prefix
-     * the return key will take out prefix
-     *
-     * @param prefix filter keys with prefix
-     * @return
-     */
-    @Deprecated
-    public Map<String, String> readValuesByPrefix(String prefix) {
-        Map<String, String> result = new HashMap<>();
-        Set<String> keys = ketSet();
-        for (String key : keys) {
-            if (key.startsWith(prefix) && key.length() > prefix.length()) {
-                String filterKey = key.substring(prefix.length() + 1);
-                result.put(filterKey, getString(key));
-            }
-        }
-        return result;
     }
 
     /**
@@ -331,10 +286,7 @@ public class Props {
      */
     public <T> T getValue(String key, Class<T> valueType) {
         key = key.trim();
-        if (runTimeProps.containsKey(key)) {
-            return runTimeProps.getValue(key, valueType);
-        }
-        for (int i = propsProviderList.size() - 1; i >= 0; i--) {
+        for (int i = 0; i < propsProviderList.size(); i++) {
             PropsProvider propsProvider = propsProviderList.get(i);
             if (propsProvider.containsKey(key)) {
                 return propsProvider.getValue(key, valueType);
@@ -357,7 +309,7 @@ public class Props {
      * @return
      */
     public <T> List<T> getValueList(String key, Class<T> valueType) {
-        for (int i = propsProviderList.size() - 1; i >= 0; i--) {
+        for (int i = 0; i < propsProviderList.size(); i++) {
             PropsProvider propsProvider = propsProviderList.get(i);
             if (propsProvider instanceof JsonProps) {
                 JsonProps jsonProps = (JsonProps) propsProvider;

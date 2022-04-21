@@ -1,8 +1,10 @@
 package com.miotech.kun.workflow.executor;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
@@ -11,7 +13,6 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -20,11 +21,11 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
-import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.event.*;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -33,6 +34,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstanceKind;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.local.*;
 import com.miotech.kun.workflow.executor.mock.*;
 import com.miotech.kun.workflow.testing.event.EventCollector;
@@ -43,6 +45,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
 import com.zaxxer.hikari.HikariDataSource;
+import org.joor.Reflect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -57,9 +60,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -70,10 +71,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.doAnswer;
 
-@Disabled
 public class LocalExecutorTest extends CommonTestBase {
 
-    @Inject
     private Executor executor;
 
     @Inject
@@ -96,16 +95,13 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private LocalProcessBackend spyBackend;
 
-    @Inject
-    private AbstractQueueManager localQueueManager;
+    private LocalQueueManage localQueueManager;
 
     @Inject
     private DataSource dataSource;
 
-    @Inject
     private LocalProcessMonitor workerMonitor;
 
-    @Inject
     private WorkerLifeCycleManager workerLifeCycleManager;
 
     @Inject
@@ -119,6 +115,9 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private MockEventSubscriber mockEventSubscriber;
 
+    @Inject
+    private Injector injector;
+
 
     private Props props;
 
@@ -131,9 +130,6 @@ public class LocalExecutorTest extends CommonTestBase {
     @Override
     protected void configuration() {
         props = new Props();
-        props.put("executor.env.resourceQueues", "default,test");
-        props.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
-        props.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
         props.put("datasource.maxPoolSize", 1);
         props.put("datasource.minimumIdle", 0);
         props.put("neo4j.uri", neo4jContainer.getBoltUrl());
@@ -150,28 +146,50 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(EventSubscriber.class, mockEventSubscriber);
         LocalProcessBackend localProcessBackend = new LocalProcessBackend();
         spyBackend = spy(localProcessBackend);
-        bind(LocalProcessBackend.class, spyBackend);
-        bind(AbstractQueueManager.class, LocalQueueManage.class);
         bind(Props.class, props);
-        bind(WorkerMonitor.class, LocalProcessMonitor.class);
-        bind(WorkerLifeCycleManager.class, LocalProcessLifeCycleManager.class);
-        bind(Executor.class, LocalExecutor.class);
-        bind(Scheduler.class, LocalScheduler.class);
     }
 
     @BeforeEach
-    public void setUp() throws IOException{
+    public void setUp() throws IOException {
         tempFolder.create();
         databaseOperator.update("truncate table kun_wf_target RESTART IDENTITY");
         props.put("datasource.jdbcUrl", postgres.getJdbcUrl() + "&stringtype=unspecified");
         props.put("datasource.username", postgres.getUsername());
         props.put("datasource.password", postgres.getPassword());
         props.put("datasource.driverClassName", "org.postgresql.Driver");
-        executor = injector.getInstance(Executor.class);
-        workerLifeCycleManager.init();
+
+        ExecutorConfig executorConfig = new ExecutorConfig();
+        ResourceQueue defaultQueue = ResourceQueue.newBuilder()
+                .withQueueName("default")
+                .withWorkerNumbers(2)
+                .build();
+        ResourceQueue testQueue = ResourceQueue.newBuilder()
+                .withQueueName("test")
+                .withWorkerNumbers(2)
+                .build();
+
+        Map<String, String> storageMap = new HashMap<>();
+        storageMap.put("logDir", "/tmp/logs");
+        storageMap.put("operatorDir", "/tmp/operators");
+        storageMap.put("commandDir", "/tmp/commands");
+
+        executorConfig.setResourceQueues(Lists.newArrayList(defaultQueue, testQueue));
+        executorConfig.setStorage(storageMap);
+        executorConfig.setKind("local");
+        executorConfig.setName("local");
+        executorConfig.setLabel("local");
+
+        executor = new LocalExecutor(executorConfig);
+        localQueueManager = new LocalQueueManage(executorConfig, spyBackend);
+        Reflect.on(executor).set("localQueueManager", localQueueManager);
+        workerMonitor = new LocalProcessMonitor(spyBackend);
+        workerLifeCycleManager = new LocalProcessLifeCycleManager(executorConfig, workerMonitor, localQueueManager, spyBackend);
+        Reflect.on(executor).set("processLifeCycleManager", workerLifeCycleManager);
+        executor.injectMembers(injector);
+        executor.init();
+
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
-        workerMonitor.start();
         taskRunStateMachine.start();
     }
 
@@ -311,7 +329,7 @@ public class LocalExecutorTest extends CommonTestBase {
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
         doAnswer(invocation -> {
-            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RUNNING,attempt.getId());
+            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RUNNING, attempt.getId());
             eventBus.post(taskRunTransitionEvent);
             return null;
         }).when(spyBackend).startProcess(ArgumentMatchers.any(), ArgumentMatchers.any());

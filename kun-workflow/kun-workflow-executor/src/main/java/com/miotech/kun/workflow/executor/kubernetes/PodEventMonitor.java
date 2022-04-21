@@ -1,8 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.google.inject.assistedinject.Assisted;
-import com.miotech.kun.commons.utils.InitializingBean;
-import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -13,8 +11,6 @@ import io.fabric8.kubernetes.client.WatcherException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -32,13 +28,12 @@ public class PodEventMonitor implements WorkerMonitor {
     private KubernetesClient kubernetesClient;
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
     private final long POLLING_PERIOD = 5 * 1000;
-    private final Props props;
+    private final KubeConfig kubeConfig;
     private final String name;
 
-    @Inject
-    public PodEventMonitor(@Assisted KubernetesClient kubernetesClient, Props props, @Assisted String name) {
+    public PodEventMonitor(@Assisted KubernetesClient kubernetesClient, KubeConfig kubeConfig, @Assisted String name) {
         this.kubernetesClient = kubernetesClient;
-        this.props = props;
+        this.kubeConfig = kubeConfig;
         this.name = name;
         start();
         logger.info("pod even monitor: {} initializing", name);
@@ -50,7 +45,7 @@ public class PodEventMonitor implements WorkerMonitor {
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new PollingPodsStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);
         kubernetesClient.pods()
-                .inNamespace(props.getString("executor.env."+name+".namespace"))
+                .inNamespace(kubeConfig.getNamespace())
                 .withLabel(KUN_WORKFLOW)
                 .watch(new PodStatusWatcher());
     }
@@ -100,7 +95,7 @@ public class PodEventMonitor implements WorkerMonitor {
         public void run() {
             try {
                 PodList podList = kubernetesClient.pods()
-                        .inNamespace(props.getString("executor.env."+name+".namespace"))
+                        .inNamespace(kubeConfig.getNamespace())
                         .withLabel(KUN_WORKFLOW).list();
                 logger.debug("fetch pod list from kubernetes size = {}, register size = {}", podList.getItems().size(), registerHandlers.size());
                 Set<Long> registerSet = new HashSet<>(registerHandlers.keySet());

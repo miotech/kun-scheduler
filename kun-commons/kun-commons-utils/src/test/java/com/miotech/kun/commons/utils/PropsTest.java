@@ -1,12 +1,14 @@
 package com.miotech.kun.commons.utils;
 
 import com.miotech.kun.commons.utils.model.TestClass;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
@@ -142,25 +144,6 @@ public class PropsTest {
         assertThat(props.getDouble("double"), is(345654.456756));
     }
 
-    @Disabled
-    public void readByPrefix(){
-        //prepare
-        Props props = new Props();
-        props.put("aaa.bbb.1","1");
-        props.put("aaa.bbb.2","2");
-        props.put("aaa.ccc.1","1");
-        props.put("aaa.ccc.2","2");
-        props.put("aaa.ccc.3","3");
-        props.put("aaa.ccc.4","4");
-        props.put("aaa.ccc.5","5");
-
-        Map<String,String> result = props.readValuesByPrefix("aaa.ccc");
-
-        //verify
-        Set<String> keys = result.keySet();
-        assertThat(keys,hasSize(5));
-        assertThat(keys,contains("1","2","3","4","5"));
-    }
 
     @Test
     public void readByClassTypeTest(){
@@ -225,6 +208,20 @@ public class PropsTest {
         assertThat(properties.getProperty("testSection1.TestClass.id"),is("1"));
         assertThat(properties.getProperty("testSection1.TestClass.describe"),is("test class 1"));
         assertThat(properties.getProperty("testSection2.testKey3"),is("fileValue3"));
+    }
+
+    @Test
+    /**
+     * test config value as ${ENV_VARIABLE:default} in yaml file
+     * when ENV_VARIABLE not set , get value from props will return default
+     */
+    public void testReplaceVariableWithDefaultValue(){
+        //prepare
+        Props props = PropsUtils.loadPropsFromResource("application-test.yaml");
+
+        String value = props.get("testSection2.testKey4");
+
+        assertThat(value,is("default"));
     }
 
 

@@ -70,7 +70,6 @@ public class JsonProps implements PropsProvider {
                 root = filedNode;
             }
         } catch (Exception e) {
-            logger.warn("can not get key = " + key + "from jsonProps", e);
         }
         return filedNode;
     }

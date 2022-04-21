@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import java.util.Map;
 
 public class KubernetesExecutorModule extends AppModule {
 
@@ -30,11 +29,7 @@ public class KubernetesExecutorModule extends AppModule {
     protected void configure() {
         super.configure();
         String storagePrefix = "executor.env.storage";
-        Map<String, String> storageConfig = props.readValuesByPrefix(storagePrefix);
-        KubeExecutorConfig kubeExecutorConfig = KubeExecutorConfig.newBuilder()
-                .withK8sClientConfig(kubernetesConfig())
-                .withStorageConfig(storageConfig)
-                .build();
+        KubeExecutorConfig kubeExecutorConfig = props.getValue("executor.config",KubeExecutorConfig.class);
         bind(KubeExecutorConfig.class).toInstance(kubeExecutorConfig);
         bind(AbstractQueueManager.class).to(KubernetesResourceManager.class);
         bind(WorkerMonitor.class).to(PodEventMonitor.class);

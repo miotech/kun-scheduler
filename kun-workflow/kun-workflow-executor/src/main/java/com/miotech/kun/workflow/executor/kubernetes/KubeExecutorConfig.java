@@ -1,51 +1,27 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import io.fabric8.kubernetes.client.Config;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 
-import java.util.Map;
+public class KubeExecutorConfig extends ExecutorConfig {
 
-public class KubeExecutorConfig {
+    private KubeConfig kubeConfig;
 
-    private final Config k8sClientConfig;
-    private final Map<String, String> storageConfig;
+    private ImageHub privateHub;
 
-    public KubeExecutorConfig(Config k8sClientConfig, Map<String, String> storageConfig) {
-        this.k8sClientConfig = k8sClientConfig;
-        this.storageConfig = storageConfig;
+    public KubeConfig getKubeConfig() {
+        return kubeConfig;
     }
 
-    public Config getK8sClientConfig() {
-        return k8sClientConfig;
+    public void setKubeConfig(KubeConfig kubeConfig) {
+        this.kubeConfig = kubeConfig;
     }
 
-    public Map<String, String> getStorageConfig() {
-        return storageConfig;
+    public ImageHub getPrivateHub() {
+        return privateHub;
     }
 
-    public static KubeExecutorConfigBuilder newBuilder() {
-        return new KubeExecutorConfigBuilder();
+    public void setPrivateHub(ImageHub privateHub) {
+        this.privateHub = privateHub;
     }
 
-
-    public static final class KubeExecutorConfigBuilder {
-        private Config k8sClientConfig;
-        private Map<String, String> storageConfig;
-
-        private KubeExecutorConfigBuilder() {
-        }
-
-        public KubeExecutorConfigBuilder withK8sClientConfig(Config k8sClientConfig) {
-            this.k8sClientConfig = k8sClientConfig;
-            return this;
-        }
-
-        public KubeExecutorConfigBuilder withStorageConfig(Map<String, String> storageConfig) {
-            this.storageConfig = storageConfig;
-            return this;
-        }
-
-        public KubeExecutorConfig build() {
-            return new KubeExecutorConfig(k8sClientConfig, storageConfig);
-        }
-    }
 }

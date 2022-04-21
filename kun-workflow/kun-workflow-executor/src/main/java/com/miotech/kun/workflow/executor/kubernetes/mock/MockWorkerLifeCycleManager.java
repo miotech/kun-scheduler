@@ -1,17 +1,12 @@
 package com.miotech.kun.workflow.executor.kubernetes.mock;
 
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.kubernetes.PodStatusSnapShot;
-import com.miotech.kun.workflow.executor.local.MiscService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodStatus;
@@ -20,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-@Singleton
 public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
@@ -29,18 +23,21 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
     private MockWorkerMonitor mockWorkerMonitor;
 
 
-    @Inject
-    public MockWorkerLifeCycleManager(TaskRunDao taskRunDao, MockWorkerMonitor workerMonitor,
-                                      Props props, MiscService miscService, MockQueueManager queueManager,
-                                      EventBus eventBus, EventSubscriber eventSubscriber) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber, "test");
+    public MockWorkerLifeCycleManager(ExecutorConfig executorConfig, MockWorkerMonitor workerMonitor,
+                                      MockQueueManager queueManager) {
+        super(executorConfig, workerMonitor, queueManager, "test");
         this.mockQueueManager = queueManager;
         this.mockWorkerMonitor = workerMonitor;
     }
 
     @Override
+    public void injectMembers(Injector injector) {
+        injector.injectMembers(this);
+    }
+
+    @Override
     public void startWorker(TaskAttempt taskAttempt) {
-        logger.info("start worker taskAttemptId = {}",taskAttempt.getId());
+        logger.info("start worker taskAttemptId = {}", taskAttempt.getId());
         WorkerInstance instance = WorkerInstance.newBuilder()
                 .withTaskAttemptId(taskAttempt.getId()).build();
         mockQueueManager.addWorker(taskAttempt);
@@ -54,7 +51,7 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public WorkerSnapshot getWorker(Long taskAttemptId) {
-        if(mockWorkerMonitor.hasRegister(taskAttemptId)){
+        if (mockWorkerMonitor.hasRegister(taskAttemptId)) {
             WorkerInstance instance = WorkerInstance.newBuilder()
                     .withTaskAttemptId(taskAttemptId).build();
             return new PodStatusSnapShot(instance, new PodStatus(), new PodSpec(), new ObjectMeta());
@@ -76,15 +73,15 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
         mockWorkerMonitor.makeDone(taskAttemptId);
     }
 
-    public void markFailed(Long taskAttemptId){
+    public void markFailed(Long taskAttemptId) {
         mockWorkerMonitor.makeFailed(taskAttemptId);
     }
 
-    public void markRunning(Long taskAttemptId){
+    public void markRunning(Long taskAttemptId) {
         mockWorkerMonitor.makeRunning(taskAttemptId);
     }
 
-    public boolean hasRegister(Long taskAttemptId){
+    public boolean hasRegister(Long taskAttemptId) {
         return mockWorkerMonitor.hasRegister(taskAttemptId);
     }
 

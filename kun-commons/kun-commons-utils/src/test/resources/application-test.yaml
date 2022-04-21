@@ -17,3 +17,4 @@ testSection1:
       describe: test class 4
 testSection2:
   testKey3: fileValue3
+  testKey4: ${ENV_VARIABLE:default}

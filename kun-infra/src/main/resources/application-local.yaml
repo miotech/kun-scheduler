@@ -1,21 +1,20 @@
 executor:
   # use local process
-   env:
-     name: local
-     resourceQueues:
-       default:
-         quota:
-           workerNumbers: 4
-       test:
-         quota:
-           workerNumbers: 2
-     storage:
-       logDir: ${LOG_DIR:/server/target/logs}
-       operatorDir: ${OPERATOR_DIR:/server/lib}
-       commandDir: ${COMMAND_DIR:/server/lib}
-       type: ${STORAGE_TYPE:LOCAL}
+  kind: local
+  name: local
+  resourceQueues:
+    - queueName: default
+      workerNumbers: 4
+    - queueName: test
+      workerNumbers: 2
+  storage:
+    logDir: ${LOG_DIR:/server/target/logs}
+    operatorDir: ${OPERATOR_DIR:/server/lib}
+    commandDir: ${COMMAND_DIR:/server/lib}
+    type: ${STORAGE_TYPE:LOCAL}
 
-#   env:
+#  kind: kubernetes
+#   config:
 #     name: kubernetes
 #     version: 1.15
 #     jarDirectory: ${JAR_DIRECTORY}
@@ -31,21 +30,21 @@ executor:
 #       operatorDir: ${OPERATOR_DIR:/server/lib}
 #       commandDir: ${COMMAND_DIR:/server/lib}
 #       type: ${STORAGE_TYPE:LOCAL}
-
-     #    use private hub
+#
+#         #use private hub
 #     privateHub :
 #       url: hub.miotech.com/library
 #     resourceQueues:
-#       default:
+#       - queueName: default
 #         quota:
 #           cores: 2
 #           memory: 4
 #           workerNumbers: 4
-#       test:
+#       - queueName: test
 #         quota:
 #           cores: 1
 #           memory: 2
-#           workerNumbers: 2
+#          workerNumbers: 2
 
 
 server:

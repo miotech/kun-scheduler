@@ -1,5 +1,7 @@
 package com.miotech.kun.commons.utils;
 
+import com.google.common.collect.Maps;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -10,7 +12,7 @@ public class MapProps implements PropsProvider {
     private final Map<String, Object> propsMap;
 
     public MapProps(Map<String, Object> propsMap) {
-        this.propsMap = propsMap;
+        this.propsMap = Maps.newHashMap(propsMap);
     }
 
     @Override

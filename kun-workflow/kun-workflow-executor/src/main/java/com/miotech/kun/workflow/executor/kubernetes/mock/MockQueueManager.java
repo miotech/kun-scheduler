@@ -1,26 +1,20 @@
 package com.miotech.kun.workflow.executor.kubernetes.mock;
 
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.TaskAttemptQueue;
-import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Singleton
 public class MockQueueManager extends AbstractQueueManager {
 
     Map<String, Integer> map = new ConcurrentHashMap<>();
 
-    @Inject
-    public MockQueueManager(Props props, MiscService miscService, EventBus eventBus) {
-        super(props, miscService, eventBus, "test");
+    public MockQueueManager(ExecutorConfig executorConfig) {
+        super(executorConfig, "test");
     }
 
     @Override

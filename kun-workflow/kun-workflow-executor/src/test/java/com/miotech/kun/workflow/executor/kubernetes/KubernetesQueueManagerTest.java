@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
@@ -14,6 +15,7 @@ import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.executor.*;
@@ -80,12 +82,24 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
     private EventCollector eventCollector;
 
+    private KubeExecutorConfig kubeExecutorConfig;
+
     @Override
     protected void configuration() {
         mockProps = new Props();
         mockProps.put("executor.env.resourceQueues", "default,test");
         mockProps.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
         mockProps.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
+        kubeExecutorConfig = new KubeExecutorConfig();
+        ResourceQueue defaultQueue = ResourceQueue.newBuilder()
+                .withQueueName("default")
+                .withWorkerNumbers(2)
+                .build();
+        ResourceQueue testQueue = ResourceQueue.newBuilder()
+                .withQueueName("test")
+                .withWorkerNumbers(2)
+                .build();
+        kubeExecutorConfig.setResourceQueues(Lists.newArrayList(defaultQueue,testQueue));
         super.configuration();
         bind(MetadataServiceFacade.class,mock(MetadataServiceFacade.class));
         bind(LineageServiceFacade.class,mock(LineageServiceFacade.class));
@@ -293,8 +307,8 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
     }
 
     private KubernetesResourceManager prepareQueueManage() {
-        KubernetesResourceManager queueManager = new KubernetesResourceManager(mock(KubernetesClient.class), mockProps,
-                miscService, eventBus, "test");
+        KubernetesResourceManager queueManager = new KubernetesResourceManager(kubeExecutorConfig,mock(KubernetesClient.class)
+                , "test");
         queueManager.init();
         return queueManager;
     }

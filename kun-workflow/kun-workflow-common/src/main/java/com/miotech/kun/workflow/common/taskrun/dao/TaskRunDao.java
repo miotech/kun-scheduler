@@ -60,7 +60,7 @@ public class TaskRunDao {
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
-    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority", "retry_times", "executor_label");
+    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority", "retry_times", "executor_label", "runtime_label");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
@@ -1070,7 +1070,8 @@ public class TaskRunDao {
                 taskAttempt.getQueueName(),
                 taskAttempt.getPriority(),
                 taskAttempt.getRetryTimes(),
-                taskAttempt.getExecutorLabel()
+                taskAttempt.getExecutorLabel(),
+                taskAttempt.getRuntimeLabel()
         );
         return taskAttempt;
     }
@@ -1100,6 +1101,7 @@ public class TaskRunDao {
                 taskAttempt.getPriority(),
                 taskAttempt.getRetryTimes(),
                 taskAttempt.getExecutorLabel(),
+                taskAttempt.getRuntimeLabel(),
                 taskAttempt.getId()
         );
         return taskAttempt;
@@ -2014,6 +2016,7 @@ public class TaskRunDao {
                     .withPriority(rs.getInt(column("priority", tableAlias)))
                     .withRetryTimes(rs.getInt(column("retry_times", tableAlias)))
                     .withExecutorLabel(rs.getString(column("executor_label", tableAlias)))
+                    .withRuntimeLabel(rs.getString(column("runtime_label",tableAlias)))
                     .build();
         }
     }

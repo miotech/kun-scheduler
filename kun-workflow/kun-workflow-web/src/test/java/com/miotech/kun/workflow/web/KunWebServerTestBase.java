@@ -10,7 +10,7 @@ import com.miotech.kun.infra.KunInfraWebServer;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
+import com.miotech.kun.workflow.core.Executor;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
@@ -47,8 +47,8 @@ public class KunWebServerTestBase extends GuiceTestBase {
     @Inject
     private KunInfraWebServer webServer;
 
-    @Inject
-    private WorkerLifeCycleManager workerLifeCycleManager;
+
+    private Executor executor;
 
     @Inject
     private Props props;
@@ -82,7 +82,8 @@ public class KunWebServerTestBase extends GuiceTestBase {
     public void tearDown() {
         // TODO: move these cleaning logic to a proper location
         closeIfPossible(dataSource); // close HikariDatasource
-        workerLifeCycleManager.shutdown();
+        executor = injector.getInstance(Executor.class);
+        executor.shutdown();
         webServer.shutdown();
     }
 

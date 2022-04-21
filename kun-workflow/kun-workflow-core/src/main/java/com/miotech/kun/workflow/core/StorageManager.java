@@ -1,11 +1,17 @@
 package com.miotech.kun.workflow.core;
 
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
 
 import java.util.Map;
 
 public interface StorageManager {
+
+    /**
+     * inject members
+     */
+    void injectMember(Injector injector);
 
     /**
      * initialize storage manager

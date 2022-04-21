@@ -2,13 +2,13 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
-import com.google.inject.assistedinject.Assisted;
-import com.miotech.kun.commons.utils.Props;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,22 +27,20 @@ public abstract class AbstractQueueManager {
 
     protected Map<String, TaskAttemptQueue> queueMap;
     private Lock lock = new ReentrantLock();
-    protected Props props;
-    private final EventBus eventBus;
-    private MiscService miscService;
+    @Inject
+    private EventBus eventBus;
     private final String name;
+    private final List<ResourceQueue> resourceQueueList;
+    protected final ExecutorConfig executorConfig;
 
-    public AbstractQueueManager(Props props, MiscService miscService, EventBus eventBus, String name) {
-        this.props = props;
+    public AbstractQueueManager(ExecutorConfig executorConfig, String name) {
+        this.executorConfig = executorConfig;
+        this.resourceQueueList = executorConfig.getResourceQueues();
         queueMap = new ConcurrentHashMap<>();
-        this.miscService = miscService;
-        this.eventBus = eventBus;
         this.name = name;
     }
 
     public void init() {//根据配置文件初始化nameSpace资源配额
-        logger.debug("{} queue manager load resource configuration...", name);
-        List<ResourceQueue> resourceQueueList = loadResourceQueue();
         logger.debug("init taskAttempt Queue...");
         List<TaskAttemptQueue> taskAttemptQueueList = initTaskAttemptQueue(resourceQueueList);
         for (TaskAttemptQueue taskAttemptQueue : taskAttemptQueueList) {
@@ -59,24 +57,8 @@ public abstract class AbstractQueueManager {
         return taskAttemptQueueList;
     }
 
-    public List<ResourceQueue> loadResourceQueue() {
-        List<String> queueNames = props.getStringList("executor.env."+name+".resourceQueues");
-        List<ResourceQueue> queueList = new ArrayList<>();
-        for (String queueName : queueNames) {
-            String prefix = "executor.env."+name+".resourceQueues." + queueName;
-            Integer cores = props.getInt(prefix + ".quota.cores", 0);
-            Integer memory = props.getInt(prefix + ".quota.memory", 0);
-            Integer workerNumbers = props.getInt(prefix + ".quota.workerNumbers", 0);
-            ResourceQueue resourceQueue = ResourceQueue.newBuilder()
-                    .withQueueName(queueName)
-                    .withCores(cores)
-                    .withMemory(memory)
-                    .withWorkerNumbers(workerNumbers)
-                    .build();
-            logger.info("init queue = {}", resourceQueue);
-            queueList.add(resourceQueue);
-        }
-        return queueList;
+    public void injectMember(Injector injector){
+        injector.injectMembers(this);
     }
 
 

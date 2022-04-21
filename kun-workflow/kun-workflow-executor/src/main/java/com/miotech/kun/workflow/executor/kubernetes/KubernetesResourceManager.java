@@ -1,14 +1,9 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.assistedinject.Assisted;
-import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.TaskAttemptQueue;
-import com.miotech.kun.workflow.executor.local.MiscService;
 import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -23,11 +18,11 @@ public class KubernetesResourceManager extends AbstractQueueManager {
     private final Logger logger = LoggerFactory.getLogger(KubernetesResourceManager.class);
     private KubernetesClient client;
     private final String name;
+    private final KubeConfig kubeConfig;
 
-    @Inject
-    public KubernetesResourceManager(@Assisted KubernetesClient kubernetesClient, Props props, MiscService miscService,
-                                     EventBus eventBus, @Assisted String name) {
-        super(props, miscService, eventBus, name);
+    public KubernetesResourceManager(KubeExecutorConfig executorConfig, KubernetesClient kubernetesClient, @Assisted String name) {
+        super(executorConfig, name);
+        this.kubeConfig = executorConfig.getKubeConfig();
         this.client = kubernetesClient;
         this.name = name;
         logger.info("k8s resource manager: {} initializing", name);
@@ -53,7 +48,7 @@ public class KubernetesResourceManager extends AbstractQueueManager {
 
     private ResourceQueue getUsedResource(String queueName) {
         PodList podList = client.pods()
-                .inNamespace(props.getString("executor.env."+name+".namespace"))
+                .inNamespace(kubeConfig.getNamespace())
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(TASK_QUEUE, queueName)
                 .list();

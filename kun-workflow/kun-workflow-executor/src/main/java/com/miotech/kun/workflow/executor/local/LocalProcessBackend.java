@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.executor.local;
 
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -24,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.miotech.kun.workflow.executor.local.LocalProcessConstants.KUN_ATTEMPT_ID;
 import static com.miotech.kun.workflow.executor.local.LocalProcessConstants.KUN_QUEUE_NAME;
 
-@Singleton
 public class LocalProcessBackend {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalProcessBackend.class);

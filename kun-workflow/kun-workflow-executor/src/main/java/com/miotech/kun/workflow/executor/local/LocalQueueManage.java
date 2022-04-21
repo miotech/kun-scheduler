@@ -1,19 +1,15 @@
 package com.miotech.kun.workflow.executor.local;
 
-import com.google.common.eventbus.EventBus;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.TaskAttemptQueue;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 
-@Singleton
 public class LocalQueueManage extends AbstractQueueManager {
 
     private static Logger logger = LoggerFactory.getLogger(LocalQueueManage.class);
@@ -21,9 +17,8 @@ public class LocalQueueManage extends AbstractQueueManager {
     private final LocalProcessBackend localProcessBackend;
 
 
-    @Inject
-    public LocalQueueManage(Props props, MiscService miscService, LocalProcessBackend localProcessBackend, EventBus eventBus) {
-        super(props, miscService, eventBus, "local");
+    public LocalQueueManage(ExecutorConfig executorConfig, LocalProcessBackend localProcessBackend) {
+        super(executorConfig, "local");
         this.localProcessBackend = localProcessBackend;
     }
 
