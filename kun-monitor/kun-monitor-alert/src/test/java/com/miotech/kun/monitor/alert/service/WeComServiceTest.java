@@ -2,6 +2,7 @@ package com.miotech.kun.monitor.alert.service;
 
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.monitor.alert.MonitorAlertTestBase;
 import com.miotech.kun.monitor.alert.mocking.MockTaskAttemptStatusChangeEventFactory;
 import com.miotech.kun.monitor.alert.mocking.MockUserInfoFactory;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
@@ -33,6 +35,8 @@ public class WeComServiceTest extends MonitorAlertTestBase {
         TaskAttemptStatusChangeEvent event = MockTaskAttemptStatusChangeEventFactory.create(true);
         UserInfo userInfo = MockUserInfoFactory.create();
         doReturn(userInfo).when(deployedTaskFacade).getUserByTaskId(event.getTaskId());
+        DeployedTask deployedTask = DeployedTask.newBuilder().withDefinitionId(1L).build();
+        doReturn(Optional.of(deployedTask)).when(deployedTaskFacade).findByWorkflowTaskId(event.getTaskId());
 
         weComService.sendMessage(event);
         verify(weComSender, times(1)).sendMessageToUsers(anyList(), anyString());

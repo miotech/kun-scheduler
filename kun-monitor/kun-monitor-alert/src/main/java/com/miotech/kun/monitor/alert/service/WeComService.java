@@ -20,6 +20,8 @@ import java.util.Optional;
 @Service
 public class WeComService {
 
+    private static final String MSG_TEMPLATE = "[reason]: %s%n[task]: %s%n[result]: %s%n[owner]: %s%n[link]: %s";
+
     @Value("${notify.wecom.chatid}")
     private String chatid;
 
@@ -77,9 +79,12 @@ public class WeComService {
             log.debug("Pushing status message with link. task run id = {}, backfill id = {}, task definition id = {}.", taskRunId, derivingBackfillId.orElse(null), taskDefinitionId.orElse(null));
             // If it is not a backfill task run, and corresponding deployment task is found, then it should be a scheduled task run
             if (taskDefinitionId.isPresent() && (!derivingBackfillId.isPresent())) {
-                return String.format("Deployed task: '%s' in state: %s%nTask owner : %s%nSee link: %s",
+                String reason = event.getToStatus().isSuccess() ? "Notification" : "Failure";
+                String result = event.getToStatus().isSuccess() ? "task succeeded" : "task failed";
+                return String.format(MSG_TEMPLATE,
+                        reason,
                         event.getTaskName(),
-                        event.getToStatus().name(),
+                        result,
                         userInfo.getUsername(),
                         notifyLinkConfig.getScheduledTaskLinkURL(taskDefinitionId.get(), taskRunId)
                 );
