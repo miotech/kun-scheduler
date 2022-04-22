@@ -8,6 +8,7 @@ import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import com.miotech.kun.monitor.sla.utils.LocalDateTimeUtils;
 import com.miotech.kun.monitor.facade.alert.NotifyFacade;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRunState;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ import java.util.Optional;
 @Component
 public class TimelineScheduler {
 
-    private static final String MSG_TEMPLATE = "Deployed task: '%s' not completed before the deadline.%nRoot definition:%s%n%nSee link: %s";
+    private static final String MSG_TEMPLATE = "[reason]: %s%n[task]: %s%n[result]: %s%n[owner]: %s%n[link]: %s";
 
     @Value("${notify.urlLink.prefix}")
     private String prefix;
@@ -73,10 +74,20 @@ public class TimelineScheduler {
 
             DeployedTask deployedTask = deployedTaskOpt.get();
             String rootDefinitionName = fetchTaskDefinitionName(taskTimeline.getRootDefinitionId());
-            String msg = String.format(MSG_TEMPLATE, deployedTask.getName(), rootDefinitionName, this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
+            UserInfo userInfo = deployedTaskFacade.getUserByTaskId(deployedTask.getWorkflowTaskId());
+            String result = buildResult(rootDefinitionName);
+            String msg = String.format(MSG_TEMPLATE, "Overdue", deployedTask.getName(), result, userInfo.getUsername(), this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
             log.debug("Task: {} is not executed before the deadline, send an alarm, msg: {}", deployedTask.getName(), msg);
             notifyFacade.notify(deployedTask.getWorkflowTaskId(), msg);
         }
+    }
+
+    private String buildResult(String rootDefinitionName) {
+        if (StringUtils.isBlank(rootDefinitionName)) {
+            return "not finished before deadline";
+        }
+
+        return String.format("caused by upstream task: %s", rootDefinitionName);
     }
 
     private String fetchTaskDefinitionName(Long rootDefinitionId) {
