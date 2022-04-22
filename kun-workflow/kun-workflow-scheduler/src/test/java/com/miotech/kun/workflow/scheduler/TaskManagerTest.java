@@ -11,6 +11,8 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -920,7 +922,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps2.getLogPath(), is(nullValue()));
         assertThat(attemptProps2.getStartAt(), is(nullValue()));
         assertThat(attemptProps2.getEndAt(), is(nullValue()));
-        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(notNullValue()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(nullValue()));
 
     }
 

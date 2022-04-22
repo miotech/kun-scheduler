@@ -115,6 +115,7 @@ public class TaskManager {
 
             //retry task run will change downstream status from upstream failed to created
             List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
+            taskRunDao.resetTaskRunTimestampToNull(downstreamTaskRunIds, "term_at");
             updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.CREATED);
             updateRestrictedTaskRunsStatus(downstreamTaskRunIds);
             trigger();
