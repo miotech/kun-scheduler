@@ -58,7 +58,7 @@ public class ExpectationFailureTaskAttemptFinishedEventHandler implements TaskAt
             String datasetName = getDatasetName(expectation.getDataset().getGid());
             long latestFailingCount = expectationRunDao.getLatestFailingCount(expectation.getExpectationId());
             log.info("expectation: {} failed, an alarm will be send to: {}", expectation.getExpectationId(), StringUtils.join(notifiedUsers, ","));
-            notifyFacade.notify(notifiedUsers, String.format(MSG_TEMPLATE, "Failure", datasetName, "testcase failed", expectation.getCreateUser(), latestFailingCount,
+            notifyFacade.notify(notifiedUsers, String.format(MSG_TEMPLATE, "Failure", datasetName, String.format("testcase '%s' failed", expectation.getName()), expectation.getCreateUser(), latestFailingCount,
                     this.prefix + String.format("/data-discovery/dataset/%s?caseId=%s", expectation.getDataset().getGid(), expectation.getExpectationId())));
         }
     }
