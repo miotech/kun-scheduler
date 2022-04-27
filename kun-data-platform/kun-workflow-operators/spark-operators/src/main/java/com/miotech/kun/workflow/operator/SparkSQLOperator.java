@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.joor.Reflect;
@@ -24,6 +23,7 @@ public class SparkSQLOperator extends KunOperator {
     public void init() {
         OperatorContext context = getContext();
         logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
+
         if (context.getTaskRunId() % 10 >= shadowTestPct) {
             useLegacySparkSqlOperator = true;
             sparkSqlOperatorV1.setContext(context);
@@ -120,11 +120,12 @@ public class SparkSQLOperator extends KunOperator {
     public Map<String, String> generateRunTimeParams(Config config) {
         Map<String, String> sparkSubmitParams = new HashMap<>();
 
+        OperatorContext context = getContext();
         String sessionName = config.getString(CONF_LIVY_SHARED_SESSION_NAME);
         if (!Strings.isNullOrEmpty(sessionName)) {
-            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
+            sessionName = sessionName + " - " + context.getTaskRunId();
         } else {
-            sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
+            sessionName = "Spark Job: " + context.getTaskRunId();
         }
         sparkSubmitParams.put("name", sessionName);
 

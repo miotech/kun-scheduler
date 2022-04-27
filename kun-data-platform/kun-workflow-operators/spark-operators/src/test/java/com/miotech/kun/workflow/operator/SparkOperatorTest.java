@@ -1,18 +1,15 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import junit.framework.TestCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
-import static com.miotech.kun.workflow.operator.SparkConfiguration.CONF_S3_SECRET_KEY;
 import static org.junit.Assert.assertTrue;
 
 public class SparkOperatorTest {
@@ -22,7 +19,6 @@ public class SparkOperatorTest {
 
     @BeforeEach
     public void initSparkOperator(){
-
         context = new MockOperatorContextImpl(operator);
         context.setParam(CONF_LIVY_HOST, "http://localhost:8089");
         context.setParam(CONF_LIVY_PROXY_USER, "hadoop");
@@ -37,6 +33,7 @@ public class SparkOperatorTest {
         context.setParam(CONF_S3_ACCESS_KEY, "");
         context.setParam(CONF_S3_SECRET_KEY, "");
         context.setParam(SPARK_YARN_HOST, "http://localhost:8088");
+        operator.setContext(context);
     }
 
     @Test

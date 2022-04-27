@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections.CollectionUtils;
@@ -29,6 +28,7 @@ public class SparkOperator extends KunOperator {
     public void init() {
         OperatorContext context = getContext();
         logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
+
         if (context.getTaskRunId() % 10 >= shadowTestPct) {
             useLegacySparkOperator = true;
             sparkOperatorV1.setContext(context);
@@ -97,9 +97,10 @@ public class SparkOperator extends KunOperator {
     public Map<String, String> generateRunTimeParams(Config config) {
         Map<String, String> sparkSubmitParams = new HashMap<>();
 
+        OperatorContext context = getContext();
         String sessionName = config.getString(CONF_LIVY_BATCH_NAME);
         if (!Strings.isNullOrEmpty(sessionName)) {
-            sessionName = sessionName + "-" + IdGenerator.getInstance().nextId();
+            sessionName = sessionName + "-" + context.getTaskRunId();
             sparkSubmitParams.put("name", sessionName);
         }
 
