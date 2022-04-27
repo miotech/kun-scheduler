@@ -2,6 +2,7 @@ package com.miotech.kun.dataquality.web.common.service;
 
 import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.facade.ExpectationFacade;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.entity.CaseResult;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ExpectationService {
+public class ExpectationService implements ExpectationFacade {
 
     @Autowired
     private ExpectationDao expectationDao;

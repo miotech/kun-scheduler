@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Repository
@@ -63,6 +64,16 @@ public class ExpectationRunDao {
         return jdbcTemplate.queryForObject(sql, ExpectationRunRowMapper.INSTANCE, expectationId);
     }
 
+    public List<ValidationResult> fetchByUpdateTimeFromAndPassed(OffsetDateTime updateTimeFrom, boolean passed) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(COLUMNS.toArray(new String[0]))
+                .from(TABLE_NAME)
+                .where("update_time >= ? and passed = ?")
+                .orderBy("id desc")
+                .getSQL();
+        return jdbcTemplate.query(sql, ExpectationRunRowMapper.INSTANCE, updateTimeFrom, passed);
+    }
+
     private static class ExpectationRunRowMapper implements RowMapper<ValidationResult> {
         public static final ExpectationRunDao.ExpectationRunRowMapper INSTANCE = new ExpectationRunDao.ExpectationRunRowMapper();
 
@@ -75,6 +86,7 @@ public class ExpectationRunDao {
                     .withAssertionResults(JSONUtils.jsonToObject(rs.getString("assertion_result"),
                             new TypeReference<List<AssertionResult>>() {
                             }))
+                    .withContinuousFailingCount(rs.getLong("continuous_failing_count"))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
                     .build();
         }

@@ -13,13 +13,16 @@ public class ValidationResult {
 
     private final List<AssertionResult> assertionResults;
 
+    private final long continuousFailingCount;
+
     private final OffsetDateTime updateTime;
 
-    public ValidationResult(long expectationId, boolean passed, String executionResult, List<AssertionResult> assertionResults, OffsetDateTime updateTime) {
+    public ValidationResult(long expectationId, boolean passed, String executionResult, List<AssertionResult> assertionResults, long continuousFailingCount, OffsetDateTime updateTime) {
         this.expectationId = expectationId;
         this.passed = passed;
         this.executionResult = executionResult;
         this.assertionResults = assertionResults;
+        this.continuousFailingCount = continuousFailingCount;
         this.updateTime = updateTime;
     }
 
@@ -39,6 +42,10 @@ public class ValidationResult {
         return assertionResults;
     }
 
+    public long getContinuousFailingCount() {
+        return continuousFailingCount;
+    }
+
     public OffsetDateTime getUpdateTime() {
         return updateTime;
     }
@@ -53,6 +60,7 @@ public class ValidationResult {
                 .withPassed(this.passed)
                 .withExecutionResult(this.executionResult)
                 .withAssertionResults(this.assertionResults)
+                .withContinuousFailingCount(this.continuousFailingCount)
                 .withUpdateTime(this.updateTime)
                 ;
     }
@@ -62,6 +70,7 @@ public class ValidationResult {
         private boolean passed;
         private String executionResult;
         private List<AssertionResult> assertionResults;
+        private long continuousFailingCount;
         private OffsetDateTime updateTime;
 
         private Builder() {
@@ -87,13 +96,18 @@ public class ValidationResult {
             return this;
         }
 
+        public Builder withContinuousFailingCount(long continuousFailingCount) {
+            this.continuousFailingCount = continuousFailingCount;
+            return this;
+        }
+
         public Builder withUpdateTime(OffsetDateTime updateTime) {
             this.updateTime = updateTime;
             return this;
         }
 
         public ValidationResult build() {
-            return new ValidationResult(expectationId, passed, executionResult, assertionResults, updateTime);
+            return new ValidationResult(expectationId, passed, executionResult, assertionResults, continuousFailingCount, updateTime);
         }
     }
 }
