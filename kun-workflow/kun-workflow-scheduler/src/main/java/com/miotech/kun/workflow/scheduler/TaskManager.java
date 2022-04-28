@@ -113,11 +113,12 @@ public class TaskManager {
             TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE, taskAttempt.getId());
             eventBus.post(taskRunTransitionEvent);
 
-            //retry task run will change downstream status from upstream failed to created
-            List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
-            taskRunDao.resetTaskRunTimestampToNull(downstreamTaskRunIds, "term_at");
-            updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.CREATED);
-            updateRestrictedTaskRunsStatus(downstreamTaskRunIds);
+            List<Long> taskRunShouldBeCreated = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
+            logger.debug("taskRuns {} will change status from upstream failed to created", taskRunShouldBeCreated);
+            taskRunDao.resetTaskRunTimestampToNull(taskRunShouldBeCreated, "term_at");
+
+            updateTaskRunConditions(taskRunShouldBeCreated, TaskRunStatus.CREATED);
+            updateRestrictedTaskRunsStatus(taskRunShouldBeCreated);
             trigger();
             return true;
         } catch (Exception e) {
@@ -237,7 +238,7 @@ public class TaskManager {
                 List<Long> ids = new ArrayList<>(Collections.singletonList(taskRunId));
                 if (currentStatus.isFinished()) {
                     updateTaskRunConditions(ids, currentStatus);
-                    List<Long> downstreamTaskRunIds;
+                    List<Long> downstreamTaskRunIds = null;
                     if (currentStatus.isFailure()) {
                         downstreamTaskRunIds = updateDownStreamStatus(taskRunId, TaskRunStatus.UPSTREAM_FAILED, Lists.newArrayList(TaskRunStatus.CREATED));
                         updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.UPSTREAM_FAILED);
@@ -290,21 +291,23 @@ public class TaskManager {
     }
 
     private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus, List<TaskRunStatus> filterStatus) {
-        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
-        logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
+        //fetch all downstream of retry taskRun
+        List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
+        logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downstreamTaskRunIds, taskRunId);
+        taskRunDao.updateTaskRunWithFailedUpstream(taskRunId, downstreamTaskRunIds, taskRunStatus);
         if (taskRunStatus.isTermState()) {
             OffsetDateTime termAt = DateTimeUtils.now();
-            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus, termAt, filterStatus);
+            taskRunDao.updateAttemptStatusByTaskRunIds(downstreamTaskRunIds, taskRunStatus, termAt, filterStatus);
+            return downstreamTaskRunIds;
         } else {
-            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus, null, filterStatus);
+            //fetch taskRun should update to created by dependency
+            List<Long> taskRunShouldBeCreated = taskRunDao.taskRunShouldBeCreated(downstreamTaskRunIds);
+            taskRunDao.updateAttemptStatusByTaskRunIds(taskRunShouldBeCreated, taskRunStatus, null, filterStatus);
+            return taskRunShouldBeCreated;
         }
-        taskRunDao.updateTaskRunWithFailedUpstream(taskRunId, downStreamTaskRunIds, taskRunStatus);
-        return downStreamTaskRunIds;
+
     }
 
-    private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
-        return updateDownStreamStatus(taskRunId, taskRunStatus, new ArrayList<>());
-    }
 
     private class TaskRunReadyCheckEvent {
 

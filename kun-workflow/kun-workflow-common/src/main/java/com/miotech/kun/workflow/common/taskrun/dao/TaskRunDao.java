@@ -1184,10 +1184,11 @@ public class TaskRunDao {
             if (prev.isPresent()) {
                 dbOperator.update(sbTa.asPrepared().getSQL(), pmTa.toArray());
                 dbOperator.update(sbTr.asPrepared().getSQL(), pmTr.toArray());
+                DependencyStatus dependencyStatus = DependencyStatus.CREATED;
                 if (status.isFinished()) {
-                    DependencyStatus dependencyStatus = status.isSuccess() ? DependencyStatus.SUCCESS : DependencyStatus.FAILED;
-                    updateTaskRunDependency(taskRunId, dependencyStatus);
+                    dependencyStatus = status.isSuccess() ? DependencyStatus.SUCCESS : DependencyStatus.FAILED;
                 }
+                updateTaskRunDependency(taskRunId, dependencyStatus);
             }
             return prev;
         });
@@ -1842,6 +1843,22 @@ public class TaskRunDao {
                 .asPrepared()
                 .getSQL();
         dbOperator.update(sql, status.name(), taskRunId);
+    }
+
+    public List<Long> taskRunShouldBeCreated(List<Long> taskRunIds){
+        if(taskRunIds.size() == 0){
+            return new ArrayList<>();
+        }
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("id")
+                .from(TASK_RUN_TABLE_NAME)
+                .where("id in (" + repeatJoin("?", ",", taskRunIds.size()) +
+                        ") and jsonb_array_length(failed_upstream_task_run_ids) = 0 and status = ?" )
+                .getSQL();
+        List<Object> params = new ArrayList<>();
+        params.addAll(taskRunIds);
+        params.add(TaskRunStatus.UPSTREAM_FAILED.name());
+        return dbOperator.fetchAll(sql,rs -> rs.getLong("id"),params.toArray());
     }
 
     public void updateTaskRunDependencyByTaskRunIds(List<Long> taskRunIds, DependencyStatus status) {

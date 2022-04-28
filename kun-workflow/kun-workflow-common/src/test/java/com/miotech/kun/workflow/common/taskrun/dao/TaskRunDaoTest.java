@@ -1317,4 +1317,29 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         fetchedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         assertNull(fetchedTaskRun.getTermAt());
     }
+
+    @Test
+    public void taskRunShouldBeCreatedTest(){
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4,"0>>2;0>>3;1>>2");
+        for (Task task : taskList){
+            taskDao.create(task);
+        }
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList,"0>>2;0>>3;1>>2");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED).build();
+        TaskRun taskRun4 = taskRunList.get(3).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun2.getId())).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+
+        List<Long> taskRunShouldBeCreated = taskRunDao.taskRunShouldBeCreated(Arrays.asList(taskRun3.getId(),taskRun4.getId()));
+
+        //verify
+        assertThat(taskRunShouldBeCreated,hasSize(1));
+        assertThat(taskRunShouldBeCreated.get(0),is(taskRun3.getId()));
+    }
 }

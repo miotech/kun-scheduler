@@ -34,6 +34,7 @@ public class SparkSQLOperatorTest {
         context.setParam(CONF_S3_SECRET_KEY, "");
         context.setParam(SPARK_YARN_HOST, "http://localhost:8088");
         context.setParam(SPARK_APPLICATION, "s3://bucket/sql.jar");
+        operator.setContext(context);
 
     }
 

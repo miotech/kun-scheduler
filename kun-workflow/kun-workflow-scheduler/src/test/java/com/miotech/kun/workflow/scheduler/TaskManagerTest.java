@@ -11,8 +11,6 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
-import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
-import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -1164,7 +1162,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskRun taskRun0 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1).cloneBuilder()
                 .withStatus(TaskRunStatus.RUNNING)
-                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun0,ConditionType.TASKRUN_DEPENDENCY_SUCCESS,true)))
+                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun0, ConditionType.TASKRUN_DEPENDENCY_SUCCESS, true)))
                 .withDependentTaskRunIds(Lists.newArrayList(taskRun0.getId()))
                 .build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder()
@@ -1172,8 +1170,8 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .build();
         TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task1).cloneBuilder()
                 .withTaskRunConditions(Lists.newArrayList(
-                        createCondition(taskRun1,ConditionType.TASKRUN_PREDECESSOR_FINISH,false),
-                        createCondition(taskRun2,ConditionType.TASKRUN_DEPENDENCY_SUCCESS,true)))
+                        createCondition(taskRun1, ConditionType.TASKRUN_PREDECESSOR_FINISH, false),
+                        createCondition(taskRun2, ConditionType.TASKRUN_DEPENDENCY_SUCCESS, true)))
                 .withDependentTaskRunIds(Lists.newArrayList(taskRun2.getId()))
                 .build();
         ;
@@ -1208,19 +1206,19 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
                 .cloneBuilder()
-                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun0,ConditionType.TASKRUN_DEPENDENCY_SUCCESS,true)))
+                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun0, ConditionType.TASKRUN_DEPENDENCY_SUCCESS, true)))
                 .withDependentTaskRunIds(Lists.newArrayList(taskRun0.getId()))
                 .withStatus(TaskRunStatus.SUCCESS).build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2)
                 .cloneBuilder()
-                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun0,ConditionType.TASKRUN_DEPENDENCY_SUCCESS,true)))
+                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun0, ConditionType.TASKRUN_DEPENDENCY_SUCCESS, true)))
                 .withDependentTaskRunIds(Lists.newArrayList(taskRun0.getId()))
                 .withStatus(TaskRunStatus.RUNNING).build();
         TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder()
                 .withTaskRunConditions(Lists.newArrayList(
-                        createCondition(taskRun0,ConditionType.TASKRUN_PREDECESSOR_FINISH,true),
-                        createCondition(taskRun1,ConditionType.TASKRUN_PREDECESSOR_FINISH,true),
-                        createCondition(taskRun2,ConditionType.TASKRUN_PREDECESSOR_FINISH,false)))
+                        createCondition(taskRun0, ConditionType.TASKRUN_PREDECESSOR_FINISH, true),
+                        createCondition(taskRun1, ConditionType.TASKRUN_PREDECESSOR_FINISH, true),
+                        createCondition(taskRun2, ConditionType.TASKRUN_PREDECESSOR_FINISH, false)))
                 .build();
         taskDao.create(task0);
         taskDao.create(task1);
@@ -1257,7 +1255,7 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .withTaskRunConditions(Collections.singletonList(taskRunCondition))
                 .withStatus(TaskRunStatus.BLOCKED).build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
-                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun1,ConditionType.TASKRUN_PREDECESSOR_FINISH,false)))
+                .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun1, ConditionType.TASKRUN_PREDECESSOR_FINISH, false)))
                 .build();
         taskDao.create(task);
         taskRunDao.createTaskRun(taskRun0);
@@ -1273,7 +1271,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     }
 
     @Test
-    public void retrySuccessTaskRun_should_throws_exception(){
+    public void retrySuccessTaskRun_should_throws_exception() {
         //prepare
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
         TaskRun taskRun = taskAttempt.getTaskRun();
@@ -1281,10 +1279,86 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskDao.create(task);
         taskRunDao.createTaskRun(taskRun);
         taskRunDao.createAttempt(taskAttempt);
-        taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.SUCCESS);
+        taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
 
-        assertThrows("taskRun status must be failed ",IllegalStateException.class,() -> taskManager.retry(taskRun));
+        assertThrows("taskRun status must be failed ", IllegalStateException.class, () -> taskManager.retry(taskRun));
     }
+
+    /**
+     * taskRun1 is taskRun3's upstream
+     * taskRun2、3 is taskRun4's upstream
+     * taskRun3 is taskRun5's upstream
+     * taskRun1、2 failed
+     * retry taskRun1, taskRun3、5 should be invoke,taskRun5 should still upstreamFailed
+     */
+    @Test
+    public void retryOneOfFailedUpstream_task_run_status_should_still_upstream_failed() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(5, "0>>2;1>>3;2>>3;2>>4");
+        long operatorId = taskList.get(0).getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("testOperator")
+                .withPackagePath(compileJar(NopOperator.class, NopOperator.class.getSimpleName()))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>3;2>>3;2>>4");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        TaskRun taskRun4 = taskRunList.get(3);
+        TaskRun taskRun5 = taskRunList.get(4);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+        taskRunDao.createTaskRun(taskRun5);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1) || taskAttemptId.equals(taskRun2.getId() + 1)) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+        // wait taskRun1,taskRun2 failed
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptDone(taskRun2.getId() + 1);
+
+        //retry taskRun1
+        TaskRun saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        taskManager.retry(saved1);
+
+        //wait taskRun5 retry finished
+        awaitUntilAttemptDone(taskRun5.getId() + 1);
+
+        //verify
+        TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
+        assertThat(attemptProps1.getAttempt(), is(2));
+        assertThat(attemptProps1.getStatus(), is(TaskRunStatus.SUCCESS));
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attemptProps2.getAttempt(), is(1));
+        assertThat(attemptProps2.getStatus(), is(TaskRunStatus.FAILED));
+        TaskAttemptProps attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
+        assertThat(attemptProps3.getAttempt(), is(1));
+        assertThat(attemptProps3.getStatus(), is(TaskRunStatus.SUCCESS));
+        TaskAttemptProps attemptProps4 = taskRunDao.fetchLatestTaskAttempt(taskRun4.getId());
+        assertThat(attemptProps4.getAttempt(), is(1));
+        assertThat(attemptProps4.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        TaskAttemptProps attemptProps5 = taskRunDao.fetchLatestTaskAttempt(taskRun5.getId());
+        assertThat(attemptProps5.getAttempt(), is(1));
+        assertThat(attemptProps5.getStatus(), is(TaskRunStatus.SUCCESS));
+    }
+
 
     private TaskRunCondition createCondition(TaskRun taskRun, ConditionType conditionType, boolean result) {
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
