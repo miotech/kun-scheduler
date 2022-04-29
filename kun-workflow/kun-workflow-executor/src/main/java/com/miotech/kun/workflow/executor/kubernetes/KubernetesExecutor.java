@@ -1,8 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.google.inject.Inject;
-import com.google.inject.assistedinject.Assisted;
-import com.miotech.kun.commons.utils.InitializingBean;
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.StorageManager;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
@@ -10,6 +8,8 @@ import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.storage.StorageManagerFactory;
 import com.miotech.kun.workflow.executor.storage.StorageType;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -20,38 +20,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class KubernetesExecutor implements Executor, InitializingBean {
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
+public class KubernetesExecutor implements Executor {
 
     private final Logger logger = LoggerFactory.getLogger(KubernetesExecutor.class);
-    private final PodLifeCycleManager podLifeCycleManager;//pod生命周期管理
+    private PodLifeCycleManager podLifeCycleManager;//pod生命周期管理
     private final KubernetesResourceManager kubernetesResourceManager;//管理kubernetes资源配额
-    private final StorageManager storageManager;
     private final String name;
     private final KubeExecutorConfig kubeExecutorConfig;
+    private StorageManager storageManager;
 
-    @Inject
-    public KubernetesExecutor(PodLifeCycleManagerFactory podLifeCycleManagerFactory,
-                              KubernetesResourceManagerFactory kubernetesResourceManagerFactory,
-                              PodEventMonitorFactory podEventMonitorFactory,
-                              StorageManagerFactory storageManagerFactory,
-                              @Assisted KubeExecutorConfig kubeExecutorConfig,
-                              @Assisted String name) {
-        if (podEventMonitorFactory == null) {
-            logger.warn("podEventMonitorFactory is not injected");
-        }
-        if (podLifeCycleManagerFactory == null) {
-            logger.warn("podLifeCycleManagerFactory is not injected");
-        }
-        KubernetesClient kubernetesClient = new DefaultKubernetesClient(kubeExecutorConfig.getK8sClientConfig());
-        KubernetesResourceManager kubernetesResourceManager = kubernetesResourceManagerFactory.create(kubernetesClient, name);
-        StorageType storageType =  StorageType.valueOf(kubeExecutorConfig.getStorageConfig().get("type").toUpperCase());
-        StorageManager storageManager = storageManagerFactory.createStorageManager(storageType);
+    public KubernetesExecutor(KubeExecutorConfig kubeExecutorConfig,
+                              String name) {
+        KubeConfig kubeConfig = kubeExecutorConfig.getKubeConfig();
+        KubernetesClient kubernetesClient = new DefaultKubernetesClient(getK8sConfig(kubeConfig));
+        kubernetesResourceManager = new KubernetesResourceManager(kubeExecutorConfig, kubernetesClient, name);
         this.kubeExecutorConfig = kubeExecutorConfig;
-        this.podLifeCycleManager = podLifeCycleManagerFactory.create(kubernetesClient, kubernetesResourceManager,
-                podEventMonitorFactory.create(kubernetesClient, name), name , storageManager);
-        this.kubernetesResourceManager = kubernetesResourceManager;
+        StorageType storageType = StorageType.valueOf(kubeExecutorConfig.getStorage()
+                .getOrDefault("type", "LOCAL").toUpperCase());
+        storageManager = StorageManagerFactory.createStorageManager(storageType);
+        PodEventMonitor podEventMonitor = new PodEventMonitor(kubernetesClient, kubeConfig, name);
+        podLifeCycleManager = new PodLifeCycleManager(kubeExecutorConfig, podEventMonitor, kubernetesClient, kubernetesResourceManager, name, storageManager);
         this.name = name;
-        this.storageManager = storageManager;
         logger.info("k8s executor: {}, initialize", name);
     }
 
@@ -63,6 +54,25 @@ public class KubernetesExecutor implements Executor, InitializingBean {
         return true;
     }
 
+
+    @Override
+    public void shutdown() {
+        podLifeCycleManager.shutdown();
+    }
+
+    @Override
+    public void injectMembers(Injector injector) {
+        kubernetesResourceManager.injectMember(injector);
+        podLifeCycleManager.injectMembers(injector);
+        injector.injectMembers(this);
+    }
+
+    @Override
+    public void init() {
+        podLifeCycleManager.init();
+        Map<String, String> storageConfig = kubeExecutorConfig.getStorage();
+        storageManager.init(storageConfig);
+    }
 
     @Override
     public boolean reset() {
@@ -87,16 +97,16 @@ public class KubernetesExecutor implements Executor, InitializingBean {
             List<String> logList = coverLogsToList(logs);
             Integer lineCount = logList.size();
             logger.debug("get logs from running worker success,line count = {}", lineCount);
-            return new WorkerLogs(logList,startLine,endLine,lineCount);
-        }catch (Exception e){
+            return new WorkerLogs(logList, startLine, endLine, lineCount);
+        } catch (Exception e) {
 
         }
-        return storageManager.workerLog(taskAttemptId,startLine,endLine);
+        return storageManager.workerLog(taskAttemptId, startLine, endLine);
     }
 
     @Override
     public void uploadOperator(Long operatorId, String localFile) {
-        storageManager.uploadOperator(operatorId,localFile);
+        storageManager.uploadOperator(operatorId, localFile);
     }
 
     @Override
@@ -119,14 +129,39 @@ public class KubernetesExecutor implements Executor, InitializingBean {
         return kubernetesResourceManager.updateResourceQueue(resourceQueue);
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        podLifeCycleManager.run();
-        Map<String,String> storageConfig = kubeExecutorConfig.getStorageConfig();
-        storageManager.init(storageConfig);
-    }
-
     private List<String> coverLogsToList(String logs) {
         return Arrays.stream(logs.split("\n")).collect(Collectors.toList());
+    }
+
+    private Config getK8sConfig(KubeConfig kubeConfig) {
+        String masterUrl = kubeConfig.getUrl();
+        String oauthToken = kubeConfig.getOauthToken();
+        String caCertFile = kubeConfig.getCaCertFile();
+        String clientCert = kubeConfig.getClientCert();
+        String clientKey = kubeConfig.getClientKey();
+        String caCert = kubeConfig.getCaCert();
+
+        logger.info("kubeConfig : {}", kubeConfig);
+
+        if (isNotEmpty(masterUrl) && isNotEmpty(oauthToken) && isNotEmpty(caCertFile)) {
+            logger.info("Interact with k8s cluster using oauth authentication.");
+            return new ConfigBuilder()
+                    .withMasterUrl(masterUrl)
+                    .withOauthToken(oauthToken)
+                    .withCaCertFile(caCertFile)
+                    .build();
+        } else if (isNotEmpty(clientCert) && isNotEmpty(clientKey) && isNotEmpty(caCert)) {
+            logger.info("Interact with k8s cluster using client");
+            return new ConfigBuilder()
+                    .withMasterUrl(masterUrl)
+                    .withOauthToken(oauthToken)
+                    .withClientKeyData(clientKey)
+                    .withCaCertData(caCert)
+                    .withClientCertData(clientCert)
+                    .build();
+        } else {
+            logger.info("Interact with k8s cluster using rbac authentication.");
+            return Config.autoConfigure(null);
+        }
     }
 }

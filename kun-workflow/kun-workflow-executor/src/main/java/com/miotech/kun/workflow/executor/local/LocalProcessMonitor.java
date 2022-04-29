@@ -1,13 +1,10 @@
 package com.miotech.kun.workflow.executor.local;
 
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,8 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-@Singleton
-public class LocalProcessMonitor implements WorkerMonitor, InitializingBean {
+public class LocalProcessMonitor implements WorkerMonitor {
 
     private final Logger logger = LoggerFactory.getLogger(LocalProcessMonitor.class);
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
@@ -28,7 +24,6 @@ public class LocalProcessMonitor implements WorkerMonitor, InitializingBean {
 
     private ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
 
-    @Inject
     public LocalProcessMonitor(LocalProcessBackend localProcessBackend) {
         this.localProcessBackend = localProcessBackend;
     }
@@ -63,10 +58,6 @@ public class LocalProcessMonitor implements WorkerMonitor, InitializingBean {
         registerHandlers.clear();
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        start();
-    }
 
     //监控process状态变更
     class LocalProcessWatcher implements ProcessWatcher  {

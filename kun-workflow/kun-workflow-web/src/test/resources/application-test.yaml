@@ -2,20 +2,64 @@ server:
   port: 18088
 
 executor:
-  env:
-    name: local
-    resourceQueues:
-      default:
-        quota:
-          workerNumbers: 4
-      test:
-        quota:
-          workerNumbers: 2
-    storage:
-      logDir: ${LOG_DIR:/tmp/target/logs}
-      operatorDir: ${OPERATOR_DIR:/tmp/lib}
-      commandDir: ${COMMAND_DIR:/tmp/lib}
-      type: ${STORAGE_TYPE:LOCAL}
+  kind: local
+  name: local
+  label: local
+  resourceQueues:
+    - queueName: default
+      workerNumbers: 4
+    - queueName: test
+      workerNumbers: 2
+  storage:
+    logDir: ${LOG_DIR:/server/target/logs}
+    operatorDir: ${OPERATOR_DIR:/server/lib}
+    commandDir: ${COMMAND_DIR:/server/lib}
+    type: ${STORAGE_TYPE:LOCAL}
+#  name: dispatch
+#  kind: dispatch
+#  defaultExecutor: aws
+#  executors:
+#    - kind: kubernetes
+#      name: aws
+#      label: aws,kun
+#      kubeConfig:
+#        version: 1.15
+#        jarDirectory: ${JAR_DIRECTORY}
+#        logPath: ${WORKER_LOG_DIRECTORY}
+#        url: ${KUBERNETES_MASTER}
+#        oauthToken: ${KUBERNETES_TOKEN}
+#        caCertFile: ${CA_CERT_FILE:/server/config/ca.crt}
+#        nfsName: efs-hostpath
+#        nfsClaimName: /mnt/s3/kun
+#        namespace: ${KUBERNETES_NAMESPACE}
+#        image: kunoperator
+#          #    use private hub
+#      privateHub:
+#        url: hub
+#        useSecret: true
+#        secret: docker-secret
+#      storage:
+#        logDir: ${LOG_DIR:/server/config/logs}
+#        operatorDir: ${OPERATOR_DIR:/server/lib}
+#        commandDir: ${COMMAND_DIR:/server/lib}
+#        type: ${STORAGE_TYPE:LOCAL}
+#      resourceQueues:
+#        - queueName: default
+#          workerNumbers: 4
+#        - queueName: test
+#          workerNumbers: 2
+#    - kind: local
+#      name: local
+#      resourceQueues:
+#        - queueName: default
+#          workerNumbers: 4
+#        - queueName: test
+#          workerNumbers: 2
+#      storage:
+#        logDir: ${LOG_DIR:/server/target/logs}
+#        operatorDir: ${OPERATOR_DIR:/server/lib}
+#        commandDir: ${COMMAND_DIR:/server/lib}
+#        type: ${STORAGE_TYPE:LOCAL}
 
 resource:
   libDirectory: /tmp

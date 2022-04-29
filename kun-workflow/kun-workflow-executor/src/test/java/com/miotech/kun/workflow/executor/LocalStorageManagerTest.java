@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
@@ -49,6 +50,9 @@ public class LocalStorageManagerTest extends DatabaseTestBase {
     @Inject
     private TaskDao taskDao;
 
+    @Inject
+    private Injector injector;
+
     private LocalStorageManager localStorageManager;
 
     private ResourceLoader resourceLoader = new ResourceLoaderImpl();
@@ -56,6 +60,7 @@ public class LocalStorageManagerTest extends DatabaseTestBase {
     @BeforeEach
     public void init() {
         localStorageManager = (LocalStorageManager) storageManagerFactory.createStorageManager(StorageType.LOCAL);
+        localStorageManager.injectMember(injector);
         Map<String, String> storageMap = new HashMap<>();
         storageMap.put("logDir", "/tmp/logs");
         storageMap.put("operatorDir", "/tmp/operators");

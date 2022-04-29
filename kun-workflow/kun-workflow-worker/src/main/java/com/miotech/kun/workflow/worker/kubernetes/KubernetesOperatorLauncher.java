@@ -8,7 +8,9 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.MapProps;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsProvider;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
@@ -25,6 +27,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Map;
 
 public class KubernetesOperatorLauncher {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesOperatorLauncher.class);
@@ -40,7 +44,13 @@ public class KubernetesOperatorLauncher {
     private static Injector injector;
 
     public static void main(String args[]) {
-        props = new Props(System.getenv());
+        Map<String, Object> propertiesMap = new HashMap<>();
+        System.getenv().entrySet().
+                forEach(x -> {
+                    propertiesMap.put(x.getKey(), x.getValue());
+                });
+        PropsProvider provider = new MapProps(propertiesMap);
+        props = new Props(provider);
         ExecCommand command = readExecCommand();
         // 初始化logger
         initLogger(command.getLogPath());

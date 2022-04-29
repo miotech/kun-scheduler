@@ -1,7 +1,10 @@
 package com.miotech.kun.workflow.executor;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -14,7 +17,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
-import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,28 +35,26 @@ import java.util.stream.Collectors;
 public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
-    protected final WorkerMonitor workerMonitor;
-    protected final Props props;
-    private final MiscService miscService;
-    protected final TaskRunDao taskRunDao;
-    protected final AbstractQueueManager queueManager;
-    private final EventBus eventBus;
-    private final EventSubscriber eventSubscriber;
+    @Inject
+    protected TaskRunDao taskRunDao;
+    @Inject
+    private EventBus eventBus;
+    @Inject
+    private EventSubscriber eventSubscriber;
+    protected WorkerMonitor workerMonitor;
+    @Inject
+    protected Props props;
+    protected AbstractQueueManager queueManager;
     private Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
-    private final String name;
+    protected final String name;
+    protected final ExecutorConfig executorConfig;
 
-    public WorkerLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor,
-                                  Props props, MiscService miscService,
-                                  AbstractQueueManager queueManager, EventBus eventBus,
-                                  EventSubscriber eventSubscriber, String name) {
-        this.props = props;
-        this.taskRunDao = taskRunDao;
+    public WorkerLifeCycleManager(ExecutorConfig executorConfig, WorkerMonitor workerMonitor,
+                                  AbstractQueueManager queueManager, String name) {
         this.workerMonitor = workerMonitor;
-        this.miscService = miscService;
         this.queueManager = queueManager;
-        this.eventBus = eventBus;
-        this.eventSubscriber = eventSubscriber;
         this.name = name;
+        this.executorConfig = executorConfig;
         logger.info("{} worker life cycle manager initialize", name);
     }
 
@@ -63,6 +64,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     public void init() {
         queueManager.init();
         consumer.start();
+        workerMonitor.start();
         eventSubscriber.subscribe(event -> {
             if (event instanceof CheckResultEvent) {
                 logger.debug("receive check result event = {}", event);
@@ -71,10 +73,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         });
     }
 
-    public void run() {
-        init();
-        workerMonitor.start();
-    }
 
     public void shutdown() {
         queueManager.reset();
@@ -152,6 +150,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     /* ----------- abstract methods ------------ */
 
+    protected abstract void injectMembers(Injector injector);
+
     protected abstract void startWorker(TaskAttempt taskAttempt);
 
     protected abstract Boolean stopWorker(Long taskAttemptId);
@@ -193,18 +193,13 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private List<TaskAttempt> fetchRecoverAttempts() {
         List<TaskAttempt> candidateRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
-        List<String> executorLabels = Arrays.asList(StringUtils.split(props.getString("executor.env."+name+".label"), ","));
-        String defaultExecutorName = props.getString("executor.env.default");
+        List<String> executorLabels = Lists.newArrayList(StringUtils.split(executorConfig.getLabel(), ","));
+        //add executor name to label list
+        executorLabels.add(executorConfig.getName());
         List<TaskAttempt> shouldRecoverAttemptList = new ArrayList<>();
         for (TaskAttempt taskAttempt : candidateRecoverAttemptList) {
-            if (taskAttempt.getExecutorLabel() == null) {
-                if (name.equals(defaultExecutorName)) {
-                    shouldRecoverAttemptList.add(taskAttempt);
-                }
-            } else {
-                if (executorLabels.contains(taskAttempt.getExecutorLabel())) {
-                    shouldRecoverAttemptList.add(taskAttempt);
-                }
+            if (executorLabels.contains(taskAttempt.getRuntimeLabel())) {
+                shouldRecoverAttemptList.add(taskAttempt);
             }
         }
         return shouldRecoverAttemptList;

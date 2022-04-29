@@ -1,23 +1,25 @@
 package com.miotech.kun.workflow.executor;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.local.LocalProcessBackend;
 import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +31,6 @@ import static com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory.cr
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@Disabled
 public class LocalQueueManageTest extends CommonTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(LocalQueueManageTest.class);
@@ -49,6 +50,9 @@ public class LocalQueueManageTest extends CommonTestBase {
     @Inject
     private EventBus eventBus;
 
+    @Inject
+    private Injector injector;
+
     @Override
     protected void configuration() {
         super.configuration();
@@ -61,12 +65,18 @@ public class LocalQueueManageTest extends CommonTestBase {
     @Test
     public void testChangeAttemptPriority() {
         //prepare
-        Props props = new Props();
-        props.put("executor.env.resourceQueues", "default,user");
-        props.put("executor.env.resourceQueues.default.quota.workerNumbers", 3);
-        props.put("executor.env.resourceQueues.user.quota.workerNumbers", 0);
+        ExecutorConfig executorConfig = new ExecutorConfig();
+        ResourceQueue defaultQueue = ResourceQueue.newBuilder()
+                .withQueueName("default")
+                .withWorkerNumbers(3)
+                .build();
+        ResourceQueue testQueue = ResourceQueue.newBuilder()
+                .withQueueName("test")
+                .withWorkerNumbers(0)
+                .build();
+        executorConfig.setResourceQueues(Lists.newArrayList(defaultQueue,testQueue));
 
-        LocalQueueManage localQueueManage = prepareQueueManage(props);
+        LocalQueueManage localQueueManage = prepareQueueManage(executorConfig);
         Task task1 = MockTaskFactory.createTask().cloneBuilder().
                 withPriority(16).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
@@ -100,12 +110,18 @@ public class LocalQueueManageTest extends CommonTestBase {
     @Test
     public void testSamePriorityShouldFIFO() {
         //prepare
-        Props props = new Props();
-        props.put("executor.env.resourceQueues", "default,user");
-        props.put("executor.env.resourceQueues.default.quota.workerNumbers", 3);
-        props.put("executor.env.resourceQueues.user.quota.workerNumbers", 0);
+        ExecutorConfig executorConfig = new ExecutorConfig();
+        ResourceQueue defaultQueue = ResourceQueue.newBuilder()
+                .withQueueName("default")
+                .withWorkerNumbers(3)
+                .build();
+        ResourceQueue testQueue = ResourceQueue.newBuilder()
+                .withQueueName("test")
+                .withWorkerNumbers(0)
+                .build();
+        executorConfig.setResourceQueues(Lists.newArrayList(defaultQueue,testQueue));
 
-        LocalQueueManage localQueueManage = prepareQueueManage(props);
+        LocalQueueManage localQueueManage = prepareQueueManage(executorConfig);
         Task task1 = MockTaskFactory.createTask();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
         TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
@@ -132,8 +148,9 @@ public class LocalQueueManageTest extends CommonTestBase {
 
     }
 
-    private LocalQueueManage prepareQueueManage(Props props) {
-        LocalQueueManage localQueueManage = new LocalQueueManage(props, miscService,localProcessBackend,eventBus);
+    private LocalQueueManage prepareQueueManage(ExecutorConfig executorConfig) {
+        LocalQueueManage localQueueManage = new LocalQueueManage(executorConfig,localProcessBackend);
+        localQueueManage.injectMember(injector);
         localQueueManage.init();
         return localQueueManage;
     }

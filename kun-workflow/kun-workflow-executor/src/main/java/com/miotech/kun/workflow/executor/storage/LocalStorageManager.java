@@ -1,6 +1,8 @@
 package com.miotech.kun.workflow.executor.storage;
 
 import com.google.common.base.Strings;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.resource.ResourceLoaderImpl;
@@ -26,13 +28,16 @@ public class LocalStorageManager implements StorageManager {
 
     private final Logger logger = LoggerFactory.getLogger(LocalStorageManager.class);
     private ResourceLoader resourceLoader;
-    private final TaskRunDao taskRunDao;
+    @Inject
+    private TaskRunDao taskRunDao;
     private String commandDir = "";
     private String logDir = "";
     private String operatorDir = "";
 
-    public LocalStorageManager(TaskRunDao taskRunDao) {
-        this.taskRunDao = taskRunDao;
+
+    @Override
+    public void injectMember(Injector injector) {
+        injector.injectMembers(this);
     }
 
     @Override

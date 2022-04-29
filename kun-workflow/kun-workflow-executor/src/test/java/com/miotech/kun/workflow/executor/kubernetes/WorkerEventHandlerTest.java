@@ -1,6 +1,5 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -40,12 +39,11 @@ public class WorkerEventHandlerTest extends CommonTestBase {
     private TaskDao taskDao;
     @Inject
     private TaskRunDao taskRunDao;
-    private Props props;
+    private KubeConfig kubeConfig;
 
     @BeforeEach
     public void init() {
-        props = new Props();
-        props.put("executor.env.namespace","default");
+        kubeConfig.setNamespace("default");
         client = mock(KubernetesClient.class);
     }
 
@@ -67,7 +65,8 @@ public class WorkerEventHandlerTest extends CommonTestBase {
         doReturn(mockFilter).when(mockFilter).withLabel(any(),any());
         doReturn(podList).when(mockFilter).list();
         doReturn(null).when(mockFilter).watch(any());
-        podEventMonitor = new PodEventMonitor(client, props, "test");
+        //todo init kubeConfig
+        podEventMonitor = new PodEventMonitor(client, kubeConfig, "test");
         podEventMonitor.start();
         WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),
                 "kubernetes-" + taskAttempt.getId(), taskAttempt.getQueueName(), WorkerInstanceKind.KUBERNETES);

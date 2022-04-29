@@ -5,6 +5,8 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
     implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-properties'
     implementation("org.apache.hadoop:hadoop-hdfs:2.7.3") {
         exclude group: 'javax.servlet', module: 'servlet-api'
     }

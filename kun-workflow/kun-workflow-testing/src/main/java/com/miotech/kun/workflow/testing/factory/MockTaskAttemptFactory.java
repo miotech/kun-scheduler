@@ -12,15 +12,8 @@ public class MockTaskAttemptFactory {
     }
 
     public static TaskAttempt createTaskAttempt(TaskRun taskRun) {
-        return TaskAttempt.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), 1))
-                .withAttempt(1)
-                .withTaskRun(taskRun)
-                .withStatus(taskRun.getStatus())
-                .withQueueName(taskRun.getQueueName())
-                .withPriority(taskRun.getPriority())
-                .withRetryTimes(0)
-                .build();
+        return createTaskAttemptWithStatus(taskRun,taskRun.getStatus());
+
     }
 
     public static TaskAttempt createTaskAttemptWithStatus(TaskRun taskRun,TaskRunStatus status) {
@@ -32,6 +25,7 @@ public class MockTaskAttemptFactory {
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
                 .withRetryTimes(0)
+                .withRuntimeLabel("local")
                 .build();
     }
 

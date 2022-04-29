@@ -1,12 +1,11 @@
 package com.miotech.kun.workflow.executor.local;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.utils.Props;
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.storage.LocalStorageManager;
 import com.miotech.kun.workflow.executor.storage.StorageManagerFactory;
 import com.miotech.kun.workflow.executor.storage.StorageType;
@@ -15,26 +14,43 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-@Singleton
 public class LocalExecutor implements Executor {
 
     private final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
-    private final LocalProcessLifeCycleManager processLifeCycleManager;
-    private final LocalQueueManage localQueueManager;
-    private final LocalStorageManager localStorageManager;
+    private LocalProcessLifeCycleManager processLifeCycleManager;
+    private LocalQueueManage localQueueManager;
+    private LocalStorageManager localStorageManager;
+    private final ExecutorConfig executorConfig;
 
-    @Inject
-    public LocalExecutor(LocalProcessLifeCycleManager processLifeCycleManager,
-                         LocalQueueManage localQueueManage,
-                         StorageManagerFactory storageManagerFactory,
-                         Props props) {
-        this.processLifeCycleManager = processLifeCycleManager;
-        this.localQueueManager = localQueueManage;
-        localStorageManager = (LocalStorageManager) storageManagerFactory.createStorageManager(StorageType.LOCAL);
-        String storagePrefix = "executor.env.storage";
-        Map<String, String> storageConfig = props.readValuesByPrefix(storagePrefix);
-        localStorageManager.init(storageConfig);
+
+    public LocalExecutor(ExecutorConfig executorConfig) {
+        this.executorConfig = executorConfig;
+        LocalProcessBackend localProcessBackend = new LocalProcessBackend();
+        LocalProcessMonitor localProcessMonitor = new LocalProcessMonitor(localProcessBackend);
+        this.localQueueManager = new LocalQueueManage(executorConfig,localProcessBackend);
+        this.processLifeCycleManager = new LocalProcessLifeCycleManager(executorConfig,localProcessMonitor,localQueueManager,localProcessBackend);
+        localStorageManager = (LocalStorageManager) StorageManagerFactory.createStorageManager(StorageType.LOCAL);
+
         logger.info("local executor initialize");
+    }
+
+    @Override
+    public void shutdown() {
+        processLifeCycleManager.shutdown();
+    }
+
+    @Override
+    public void injectMembers(Injector injector) {
+        localQueueManager.injectMember(injector);
+        processLifeCycleManager.injectMembers(injector);
+        injector.injectMembers(this);
+    }
+
+    @Override
+    public void init() {
+        processLifeCycleManager.init();
+        Map<String, String> storageConfig = executorConfig.getStorage();
+        localStorageManager.init(storageConfig);
     }
 
     @Override

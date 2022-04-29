@@ -36,9 +36,11 @@ public class TaskAttempt {
 
     private final String executorLabel;
 
+    private final String runtimeLabel;
+
     public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status,
                        String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName,Integer priority,
-                       Integer retryTimes, String executorLabel) {
+                       Integer retryTimes, String executorLabel, String runtimeLabel) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
@@ -52,6 +54,7 @@ public class TaskAttempt {
         this.priority = priority;
         this.retryTimes = retryTimes;
         this.executorLabel = executorLabel;
+        this.runtimeLabel = runtimeLabel;
     }
 
     public Long getId() {
@@ -107,6 +110,10 @@ public class TaskAttempt {
         return executorLabel;
     }
 
+    public String getRuntimeLabel() {
+        return runtimeLabel;
+    }
+
     public static TaskAttempt.Builder newBuilder() {
         return new TaskAttempt.Builder();
     }
@@ -156,6 +163,7 @@ public class TaskAttempt {
         private Integer priority;
         private Integer retryTimes;
         private String executorLabel;
+        private String runtimeLabel;
 
         private Builder() {
         }
@@ -215,8 +223,13 @@ public class TaskAttempt {
             return this;
         }
 
+        public Builder withRuntimeLabel(String runtimeLabel){
+            this.runtimeLabel = runtimeLabel;
+            return this;
+        }
+
         public TaskAttempt build() {
-            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority,retryTimes, executorLabel);
+            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority,retryTimes, executorLabel, runtimeLabel);
         }
     }
 }

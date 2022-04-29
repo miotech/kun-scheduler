@@ -1,13 +1,18 @@
 package com.miotech.kun.commons.utils;
 
+import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.io.IOContext;
+import com.fasterxml.jackson.core.util.BufferRecycler;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLParser;
 import com.google.common.io.PatternFilenameFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -28,20 +33,20 @@ public class PropsUtils {
 
     public static Props loadPropsFromResource(String resourceName) {
         logger.info("Loading props from {}", resourceName);
-        Yaml yaml = new Yaml();
+        ObjectMapper mapper = new ObjectMapper(new PropsFactory());
         InputStream inputStream = PropertyUtils.class
                 .getClassLoader()
                 .getResourceAsStream(resourceName);
-        Map<String, Object> yamlProps = yaml.load(inputStream);
-        Map<String, String> propertiesMap = new HashMap<>();
-        flatten(yamlProps)
-                .entrySet()
-                .forEach(x -> {
-                    String propValue = x.getValue() != null ? x.getValue().toString() : "";
-                    propValue = replaceValueFromEnvironment(propValue);
-                    propertiesMap.put(x.getKey(), propValue);
-                });
-        return new Props(propertiesMap);
+        mapper.findAndRegisterModules();
+        Props props = new Props();
+        try {
+            JsonNode jsonNode = mapper.readTree(inputStream);
+            PropsProvider propsProvider = new JsonProps(mapper, jsonNode);
+            props.addPropsProvider(propsProvider);
+        } catch (Exception e) {
+            ExceptionUtils.wrapIfChecked(e);
+        }
+        return props;
     }
 
     public static String replaceValueFromEnvironment(String rawText) {
@@ -144,7 +149,7 @@ public class PropsUtils {
     public static Props loadPropsFromEnv(String moduleName) {
         Map<String, String> systemEnv = EnvironmentUtils.getVariables();
         //filter kun env
-        Map<String, String> propertiesMap = new HashMap<>();
+        Map<String, Object> propertiesMap = new HashMap<>();
         systemEnv.entrySet().
                 forEach(x -> {
                     String key = x.getKey();
@@ -153,7 +158,10 @@ public class PropsUtils {
                         propertiesMap.put(convertKey(x.getKey(), moduleName), propValue);
                     }
                 });
-        return new Props(propertiesMap);
+        PropsProvider propsProvider = new MapProps(propertiesMap);
+        Props props = new Props();
+        props.addPropsProvider(propsProvider);
+        return props;
     }
 
     public static String convertKey(String envKey, String moduleName) {
@@ -168,4 +176,59 @@ public class PropsUtils {
         }
         return false;
     }
+
+    private static class PropsParser extends YAMLParser {
+
+        public PropsParser(IOContext ctxt, BufferRecycler br,
+                           int parserFeatures, int formatFeatures,
+                           ObjectCodec codec, Reader reader) {
+            super(ctxt, br,parserFeatures,formatFeatures,codec,reader);
+        }
+
+        @Override
+        public String getText() throws IOException {
+            final String value = super.getText();
+            if (value != null) {
+                return replaceValueFromEnvironment(value);
+            }
+            return null;
+        }
+
+        @Override
+        public String getValueAsString() throws IOException {
+            return replaceValueFromEnvironment(null);
+        }
+
+        @Override
+        public String getValueAsString(final String defaultValue) throws IOException {
+            final String value = super.getValueAsString(defaultValue);
+            if (value != null) {
+                return replaceValueFromEnvironment(value);
+            }
+            return null;
+        }
+    }
+
+    private static class PropsFactory extends YAMLFactory {
+
+        @Override
+        protected YAMLParser _createParser(Reader r, IOContext ctxt) throws IOException {
+            return new PropsParser(ctxt, _getBufferRecycler(), _parserFeatures, _yamlParserFeatures,
+                    _objectCodec, r);
+        }
+
+        @Override
+        protected YAMLParser _createParser(byte[] data, int offset, int len, IOContext ctxt) throws IOException {
+            return new PropsParser(ctxt, _getBufferRecycler(), _parserFeatures, _yamlParserFeatures,
+                    _objectCodec, _createReader(data, offset, len, null, ctxt));
+        }
+
+        @Override
+        protected YAMLParser _createParser(InputStream in, IOContext ctxt) throws IOException {
+            return new PropsParser(ctxt, _getBufferRecycler(), _parserFeatures, _yamlParserFeatures,
+                    _objectCodec, _createReader(in, null, ctxt));
+        }
+
+    }
+
 }

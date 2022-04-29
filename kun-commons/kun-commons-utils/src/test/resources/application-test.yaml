@@ -1,5 +1,20 @@
 testSection1:
   testKey1: fileValue1
   testKey2: fileValue2
+  TestClass:
+    name: class1
+    id: 1
+    describe: test class 1
+  TestClassList:
+    - name: class2
+      id: 2
+      describe: test class 2
+    - name: class3
+      id: 3
+      describe: test class 3
+    - name: class4
+      id: 4
+      describe: test class 4
 testSection2:
   testKey3: fileValue3
+  testKey4: ${ENV_VARIABLE:default}

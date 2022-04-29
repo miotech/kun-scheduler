@@ -1,23 +1,18 @@
 package com.miotech.kun.workflow.executor.local;
 
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.commons.utils.Props;
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
-import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
-import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
-import com.miotech.kun.workflow.executor.WorkerMonitor;
+import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +20,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Singleton
 public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalProcessLifeCycleManager.class);
 
-    private final OperatorDao operatorDao;
+    @Inject
+    private OperatorDao operatorDao;
 
     private final LocalProcessBackend localProcessBackend;
 
@@ -38,14 +33,17 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
     private static final Integer MINI_MUM_IDLE = 0;
     private static final Integer GRACE_ABORT_TIME = 30;
 
-    @Inject
-    public LocalProcessLifeCycleManager(TaskRunDao taskRunDao, LocalProcessMonitor workerMonitor, Props props,
-                                        MiscService miscService, LocalQueueManage queueManager,
-                                        OperatorDao operatorDao, LocalProcessBackend localProcessBackend,
-                                        EventBus eventBus, EventSubscriber eventSubscriber) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber, "local");
-        this.operatorDao = operatorDao;
+    public LocalProcessLifeCycleManager(ExecutorConfig executorConfig,
+                                        LocalProcessMonitor workerMonitor,
+                                        LocalQueueManage queueManager,
+                                        LocalProcessBackend localProcessBackend) {
+        super(executorConfig, workerMonitor, queueManager, "local");
         this.localProcessBackend = localProcessBackend;
+    }
+
+    @Override
+    protected void injectMembers(Injector injector) {
+        injector.injectMembers(this);
     }
 
     @Override
@@ -58,7 +56,7 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
     public Boolean stopWorker(Long taskAttemptId) {
         localProcessBackend.stopProcess(taskAttemptId);
         //wait grace abort time to check process is dead
-        new Thread(() ->{
+        new Thread(() -> {
             Uninterruptibles.sleepUninterruptibly(GRACE_ABORT_TIME, TimeUnit.SECONDS);
             localProcessBackend.forceStopProcess(taskAttemptId);
         }).start();

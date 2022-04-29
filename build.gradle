@@ -103,6 +103,9 @@ subprojects {
                 implementation 'org.jgrapht:jgrapht-core:1.4.0'
                 implementation "org.projectlombok:lombok:1.18.12"
                 implementation 'com.google.inject.extensions:guice-assistedinject:5.1.0'
+                implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.0'
+                implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-properties:2.11.0'
+
 
                 testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
                 testImplementation 'org.testcontainers:junit-jupiter:1.16.2'

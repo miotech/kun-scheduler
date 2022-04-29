@@ -3,10 +3,10 @@ package com.miotech.kun.workflow.core.model.resource;
 import java.util.Objects;
 
 public class ResourceQueue{
-    private final String queueName;
-    private final Integer cores;
-    private final Integer memory;
-    private final Integer workerNumbers;
+    private String queueName;
+    private Integer cores;
+    private Integer memory;
+    private Integer workerNumbers;
 
     public ResourceQueue(String queueName, Integer cores, Integer memory, Integer workerNumbers) {
         this.queueName = queueName;
@@ -15,16 +15,33 @@ public class ResourceQueue{
         this.workerNumbers = workerNumbers;
     }
 
+    public ResourceQueue(){
+
+    }
+
+
     public String getQueueName() {
         return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
     }
 
     public Integer getCores() {
         return cores;
     }
 
+    public void setCores(Integer cores) {
+        this.cores = cores;
+    }
+
     public Integer getMemory() {
         return memory;
+    }
+
+    public void setMemory(Integer memory) {
+        this.memory = memory;
     }
 
     public Integer getWorkerNumbers() {

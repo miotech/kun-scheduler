@@ -1,0 +1,1 @@
+ALTER TABLE kun_wf_task_attempt ADD COLUMN runtime_label varchar(64);

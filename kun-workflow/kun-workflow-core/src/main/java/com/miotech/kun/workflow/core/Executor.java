@@ -1,9 +1,28 @@
 package com.miotech.kun.workflow.core;
 
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
 
 public interface Executor extends TaskAttemptExecutor, ResourceManager {
+
+    /**
+     * only for test
+     */
+    @Internal
+    public void shutdown();
+
+
+    /**
+     * inject members
+     * @param injector
+     */
+    public void injectMembers(Injector injector);
+
+    /**
+     * init executor
+     */
+    public void init();
 
     /**
      * 关闭executor
