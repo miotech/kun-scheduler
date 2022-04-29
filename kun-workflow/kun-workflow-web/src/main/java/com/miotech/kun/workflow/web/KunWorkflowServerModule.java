@@ -26,6 +26,7 @@ import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.kubernetes.KubeExecutorConfig;
 import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
+import com.miotech.kun.workflow.executor.local.PublicEventHandler;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.web.service.RecoverService;
 import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
@@ -57,6 +58,7 @@ public class KunWorkflowServerModule extends AppModule {
         bind(RecoverService.class);
         bind(TaskRunStateMachine.class);
         bind(TaskRunStatistic.class);
+        bind(PublicEventHandler.class);
         bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);
     }
 

@@ -17,7 +17,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.local.LocalProcessBackend;
 import com.miotech.kun.workflow.executor.local.LocalQueueManage;
-import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.executor.local.PublicEventHandler;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ public class LocalQueueManageTest extends CommonTestBase {
     private final Logger logger = LoggerFactory.getLogger(LocalQueueManageTest.class);
 
     @Inject
-    private MiscService miscService;
+    private PublicEventHandler publicEventHandler;
 
     @Inject
     private LocalProcessBackend localProcessBackend;

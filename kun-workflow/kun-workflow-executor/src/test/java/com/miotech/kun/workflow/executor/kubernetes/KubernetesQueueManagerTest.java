@@ -22,7 +22,7 @@ import com.miotech.kun.workflow.executor.*;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockQueueManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerMonitor;
-import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.executor.local.PublicEventHandler;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -58,7 +58,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
     private KubernetesExecutor executor;
 
     @Inject
-    private MiscService miscService;
+    private PublicEventHandler publicEventHandler;
 
     @Inject
     private TaskRunDao taskRunDao;

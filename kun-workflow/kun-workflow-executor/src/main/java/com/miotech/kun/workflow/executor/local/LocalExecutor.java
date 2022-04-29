@@ -41,6 +41,7 @@ public class LocalExecutor implements Executor {
 
     @Override
     public void injectMembers(Injector injector) {
+        localStorageManager.injectMember(injector);
         localQueueManager.injectMember(injector);
         processLifeCycleManager.injectMembers(injector);
         injector.injectMembers(this);

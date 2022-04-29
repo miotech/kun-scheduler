@@ -62,6 +62,7 @@ public class KubernetesExecutor implements Executor {
 
     @Override
     public void injectMembers(Injector injector) {
+        storageManager.injectMember(injector);
         kubernetesResourceManager.injectMember(injector);
         podLifeCycleManager.injectMembers(injector);
         injector.injectMembers(this);
