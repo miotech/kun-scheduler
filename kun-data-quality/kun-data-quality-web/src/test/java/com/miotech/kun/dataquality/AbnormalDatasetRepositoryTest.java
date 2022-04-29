@@ -79,4 +79,13 @@ public class AbnormalDatasetRepositoryTest extends DataQualityTestBase {
         assertThat(abnormalDatasets.get(0).getStatus(), is("SUCCESS"));
     }
 
+    @Test
+    public void testFindByTaskRunId() {
+        AbnormalDataset abnormalDataset = MockAbnormalDatasetFactory.create();
+        abnormalDatasetRepository.create(abnormalDataset);
+
+        AbnormalDataset abnormalDatasetOfFetched = abnormalDatasetRepository.findByTaskRunId(abnormalDataset.getTaskRunId());
+        assertThat(abnormalDatasetOfFetched, sameBeanAs(abnormalDataset).ignoring("id"));
+    }
+
 }

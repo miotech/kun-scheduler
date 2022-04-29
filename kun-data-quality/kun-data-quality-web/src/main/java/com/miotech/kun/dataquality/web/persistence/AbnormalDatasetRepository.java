@@ -80,6 +80,15 @@ public class AbnormalDatasetRepository {
         return jdbcTemplate.query(sql, AbnormalDatasetRowMapper.INSTANCE);
     }
 
+    public AbnormalDataset findByTaskRunId(Long taskRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(TABLE_COLUMNS.toArray(new String[0]))
+                .from(TABLE_NAME)
+                .where("task_run_id = ?")
+                .getSQL();
+        return jdbcTemplate.queryForObject(sql, AbnormalDatasetRowMapper.INSTANCE, taskRunId);
+    }
+
     public static class AbnormalDatasetRowMapper implements RowMapper<AbnormalDataset> {
         public static final AbnormalDatasetRowMapper INSTANCE = new AbnormalDatasetRowMapper();
 
