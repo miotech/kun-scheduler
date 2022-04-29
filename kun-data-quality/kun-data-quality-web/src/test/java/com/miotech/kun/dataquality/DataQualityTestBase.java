@@ -5,6 +5,7 @@ import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.testing.KunAppTestBase;
+import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.dataquality.mock.MockSubscriber;
 import com.miotech.kun.monitor.facade.alert.NotifyFacade;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -95,6 +96,11 @@ public abstract class DataQualityTestBase extends KunAppTestBase {
         @Bean
         public NotifyFacade getNotifyFacade() {
             return Mockito.mock(NotifyFacade.class);
+        }
+
+        @Bean
+        public DeployedTaskFacade getDeployedTaskFacade() {
+            return Mockito.mock(DeployedTaskFacade.class);
         }
 
     }

@@ -85,4 +85,8 @@ public class AbnormalDatasetService {
     public void updateStatusByTaskRunId(Long taskRunId, String status) {
         abnormalDatasetRepository.updateStatusByTaskRunId(taskRunId, status);
     }
+
+    public AbnormalDataset findByTaskRunId(Long taskRunId) {
+        return abnormalDatasetRepository.findByTaskRunId(taskRunId);
+    }
 }
