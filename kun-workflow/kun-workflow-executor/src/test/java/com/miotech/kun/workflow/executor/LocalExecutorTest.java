@@ -91,7 +91,7 @@ public class LocalExecutorTest extends CommonTestBase {
     private EventBus eventBus;
 
     @Inject
-    private MiscService miscService;
+    private PublicEventHandler publicEventHandler;
 
     private LocalProcessBackend spyBackend;
 
