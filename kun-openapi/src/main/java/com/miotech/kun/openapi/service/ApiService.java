@@ -151,10 +151,13 @@ public class ApiService extends BaseSecurityService {
 
     public TaskVO updateTask(TaskUpdateRequest request, String token) {
         Long ownerId = setUserByToken(token);
+        Preconditions.checkArgument((request.getTaskName() != null || request.getTaskPayload() != null),
+                "At least update one of taskName or taskPayload");
+        TaskDefinition originalTaskDef = taskDefinitionService.find(request.getTaskId());
         TaskDefinition taskDefinition = taskDefinitionService.update(request.getTaskId(),
                 new UpdateTaskDefinitionRequest(request.getTaskId(),
-                        request.getTaskName(),
-                        request.getTaskPayload(),
+                        request.getTaskName() == null? originalTaskDef.getName() : request.getTaskName(),
+                        request.getTaskPayload() == null? originalTaskDef.getTaskPayload() : request.getTaskPayload(),
                         ownerId
                 ));
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
