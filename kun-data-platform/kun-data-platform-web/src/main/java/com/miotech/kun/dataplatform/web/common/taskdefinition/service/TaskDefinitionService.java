@@ -185,11 +185,14 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
     @Transactional
     public TaskDefinition update(Long definitionId,
                                  UpdateTaskDefinitionRequest request) {
+        TaskDefinition taskDefinition = find(definitionId);
+        if (taskDefinition.isArchived()) {
+            throw new IllegalStateException(String.format("Task definition is already deleted: \"%s\"", definitionId));
+        }
+
         Preconditions.checkArgument(StringUtils.isNoneBlank(request.getName()), "name should not be empty");
         Preconditions.checkNotNull(request.getOwner(), "owner should not be `null`");
         Preconditions.checkNotNull(request.getTaskPayload(), "taskPayload should not be `null`");
-
-        TaskDefinition taskDefinition = find(definitionId);
 
         //Check task name duplicate
         String taskName = request.getName();

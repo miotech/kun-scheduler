@@ -21,6 +21,7 @@ import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.json.simple.JSONObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -693,6 +694,39 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
         TaskTryBatchRequest taskTryBatchRequest2 = new TaskTryBatchRequest(taskTryList.stream().map(TaskTry::getId).collect(Collectors.toList()));
         taskDefinitionService.stopBatch(taskTryBatchRequest2);
         Mockito.verify(workflowClient, Mockito.times(1)).stopTaskRuns(any(List.class));
+    }
+
+    @Test
+    public void updateDeletedTaskDefinition_shouldThrowException() {
+        //prepare
+        TaskDefinition taskDef = MockTaskDefinitionFactory.createTaskDefinition();
+        Long taskDefId = taskDef.getDefinitionId();
+        taskDefinitionDao.create(taskDef);
+        //process
+        taskDefinitionService.delete(taskDefId);
+
+        TaskPayload taskPayload = taskDef.getTaskPayload();
+        Map<String, Object> taskConfig = taskPayload.getTaskConfig();
+        taskConfig.put("sql", "select 2");
+        TaskPayload updatedTaskPayload = taskPayload
+                .cloneBuilder()
+                .withTaskConfig(taskConfig)
+                .build();
+        UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                taskDef.getDefinitionId(),
+                taskDef.getName() + "_updated",
+                updatedTaskPayload,
+                1L
+        );
+        IllegalStateException thrown = Assertions.assertThrows(IllegalStateException.class, () -> {
+            TaskDefinition updated = taskDefinitionService.update(updateRequest.getDefinitionId(),
+                    updateRequest);
+        });
+        assertTrue(thrown.getMessage().contains("Task definition is already deleted"));
+
+
+
+
     }
 
 }
