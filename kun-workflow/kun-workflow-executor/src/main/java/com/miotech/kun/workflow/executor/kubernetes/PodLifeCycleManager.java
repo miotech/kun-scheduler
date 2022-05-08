@@ -1,7 +1,9 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.miotech.kun.commons.utils.FtlUtils;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.worker.filter.WorkerImageFilter;
@@ -19,6 +21,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,10 +45,11 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final Integer MINI_MUM_IDLE = 0;
     private final KubeConfig kubeConfig;
     private final ImageHub imageHub;
+    private final String TEMPLATE_FILE = "pod.ftl";
 
-    public PodLifeCycleManager(KubeExecutorConfig kubeExecutorConfig,PodEventMonitor workerMonitor,
+    public PodLifeCycleManager(KubeExecutorConfig kubeExecutorConfig, PodEventMonitor workerMonitor,
                                KubernetesClient kubernetesClient, KubernetesResourceManager KubernetesResourceManager,
-                               String name , StorageManager storageManager) {
+                               String name, StorageManager storageManager) {
         super(kubeExecutorConfig, workerMonitor, KubernetesResourceManager, name);
         this.kubernetesClient = kubernetesClient;
         this.storageManager = storageManager;
@@ -52,7 +59,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     @Override
-    public void init(){
+    public void init() {
         super.init();
         //set active image to the latest one;
         WorkerImageFilter imageFilter = WorkerImageFilter.newBuilder()
@@ -61,9 +68,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
                 .withPageSize(1)
                 .build();
         List<WorkerImage> workerImageList = workerImageService.fetchWorkerImage(imageFilter).getRecords();
-        if(workerImageList.size() > 0){
+        if (workerImageList.size() > 0) {
             WorkerImage workerImage = workerImageList.get(0);
-            workerImageService.setActiveVersion(workerImage.getId(),workerImage.getImageName());
+            workerImageService.setActiveVersion(workerImage.getId(), workerImage.getImageName());
         }
     }
 
@@ -76,14 +83,26 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     public void startWorker(TaskAttempt taskAttempt) {
         //logger.info("going to start pod taskAttemptId = {}", taskAttempt.getId());
         logger.info("pod life cycle manager: {} start worker pod taskAttemptId = {}", name, taskAttempt.getId());
-        kubernetesClient.pods()
-                .inNamespace(kubeConfig.getNamespace())
-                .create(buildPod(taskAttempt));
+        Map<String, Object> podConfig = buildPodConfig(taskAttempt);
+        String podFile = "pod" + taskAttempt.getId() + ".yaml";
+        logger.debug("write pod config {} to {}", podConfig, podFile);
+        writeYaml(podConfig, podFile);
+        logger.debug("pod file is {}", Files.asCharSource(new File(podFile), Charset.defaultCharset()));
+        try {
+            Pod pod = kubernetesClient.pods().load(new FileInputStream(podFile)).get();
+            kubernetesClient.pods()
+                    .inNamespace(kubeConfig.getNamespace())
+                    .create(pod);
+        } catch (IOException e) {
+            logger.error("load pod from {} failed", podFile, e);
+        }
     }
 
     @Override
     public Boolean stopWorker(Long taskAttemptId) {
         logger.info("going to stop pod taskAttemptId = {}", taskAttemptId);
+        String podFile = "pod" + taskAttemptId + ".yaml";
+        cleanPodFile(podFile);
         return kubernetesClient.pods()
                 .inNamespace(kubeConfig.getNamespace())
                 .withLabel(KUN_WORKFLOW)
@@ -147,63 +166,47 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
                 PodStatusSnapShot.fromPod(x)).collect(Collectors.toList());
     }
 
+    private Map<String, Object> buildPodConfig(TaskAttempt taskAttempt) {
+        Map<String, Object> podConfig = new HashMap<>();
+        //set labales
+        podConfig.put(KUN_WORKFLOW, null);
+        podConfig.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
+        podConfig.put(TASK_QUEUE, taskAttempt.getQueueName());
 
-    private Pod buildPod(TaskAttempt taskAttempt) {
-        Pod pod = new Pod();
-        ObjectMeta objectMeta = new ObjectMeta();
-        objectMeta.setName(KUN_WORKFLOW + taskAttempt.getId());
-        objectMeta.setNamespace(kubeConfig.getNamespace());
-        Map<String, String> labels = new HashMap<>();
-        labels.put(KUN_WORKFLOW, null);
-        labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
-        labels.put(TASK_QUEUE, taskAttempt.getQueueName());
-        objectMeta.setLabels(labels);
-        pod.setMetadata(objectMeta);
-        pod.setSpec(buildSpec(taskAttempt));
-        return pod;
-    }
+        //set meta info
+        podConfig.put("podName", KUN_WORKFLOW + taskAttempt.getId());
+        podConfig.put("namespace", kubeConfig.getNamespace());
 
-    private PodSpec buildSpec(TaskAttempt taskAttempt) {
-        logger.debug("building pod spec,taskAttemptId = {}", taskAttempt.getId());
-        taskAttempt.getTaskRun().getTask().getOperatorId();
-        PodSpec podSpec = new PodSpec();
-        podSpec.setRestartPolicy("Never");
-        podSpec.setContainers(Arrays.asList(buildContainer(taskAttempt)));
+        //set secret
         if (imageHub != null) {
             if (imageHub.getUseSecret()) {
                 LocalObjectReference secret = new LocalObjectReferenceBuilder()
                         .withName(imageHub.getSecret())
                         .build();
-                podSpec.setImagePullSecrets(Arrays.asList(secret));
+                podConfig.put("dockerSecret", imageHub.getSecret());
             }
         }
-        Volume nfsVolume = new VolumeBuilder()
-                .withPersistentVolumeClaim(
-                        new PersistentVolumeClaimVolumeSourceBuilder()
-                                .withNewClaimName(kubeConfig.getNfsClaimName())
-                                .build())
-                .withName(kubeConfig.getNfsName())
-                .build();
-        List<Volume> volumeList = new ArrayList<>();
-        volumeList.add(nfsVolume);
-        podSpec.setVolumes(volumeList);
-        return podSpec;
-    }
 
-    private Container buildContainer(TaskAttempt taskAttempt) {
-        logger.debug("building pod container,taskAttemptId = {}", taskAttempt.getId());
+        //set volume
+        podConfig.put("pvName", kubeConfig.getNfsName());
+        podConfig.put("subPath", kubeConfig.getNfsClaimName());
+
+        //set container
         Long operatorId = taskAttempt.getTaskRun().getTask().getOperatorId();
-        Container container = new Container();
-        container.setImagePullPolicy(IMAGE_PULL_POLICY);
         String containerName = getContainerFromOperator(operatorId);
         WorkerImage workerImage = workerImageService.fetchActiveImage(POD_IMAGE_NAME);
         String imageName = POD_IMAGE_NAME + ":" + workerImage.getVersion();
         if (imageHub != null) {
             imageName = imageHub.getUrl() + "/" + imageName;
         }
-        container.setName(containerName);
-        container.setImage(imageName);
-        container.setCommand(buildCommand(taskAttempt.getId()));
+        podConfig.put("containerName", containerName);
+        podConfig.put("imageName", imageName);
+        podConfig.put("pullPolicy", IMAGE_PULL_POLICY);
+
+        //set command
+        podConfig.put("commandList", buildCommand(taskAttempt.getId()));
+
+        //mount
         List<VolumeMount> mounts = new ArrayList<>();
         VolumeMount logMount = new VolumeMount();
         logMount.setMountPath(POD_WORK_DIR + "/logs");
@@ -214,12 +217,19 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         jarMount.setMountPath(POD_LIB_DIR);
         jarMount.setName(kubeConfig.getNfsName());
         jarMount.setSubPath(kubeConfig.getJarDirectory());
+        podConfig.put("volumeList", mounts);
+
         ExecCommand command = buildExecCommand(taskAttempt);
         writeExecCommandToPVC(command);
         mounts.add(jarMount);
-        container.setVolumeMounts(mounts);
-        container.setEnv(buildEnv(taskAttempt));
-        return container;
+        //set env
+        podConfig.put("envList", buildEnv(taskAttempt));
+
+        return podConfig;
+    }
+
+    public void writeYaml(Map<String, Object> podConfig, String output) {
+        FtlUtils.processTemplate(this.getClass(), TEMPLATE_FILE, output, podConfig);
     }
 
     private List<EnvVar> buildEnv(TaskAttempt taskAttempt) {
@@ -265,7 +275,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private void addVar(List<EnvVar> envVarList, String name, String value) {
         EnvVar envVar = new EnvVar();
-        envVar.setName(name);
+        envVar.setKey(name);
         envVar.setValue(value);
         envVarList.add(envVar);
     }
@@ -290,5 +300,16 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         jvmArgs.add("-XX:+HeapDumpOnOutOfMemoryError");
         jvmArgs.add(String.format("-XX:HeapDumpPath=/tmp/%d/heapdump.hprof", taskAttemptId));
         return jvmArgs;
+    }
+
+    private void cleanPodFile(String fileName) {
+        File file = new File(fileName);
+        if (file.exists()) {
+            try {
+                file.delete();
+            } catch (Exception e) {
+                logger.error("can not delete pod {} file", fileName, e);
+            }
+        }
     }
 }
