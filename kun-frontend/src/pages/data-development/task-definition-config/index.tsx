@@ -84,7 +84,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
 
   useEffect(() => {
     if (initTaskDefinition && location.query.taskPayload) {
-      initTaskDefinition.taskPayload = JSON.parse(location.query.taskPayload);
+      initTaskDefinition.taskPayload = JSON.parse(decodeURIComponent(location.query.taskPayload));
     }
     setDraftTaskDef(initTaskDefinition ? normalizeTaskDefinition(initTaskDefinition, taskTemplate || null) : null);
   }, [location, initTaskDefinition, taskTemplate]);

@@ -100,8 +100,8 @@ export const ViewVersion: React.FC<Props> = memo(props => {
             <div className={Styles.line}> </div>
             {!taskCommit?.latestCommit && (
               <Link
-                to={`/data-development/task-definition/${params.taskDefId}?taskPayload=${JSON.stringify(
-                  snapshot?.taskPayload,
+                to={`/data-development/task-definition/${params.taskDefId}?taskPayload=${encodeURIComponent(
+                  JSON.stringify(snapshot?.taskPayload),
                 )}`}
                 target="_blank"
                 className={Styles.rollback}
