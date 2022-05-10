@@ -3,9 +3,7 @@ package com.miotech.kun.datadiscovery.controller;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
+import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryId;
@@ -71,8 +69,8 @@ public class GlossaryController {
         return RequestResult.success(glossaryService.search(basicSearchRequest));
     }
 
-    @PostMapping("/metadata/glossary/copy/{id}")
-    public RequestResult<Glossary> copy(@PathVariable("id") Long id) {
-        return RequestResult.success(glossaryService.copy(id));
+    @PostMapping("/metadata/glossary/copy")
+    public RequestResult<GlossaryChildren> copy(@RequestBody GlossaryCopyRequest glossaryCopyRequest) {
+        return RequestResult.success(glossaryService.copy(glossaryCopyRequest));
     }
 }

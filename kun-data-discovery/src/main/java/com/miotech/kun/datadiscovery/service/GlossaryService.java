@@ -3,6 +3,7 @@ package com.miotech.kun.datadiscovery.service;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.Nullable;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -205,24 +207,74 @@ public class GlossaryService extends BaseSecurityService {
         return searchedInfoList.stream().map(searchedInfo -> AppBasicConversionService.getSharedInstance().convert(searchedInfo, GlossarySearchedInfo.class)).filter(Objects::nonNull).peek(glossarySearchedInfo -> glossarySearchedInfo.setAncestryGlossaryList(ancestryGlossaryMap.get(glossarySearchedInfo.getGid()))).collect(Collectors.toList());
     }
 
+    /**
+     * @param copyReq
+     * @return parent glossary
+     */
+
     @Transactional(rollbackFor = Exception.class)
-    public Glossary copy(Long copyId) {
-        GlossaryBasicInfo oldGlossaryBasicInfo = getGlossaryBasicInfo(copyId);
-        Long newGlossaryId = copy(oldGlossaryBasicInfo);
-        return fetchGlossary(newGlossaryId);
+    public GlossaryChildren copy(GlossaryCopyRequest copyReq) {
+        log.debug("copy info:{}", copyReq);
+        Long parentId = copyReq.getParentId();
+        Long sourceId = copyReq.getSourceId();
+        switch (copyReq.getCopyOperation()) {
+            case ONLY_ONESELF:
+                copyOnlyOneSelf(parentId, sourceId);
+                break;
+            case CONTAINS_CHILDREN:
+                copyContainsChildren(parentId, sourceId);
+                break;
+            case ONLY_CHILDREN:
+                copyOnlyChildren(parentId, sourceId);
+                break;
+            default:
+                log.error("copy operation does not exist or null:{}", copyReq.getCopyOperation());
+                throw new IllegalArgumentException("copy operation does not exist or null");
+        }
+
+        return fetchGlossaryChildren(parentId);
     }
 
-    private Long copy(GlossaryBasicInfo oldGlossaryBasicInfo) {
-        Long newGlossaryId = copySelf(oldGlossaryBasicInfo);
-        List<GlossaryBasicInfo> oldChildren = fetchChildrenBasicList(oldGlossaryBasicInfo.getId());
-        Collections.reverse(oldChildren);
-        if (CollectionUtils.isNotEmpty(oldChildren)) {
-            oldChildren.forEach(glossary -> {
-                glossary.setParentId(newGlossaryId);
-                copy(glossary);
-            });
+    private void copyContainsChildren(Long parentId, Long sourceId) {
+        List<Long> descendants = glossaryRepository.findSelfDescendants(sourceId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
+        if ((!sourceId.equals(parentId)) && descendants.contains(parentId)) {
+            log.error("The copied node cannot be a parent node:parentId{},sourceId:{}", parentId, sourceId);
+            throw new IllegalStateException("The copied node cannot be a parent node");
         }
-        return newGlossaryId;
+        copyRecursively(parentId, sourceId, Lists.newArrayList());
+
+    }
+
+    private void copyOnlyChildren(Long parentId, Long sourceId) {
+        List<Long> descendants = glossaryRepository.findSelfDescendants(sourceId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
+        if ((!sourceId.equals(parentId)) && descendants.contains(parentId)) {
+            log.error("The copied node cannot be a parent node:parentId{},sourceId:{}", parentId, sourceId);
+            throw new IllegalStateException("The copied node cannot be a parent node");
+        }
+        List<GlossaryBasicInfo> oldChildren = fetchChildrenBasicList(sourceId);
+        Collections.reverse(oldChildren);
+        ArrayList<Long> newGlossaryList = Lists.newArrayList();
+        if (CollectionUtils.isNotEmpty(oldChildren)) {
+            oldChildren.forEach(glossary -> copyRecursively(parentId, glossary.getId(), newGlossaryList));
+        }
+    }
+
+    private void copyOnlyOneSelf(Long parentId, Long sourceId) {
+        GlossaryBasicInfo oldGlossaryBasicInfo = getGlossaryBasicInfo(sourceId);
+        copySelf(oldGlossaryBasicInfo, parentId);
+    }
+
+    private void copyRecursively(@Nullable Long parentId, Long sourceId, List<Long> newGlossaryList) {
+        GlossaryBasicInfo oldGlossaryBasicInfo = getGlossaryBasicInfo(sourceId);
+        List<GlossaryBasicInfo> oldChildren = fetchChildrenBasicList(oldGlossaryBasicInfo.getId());
+        Long newGlossaryId = copySelf(oldGlossaryBasicInfo, parentId);
+        newGlossaryList.add(newGlossaryId);
+        if (CollectionUtils.isNotEmpty(oldChildren)) {
+            Collections.reverse(oldChildren);
+            oldChildren.stream()
+                    .filter(child -> !newGlossaryList.contains(child.getId()))
+                    .forEach(glossary -> copyRecursively(newGlossaryId, glossary.getId(), newGlossaryList));
+        }
     }
 
 
@@ -231,10 +283,10 @@ public class GlossaryService extends BaseSecurityService {
 
     }
 
-    private Long copySelf(GlossaryBasicInfo oldGlossaryBasicInfo) {
+    private Long copySelf(GlossaryBasicInfo oldGlossaryBasicInfo, Long parentId) {
         GlossaryRequest glossaryRequest = new GlossaryRequest();
         glossaryRequest.setName(getCopyName(oldGlossaryBasicInfo.getName()));
-        glossaryRequest.setParentId(oldGlossaryBasicInfo.getParentId());
+        glossaryRequest.setParentId(parentId);
         glossaryRequest.setDescription(oldGlossaryBasicInfo.getDescription());
         List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(oldGlossaryBasicInfo.getId());
         if (CollectionUtils.isNotEmpty(glossaryToDataSetIdList)) {
@@ -242,6 +294,7 @@ public class GlossaryService extends BaseSecurityService {
         }
         return add(glossaryRequest);
     }
+
 
     public static String getCopyName(String oldName) {
         return COPY_PREFIX + oldName;

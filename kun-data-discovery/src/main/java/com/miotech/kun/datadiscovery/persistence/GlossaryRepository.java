@@ -137,6 +137,7 @@ public class GlossaryRepository extends BaseRepository {
 
     @Transactional(rollbackFor = Exception.class)
     public Long insert(GlossaryRequest glossaryRequest) {
+        log.debug("glossaryRequest:{}",glossaryRequest);
         String kmgSql = "insert into kun_mt_glossary values " + toValuesSql(1, 10);
         Long glossaryId = IdGenerator.getInstance().nextId();
         String createUser = glossaryRequest.getCreateUser();
