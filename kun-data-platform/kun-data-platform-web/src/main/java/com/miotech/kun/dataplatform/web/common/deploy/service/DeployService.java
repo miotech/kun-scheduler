@@ -85,7 +85,7 @@ public class DeployService extends BaseSecurityService {
                 .collect(Collectors.toList());
         Deploy deploy = Deploy.newBuilder()
                 .withId(deployId)
-                .withCreator(getCurrentUser().getId())
+                .withCreator(getCurrentUser().getUsername())
                 .withName(name)
                 .withCommits(deployCommits)
                 .withSubmittedAt(DateTimeUtils.now())
@@ -128,7 +128,7 @@ public class DeployService extends BaseSecurityService {
         Deploy updatedDeploy = deploy.cloneBuilder()
                 .withStatus(success)
                 .withCommits(updatedCommits)
-                .withDeployer(getCurrentUser().getId())
+                .withDeployer(getCurrentUser().getUsername())
                 .withDeployedAt(DateTimeUtils.now())
                 .build();
         deployDao.updateDeploy(updatedDeploy);

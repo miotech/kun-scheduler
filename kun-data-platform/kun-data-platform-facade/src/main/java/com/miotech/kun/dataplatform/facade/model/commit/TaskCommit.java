@@ -14,7 +14,7 @@ public class TaskCommit {
 
     private final TaskSnapshot snapshot;
 
-    private final Long committer;
+    private final String committer;
 
     private final OffsetDateTime committedAt;
 
@@ -24,7 +24,7 @@ public class TaskCommit {
 
     private final boolean latestCommit;
 
-    public TaskCommit(Long id, Long definitionId, String version, String message, TaskSnapshot snapshot, Long committer, OffsetDateTime committedAt, CommitType commitType, CommitStatus commitStatus, boolean latestCommit) {
+    public TaskCommit(Long id, Long definitionId, String version, String message, TaskSnapshot snapshot, String committer, OffsetDateTime committedAt, CommitType commitType, CommitStatus commitStatus, boolean latestCommit) {
         this.id = id;
         this.definitionId = definitionId;
         this.version = version;
@@ -57,7 +57,7 @@ public class TaskCommit {
         return snapshot;
     }
 
-    public Long getCommitter() {
+    public String getCommitter() {
         return committer;
     }
 
@@ -99,7 +99,7 @@ public class TaskCommit {
         private String version;
         private String message;
         private TaskSnapshot snapshot;
-        private Long committer;
+        private String committer;
         private OffsetDateTime committedAt;
         private CommitType commitType;
         private CommitStatus commitStatus;
@@ -137,7 +137,7 @@ public class TaskCommit {
             return this;
         }
 
-        public Builder withCommitter(Long committer) {
+        public Builder withCommitter(String committer) {
             this.committer = committer;
             return this;
         }

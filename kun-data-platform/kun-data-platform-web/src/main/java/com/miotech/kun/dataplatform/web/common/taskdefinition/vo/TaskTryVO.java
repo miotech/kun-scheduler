@@ -14,7 +14,7 @@ public class TaskTryVO {
 
     private final Long workflowTaskRunId;
 
-    private final Long creator;
+    private final String creator;
 
     private final TaskRunStatus status;
 

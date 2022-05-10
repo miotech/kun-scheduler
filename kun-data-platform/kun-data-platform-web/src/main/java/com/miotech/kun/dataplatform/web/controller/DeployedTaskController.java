@@ -48,7 +48,7 @@ public class DeployedTaskController {
     public RequestResult<PaginationResult<DeployedTaskWithRunVO>> searchDeploys(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
-            @RequestParam(required = false) List<Long> ownerIds,
+            @RequestParam(required = false) List<String> owners,
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) List<Long> workflowTaskIds,
             @RequestParam(required = false) String name,
@@ -60,7 +60,7 @@ public class DeployedTaskController {
                 pageSize,
                 pageNum,
                 definitionIds,
-                ownerIds,
+                owners,
                 taskTemplateName,
                 name,
                 workflowTaskIds
@@ -123,7 +123,7 @@ public class DeployedTaskController {
     public RequestResult<PaginationResult<TaskRun>> searchDeploys(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
-            @RequestParam(required = false) Optional<Long> ownerId,
+            @RequestParam(required = false) Optional<String> owner,
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String status,
@@ -137,7 +137,7 @@ public class DeployedTaskController {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
                 pageNum,
-                ownerId,
+                owner,
                 definitionIds,
                 taskTemplateName,
                 name,

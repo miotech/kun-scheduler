@@ -118,11 +118,11 @@ public class DeployedTaskDao {
         StringBuilder whereClause = new StringBuilder();
         whereClause.append(" 1 = 1");
         List<Object> params = new ArrayList();
-        List<Long> ownerIds = searchRequest.getOwnerIds();
-        if (!ownerIds.isEmpty()) {
+        List<String> owners = searchRequest.getOwners();
+        if (!owners.isEmpty()) {
             whereClause.append(" AND ");
-            whereClause.append(String.format(DEPLOYED_TASK_MODEL_NAME + ".owner in (%s)", StringUtils.repeat("?", ",", ownerIds.size())));
-            params.addAll(ownerIds);
+            whereClause.append(String.format(DEPLOYED_TASK_MODEL_NAME + ".owner in (%s)", StringUtils.repeat("?", ",", owners.size())));
+            params.addAll(owners);
         }
 
         List<Long> definitionIds = searchRequest.getDefinitionIds();
@@ -227,7 +227,7 @@ public class DeployedTaskDao {
                     .withDefinitionId(rs.getLong(DEPLOYED_TASK_MODEL_NAME + "_definition_id"))
                     .withTaskTemplateName(rs.getString(DEPLOYED_TASK_MODEL_NAME + "_task_template_name"))
                     .withWorkflowTaskId(rs.getLong(DEPLOYED_TASK_MODEL_NAME + "_wf_task_id"))
-                    .withOwner(rs.getLong(DEPLOYED_TASK_MODEL_NAME + "_owner"))
+                    .withOwner(rs.getString(DEPLOYED_TASK_MODEL_NAME + "_owner"))
                     .withTaskCommit(commit)
                     .withArchived(rs.getBoolean(DEPLOYED_TASK_MODEL_NAME + "_is_archived"))
                     .build();

@@ -13,7 +13,7 @@ public class DeployedTaskSearchRequest extends PageRequest {
 
     private List<Long> definitionIds;
 
-    private List<Long> ownerIds;
+    private List<String> owners;
 
     private String taskTemplateName;
 
@@ -24,13 +24,13 @@ public class DeployedTaskSearchRequest extends PageRequest {
     public DeployedTaskSearchRequest(Integer pageSize,
                                      Integer pageNum,
                                      List<Long> definitionIds,
-                                     List<Long> ownerIds,
+                                     List<String> owners,
                                      String taskTemplateName,
                                      String name,
                                      List<Long> workflowTaskIds) {
         super(pageSize, pageNum);
         this.definitionIds = definitionIds != null ? definitionIds : ImmutableList.of();
-        this.ownerIds = ownerIds != null ? ownerIds : ImmutableList.of();
+        this.owners = owners != null ? owners : ImmutableList.of();
         this.taskTemplateName = taskTemplateName;
         this.workflowTaskIds = workflowTaskIds;
         this.name = name;

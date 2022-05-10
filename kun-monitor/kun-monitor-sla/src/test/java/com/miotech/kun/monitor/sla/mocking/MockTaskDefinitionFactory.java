@@ -39,10 +39,10 @@ public class MockTaskDefinitionFactory {
                 .withDefinitionId(definitionId)
                 .withTaskTemplateName(TEST_TEMPLATE)
                 .withTaskPayload(createTaskPayload(definitionId, slaConfig))
-                .withCreator(1L)
-                .withOwner(1L)
+                .withCreator("admin")
+                .withOwner("admin")
                 .withArchived(false)
-                .withLastModifier(1L)
+                .withLastModifier("admin")
                 .withCreateTime(DateTimeUtils.now())
                 .withUpdateTime(DateTimeUtils.now())
                 .build();
@@ -83,10 +83,10 @@ public class MockTaskDefinitionFactory {
                     .withDefinitionId(definitionId)
                     .withTaskTemplateName(TEST_TEMPLATE)
                     .withTaskPayload(taskPayload)
-                    .withCreator(1L)
-                    .withOwner(1L)
+                    .withCreator("admin")
+                    .withOwner("admin")
                     .withArchived(false)
-                    .withLastModifier(1L)
+                    .withLastModifier("admin")
                     .withCreateTime(DateTimeUtils.now())
                     .withUpdateTime(DateTimeUtils.now())
                     .build());
@@ -107,7 +107,7 @@ public class MockTaskDefinitionFactory {
                 .withWorkflowTaskRunId(taskRunId)
                 .withDefinitionId(DataPlatformIdGenerator.nextDefinitionId())
                 .withTaskConfig(new JSONObject())
-                .withCreator(1L)
+                .withCreator("admin")
                 .build();
     }
 

@@ -84,7 +84,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
         Backfill backfillToCreate = Backfill.newBuilder()
                 .withId(IdGenerator.getInstance().nextId())
                 .withName(createInfo.getName())
-                .withCreator(getCurrentUser().getId())
+                .withCreator(getCurrentUser().getUsername())
                 .withTaskRunIds(taskRunIds)
                 .withWorkflowTaskIds(createInfo.getWorkflowTaskIds())
                 .withTaskDefinitionIds(createInfo.getTaskDefinitionIds())

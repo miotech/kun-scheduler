@@ -12,7 +12,7 @@ public class TaskTry {
 
     private final Long workflowTaskRunId;
 
-    private final Long creator;
+    private final String creator;
 
     private final JSONObject taskConfig;
 
@@ -42,7 +42,7 @@ public class TaskTry {
         return workflowTaskId;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
@@ -63,7 +63,7 @@ public class TaskTry {
         private Long definitionId;
         private Long workflowTaskId;
         private Long workflowTaskRunId;
-        private Long creator;
+        private String creator;
         private JSONObject taskConfig;
 
         private Builder() {
@@ -93,7 +93,7 @@ public class TaskTry {
             return this;
         }
 
-        public Builder withCreator(Long creator) {
+        public Builder withCreator(String creator) {
             this.creator = creator;
             return this;
         }

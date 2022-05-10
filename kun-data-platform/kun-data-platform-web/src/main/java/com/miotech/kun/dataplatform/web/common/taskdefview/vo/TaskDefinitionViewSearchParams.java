@@ -17,9 +17,9 @@ public class TaskDefinitionViewSearchParams {
     String keyword;
     Integer pageNum;
     Integer pageSize;
-    Long creator;
+    String creator;
     List<Long> taskDefinitionIds;
-    List<Long> taskDefCreatorIds;
+    List<String> taskDefCreators;
     String taskTemplateName;
     String taskDefName;
     SortOrder sortOrder;

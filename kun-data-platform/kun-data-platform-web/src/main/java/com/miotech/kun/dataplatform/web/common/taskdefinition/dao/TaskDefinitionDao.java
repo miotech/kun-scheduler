@@ -97,11 +97,11 @@ public class TaskDefinitionDao {
             params.addAll(viewIds);
         }
 
-        List<Long> ownerIds = searchRequest.getOwnerIds();
-        if (!ownerIds.isEmpty()) {
+        List<String> owners = searchRequest.getOwners();
+        if (!owners.isEmpty()) {
             whereClause.append(" AND ");
-            whereClause.append(String.format(TASK_DEF_MODEL_NAME + ".owner in (%s)", com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", ownerIds.size())));
-            params.addAll(ownerIds);
+            whereClause.append(String.format(TASK_DEF_MODEL_NAME + ".owner in (%s)", com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", owners.size())));
+            params.addAll(owners);
         }
 
         if (StringUtils.isNoneBlank(searchRequest.getName())) {
@@ -216,10 +216,10 @@ public class TaskDefinitionDao {
                     .withName(rs.getString(TASK_DEF_MODEL_NAME + "_name"))
                     .withTaskTemplateName(rs.getString(TASK_DEF_MODEL_NAME + "_task_template_name"))
                     .withTaskPayload(JSONUtils.jsonToObject(rs.getString(TASK_DEF_MODEL_NAME + "_task_payload"), TaskPayload.class))
-                    .withCreator(rs.getLong(TASK_DEF_MODEL_NAME + "_creator"))
-                    .withOwner(rs.getLong(TASK_DEF_MODEL_NAME + "_owner"))
+                    .withCreator(rs.getString(TASK_DEF_MODEL_NAME + "_creator"))
+                    .withOwner(rs.getString(TASK_DEF_MODEL_NAME + "_owner"))
                     .withArchived(rs.getBoolean(TASK_DEF_MODEL_NAME + "_is_archived"))
-                    .withLastModifier(rs.getLong(TASK_DEF_MODEL_NAME + "_last_modifier"))
+                    .withLastModifier(rs.getString(TASK_DEF_MODEL_NAME + "_last_modifier"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_MODEL_NAME + "_create_time")))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_MODEL_NAME + "_update_time")))
                     .build();

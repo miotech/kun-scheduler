@@ -26,7 +26,7 @@ public class TaskDefinitionViewCreateInfoVO {
 
     String name;
 
-    Long creator;
+    String creator;
 
     List<Long> includedTaskDefinitionIds;
 

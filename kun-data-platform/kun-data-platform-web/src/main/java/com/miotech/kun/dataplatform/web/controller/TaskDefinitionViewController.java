@@ -37,18 +37,18 @@ public class TaskDefinitionViewController {
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(defaultValue = "id") String sortKey,
             @RequestParam(defaultValue = "DESC") String sortOrder,
-            @RequestParam(required = false) List<Long> taskDefCreatorIds, 
+            @RequestParam(required = false) List<String> taskDefCreators,
             @RequestParam(required = false) String taskTemplateName,
             @RequestParam(required = false) String taskDefName,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long creator
+            @RequestParam(required = false) String creator
     ) {
         TaskDefinitionViewSearchParams params = TaskDefinitionViewSearchParams.builder()
                 .pageNum(pageNum)
                 .pageSize(pageSize)
                 .keyword(keyword)
                 .creator(creator)
-                .taskDefCreatorIds(taskDefCreatorIds)
+                .taskDefCreators(taskDefCreators)
                 .taskTemplateName(taskTemplateName)
                 .taskDefName(taskDefName)
                 .sortOrder(SortOrder.from(sortOrder))

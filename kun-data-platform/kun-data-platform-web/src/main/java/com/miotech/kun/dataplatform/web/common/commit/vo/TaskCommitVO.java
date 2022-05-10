@@ -19,7 +19,7 @@ public class TaskCommitVO {
 
     private final TaskSnapshot snapshot;
 
-    private final Long committer;
+    private final String committer;
 
     private final OffsetDateTime committedAt;
 

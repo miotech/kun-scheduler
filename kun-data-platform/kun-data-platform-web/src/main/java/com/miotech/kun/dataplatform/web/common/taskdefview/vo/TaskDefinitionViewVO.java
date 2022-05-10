@@ -28,9 +28,9 @@ public class TaskDefinitionViewVO {
 
     private final String name;
 
-    private final Long creator;
+    private final String creator;
 
-    private final Long lastModifier;
+    private final String lastModifier;
 
     private final OffsetDateTime createTime;
 

@@ -12,13 +12,13 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = false)
 @Data
 public class DeploySearchRequest extends PageRequest {
-    private List<Long> creatorIds;
+    private List<String> creatorIds;
 
     private Optional<OffsetDateTime> submittedAtTo;
 
     private Optional<OffsetDateTime> submittedAtFrom;
 
-    private List<Long> deployerIds;
+    private List<String> deployerIds;
 
     private Optional<OffsetDateTime> depoyedAtFrom;
 
@@ -26,10 +26,10 @@ public class DeploySearchRequest extends PageRequest {
 
     public DeploySearchRequest(int pageSize,
                                int pageNum,
-                               List<Long> creatorIds,
+                               List<String> creatorIds,
                                Optional<OffsetDateTime> submittedAtTo,
                                Optional<OffsetDateTime> submittedAtFrom,
-                               List<Long> deployerIds,
+                               List<String> deployerIds,
                                Optional<OffsetDateTime> depoyedAtFrom,
                                Optional<OffsetDateTime> depoyedAtTo) {
         super(pageSize, pageNum);

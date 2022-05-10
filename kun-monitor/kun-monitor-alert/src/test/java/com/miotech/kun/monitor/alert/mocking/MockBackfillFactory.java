@@ -25,7 +25,7 @@ public class MockBackfillFactory {
             Backfill exampleBackfillInstance = Backfill.newBuilder()
                     .withId(100L + i)
                     .withName("example-backfill-" + i)
-                    .withCreator(1L)
+                    .withCreator("admin")
                     .withTaskRunIds(ImmutableList.of(taskRunId))
                     .withWorkflowTaskIds(ImmutableList.of(101L))
                     .withTaskDefinitionIds(ImmutableList.of(1L))

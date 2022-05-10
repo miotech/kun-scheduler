@@ -60,7 +60,7 @@ public class TaskDefinitionController {
     public RequestResult<PaginationResult<TaskDefinitionVO>> searchAllTaskDefinitions(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
-            @RequestParam(required = false) List<Long> ownerIds,
+            @RequestParam(required = false) List<String> owners,
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String taskTemplateName,
@@ -73,7 +73,7 @@ public class TaskDefinitionController {
                 name,
                 taskTemplateName,
                 definitionIds,
-                ownerIds,
+                owners,
                 archived,
                 viewIds
         );

@@ -40,14 +40,14 @@ public class TaskCommitController {
     public RequestResult<PaginationResult<TaskCommitVO>> searchCommits(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
-            @RequestParam(required = false) List<Long> committerIds,
+            @RequestParam(required = false) List<Long> commitIds,
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) Optional<Boolean> isLatest
     ) {
         CommitSearchRequest request = new CommitSearchRequest(
                 pageSize,
                 pageNum,
-                committerIds,
+                commitIds,
                 definitionIds,
                 isLatest
         );

@@ -19,7 +19,7 @@ public class MockTaskDefinitionFactory {
                 .withWorkflowTaskRunId(taskRunId)
                 .withDefinitionId(IdGenerator.getInstance().nextId())
                 .withTaskConfig(new JSONObject())
-                .withCreator(1L)
+                .withCreator("admin")
                 .build();
     }
 }

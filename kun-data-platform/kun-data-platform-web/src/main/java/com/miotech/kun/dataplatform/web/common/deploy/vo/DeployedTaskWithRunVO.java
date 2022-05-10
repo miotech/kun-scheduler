@@ -15,7 +15,7 @@ public class DeployedTaskWithRunVO extends DeployedTaskVO {
                                  Long taskDefinitionId,
                                  String name,
                                  String taskTemplateName,
-                                 Long owner,
+                                 String owner,
                                  boolean archived,
                                  TaskPayload taskPayload,
                                  TaskRun latestTaskRun) {

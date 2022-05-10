@@ -19,7 +19,7 @@ public class TaskVO {
 
     private final TaskPayload taskPayload;
 
-    private final Long creator;
+    private final String creator;
 
     @JsonProperty("isArchived")
     private final boolean archived;
@@ -30,7 +30,7 @@ public class TaskVO {
     @JsonProperty("isUpdated")
     private final boolean updated;
 
-    private final Long owner;
+    private final String owner;
 
     private final List<TaskDefinitionProps> upstreamTaskDefinitions;
 
@@ -38,7 +38,7 @@ public class TaskVO {
 
     private final OffsetDateTime lastUpdateTime;
 
-    private final Long lastModifier;
+    private final String lastModifier;
 
     private final List<TaskCommitVO> taskCommits;
 
@@ -48,13 +48,13 @@ public class TaskVO {
                   String name,
                   String taskTemplateName,
                   TaskPayload taskPayload,
-                  Long creator,
+                  String creator,
                   boolean archived,
                   boolean deployed,
                   boolean updated,
-                  Long owner,
+                  String owner,
                   List<TaskDefinitionProps> upstreamTaskDefinitions,
-                  Long lastModifier,
+                  String lastModifier,
                   OffsetDateTime lastUpdateTime,
                   OffsetDateTime createTime,
                   List<TaskCommitVO> taskCommits,

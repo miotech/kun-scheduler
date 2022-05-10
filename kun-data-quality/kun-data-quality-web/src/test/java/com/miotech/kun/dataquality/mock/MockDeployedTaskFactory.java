@@ -15,7 +15,7 @@ public class MockDeployedTaskFactory {
                 .withDefinitionId(IdGenerator.getInstance().nextId())
                 .withTaskTemplateName("template name")
                 .withWorkflowTaskId(IdGenerator.getInstance().nextId())
-                .withOwner(IdGenerator.getInstance().nextId())
+                .withOwner("admin")
                 .withTaskCommit(null)
                 .withArchived(false)
                 .build();
