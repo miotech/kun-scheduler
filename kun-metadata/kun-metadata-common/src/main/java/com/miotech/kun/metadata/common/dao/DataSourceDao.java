@@ -230,7 +230,7 @@ public class DataSourceDao {
                             .getSQL();
                     dbOperator.update(insertDataSourceSQL,
                             dataSource.getId(),
-                            JSONUtils.toJsonString(connectionInfoV1),
+                            JSONUtils.toJsonString(connectionInfoV1.getValues()),
                             typeId,
                             JSONUtils.toJsonString(dataSource.getConnectionConfig()),
                             dataSource.getDatasourceType().name());
@@ -274,7 +274,7 @@ public class DataSourceDao {
                             .asPrepared()
                             .getSQL();
                     dbOperator.update(insertDataSourceSQL,
-                            JSONUtils.toJsonString(connectionInfoV1),
+                            JSONUtils.toJsonString(connectionInfoV1.getValues()),
                             typeId,
                             JSONUtils.toJsonString(dataSource.getConnectionConfig()),
                             dataSource.getDatasourceType().name(), dataSource.getId());
