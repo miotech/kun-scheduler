@@ -19,7 +19,7 @@ public class TaskDefinitionSearchRequest extends PageRequest {
 
     private final List<Long> definitionIds;
 
-    private final List<Long> ownerIds;
+    private final List<String> owners;
 
     private final Optional<Boolean> archived;
 
@@ -30,7 +30,7 @@ public class TaskDefinitionSearchRequest extends PageRequest {
                                        String name,
                                        String taskTemplateName,
                                        List<Long> definitionIds,
-                                       List<Long> ownerIds,
+                                       List<String> owners,
                                        Optional<Boolean> archived,
                                        List<Long> viewIds
     ) {
@@ -38,7 +38,7 @@ public class TaskDefinitionSearchRequest extends PageRequest {
         this.name = name;
         this.taskTemplateName = taskTemplateName;
         this.definitionIds = definitionIds != null ? definitionIds : ImmutableList.of();
-        this.ownerIds = ownerIds != null ? ownerIds : ImmutableList.of();
+        this.owners = owners != null ? owners : ImmutableList.of();
         this.archived = archived;
         this.viewIds = viewIds;
     }

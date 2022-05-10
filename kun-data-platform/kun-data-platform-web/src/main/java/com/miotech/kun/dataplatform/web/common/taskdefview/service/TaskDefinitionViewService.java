@@ -66,12 +66,12 @@ public class TaskDefinitionViewService extends BaseSecurityService {
 
         List<TaskDefinitionView> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(finalParams);
 
-        if (Objects.nonNull(searchParams.getTaskDefCreatorIds()) && !searchParams.getTaskDefCreatorIds().isEmpty()) {
-            List<Long> taskDefCreatorIds = searchParams.getTaskDefCreatorIds();
+        if (Objects.nonNull(searchParams.getTaskDefCreators()) && !searchParams.getTaskDefCreators().isEmpty()) {
+            List<String> taskDefCreators = searchParams.getTaskDefCreators();
             viewList = viewList.stream()
                     .map(x -> x.cloneBuilder().withIncludedTaskDefinitions(x.getIncludedTaskDefinitions()
                             .stream()
-                            .filter(td -> taskDefCreatorIds.contains(td.getCreator()))
+                            .filter(td -> taskDefCreators.contains(td.getCreator()))
                             .collect(Collectors.toList()))
                             .build())
                     .collect(Collectors.toList());
@@ -129,7 +129,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
         Preconditions.checkNotNull(createRequest);
         TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
                 .name(createRequest.getName())
-                .creator(getCurrentUser().getId())
+                .creator(getCurrentUser().getUsername())
                 .includedTaskDefinitionIds(createRequest.getTaskDefinitionIds())
                 .build();
         return create(createInfoVO);
@@ -172,11 +172,11 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      */
     @Transactional
     public TaskDefinitionView update(Long viewId, UpdateTaskDefViewRequest request) {
-        return update(viewId, request, getCurrentUser().getId());
+        return update(viewId, request, getCurrentUser().getUsername());
     }
 
     @Transactional
-    public TaskDefinitionView update(Long viewId, UpdateTaskDefViewRequest request, Long modifier) {
+    public TaskDefinitionView update(Long viewId, UpdateTaskDefViewRequest request, String modifier) {
         Optional<TaskDefinitionView> fetchedView = fetchById(viewId);
         if (!fetchedView.isPresent()) {
             throw new IllegalArgumentException(String.format("Cannot update non-exist task definition view with id = %s", viewId));
@@ -214,13 +214,13 @@ public class TaskDefinitionViewService extends BaseSecurityService {
 
         Optional<TaskDefinitionView> viewOptionalBeforeSave = this.fetchById(viewModel.getId());
         Long updatedId;
-        Long modifierId = useCurrentUserAsModifier ? getCurrentUser().getId() : viewModel.getLastModifier();
+        String modifier = useCurrentUserAsModifier ? getCurrentUser().getUsername() : viewModel.getLastModifier();
         if (viewOptionalBeforeSave.isPresent()) {
             log.debug("Saving existing task definition view model with id = {}, name = {}", viewModel.getId(), viewModel.getName());
             // do update
             updatedId = viewOptionalBeforeSave.get().getId();
             taskDefinitionViewDao.update(viewModel.cloneBuilder()
-                    .withLastModifier(modifierId)
+                    .withLastModifier(modifier)
                     .build()
             );
         } else {
@@ -229,7 +229,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
             updatedId = Objects.isNull(viewModel.getId()) ? IdGenerator.getInstance().nextId() : viewModel.getId();
             TaskDefinitionView viewModelToCreate = viewModel.cloneBuilder()
                     .withId(updatedId)
-                    .withLastModifier(modifierId)
+                    .withLastModifier(modifier)
                     .build();
             taskDefinitionViewDao.create(viewModelToCreate);
         }
@@ -250,7 +250,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
 
     @Transactional
     public TaskDefinitionView putTaskDefinitionsIntoView(Set<Long> taskDefinitionIds, Long viewId) {
-        return putTaskDefinitionsIntoView(taskDefinitionIds, viewId, getCurrentUser().getId());
+        return putTaskDefinitionsIntoView(taskDefinitionIds, viewId, getCurrentUser().getUsername());
     }
 
     /**
@@ -261,11 +261,11 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      * @throws NullPointerException when view with target id not found
      */
     @Transactional
-    public TaskDefinitionView putTaskDefinitionsIntoView(Set<Long> taskDefinitionIds, Long viewId, Long modifierId) {
+    public TaskDefinitionView putTaskDefinitionsIntoView(Set<Long> taskDefinitionIds, Long viewId, String modifier) {
         // Precondition checks:
         // 1. arguments not null
         // 2. view exists
-        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifierId);
+        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifier);
         // 3. task definitions exists
         assureAllTaskDefinitionsExists(taskDefinitionIds);
 
@@ -278,7 +278,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
         );
 
         TaskDefinitionView updatedView = view.cloneBuilder()
-                .withLastModifier(modifierId)
+                .withLastModifier(modifier)
                 .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
                 .build();
         return this.save(updatedView);
@@ -286,7 +286,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
 
     @Transactional
     public TaskDefinitionView removeTaskDefinitionsFromView(Set<Long> taskDefinitionIdsToRemove, Long viewId) {
-        return removeTaskDefinitionsFromView(taskDefinitionIdsToRemove, viewId, getCurrentUser().getId());
+        return removeTaskDefinitionsFromView(taskDefinitionIdsToRemove, viewId, getCurrentUser().getUsername());
     }
 
     /**
@@ -309,8 +309,8 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      * @throws NullPointerException when view with target id not found
      */
     @Transactional
-    public TaskDefinitionView removeTaskDefinitionsFromView(Set<Long> taskDefinitionIdsToRemove, Long viewId, Long modifierId) {
-        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIdsToRemove, viewId, modifierId);
+    public TaskDefinitionView removeTaskDefinitionsFromView(Set<Long> taskDefinitionIdsToRemove, Long viewId, String modifier) {
+        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIdsToRemove, viewId, modifier);
         List<TaskDefinition> existingTaskDefinitions = view.getIncludedTaskDefinitions();
 
         // Filter out task definitions to be removed from view by ids
@@ -320,7 +320,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
                         .collect(Collectors.toList());
 
         TaskDefinitionView updatedView = view.cloneBuilder()
-                .withLastModifier(modifierId)
+                .withLastModifier(modifier)
                 .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
                 .build();
         return this.save(updatedView);
@@ -328,7 +328,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
 
     @Transactional
     public TaskDefinitionView overwriteTaskDefinitionsOfView(Set<Long> taskDefinitionIds, Long viewId) {
-        return overwriteTaskDefinitionsOfView(taskDefinitionIds, viewId, getCurrentUser().getId());
+        return overwriteTaskDefinitionsOfView(taskDefinitionIds, viewId, getCurrentUser().getUsername());
     }
 
     /**
@@ -339,25 +339,25 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      * @throws NullPointerException when view with target id not found
      */
     @Transactional
-    public TaskDefinitionView overwriteTaskDefinitionsOfView(Set<Long> taskDefinitionIds, Long viewId, Long modifierId) {
+    public TaskDefinitionView overwriteTaskDefinitionsOfView(Set<Long> taskDefinitionIds, Long viewId, String modifier) {
         // Precondition checks:
         // 1. arguments not null
         // 2. view exists
-        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifierId);
+        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifier);
         // 3. task definitions exists
         assureAllTaskDefinitionsExists(taskDefinitionIds);
 
         TaskDefinitionView updatedView = view.cloneBuilder()
-                .withLastModifier(modifierId)
+                .withLastModifier(modifier)
                 .withIncludedTaskDefinitions(taskDefinitionDao.fetchByIds(new ArrayList<>(taskDefinitionIds)))
                 .build();
         return this.save(updatedView);
     }
 
-    private TaskDefinitionView checkArgumentsAndFetchTargetView(Set<Long> taskDefIds, Long viewId, Long modifierId) {
+    private TaskDefinitionView checkArgumentsAndFetchTargetView(Set<Long> taskDefIds, Long viewId, String modifier) {
         Preconditions.checkNotNull(taskDefIds);
         Preconditions.checkNotNull(viewId);
-        Preconditions.checkNotNull(modifierId);
+        Preconditions.checkNotNull(modifier);
         Optional<TaskDefinitionView> viewOptional = taskDefinitionViewDao.fetchById(viewId);
         if (!viewOptional.isPresent()) {
             throw new NullPointerException(String.format("Cannot find view with id = %s", viewId));

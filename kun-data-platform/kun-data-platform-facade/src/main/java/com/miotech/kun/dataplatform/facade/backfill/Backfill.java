@@ -29,7 +29,7 @@ public class Backfill {
 
     private final OffsetDateTime updateTime;
 
-    private final Long creator;
+    private final String creator;
 
     public Long getId() {
         return id;
@@ -59,7 +59,7 @@ public class Backfill {
         return updateTime;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
@@ -113,7 +113,7 @@ public class Backfill {
         private List<Long> taskDefinitionIds;
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
-        private Long creator;
+        private String creator;
 
         private BackFillBuilder() {
         }
@@ -148,7 +148,7 @@ public class Backfill {
             return this;
         }
 
-        public BackFillBuilder withCreator(Long creator) {
+        public BackFillBuilder withCreator(String creator) {
             this.creator = creator;
             return this;
         }

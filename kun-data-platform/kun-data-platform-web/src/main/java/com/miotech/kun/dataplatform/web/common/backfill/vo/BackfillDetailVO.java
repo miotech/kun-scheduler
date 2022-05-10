@@ -19,9 +19,7 @@ public class BackfillDetailVO {
 
     private final String name;
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
-    private final Long creator;
+    private final String creator;
 
     private final OffsetDateTime createTime;
 
@@ -55,7 +53,7 @@ public class BackfillDetailVO {
         return name;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
@@ -105,7 +103,7 @@ public class BackfillDetailVO {
     public static final class BackfillDetailVOBuilder {
         private Long id;
         private String name;
-        private Long creator;
+        private String creator;
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
         private List<Long> taskRunIds;
@@ -126,7 +124,7 @@ public class BackfillDetailVO {
             return this;
         }
 
-        public BackfillDetailVOBuilder withCreator(Long creator) {
+        public BackfillDetailVOBuilder withCreator(String creator) {
             this.creator = creator;
             return this;
         }

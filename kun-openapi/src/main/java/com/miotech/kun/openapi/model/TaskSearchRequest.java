@@ -11,7 +11,7 @@ public class TaskSearchRequest extends PageRequest {
 
     private String taskTemplateName;
 
-    private Long ownerId;
+    private String ownerId;
 
     private Long taskViewId;
 
@@ -19,7 +19,7 @@ public class TaskSearchRequest extends PageRequest {
                              Integer pageNum,
                              String taskName,
                              String taskTemplateName,
-                             Long ownerId,
+                             String ownerId,
                              Long taskViewId) {
         super(pageSize, pageNum);
         this.taskName = taskName;

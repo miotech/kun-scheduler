@@ -11,7 +11,7 @@ import java.util.Optional;
 @EqualsAndHashCode(callSuper = false)
 @Data
 public class CommitSearchRequest extends PageRequest {
-    private List<Long> commiterIds;
+    private List<Long> commitIds;
 
     private List<Long> definitionIds;
 
@@ -19,11 +19,11 @@ public class CommitSearchRequest extends PageRequest {
 
     public CommitSearchRequest(int pageSize,
                                int pageNum,
-                               List<Long> commiterIds,
+                               List<Long> commitIds,
                                List<Long> definitionIds,
                                Optional<Boolean> isLatest) {
         super(pageSize, pageNum);
-        this.commiterIds = commiterIds != null ? commiterIds : ImmutableList.of();
+        this.commitIds = commitIds != null ? commitIds : ImmutableList.of();
         this.definitionIds = definitionIds != null ? definitionIds : ImmutableList.of();
         this.isLatest = isLatest;
     }

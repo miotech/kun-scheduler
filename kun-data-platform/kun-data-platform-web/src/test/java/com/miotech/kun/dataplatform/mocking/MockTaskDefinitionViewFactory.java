@@ -12,10 +12,10 @@ public class MockTaskDefinitionViewFactory  {
     }
 
     public static TaskDefinitionView createTaskDefView(Long id) {
-        return createTaskDefView(id, 1L);
+        return createTaskDefView(id, "admin");
     }
 
-    public static TaskDefinitionView createTaskDefView(Long id, Long creator) {
+    public static TaskDefinitionView createTaskDefView(Long id, String creator) {
         return TaskDefinitionView.newBuilder()
                 .withId(id)
                 .withName("view-" + id.toString())

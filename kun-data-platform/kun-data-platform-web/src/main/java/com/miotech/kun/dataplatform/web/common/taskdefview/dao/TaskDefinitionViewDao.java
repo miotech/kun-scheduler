@@ -140,15 +140,15 @@ public class TaskDefinitionViewDao {
         }
 
         if ((Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty())
-                || Objects.nonNull(searchParams.getTaskDefCreatorIds()) || Objects.nonNull(searchParams.getTaskTemplateName())) {
+                || Objects.nonNull(searchParams.getTaskDefCreators()) || Objects.nonNull(searchParams.getTaskTemplateName())) {
             StringBuilder subWhereClauseBuilder = new StringBuilder();
             if (Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty()) {
                 subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
                 paramsList.add(searchParams.getTaskDefName());
             }
-            if (Objects.nonNull(searchParams.getTaskDefCreatorIds()) && !searchParams.getTaskDefCreatorIds().isEmpty()) {
-                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".creator IN (" + SQLUtils.generateSqlInClausePlaceholders(searchParams.getTaskDefCreatorIds()) + ")) AND ");
-                paramsList.addAll(searchParams.getTaskDefCreatorIds());
+            if (Objects.nonNull(searchParams.getTaskDefCreators()) && !searchParams.getTaskDefCreators().isEmpty()) {
+                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".creator IN (" + SQLUtils.generateSqlInClausePlaceholders(searchParams.getTaskDefCreators()) + ")) AND ");
+                paramsList.addAll(searchParams.getTaskDefCreators());
             }
             if (Objects.nonNull(searchParams.getTaskTemplateName()) && !searchParams.getTaskTemplateName().isEmpty()) {
                 subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".task_template_name = ?) AND");
@@ -403,8 +403,8 @@ public class TaskDefinitionViewDao {
             TaskDefinitionView.TaskDefinitionViewBuilder builder = TaskDefinitionView.newBuilder()
                     .withId(viewId)
                     .withName(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_name"))
-                    .withCreator(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_creator"))
-                    .withLastModifier(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_last_modifier"))
+                    .withCreator(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_creator"))
+                    .withLastModifier(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_last_modifier"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_create_time")))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_update_time")));
             builder.withIncludedTaskDefinitions(Collections.emptyList());
@@ -429,8 +429,8 @@ public class TaskDefinitionViewDao {
             TaskDefinitionView.TaskDefinitionViewBuilder builder = TaskDefinitionView.newBuilder()
                     .withId(viewId)
                     .withName(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_name"))
-                    .withCreator(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_creator"))
-                    .withLastModifier(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_last_modifier"))
+                    .withCreator(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_creator"))
+                    .withLastModifier(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_last_modifier"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_create_time")))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_update_time")));
 

@@ -133,7 +133,7 @@ public class ApiService extends BaseSecurityService {
     }
 
     public TaskVO createTask(TaskCreateRequest request, String token) {
-        Long ownerId = setUserByToken(token);
+        String owner = setUserByToken(token);
         TaskDefinition taskDefinition = taskDefinitionService.create(new CreateTaskDefinitionRequest(request.getTaskName(),
                 request.getTaskTemplateName()));
         taskDefinitionViewService.putTaskDefinitionsIntoView(
@@ -143,14 +143,14 @@ public class ApiService extends BaseSecurityService {
                 new UpdateTaskDefinitionRequest(taskDefinition.getDefinitionId(),
                         request.getTaskName(),
                         request.getTaskPayload(),
-                        ownerId
+                        owner
                 ));
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
     }
 
 
     public TaskVO updateTask(TaskUpdateRequest request, String token) {
-        Long ownerId = setUserByToken(token);
+        String owner = setUserByToken(token);
         Preconditions.checkArgument((request.getTaskName() != null || request.getTaskPayload() != null),
                 "At least update one of taskName or taskPayload");
         TaskDefinition originalTaskDef = taskDefinitionService.find(request.getTaskId());
@@ -158,7 +158,7 @@ public class ApiService extends BaseSecurityService {
                 new UpdateTaskDefinitionRequest(request.getTaskId(),
                         request.getTaskName() == null? originalTaskDef.getName() : request.getTaskName(),
                         request.getTaskPayload() == null? originalTaskDef.getTaskPayload() : request.getTaskPayload(),
-                        ownerId
+                        owner
                 ));
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
     }
@@ -171,18 +171,18 @@ public class ApiService extends BaseSecurityService {
     }
 
     public boolean changeTaskRunPriority(TaskRunPriorityChangeRequest request, String token) {
-        Long userId = setUserByToken(token);
+        setUserByToken(token);
         Integer priority = request.getPriority();
         Preconditions.checkArgument((priority > 0 && priority <= 5), "task run priority should be 1-5");
         return workflowClient.changeTaskRunPriority(request.getTaskRunId(), request.getPriority());
     }
 
-    private Long setUserByToken(String token) {
+    private String setUserByToken(String token) {
         Preconditions.checkArgument(token.startsWith("Bearer "), "Token should in format: Bearer {token}");
         String username = JwtUtils.parseUsername(token);
         UserInfo userInfo = getUserByUsername(username);
         setCurrentUser(userInfo);
-        return getCurrentUser().getId();
+        return getCurrentUser().getUsername();
     }
 
     // TaskDefinitionVO is designed for web-frontend usage

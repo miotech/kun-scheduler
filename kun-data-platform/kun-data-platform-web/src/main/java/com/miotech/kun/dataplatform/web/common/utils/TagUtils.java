@@ -29,12 +29,12 @@ public class TagUtils {
     public static final String TAG_TASK_COMMIT_ID_NAME = "commitId";
     public static final String TAG_TASK_IS_ARCHIVED_NAME = "isArchived";
 
-    public static List<Tag> buildTryRunTags(Long creator, Long definitionId) {
+    public static List<Tag> buildTryRunTags(String creator, Long definitionId) {
         Map<String, String> tags = new HashMap<>();
         tags.put(TAG_PROJECT_NAME, TAG_PROJECT_VALUE);
         tags.put(TAG_ENV_NAME, TAG_ENV_DEV);
         tags.put(TAG_TASK_TYPE_NAME, TAG_TASK_TYPE_MANUAL);
-        tags.put(TAG_CREATOR_NAME, creator.toString());
+        tags.put(TAG_CREATOR_NAME, creator);
         tags.put(TAG_TASK_DEFINITION_ID_NAME, definitionId.toString());
         return mapToTags(tags);
     }
@@ -57,14 +57,14 @@ public class TagUtils {
     public static List<Tag> buildScheduleRunTags(Long definitionId,
                                                  Long commitId,
                                                  String taskTemplateName,
-                                                 Long owner) {
+                                                 String owner) {
         return buildScheduleRunTags(definitionId, commitId, taskTemplateName, owner, false);
     }
 
     public static List<Tag> buildScheduleRunTags(Long definitionId,
                                                  Long commitId,
                                                  String taskTemplateName,
-                                                 Long owner,
+                                                 String owner,
                                                  Boolean isArchived) {
         Map<String, String> tags = new HashMap<>();
         tags.put(TAG_PROJECT_NAME, TAG_PROJECT_VALUE);

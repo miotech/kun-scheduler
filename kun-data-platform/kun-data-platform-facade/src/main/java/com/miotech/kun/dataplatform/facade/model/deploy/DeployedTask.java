@@ -15,7 +15,7 @@ public class DeployedTask {
 
     private final Long workflowTaskId;
 
-    private final Long owner;
+    private final String owner;
 
     private final TaskCommit taskCommit;
 
@@ -27,7 +27,7 @@ public class DeployedTask {
                         String taskTemplateName,
                         Long workflowTaskId,
                         TaskCommit taskCommit,
-                        Long owner,
+                        String owner,
                         boolean archived) {
         this.id = id;
         this.name = name;
@@ -59,7 +59,7 @@ public class DeployedTask {
         return workflowTaskId;
     }
 
-    public Long getOwner() {
+    public String getOwner() {
         return owner;
     }
 
@@ -91,7 +91,7 @@ public class DeployedTask {
         private Long definitionId;
         private String taskTemplateName;
         private Long workflowTaskId;
-        private Long owner;
+        private String owner;
         private TaskCommit taskCommit;
         private boolean archived;
 
@@ -127,7 +127,7 @@ public class DeployedTask {
             return this;
         }
 
-        public Builder withOwner(Long owner) {
+        public Builder withOwner(String owner) {
             this.owner = owner;
             return this;
         }

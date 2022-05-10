@@ -26,7 +26,6 @@ import com.miotech.kun.dataplatform.web.common.utils.TagUtils;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.monitor.facade.alert.TaskNotifyConfigFacade;
-import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
 import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -146,7 +145,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         Preconditions.checkNotNull(taskTemplateName, "task template name should be null");
         Preconditions.checkNotNull(taskTemplateService.find(taskTemplateName), "task template name not valid");
 
-        Long currentUser = getCurrentUser().getId();
+        String currentUser = getCurrentUser().getUsername();
         Preconditions.checkNotNull(currentUser, "Current user id should not be `null`");
         TaskPayload taskPayload = TaskPayload.newBuilder()
                 .withScheduleConfig(ScheduleConfig.newBuilder()
@@ -205,7 +204,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 .withTaskPayload(request.getTaskPayload())
                 .withName(request.getName())
                 .withOwner(request.getOwner())
-                .withLastModifier(getCurrentUser().getId())
+                .withLastModifier(getCurrentUser().getUsername())
                 .withUpdateTime(DateTimeUtils.now())
                 .build();
         taskDefinitionDao.update(updated);
@@ -255,7 +254,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
     public void checkRule(TaskDefinition taskDefinition) {
         Preconditions.checkNotNull(taskDefinition.getTaskPayload(), "taskPayload should not be `null`");
-        Preconditions.checkArgument(taskDefinition.getOwner() > 0, "owner should specified");
+        Preconditions.checkArgument(StringUtils.isNotBlank(taskDefinition.getOwner()), "owner should specified");
         TaskTemplate taskTemplate = taskTemplateService.find(taskDefinition.getTaskTemplateName());
         this.checkParams(taskTemplate, taskDefinition.getTaskPayload().getTaskConfig());
         this.checkSchedule(taskDefinition);
@@ -387,7 +386,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         Long operatorId = taskTemplate.getOperator().getId();
 
         // build task parameter
-        Long creator = getCurrentUser().getId();
+        String creator = getCurrentUser().getUsername();
         Long taskTryId = DataPlatformIdGenerator.nextTaskTryId();
         // merge default config with request config
         TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate, taskDefinition);
@@ -438,7 +437,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
         Map<TaskDefinition, Task> taskDefToTaskMap = new HashMap<>();
         Map<Long, Long> taskIdToTaskDefIdMap = new HashMap<>();
-        Long creator = getCurrentUser().getId();
+        String creator = getCurrentUser().getUsername();
 
         //sava task in topo order
         TopologicalOrderIterator<TaskDefinition, DefaultEdge> iterator = new TopologicalOrderIterator<>(graph);
@@ -525,7 +524,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
     private List<TaskTry> persistTaskTry(Map<Long, TaskRun> taskIdToTaskRunMap,
                                          Map<TaskDefinition, Task> taskDefToTaskMap, Map<Long, Long> taskIdToTaskDefIdMap) {
-        Long creator = getCurrentUser().getId();
+        String creator = getCurrentUser().getUsername();
         List<TaskTry> taskTryList = new ArrayList<>();
         for (TaskRun taskRun : taskIdToTaskRunMap.values()) {
             Long taskTryId = DataPlatformIdGenerator.nextTaskTryId();

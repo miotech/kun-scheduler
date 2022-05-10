@@ -128,7 +128,7 @@ public class TaskCommitDao {
         StringBuilder whereClause = new StringBuilder();
         whereClause.append(" 1 = 1");
         List<Object> params = new ArrayList();
-        List<Long> commitIds = searchRequest.getCommiterIds();
+        List<Long> commitIds = searchRequest.getCommitIds();
         if (!commitIds.isEmpty()) {
             whereClause.append(" AND ");
             whereClause.append(String.format(TASK_COMMIT_MODEL_NAME + ".id in (%s)", StringUtils.repeatJoin("?", ",", commitIds.size())));
@@ -262,7 +262,7 @@ public class TaskCommitDao {
                     .withVersion(VersionUtil.getVersion(rs.getInt(TASK_COMMIT_MODEL_NAME + "_version")))
                     .withMessage(rs.getString(TASK_COMMIT_MODEL_NAME + "_message"))
                     .withSnapshot(JSONUtils.jsonToObject(rs.getString(TASK_COMMIT_MODEL_NAME + "_snapshot"), TaskSnapshot.class))
-                    .withCommitter(rs.getLong(TASK_COMMIT_MODEL_NAME + "_committer"))
+                    .withCommitter(rs.getString(TASK_COMMIT_MODEL_NAME + "_committer"))
                     .withCommittedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_COMMIT_MODEL_NAME + "_committed_at")))
                     .withCommitType(CommitType.resolve(rs.getString(TASK_COMMIT_MODEL_NAME + "_commit_type")))
                     .withCommitStatus(CommitStatus.resolve(rs.getString(TASK_COMMIT_MODEL_NAME + "_commit_status")))

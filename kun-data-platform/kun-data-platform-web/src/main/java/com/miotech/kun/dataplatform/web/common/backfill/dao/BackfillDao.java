@@ -273,7 +273,7 @@ public class BackfillDao {
             Backfill.BackFillBuilder builder = Backfill.newBuilder()
                     .withId(backfillId)
                     .withName(rs.getString(BACKFILL_MODEL_NAME + "_name"))
-                    .withCreator(rs.getLong(BACKFILL_MODEL_NAME + "_creator"))
+                    .withCreator(rs.getString(BACKFILL_MODEL_NAME + "_creator"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(BACKFILL_MODEL_NAME + "_create_time")))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(BACKFILL_MODEL_NAME + "_update_time")));
 

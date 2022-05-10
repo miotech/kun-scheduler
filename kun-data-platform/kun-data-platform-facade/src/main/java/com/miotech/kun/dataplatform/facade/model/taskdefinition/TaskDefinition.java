@@ -13,13 +13,13 @@ public class TaskDefinition {
 
     private final TaskPayload taskPayload;
 
-    private final Long creator;
+    private final String creator;
 
-    private final Long owner;
+    private final String owner;
 
     private final boolean archived;
 
-    private final Long lastModifier;
+    private final String lastModifier;
 
     private final OffsetDateTime createTime;
 
@@ -31,9 +31,10 @@ public class TaskDefinition {
                           Long definitionId,
                           String taskTemplateName,
                           TaskPayload taskPayload,
-                          Long creator, Long owner,
+                          String creator,
+                          String owner,
                           boolean archived,
-                          Long lastModifier,
+                          String lastModifier,
                           OffsetDateTime createTime,
                           OffsetDateTime updateTime) {
         this.id = id;
@@ -74,11 +75,11 @@ public class TaskDefinition {
         return taskPayload;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
-    public Long getOwner() {
+    public String getOwner() {
         return owner;
     }
 
@@ -86,7 +87,7 @@ public class TaskDefinition {
         return archived;
     }
 
-    public Long getLastModifier() {
+    public String getLastModifier() {
         return lastModifier;
     }
 
@@ -121,10 +122,10 @@ public class TaskDefinition {
         private Long definitionId;
         private String taskTemplateName;
         private TaskPayload taskPayload;
-        private Long creator;
-        private Long owner;
+        private String creator;
+        private String owner;
         private boolean archived;
-        private Long lastModifier;
+        private String lastModifier;
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
 
@@ -156,12 +157,12 @@ public class TaskDefinition {
             return this;
         }
 
-        public Builder withCreator(Long creator) {
+        public Builder withCreator(String creator) {
             this.creator = creator;
             return this;
         }
 
-        public Builder withOwner(Long owner) {
+        public Builder withOwner(String owner) {
             this.owner = owner;
             return this;
         }
@@ -171,7 +172,7 @@ public class TaskDefinition {
             return this;
         }
 
-        public Builder withLastModifier(Long lastModifier) {
+        public Builder withLastModifier(String lastModifier) {
             this.lastModifier = lastModifier;
             return this;
         }

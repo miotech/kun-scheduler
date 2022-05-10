@@ -225,17 +225,17 @@ public class BackfillDaoTest extends DataPlatformTestBase {
         BackfillSearchParams searchParams1 = new BackfillSearchParams();
         searchParams1.setPageNumber(1);
         searchParams1.setPageSize(100);
-        searchParams1.setCreators(Lists.newArrayList(1L));
+        searchParams1.setCreators(Lists.newArrayList("admin"));
 
         BackfillSearchParams searchParams2 = new BackfillSearchParams();
         searchParams2.setPageNumber(1);
         searchParams2.setPageSize(100);
-        searchParams2.setCreators(Lists.newArrayList(1L, 2L));
+        searchParams2.setCreators(Lists.newArrayList("admin", "root"));
 
         BackfillSearchParams searchParams3 = new BackfillSearchParams();
         searchParams3.setPageNumber(1);
         searchParams3.setPageSize(100);
-        searchParams3.setCreators(Lists.newArrayList(2L));
+        searchParams3.setCreators(Lists.newArrayList("root"));
 
         // 2. Process
         PageResult<Backfill> resultPage1 = backfillDao.search(searchParams1);
