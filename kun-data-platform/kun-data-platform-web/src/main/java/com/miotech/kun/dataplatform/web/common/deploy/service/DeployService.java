@@ -17,6 +17,8 @@ import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefini
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.web.exception.UpstreamTaskNotPublishedException;
 import com.miotech.kun.monitor.facade.alert.TaskNotifyConfigFacade;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationType;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -191,6 +193,7 @@ public class DeployService extends BaseSecurityService {
     }
 
     @Transactional
+    @OperationRecord(type = OperationType.TASK_DEFINITION_DEPLOY, args = {"#definitionId"})
     public Deploy deployFast(Long definitionId, CommitRequest request) {
         // commit first
         TaskCommit commit = commitService.commit(definitionId, request.getMessage());

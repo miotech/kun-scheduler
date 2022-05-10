@@ -29,7 +29,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.miotech.kun.datadiscovery",
         "com.miotech.kun.webapp",
         "com.miotech.kun.monitor",
-        "com.miotech.kun.openapi"
+        "com.miotech.kun.openapi",
+        "com.miotech.kun.operationrecord"
 }, exclude = {
         MongoAutoConfiguration.class,
         MongoDataAutoConfiguration.class,
