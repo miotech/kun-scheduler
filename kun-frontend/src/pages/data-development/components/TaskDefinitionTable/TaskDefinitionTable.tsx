@@ -93,11 +93,11 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       pageSize,
       name: filters.name,
       taskTemplateName: filters.taskTemplateName || undefined,
-      ownerIds: filters.creatorIds as any,
+      owners: filters.creators as any,
       viewIds: taskDefViewId != null ? [taskDefViewId] : undefined,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskDefViewId, filters.taskTemplateName, filters.creatorIds, pageNum, pageSize, updateTime]);
+  }, [taskDefViewId, filters.taskTemplateName, filters.creators, pageNum, pageSize, updateTime]);
 
   useDebouncedUpdateEffect(
     () => {
@@ -106,7 +106,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
         pageSize,
         name: filters.name,
         taskTemplateName: filters.taskTemplateName || undefined,
-        ownerIds: filters.creatorIds as any,
+        owners: filters.creators as any,
         viewIds: taskDefViewId != null ? [taskDefViewId] : undefined,
       });
       setPageNum(1);
@@ -156,7 +156,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
         width: 160,
         title: t('dataDevelopment.definition.property.owner'),
         dataIndex: 'owner',
-        render: (txt: any, record: TaskDefinition) => <UsernameText userId={record.owner} />,
+        render: (txt: any, record: TaskDefinition) => <UsernameText owner={record.owner} />,
       },
       {
         key: 'createTime',

@@ -67,7 +67,7 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(props)
         key: 'creator',
         render: (txt, record) => (
           <span>
-            <UsernameText userId={record.creator} />
+            <UsernameText owner={record.creator} />
           </span>
         ),
       },

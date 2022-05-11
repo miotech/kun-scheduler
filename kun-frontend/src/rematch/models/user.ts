@@ -19,7 +19,7 @@ export const user = {
     username: '',
     whoamiLoading: false,
     permissions: [],
-  } as UserState,
+  } as any,
 
   reducers: {
     updateLogin: produce((draftState: UserState, payload: boolean) => {

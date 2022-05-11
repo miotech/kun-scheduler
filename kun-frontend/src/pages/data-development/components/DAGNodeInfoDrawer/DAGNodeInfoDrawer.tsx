@@ -18,11 +18,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 export const DAGNodeInfoDrawer: React.FC<Props> = memo(function DAGNodeInfoDrawer(props) {
-  const {
-    visible = false,
-    currentTaskDef,
-    getContainer,
-  } = props;
+  const { visible = false, currentTaskDef, getContainer } = props;
 
   const t = useI18n();
 
@@ -46,7 +42,7 @@ export const DAGNodeInfoDrawer: React.FC<Props> = memo(function DAGNodeInfoDrawe
           {currentTaskDef?.taskTemplateName}
         </Descriptions.Item>
         <Descriptions.Item label={t('dataDevelopment.definition.property.owner')}>
-          {currentTaskDef?.owner ? <UsernameText userId={currentTaskDef.owner} /> : ''}
+          {currentTaskDef?.owner ? <UsernameText owner={currentTaskDef.owner} /> : ''}
         </Descriptions.Item>
         <Descriptions.Item label={t('dataDevelopment.definition.property.createTime')}>
           {currentTaskDef?.createTime ? dayjs(currentTaskDef.createTime).format('YYYY-MM-DD HH:mm') : '-'}
@@ -58,13 +54,13 @@ export const DAGNodeInfoDrawer: React.FC<Props> = memo(function DAGNodeInfoDrawe
       <Row>
         <Link
           to={SafeUrlAssembler()
-            .template('/data-development/task-definition/:taskDefId').param({
+            .template('/data-development/task-definition/:taskDefId')
+            .param({
               taskDefId: currentTaskDef?.id,
-            }).toString()}
+            })
+            .toString()}
         >
-          <Button type="primary">
-            {t('dataDevelopment.goToDefinitionDetails')}
-          </Button>
+          <Button type="primary">{t('dataDevelopment.goToDefinitionDetails')}</Button>
         </Link>
       </Row>
     </Drawer>

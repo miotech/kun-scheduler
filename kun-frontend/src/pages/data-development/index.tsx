@@ -100,10 +100,10 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       keyword: taskDefViewSearchKeyword,
       taskDefName: filters.name || undefined,
       taskTemplateName: filters.taskTemplateName || undefined,
-      taskDefCreatorIds: filters.creatorIds as any,
+      taskDefCreators: filters.creators as any,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskDefViewSearchKeyword, filters.name, filters.taskTemplateName, filters.creatorIds]);
+  }, [taskDefViewSearchKeyword, filters.name, filters.taskTemplateName, filters.creators]);
 
   const forceTableRefresh = useCallback(() => {
     setUpdateTime(Date.now());

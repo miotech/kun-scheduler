@@ -43,7 +43,7 @@ export const BackfillTaskView: React.FC<Props> = memo(function BackfillTaskView(
       pageNumber: pageNum ?? filters.pageNum,
       pageSize: filters.pageSize,
       name: (filters.keyword || '').trim() ? (filters.keyword || '').trim() : undefined,
-      creatorIds: filters.creatorId == null ? undefined : [filters.creatorId],
+      creators: filters.creator == null ? undefined : [filters.creator],
       timeRngStart:
         filters.startTimeRng == null
           ? undefined
@@ -83,7 +83,7 @@ export const BackfillTaskView: React.FC<Props> = memo(function BackfillTaskView(
     resetToFirstPage();
     fetchData(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.creatorId, filters.startTimeRng, filters.endTimeRng]);
+  }, [filters.creator, filters.startTimeRng, filters.endTimeRng]);
 
   useUnmount(() => {
     dispatch.backfillTasks.resetAll();

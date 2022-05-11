@@ -44,7 +44,7 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
   // Shall not trigger after mount
   useUpdateEffect(() => {
     dispatch.scheduledTasks.setShouldRefresh(true);
-  }, [filters.taskTemplateName, filters.ownerIds, filters.pageNum, filters.pageSize]);
+  }, [filters.taskTemplateName, filters.owners, filters.pageNum, filters.pageSize]);
 
   useUnmount(() => {
     dispatch.scheduledTasks.resetAll();

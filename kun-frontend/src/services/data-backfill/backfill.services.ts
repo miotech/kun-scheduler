@@ -11,7 +11,7 @@ import { TaskRun } from '@/definitions/TaskRun.type';
 
 export interface SearchBackfillParams extends PaginationReqBody {
   name?: string;
-  creatorIds?: string[];
+  creators?: string[];
   timeRngStart?: string;
   timeRngEnd?: string;
   sortKey?: string;
@@ -26,7 +26,7 @@ export async function fetchBackfillPage(
       pageNum: searchParams.pageNumber || 1,
       pageSize: searchParams.pageSize || 100,
       name: searchParams.name,
-      creatorIds: searchParams.creatorIds,
+      creators: searchParams.creators,
       timeRngStart: searchParams.timeRngStart,
       timeRngEnd: searchParams.timeRngEnd,
       sortKey: searchParams.sortKey,
@@ -42,9 +42,7 @@ export interface CreateAndRunBackfillReqParams {
   taskDefinitionIds: string[];
 }
 
-export async function createAndRunBackfill(
-  params: CreateAndRunBackfillReqParams,
-): ServiceRespPromise<any> {
+export async function createAndRunBackfill(params: CreateAndRunBackfillReqParams): ServiceRespPromise<any> {
   return post('/backfills', {
     data: {
       ...params,
@@ -53,9 +51,7 @@ export async function createAndRunBackfill(
   });
 }
 
-export async function fetchBackfillDetail(
-  backfillId: string,
-): ServiceRespPromise<BackfillDetail> {
+export async function fetchBackfillDetail(backfillId: string): ServiceRespPromise<BackfillDetail> {
   return get('/backfills/:backfillId', {
     pathParams: {
       backfillId,
@@ -64,27 +60,21 @@ export async function fetchBackfillDetail(
   });
 }
 
-export async function stopBackfillInstance(
-  backfillId: string,
-): ServiceRespPromise<AcknowledgementVO> {
+export async function stopBackfillInstance(backfillId: string): ServiceRespPromise<AcknowledgementVO> {
   return delet('/backfills/:backfillId/_abort', {
     pathParams: { backfillId },
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
 
-export async function rerunBackfillInstance(
-  backfillId: string,
-): ServiceRespPromise<AcknowledgementVO> {
+export async function rerunBackfillInstance(backfillId: string): ServiceRespPromise<AcknowledgementVO> {
   return post('/backfills/:backfillId/_run', {
     pathParams: { backfillId },
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
 
-export async function restartBackfillTaskRunInstance(
-  taskRunId: string,
-): ServiceRespPromise<TaskRun> {
+export async function restartBackfillTaskRunInstance(taskRunId: string): ServiceRespPromise<TaskRun> {
   return post('/backfills/taskruns/:taskRunId/_restart', {
     pathParams: {
       taskRunId,
@@ -93,9 +83,7 @@ export async function restartBackfillTaskRunInstance(
   });
 }
 
-export async function abortBackfillTaskRunInstance(
-  taskRunId: string,
-): ServiceRespPromise<TaskRun> {
+export async function abortBackfillTaskRunInstance(taskRunId: string): ServiceRespPromise<TaskRun> {
   return put('/backfills/taskruns/:taskRunId/_abort', {
     pathParams: {
       taskRunId,

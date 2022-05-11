@@ -5,7 +5,7 @@ import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
 export interface DataDevelopmentModelFilter {
   taskTemplateName: string | null;
   name: string;
-  creatorIds: string[];
+  creators: string[];
 }
 
 export interface DataDevelopmentModelState {
@@ -39,7 +39,7 @@ export const initState: DataDevelopmentModelState = {
   filters: {
     taskTemplateName: null,
     name: '',
-    creatorIds: [],
+    creators: [],
   },
   displayType: 'LIST',
   taskDefinitions: [],
