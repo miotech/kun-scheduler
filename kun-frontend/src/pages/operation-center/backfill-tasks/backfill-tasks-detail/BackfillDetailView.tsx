@@ -33,7 +33,7 @@ function backfillIsAlreadyComplete(status: RunStatusEnum[]): boolean {
 }
 
 function renderByTaskRunListStatus(status: RunStatusEnum[]) {
-  const color:string = taskColorConfig[status[0]] ? taskColorConfig[status[0]] : taskColorConfig.DEFAULT;
+  const color: string = taskColorConfig[status[0]] ? taskColorConfig[status[0]] : taskColorConfig.DEFAULT;
   return <Badge color={color} text={status[0]} />;
 }
 
@@ -144,7 +144,7 @@ export const BackfillDetailView: React.FC<Props> = memo(function BackfillDetailV
         </h1>
         <Descriptions size="middle" bordered column={2}>
           <Descriptions.Item label={t('operationCenter.backfill.property.creator')}>
-            <UsernameText userId={backfillDetailData.creator} />
+            <UsernameText owner={backfillDetailData.creator} />
           </Descriptions.Item>
           <Descriptions.Item label={t('operationCenter.backfill.property.createTime')}>
             {dayjs(backfillDetailData.createTime).format('YYYY-MM-DD HH:mm:ss')}

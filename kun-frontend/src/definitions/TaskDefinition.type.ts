@@ -32,7 +32,7 @@ export interface TaskDefinition {
   lastUpdateTime: string;
   lastModifier: string;
   createTime: string;
-  owner: string | number;
+  owner: string;
 }
 
 export const TaskDefinitionType = T.Record({
@@ -97,7 +97,7 @@ export interface ScheduleConfig {
 }
 
 export interface TaskTryVO {
-  creator: number;
+  creator: string;
   definitionId: string | number;
   id: string;
   status: RunStatusEnum;
@@ -107,7 +107,7 @@ export interface TaskTryVO {
 }
 
 export interface DeployVO {
-  creator: number;
+  creator: string;
   deployedAt: string; // Datetime
   deployer: number;
   id: string | number;

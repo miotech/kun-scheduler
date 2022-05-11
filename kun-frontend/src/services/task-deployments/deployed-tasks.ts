@@ -16,7 +16,7 @@ import SafeUrlAssembler from 'safe-url-assembler';
 export interface FetchScheduledTaskRunsReqParams extends Partial<PaginationReqBody> {
   name?: string;
   definitionsIds?: string[];
-  ownerId?: (number | string)[];
+  owner?: string[];
   status?: RunStatusEnum;
   taskTemplateName?: string;
 }
@@ -84,7 +84,7 @@ export async function fetchScheduledTaskRunLogWithoutErrorNotification(
 export interface FetchDeployedTasksReqParams extends Partial<PaginationReqBody> {
   name?: string;
   definitionIds?: string[];
-  ownerId?: (number | string)[];
+  owners?: string[];
   status?: RunStatusEnum;
   taskTemplateName?: string;
   workflowTaskIds?: string[];

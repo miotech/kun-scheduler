@@ -31,5 +31,5 @@ export interface SearchTaskDefinitionViewParams
   creator?: string | number;
   taskDefName?: string;
   taskTemplateName?: string;
-  taskDefCreatorIds?: string[];
+  taskDefCreators?: string[];
 }

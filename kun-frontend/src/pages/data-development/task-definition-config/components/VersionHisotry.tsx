@@ -46,7 +46,7 @@ export const VersionHistory: React.FC<Props> = memo(props => {
         title: t('dataDevelopment.definition.committer'),
         dataIndex: 'committer',
         render: (txt: any, record: TaskCommit) => {
-          return <UsernameText userId={record?.committer} />;
+          return <UsernameText owner={record?.committer} />;
         },
       },
       {

@@ -12,7 +12,7 @@ import css from './ViewFilters.less';
 interface OwnProps {
   filters: {
     keyword: string;
-    creatorId: string | null;
+    creator: string | null;
     startTimeRng: Moment | null;
     endTimeRng: Moment | null;
   };
@@ -39,9 +39,9 @@ export const ViewFilters: React.FC<Props> = memo(function ViewFilters(props) {
   }, []);
 
   const handleCreatorIdChange = useCallback(
-    function handleCreatorIdChange(userId: string) {
+    function handleCreatorIdChange(username: string) {
       dispatch.backfillTasks.updateFilter({
-        creatorId: userId || null,
+        creator: username || null,
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,26 +83,17 @@ export const ViewFilters: React.FC<Props> = memo(function ViewFilters(props) {
       <div className={css.UserSelectWrapper}>
         <UserSelect
           allowClear
-          value={filters.creatorId || undefined}
+          value={filters.creator || undefined}
           onChange={handleCreatorIdChange as any}
-          placeholder={t(
-            'operationCenter.backfill.filters.userSelect.placeholder',
-          )}
+          placeholder={t('operationCenter.backfill.filters.userSelect.placeholder')}
         />
       </div>
       {/* backfill created time range */}
       <div className={css.RangePickerWrapper}>
-        <RangePicker
-          format="YYYY/MM/DD"
-          onChange={handleTimeRangeFilterChange as any}
-        />
+        <RangePicker format="YYYY/MM/DD" onChange={handleTimeRangeFilterChange as any} />
       </div>
       <div className={css.ReloadBtnWrapper}>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={onClickRefresh}
-          loading={refreshBtnLoading}
-        >
+        <Button icon={<ReloadOutlined />} onClick={onClickRefresh} loading={refreshBtnLoading}>
           {t('common.refresh')}
         </Button>
       </div>
