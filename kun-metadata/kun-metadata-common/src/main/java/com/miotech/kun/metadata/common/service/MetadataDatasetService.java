@@ -170,13 +170,6 @@ public class MetadataDatasetService implements MetadataServiceFacade {
         return metadataDatasetDao.getDatabases(dataSourceIds);
     }
 
-    public DatasetBasicSearch searchDatasets(BasicSearchRequest request) {
-        return metadataDatasetDao.searchDatasets(request);
-    }
-
-    public DatasetBasicSearch fullTextSearch(DatasetSearchRequest request) {
-        return metadataDatasetDao.fullTextSearch(request);
-    }
 
     public DatasetDetail getDatasetDetail(Long id) {
         return metadataDatasetDao.getDatasetDetail(id);

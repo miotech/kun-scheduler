@@ -32,8 +32,13 @@ public class DatasetController {
     }
 
     @GetMapping("/metadata/datasets")
-    public RequestResult<DatasetBasicPage> getDatasets(BasicSearchRequest searchRequests) {
-        return RequestResult.success(metadataService.fullTextSearch(searchRequests));
+    public RequestResult<DatasetBasicPage> getDatasets(DatasetSearchRequest datasetSearchRequest) {
+        return RequestResult.success(metadataService.fullTextSearch(datasetSearchRequest));
+    }
+
+    @PostMapping("/metadata/attribute/list")
+    public RequestResult<List<String>> getResourceAttributeList(@RequestBody ResourceAttributeRequest request) {
+        return RequestResult.success(metadataService.fetchResourceAttributeList(request));
     }
 
     @GetMapping("/metadata/dataset/{id}")

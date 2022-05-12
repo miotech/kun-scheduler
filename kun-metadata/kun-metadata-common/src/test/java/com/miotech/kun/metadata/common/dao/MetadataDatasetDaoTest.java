@@ -174,69 +174,6 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void testSearchDatasets_emptyKeyword() {
-        BasicSearchRequest searchRequest = new BasicSearchRequest();
-        DatasetBasicSearch datasetBasicSearch = metadataDatasetDao.searchDatasets(searchRequest);
-
-        assertThat(datasetBasicSearch.getDatasets(), empty());
-    }
-
-    @Test
-    public void testSearchDatasets() {
-        Long gid1 = IdGenerator.getInstance().nextId();
-        Long gid2 = IdGenerator.getInstance().nextId();
-        Dataset dataset1 = MockDatasetFactory.createDataset(gid1, "test1");
-        Dataset dataset2 = MockDatasetFactory.createDataset(gid2, "test2");
-        metadataDatasetDao.createDataset(dataset1);
-        metadataDatasetDao.createDataset(dataset2);
-
-        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
-                .withUserConnection(new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "thrift://127.0.0.1:10000"))
-                .build(), DatasourceType.HIVE, ImmutableList.of());
-        dataSourceDao.create(dataSource);
-
-        BasicSearchRequest searchRequest = new BasicSearchRequest("test");
-        DatasetBasicSearch datasetBasicSearch = metadataDatasetDao.searchDatasets(searchRequest);
-
-        assertThat(datasetBasicSearch.getDatasets().size(), is(2));
-    }
-
-    @Test
-    public void testFullTextSearch() {
-        Long gid1 = IdGenerator.getInstance().nextId();
-        List<String> owners1 = ImmutableList.of("u1", "u2");
-        List<String> tags1 = ImmutableList.of("t1", "t2");
-        Long gid2 = IdGenerator.getInstance().nextId();
-        List<String> owners2 = ImmutableList.of("u2", "u3");
-        List<String> tags2 = ImmutableList.of("t2", "t3");
-        Dataset dataset1 = MockDatasetFactory.createDataset(gid1, "test1");
-        Dataset dataset2 = MockDatasetFactory.createDataset(gid2, "test2");
-        Dataset dataset1OfFetch = metadataDatasetDao.createDataset(dataset1);
-        Dataset dataset2OfFetch = metadataDatasetDao.createDataset(dataset2);
-        OffsetDateTime now = DateTimeUtils.now();
-        databaseOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, row_count, stats_date, last_updated_time, total_byte_size) VALUES (?, ?, ?, ?, ?)",
-                dataset1OfFetch.getGid(), 1L, now, now, 1L);
-
-
-        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
-                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
-                .build(), DatasourceType.HIVE, ImmutableList.of());
-        dataSourceDao.create(dataSource);
-
-        metadataDatasetDao.overwriteOwners(dataset1OfFetch.getGid(), owners1);
-        metadataDatasetDao.overwriteOwners(dataset2OfFetch.getGid(), owners2);
-
-        tagDao.overwriteDatasetTags(dataset1OfFetch.getGid(), tags1);
-        tagDao.overwriteDatasetTags(dataset2OfFetch.getGid(), tags2);
-
-        DatasetSearchRequest searchRequest = new DatasetSearchRequest(dataset1.getName(), ImmutableList.of("u2"), ImmutableList.of("t2"),
-                ImmutableList.of(1L), ImmutableList.of(dataset1.getDatasourceId()), ImmutableList.of(dataset1.getDatabaseName()), now.minusDays(1).toEpochSecond() * 1000, now.plusDays(1).toEpochSecond() * 1000, null, null, null);
-
-        DatasetBasicSearch datasetBasicSearch = metadataDatasetDao.fullTextSearch(searchRequest);
-        assertThat(datasetBasicSearch.getDatasets().size(), is(1));
-    }
-
-    @Test
     public void testGetDatasetDetail() {
         Long gid1 = IdGenerator.getInstance().nextId();
         List<String> owners1 = ImmutableList.of("u1", "u2");

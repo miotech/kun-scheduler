@@ -1,6 +1,8 @@
 package com.miotech.kun.datadiscovery.testing.mockdata;
 
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.ResourceAttributeRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.search.DataSetResourceAttribute;
@@ -10,6 +12,7 @@ import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MockSearchInfoFactory {
@@ -19,15 +22,7 @@ public class MockSearchInfoFactory {
     }
 
 
-    public static SearchedInfo mockDataSetSearch(String keyword) {
-        DataSetResourceAttribute resourceAttribute = DataSetResourceAttribute.Builder.newBuilder()
-                .withDatabase("default")
-                .withDatasource("hive")
-                .withType("hive")
-                .withTags("tag1")
-                .withOwners("admin")
-                .withSchema("public")
-                .build();
+    public static SearchedInfo mockDataSetSearch(String keyword, DataSetResourceAttribute resourceAttribute) {
         SearchedInfo datasetSearchedInfo = SearchedInfo.Builder.newBuilder()
                 .withGid(IdGenerator.getInstance().nextId())
                 .withResourceType(ResourceType.DATASET)
@@ -36,6 +31,12 @@ public class MockSearchInfoFactory {
                 .withResourceAttribute(resourceAttribute)
                 .withDeleted(false).build();
         return datasetSearchedInfo;
+    }
+
+    public static BasicSearchRequest mockBasicSearchRequest(String keyword) {
+        BasicSearchRequest basicSearchRequest = new BasicSearchRequest();
+        basicSearchRequest.setKeyword(keyword);
+        return basicSearchRequest;
     }
 
 
@@ -56,4 +57,10 @@ public class MockSearchInfoFactory {
     }
 
 
+    public static ResourceAttributeRequest mockDResourceAttributeRequest(String resourceAttributeName, Map<String, Object> resourceAttributeMap) {
+        ResourceAttributeRequest request = new ResourceAttributeRequest();
+        request.setResourceAttributeMap(resourceAttributeMap);
+        request.setResourceAttributeName(resourceAttributeName);
+        return request;
+    }
 }
