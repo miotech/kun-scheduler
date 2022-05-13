@@ -13,12 +13,12 @@ public class TaskSnapshot {
 
     private final TaskPayload taskPayload;
 
-    private final Long owner;
+    private final String owner;
 
     public TaskSnapshot(String name,
                         String taskTemplateName,
                         TaskPayload taskPayload,
-                        Long owner) {
+                        String owner) {
         this.name = name;
         this.taskTemplateName = taskTemplateName;
         this.taskPayload = taskPayload;
@@ -37,7 +37,7 @@ public class TaskSnapshot {
         return taskPayload;
     }
 
-    public Long getOwner() {
+    public String getOwner() {
         return owner;
     }
 
@@ -48,7 +48,7 @@ public class TaskSnapshot {
         private String name;
         private String taskTemplateName;
         private TaskPayload taskPayload;
-        private Long owner;
+        private String owner;
 
         private Builder() {
         }
@@ -68,7 +68,7 @@ public class TaskSnapshot {
             return this;
         }
 
-        public Builder withOwner(Long owner) {
+        public Builder withOwner(String owner) {
             this.owner = owner;
             return this;
         }

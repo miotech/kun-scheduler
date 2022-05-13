@@ -263,7 +263,7 @@ public class DeployedTaskServiceTest extends DataPlatformTestBase {
         UserInfo userInfo = new UserInfo();
         String username = "test_username";
         userInfo.setUsername(username);
-        doReturn(userInfo).when(deployedTaskService).getUserById(anyLong());
+        doReturn(userInfo).when(deployedTaskService).getUserByUsername(anyString());
 
         // execute
         UserInfo userInfoOfFetched = deployedTaskService.getUserByTaskId(mockDeployedTask.getWorkflowTaskId());

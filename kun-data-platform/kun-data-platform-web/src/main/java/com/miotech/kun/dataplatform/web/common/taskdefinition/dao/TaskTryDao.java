@@ -95,7 +95,7 @@ public class TaskTryDao {
                     .withWorkflowTaskId(rs.getLong(TASK_TRY_MODEL_NAME + "_wf_task_id"))
                     .withWorkflowTaskRunId(rs.getLong(TASK_TRY_MODEL_NAME + "_wf_task_run_id"))
                     .withTaskConfig(JSONUtils.jsonToObject(rs.getString(TASK_TRY_MODEL_NAME + "_task_config"), JSONObject.class))
-                    .withCreator(rs.getLong(TASK_TRY_MODEL_NAME + "_creator"))
+                    .withCreator(rs.getString(TASK_TRY_MODEL_NAME + "_creator"))
                     .build();
         }
     }

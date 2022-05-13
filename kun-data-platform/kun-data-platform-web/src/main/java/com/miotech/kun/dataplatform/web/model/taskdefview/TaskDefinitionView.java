@@ -20,13 +20,9 @@ public class TaskDefinitionView {
 
     private final String name;
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
-    private final Long creator;
+    private final String creator;
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
-    private final Long lastModifier;
+    private final String lastModifier;
 
     private final OffsetDateTime createTime;
 
@@ -68,11 +64,11 @@ public class TaskDefinitionView {
         return name;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
-    public Long getLastModifier() {
+    public String getLastModifier() {
         return lastModifier;
     }
 
@@ -92,8 +88,8 @@ public class TaskDefinitionView {
     public static final class TaskDefinitionViewBuilder {
         private Long id;
         private String name;
-        private Long creator;
-        private Long lastModifier;
+        private String creator;
+        private String lastModifier;
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
         private List<TaskDefinition> includedTaskDefinitions;
@@ -111,12 +107,12 @@ public class TaskDefinitionView {
             return this;
         }
 
-        public TaskDefinitionViewBuilder withCreator(Long creator) {
+        public TaskDefinitionViewBuilder withCreator(String creator) {
             this.creator = creator;
             return this;
         }
 
-        public TaskDefinitionViewBuilder withLastModifier(Long lastModifier) {
+        public TaskDefinitionViewBuilder withLastModifier(String lastModifier) {
             this.lastModifier = lastModifier;
             return this;
         }

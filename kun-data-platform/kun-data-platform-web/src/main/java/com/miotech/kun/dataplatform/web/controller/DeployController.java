@@ -40,12 +40,12 @@ public class DeployController {
     public RequestResult<PaginationResult<DeployVO>> searchDeploys(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
-            @RequestParam(required = false) List<Long> creatorIds,
+            @RequestParam(required = false) List<String> creators,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> submittedAtFrom,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> submittedAtTo,
-            @RequestParam(required = false) List<Long> deployerIds,
+            @RequestParam(required = false) List<String> deployers,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> deployedAtFrom,
             @RequestParam(required = false)
@@ -55,10 +55,10 @@ public class DeployController {
         DeploySearchRequest deploySearchRequest = new DeploySearchRequest(
                 pageSize,
                 pageNum,
-                creatorIds,
+                creators,
                 submittedAtFrom,
                 submittedAtTo,
-                deployerIds,
+                deployers,
                 deployedAtFrom,
                 deployedAtTo
         );

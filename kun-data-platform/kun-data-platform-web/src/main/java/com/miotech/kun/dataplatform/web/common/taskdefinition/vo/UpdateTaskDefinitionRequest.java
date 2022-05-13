@@ -12,5 +12,5 @@ public class UpdateTaskDefinitionRequest {
 
     private final TaskPayload taskPayload;
 
-    private final Long owner;
+    private final String owner;
 }

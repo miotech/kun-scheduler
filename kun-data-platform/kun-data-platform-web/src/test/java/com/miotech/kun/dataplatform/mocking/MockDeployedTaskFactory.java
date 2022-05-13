@@ -31,7 +31,7 @@ public class MockDeployedTaskFactory {
                     .withTaskTemplateName("SparkSQL")
                     .withTaskCommit(taskCommit)
                     .withWorkflowTaskId(workflowTaskId)
-                    .withOwner(1L)
+                    .withOwner("admin")
                     .withArchived(false)
                     .build());
         }

@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class BackfillSearchParams {
     private String name;
-    private List<Long> creators;
+    private List<String> creators;
     private Integer pageNumber;
     private Integer pageSize;
     private OffsetDateTime timeRngStart;

@@ -112,7 +112,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDefinition.getDefinitionId(),
                 taskDefinition.getName() + "_updated",
                 updatedTaskPayload,
-                1L
+                "admin"
         );
 
         // invocation
@@ -143,7 +143,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDefinition.getDefinitionId(),
                 taskDefinitionUnchanged.getName(), //used name
                 updatedTaskPayload,
-                1L
+                "admin"
         );
         assertThrows(IllegalArgumentException.class, () -> taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest));
     }
@@ -168,7 +168,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                     taskDefinitionTemp.getDefinitionId(),
                     "test", //same name use multiple times
                     updatedTaskPayload,
-                    1L
+                    "admin"
             );
             taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
             // for the last, do not delete, check whether update successfully on last time
@@ -190,7 +190,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDefinitionTemp.getDefinitionId(),
                 "test", //same name use multiple times
                 updatedTaskPayload,
-                1L
+                "admin"
         );
 
         //verify
@@ -222,7 +222,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDefinition.getDefinitionId(),
                 taskDefinition.getName() + "_updated",
                 updatedTaskPayload,
-                1L
+                "admin"
         );
 
         // invocation
@@ -267,7 +267,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDefinition.getDefinitionId(),
                 taskDefinition.getName() + "_updated",
                 updatedTaskPayload,
-                1L
+                "admin"
         );
         TaskDefinition updated = taskDefinitionService.update(updateRequest.getDefinitionId(),
                 updateRequest);
@@ -502,7 +502,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDefinition.getDefinitionId(),
                 taskDefinition.getName() + "_updated",
                 updatedTaskPayload,
-                1L
+                "admin"
         );
 
         TaskDefinition updated = taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
@@ -716,7 +716,7 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                 taskDef.getDefinitionId(),
                 taskDef.getName() + "_updated",
                 updatedTaskPayload,
-                1L
+                "admin"
         );
         IllegalStateException thrown = Assertions.assertThrows(IllegalStateException.class, () -> {
             TaskDefinition updated = taskDefinitionService.update(updateRequest.getDefinitionId(),

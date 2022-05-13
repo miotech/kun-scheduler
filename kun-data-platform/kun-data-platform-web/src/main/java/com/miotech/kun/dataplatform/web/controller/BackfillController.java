@@ -54,7 +54,7 @@ public class BackfillController {
     @ApiOperation("Get page of backfills")
     public RequestResult<PageResult<Backfill>> searchBackfills(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) List<Long> creatorIds,
+            @RequestParam(required = false) List<String> creators,
             @RequestParam(required = false) String timeRngStart,
             @RequestParam(required = false) String timeRngEnd,
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -74,8 +74,8 @@ public class BackfillController {
         if (Strings.isNotBlank(name)) {
             searchParams.setName(name);
         }
-        if (Objects.nonNull(creatorIds) && creatorIds.size() > 0) {
-            searchParams.setCreators(creatorIds);
+        if (Objects.nonNull(creators) && creators.size() > 0) {
+            searchParams.setCreators(creators);
         }
         if (Objects.nonNull(startAt)) {
             searchParams.setTimeRngStart(startAt);

@@ -15,11 +15,11 @@ public class DeployVO {
 
     private final List<DeployCommit> commits;
 
-    private final Long creator;
+    private final String creator;
 
     private final OffsetDateTime submittedAt;
 
-    private final Long deployer;
+    private final String deployer;
 
     private final OffsetDateTime deployedAt;
 

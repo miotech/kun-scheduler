@@ -9,11 +9,11 @@ public class Deploy {
 
     private final String name;
 
-    private final Long creator;
+    private final String creator;
 
     private final OffsetDateTime submittedAt;
 
-    private final Long deployer;
+    private final String deployer;
 
     private final OffsetDateTime deployedAt;
 
@@ -21,7 +21,7 @@ public class Deploy {
 
     private final List<DeployCommit> commits;
 
-    public Deploy(Long id, String name, Long creator, OffsetDateTime submittedAt, Long deployer, OffsetDateTime deployedAt, DeployStatus status, List<DeployCommit> commits) {
+    public Deploy(Long id, String name, String creator, OffsetDateTime submittedAt, String deployer, OffsetDateTime deployedAt, DeployStatus status, List<DeployCommit> commits) {
         this.id = id;
         this.name = name;
         this.creator = creator;
@@ -40,7 +40,7 @@ public class Deploy {
         return name;
     }
 
-    public Long getCreator() {
+    public String getCreator() {
         return creator;
     }
 
@@ -48,7 +48,7 @@ public class Deploy {
         return submittedAt;
     }
 
-    public Long getDeployer() {
+    public String getDeployer() {
         return deployer;
     }
 
@@ -81,9 +81,9 @@ public class Deploy {
     public static final class Builder {
         private Long id;
         private String name;
-        private Long creator;
+        private String creator;
         private OffsetDateTime submittedAt;
-        private Long deployer;
+        private String deployer;
         private OffsetDateTime deployedAt;
         private DeployStatus status;
         private List<DeployCommit> commits;
@@ -105,7 +105,7 @@ public class Deploy {
             return this;
         }
 
-        public Builder withCreator(Long creator) {
+        public Builder withCreator(String creator) {
             this.creator = creator;
             return this;
         }
@@ -115,7 +115,7 @@ public class Deploy {
             return this;
         }
 
-        public Builder withDeployer(Long deployer) {
+        public Builder withDeployer(String deployer) {
             this.deployer = deployer;
             return this;
         }

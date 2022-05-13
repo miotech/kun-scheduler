@@ -358,8 +358,8 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         if (org.apache.commons.lang3.StringUtils.isNoneBlank(request.getTaskTemplateName())) {
             filterTags.add(new Tag(TagUtils.TAG_TASK_TEMPLATE_NAME, request.getTaskTemplateName()));
         }
-        if (request.getOwnerId().isPresent()) {
-            filterTags.add(new Tag(TagUtils.TAG_OWNER_NAME, request.getOwnerId().get().toString()));
+        if (request.getOwner().isPresent()) {
+            filterTags.add(new Tag(TagUtils.TAG_OWNER_NAME, request.getOwner().get()));
         }
 
         TaskRunSearchRequest searchRequest = searchRequestBuilder
@@ -506,8 +506,8 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
     public UserInfo getUserByTaskId(Long wfTaskId) {
         Optional<DeployedTask> taskOptional = deployedTaskDao.fetchByWorkflowTaskId(wfTaskId);
         if(taskOptional.isPresent()){
-            Long userId = taskDefinitionService.find(taskOptional.get().getDefinitionId()).getOwner();
-            return getUserById(userId);
+            String username = taskDefinitionService.find(taskOptional.get().getDefinitionId()).getOwner();
+            return getUserByUsername(username);
         }
 
         return null;

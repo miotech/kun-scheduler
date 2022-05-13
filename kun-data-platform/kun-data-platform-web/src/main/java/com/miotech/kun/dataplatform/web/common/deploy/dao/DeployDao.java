@@ -94,14 +94,14 @@ public class DeployDao {
         StringBuilder whereClause = new StringBuilder();
         whereClause.append(" 1 = 1");
         List<Object> params = new ArrayList();
-        List<Long> creatorIds = searchRequest.getCreatorIds();
+        List<String> creatorIds = searchRequest.getCreatorIds();
         if (!creatorIds.isEmpty()) {
             whereClause.append(" AND ");
             whereClause.append(String.format(DEPLOY_MODEL_NAME + ".creator in (%s)", StringUtils.repeatJoin("?", ",", creatorIds.size())));
             params.addAll(creatorIds);
         }
 
-        List<Long> deployerIds = searchRequest.getDeployerIds();
+        List<String> deployerIds = searchRequest.getDeployerIds();
         if (!deployerIds.isEmpty()) {
             whereClause.append(" AND ");
             whereClause.append(String.format(DEPLOY_MODEL_NAME + ".deployer in (%s)", StringUtils.repeatJoin("?", ",", deployerIds.size())));
@@ -246,9 +246,9 @@ public class DeployDao {
             return Deploy.newBuilder()
                     .withId(rs.getLong(DEPLOY_MODEL_NAME + "_id"))
                     .withName(rs.getString(DEPLOY_MODEL_NAME + "_name"))
-                    .withCreator(rs.getLong(DEPLOY_MODEL_NAME + "_creator"))
+                    .withCreator(rs.getString(DEPLOY_MODEL_NAME + "_creator"))
                     .withSubmittedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(DEPLOY_MODEL_NAME + "_submitted_at")))
-                    .withDeployer(rs.getLong(DEPLOY_MODEL_NAME + "_deployer"))
+                    .withDeployer(rs.getString(DEPLOY_MODEL_NAME + "_deployer"))
                     .withDeployedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(DEPLOY_MODEL_NAME + "_deployed_at")))
                     .withStatus(DeployStatus.resolve(rs.getString(DEPLOY_MODEL_NAME + "_status")))
                     .build();

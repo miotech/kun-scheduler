@@ -49,7 +49,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
     private TaskDefinitionView createSimpleMockViewAndReturn(List<Long> initTaskDefinitionIds) {
         TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
                 .name("view_demo")
-                .creator(1L)
+                .creator("admin")
                 .includedTaskDefinitionIds(initTaskDefinitionIds)
                 .build();
 
@@ -65,7 +65,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         List<Long> taskDefIds = mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
         TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
                 .name("view_demo")
-                .creator(1L)
+                .creator("admin")
                 .includedTaskDefinitionIds(taskDefIds)
                 .build();
 
@@ -88,7 +88,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         // Prepare
         TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
                 .name("view_demo")
-                .creator(1L)
+                .creator("admin")
                 .includedTaskDefinitionIds(Lists.newArrayList(100L, 200L))   // task definition ids (not exists)
                 .build();
 
@@ -132,8 +132,8 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                 .withName("view_demo")
                 .withCreateTime(mockCurrentTime)
                 .withUpdateTime(mockCurrentTime)
-                .withCreator(1L)
-                .withLastModifier(1L)
+                .withCreator("admin")
+                .withLastModifier("admin")
                 .withIncludedTaskDefinitions(new ArrayList<>())
                 .build();
 
@@ -159,7 +159,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         TaskDefinitionView viewInit = createSimpleMockViewAndReturn();
         TaskDefinitionView viewUpdate = viewInit.cloneBuilder()
                 .withName("view_demo_modified")
-                .withLastModifier(2L)
+                .withLastModifier("root")
                 .build();
 
         // Process
@@ -171,14 +171,14 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         assertTrue(viewFetchedBeforeSave.isPresent());
         assertThat(viewFetchedBeforeSave.get().getId(), is(viewInit.getId()));
         assertThat(viewFetchedBeforeSave.get().getName(), is("view_demo"));
-        assertThat(viewFetchedBeforeSave.get().getCreator(), is(1L));
-        assertThat(viewFetchedBeforeSave.get().getLastModifier(), is(1L));
+        assertThat(viewFetchedBeforeSave.get().getCreator(), is("admin"));
+        assertThat(viewFetchedBeforeSave.get().getLastModifier(), is("admin"));
 
         assertTrue(viewFetchedAfterSave.isPresent());
         assertThat(viewFetchedAfterSave.get().getId(), is(viewInit.getId()));
         assertThat(viewFetchedAfterSave.get().getName(), is("view_demo_modified"));
-        assertThat(viewFetchedAfterSave.get().getCreator(), is(1L));
-        assertThat(viewFetchedAfterSave.get().getLastModifier(), is(2L));
+        assertThat(viewFetchedAfterSave.get().getCreator(), is("admin"));
+        assertThat(viewFetchedAfterSave.get().getLastModifier(), is("root"));
         assertThat(viewFetchedAfterSave.get(), sameBeanAs(savedView));
 
         // Teardown
@@ -226,13 +226,13 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         // Prepare
         TaskDefinitionView viewCreated = createSimpleMockViewAndReturn();
         List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
-        Long mockModifierId = 2L;
+        String mockModifier = "root";
 
         // Process
         taskDefinitionViewService.putTaskDefinitionsIntoView(
                 mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 viewCreated.getId(),
-                mockModifierId
+                mockModifier
         );
         TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
                 .orElseThrow(NullPointerException::new);
@@ -244,7 +244,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                         .map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 sameBeanAs(mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()))
         );
-        assertThat(viewAfterModify.getLastModifier(), is(mockModifierId));
+        assertThat(viewAfterModify.getLastModifier(), is(mockModifier));
     }
 
     @Test
@@ -257,7 +257,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
             taskDefinitionViewService.putTaskDefinitionsIntoView(
                     mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                     1234L,
-                    2L
+                    "root"
             );
             // Validate
             fail();
@@ -273,7 +273,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
             taskDefinitionViewService.putTaskDefinitionsIntoView(
                     Sets.newHashSet(111L, 222L, 333L),  // task definition ids that do not exist
                     viewCreated.getId(),
-                    1L
+                    "admin"
             );
             // Validate
             fail();
@@ -287,20 +287,20 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         // Prepare
         TaskDefinitionView viewCreated = createSimpleMockViewAndReturn();
         List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
-        Long mockModifier1Id = 2L;
-        Long mockModifier2Id = 3L;
+        String mockModifier1 = "root1";
+        String mockModifier2 = "root2";
 
         // Process
         // Perform same action 2 times, with different modifiers
         taskDefinitionViewService.putTaskDefinitionsIntoView(
                 mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 viewCreated.getId(),
-                mockModifier1Id
+                mockModifier1
         );
         taskDefinitionViewService.putTaskDefinitionsIntoView(
                 mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 viewCreated.getId(),
-                mockModifier2Id
+                mockModifier2
         );
         TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
                 .orElseThrow(NullPointerException::new);
@@ -314,7 +314,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                 sameBeanAs(mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()))
         );
         // but last modifier should be the latest one
-        assertThat(viewAfterModify.getLastModifier(), is(mockModifier2Id));
+        assertThat(viewAfterModify.getLastModifier(), is(mockModifier2));
     }
 
     @Test
@@ -333,7 +333,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         taskDefinitionViewService.removeTaskDefinitionsFromView(
                 taskDefIdsToRemove,
                 viewCreated.getId(),
-                2L
+                "root"
         );
         TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
                 .orElseThrow(NullPointerException::new);
@@ -344,7 +344,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                 viewAfterModify.getIncludedTaskDefinitions().stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 sameBeanAs(taskDefIdsRemainingExpected)
         );
-        assertThat(viewAfterModify.getLastModifier(), is(2L));
+        assertThat(viewAfterModify.getLastModifier(), is("root"));
     }
 
     @Test
@@ -357,7 +357,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
             taskDefinitionViewService.removeTaskDefinitionsFromView(
                     mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                     1234L,   // Non-exist view id
-                    2L
+                    "root"
             );
             // Validate
             fail();
@@ -383,18 +383,18 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         taskDefinitionViewService.removeTaskDefinitionsFromView(
                 taskDefIdsToRemove,
                 viewCreated.getId(),
-                2L
+                "root1"
         );
         taskDefinitionViewService.removeTaskDefinitionsFromView(
                 taskDefIdsToRemove,
                 viewCreated.getId(),
-                3L
+                "root2"
         );
         // remove with non-relevant task definition ids will not work, but no exception shall be thrown
         taskDefinitionViewService.removeTaskDefinitionsFromView(
                 Sets.newHashSet(-1L, 12345L),
                 viewCreated.getId(),
-                4L
+                "root3"
         );
         TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
                 .orElseThrow(NullPointerException::new);
@@ -405,7 +405,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                 viewAfterModify.getIncludedTaskDefinitions().stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 sameBeanAs(taskDefIdsRemainingExpected)
         );
-        assertThat(viewAfterModify.getLastModifier(), is(4L));
+        assertThat(viewAfterModify.getLastModifier(), is("root3"));
     }
 
     @Test
@@ -430,7 +430,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         taskDefinitionViewService.overwriteTaskDefinitionsOfView(
                 new HashSet<>(taskDefIdsOverwrite),
                 viewCreated.getId(),
-                2L
+                "root"
         );
         TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
                 .orElseThrow(NullPointerException::new);
@@ -441,13 +441,13 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                         .map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 sameBeanAs(new HashSet<>(taskDefIdsAtInit))
         );
-        assertThat(viewBeforeModify.getLastModifier(), is(1L));
+        assertThat(viewBeforeModify.getLastModifier(), is("admin"));
         assertThat(
                 viewAfterModify.getIncludedTaskDefinitions().stream()
                         .map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                 sameBeanAs(new HashSet<>(taskDefIdsOverwrite))
         );
-        assertThat(viewAfterModify.getLastModifier(), is(2L));
+        assertThat(viewAfterModify.getLastModifier(), is("root"));
     }
 
     @Test
@@ -460,7 +460,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
             taskDefinitionViewService.overwriteTaskDefinitionsOfView(
                     mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
                     1234L,
-                    2L
+                    "root"
             );
             // Validate
             fail();
@@ -476,7 +476,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
             taskDefinitionViewService.overwriteTaskDefinitionsOfView(
                     Sets.newHashSet(111L, 222L, 333L),  // task definition ids that do not exist
                     viewCreated.getId(),
-                    1L
+                    "admin"
             );
             // Validate
             fail();
@@ -634,17 +634,17 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         List<TaskDefinition> taskDefinitionList = MockTaskDefinitionFactory.createTaskDefinitions(3);
         TaskDefinition taskDefinition0 = taskDefinitionList.get(0).cloneBuilder()
                 .withName("apple juice")
-                .withCreator(0L)
+                .withCreator("root")
                 .withTaskTemplateName("SparkSQL")
                 .build();
         TaskDefinition taskDefinition1 = taskDefinitionList.get(1).cloneBuilder()
                 .withName("apple juice")
-                .withCreator(1L)
+                .withCreator("admin")
                 .withTaskTemplateName("Bash")
                 .build();
         TaskDefinition taskDefinition2 = taskDefinitionList.get(2).cloneBuilder()
                 .withName("boy")
-                .withCreator(1L)
+                .withCreator("admin")
                 .withTaskTemplateName("SparkSQL")
                 .build();
         List<TaskDefinitionView> viewList = prepareListOfViews(3);
@@ -668,7 +668,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         TaskDefinitionViewSearchParams searchParams2 = TaskDefinitionViewSearchParams.builder()
                 .pageNum(1)
                 .pageSize(100)
-                .taskDefCreatorIds(Arrays.asList(1L))
+                .taskDefCreators(Arrays.asList("admin"))
                 .build();
 
         TaskDefinitionViewSearchParams searchParams3 = TaskDefinitionViewSearchParams.builder()

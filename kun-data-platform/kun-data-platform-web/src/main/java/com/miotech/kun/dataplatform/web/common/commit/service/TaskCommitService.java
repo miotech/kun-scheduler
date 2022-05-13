@@ -117,7 +117,7 @@ public class TaskCommitService extends BaseSecurityService {
                 .withCommittedAt(OffsetDateTime.now())
                 .withCommitType(commitType)
                 .withCommitStatus(CommitStatus.SUBMITTED)
-                .withCommitter(getCurrentUser().getId())
+                .withCommitter(getCurrentUser().getUsername())
                 .withLatestCommit(true)
                 .build();
         // update previous commit and create new commit

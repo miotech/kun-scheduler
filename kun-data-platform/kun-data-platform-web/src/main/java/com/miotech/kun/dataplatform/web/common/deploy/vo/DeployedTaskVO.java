@@ -21,8 +21,7 @@ public class DeployedTaskVO {
 
     private final String taskTemplateName;
 
-    @JsonSerialize(using= ToStringSerializer.class)
-    private final Long owner;
+    private final String owner;
 
     @JsonProperty("isArchived")
     private final boolean archived;
