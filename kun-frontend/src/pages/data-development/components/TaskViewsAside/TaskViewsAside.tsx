@@ -3,7 +3,8 @@ import { PlusOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import { useRequest } from 'ahooks';
-
+import { RootState } from '@/rematch/store';
+import { DataDevelopmentModelState } from '@/rematch/models/dataDevelopment/model-state';
 import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsAside/TaskViewListItem';
 
 import { TaskDefinitionViewBase, TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
@@ -39,7 +40,7 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     allowAllTaskDefsView = true,
   } = props;
 
-  const { selector, dispatch } = useRedux(state => state.dataDevelopment);
+  const { selector, dispatch } = useRedux<DataDevelopmentModelState>((state: RootState) => state.dataDevelopment);
 
   const [searchText, setSearchText] = useState<string>('');
 
@@ -57,11 +58,11 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
         pageSize: 10,
         name: selector.filters.name,
         taskTemplateName: selector.filters.taskTemplateName || undefined,
-        ownerIds: selector.filters.creatorIds as any,
+        owners: selector.filters.creators as any,
         viewIds: undefined,
       });
     }
-  }, [doFetch, selector.filters, selector.filters.creatorIds, selector.filters.name, selector.filters.taskTemplateName]);
+  }, [doFetch, selector.filters, selector.filters.creators, selector.filters.name, selector.filters.taskTemplateName]);
 
   useEffect(() => {
     dispatch.dataDevelopment.setRecordCount(data?.totalCount ?? 0);

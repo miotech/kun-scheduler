@@ -2,7 +2,7 @@ import { DeployedTask } from '@/definitions/DeployedTask.type';
 
 export interface ScheduledTasksFilterState {
   searchName: string;
-  ownerIds: (string | number)[];
+  owners: string[];
   pageNum: number;
   pageSize: number;
   taskTemplateName: string;
@@ -17,7 +17,7 @@ export interface ScheduledTasksModelState {
 
 export const defaultFilter: ScheduledTasksFilterState = {
   searchName: '',
-  ownerIds: [],
+  owners: [],
   pageNum: 1,
   pageSize: 25,
   taskTemplateName: '',

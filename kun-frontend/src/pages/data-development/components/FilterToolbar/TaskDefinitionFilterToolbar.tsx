@@ -69,7 +69,7 @@ export const TaskDefinitionFilterToolbarComponent: React.FC<Props> = memo(props 
         return;
       }
       dispatch.dataDevelopment.updateFilter({
-        creatorIds: value || [],
+        creators: value || [],
       });
     },
     [dispatch],
@@ -109,7 +109,7 @@ export const TaskDefinitionFilterToolbarComponent: React.FC<Props> = memo(props 
           <Col className="gutter-row" span={8}>
             <UserSelect
               mode="multiple"
-              value={filters.creatorIds}
+              value={filters.creators}
               onChange={handleOwnerChange}
               allowClear
               placeholder={t('dataDevelopment.filterByOwner')}

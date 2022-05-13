@@ -13,15 +13,12 @@ interface OwnProps {
 
 type Props = SelectProps<string | string[]> & OwnProps;
 
-export const UserSelect: FunctionComponent<Props> = (props) => {
+export const UserSelect: FunctionComponent<Props> = props => {
   const { value, onChange, placeholder, ...restProps } = props;
 
   const t = useI18n();
 
-  const {
-    data: respData,
-    loading,
-  } = useRequest(fetchUsersList, {
+  const { data: respData, loading } = useRequest(fetchUsersList, {
     throttleInterval: 500,
     // cache up user list for later use
     cacheKey: 'fetchUsersList',
@@ -29,24 +26,26 @@ export const UserSelect: FunctionComponent<Props> = (props) => {
 
   const users = respData || [];
 
-  const options = useMemo(() => users.map(user => (
-    <Select.Option key={user.id} value={user.id} label={user.username}>
-      {user.username}
-    </Select.Option>
-  )), [
-    users,
-  ]);
+  const options = useMemo(
+    () =>
+      users.map(user => (
+        <Select.Option key={user.id} value={user.username} label={user.username}>
+          {user.username}
+        </Select.Option>
+      )),
+    [users],
+  );
 
   return (
     <Select
-      disabled={props.disabled || (!users.length)}
+      disabled={props.disabled || !users.length}
       showSearch
       optionFilterProp="label"
       notFoundContent={loading ? <KunSpin size="small" /> : null}
       {...restProps}
       // if user list is still loading, disable selector
       placeholder={loading ? `${t('common.loading')}` : placeholder}
-      value={(!users.length) ? undefined : value}
+      value={!users.length ? undefined : value}
       onChange={onChange}
     >
       {options}

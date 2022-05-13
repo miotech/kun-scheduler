@@ -74,7 +74,7 @@ export const DiffVersion: React.FC<Props> = memo(props => {
             <span className={Styles.userName}>
               <UserOutlined />
               &nbsp;
-              <UsernameText userId={leftDiff?.committer} />
+              <UsernameText owner={leftDiff?.committer} />
             </span>
             <span className={Styles.time}>
               {leftDiff?.committedAt ? moment(leftDiff.committedAt).format('YYYY-MM-DD HH:mm:ss') : '...'}
@@ -94,7 +94,7 @@ export const DiffVersion: React.FC<Props> = memo(props => {
             <span className={Styles.userName}>
               <UserOutlined />
               &nbsp;
-              <UsernameText userId={rightDiff?.committer} />
+              <UsernameText owner={rightDiff?.committer} />
             </span>
             <span className={Styles.time}>
               {rightDiff?.committedAt ? moment(rightDiff.committedAt).format('YYYY-MM-DD HH:mm:ss') : '...'}

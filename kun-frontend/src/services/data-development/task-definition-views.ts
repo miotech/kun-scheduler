@@ -24,7 +24,7 @@ export async function searchTaskDefinitionViews(searchParams: SearchTaskDefiniti
       sortOrder: searchParams.sortOrder,
       taskDefName: searchParams.taskDefName,
       taskTemplateName: searchParams.taskTemplateName,
-      taskDefCreatorIds: searchParams.taskDefCreatorIds,
+      taskDefCreators: searchParams.taskDefCreators,
     },
     mockCode: 'task-def-views.search',
   });

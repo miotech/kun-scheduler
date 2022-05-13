@@ -6,7 +6,7 @@ export interface BackfillModelState {
     pageNum: number;
     pageSize: number;
     keyword: string;
-    creatorId: string | null;
+    creator: string | null;
     startTimeRng: Moment | null;
     endTimeRng: Moment | null;
   };
@@ -26,7 +26,7 @@ export const initState: BackfillModelState = {
     pageNum: 1,
     pageSize: 25,
     keyword: '',
-    creatorId: null,
+    creator: null,
     startTimeRng: null,
     endTimeRng: null,
   },

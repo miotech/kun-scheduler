@@ -92,7 +92,7 @@ export const ViewVersion: React.FC<Props> = memo(props => {
           <div className={Styles.center}>
             <div className={Styles.version}>{taskCommit?.version}</div>
             <div className={Styles.name}>
-              <UserOutlined /> <UsernameText userId={taskCommit?.committer} />{' '}
+              <UserOutlined /> <UsernameText owner={taskCommit?.committer} />{' '}
             </div>
             <div className={Styles.tiem}>
               {taskCommit?.committedAt ? moment(taskCommit.committedAt).format('YYYY-MM-DD HH:mm:ss') : '...'}
@@ -135,11 +135,11 @@ export const ViewVersion: React.FC<Props> = memo(props => {
             </Descriptions.Item>
             {/* Owner */}
             <Descriptions.Item label={t('dataDevelopment.definition.property.owner')}>
-              {taskCommit?.snapshot?.owner ? <UsernameText userId={taskCommit?.snapshot?.owner} /> : '...'}
+              {taskCommit?.snapshot?.owner ? <UsernameText owner={taskCommit?.snapshot?.owner} /> : '...'}
             </Descriptions.Item>
             {/* Last committer */}
             <Descriptions.Item label={t('dataDevelopment.definition.committer')}>
-              <UsernameText userId={taskCommit?.committer} />
+              <UsernameText owner={taskCommit?.committer} />
             </Descriptions.Item>
           </Descriptions>
         </div>

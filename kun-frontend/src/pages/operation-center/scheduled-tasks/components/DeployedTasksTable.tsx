@@ -15,8 +15,8 @@ import { DeployedTask } from '@/definitions/DeployedTask.type';
 import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { UsernameText } from '@/components/UsernameText';
-import styles from './DeployedTasksTable.less';
 import TextContainer from '@/components/TextContainer/TextContainer';
+import styles from './DeployedTasksTable.less';
 
 interface DeployedTasksTableProps {
   tableData: DeployedTask[];
@@ -65,7 +65,7 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function Deploy
         title: t('scheduledTasks.property.owner'),
         dataIndex: 'owner',
         key: 'owner',
-        render: (txt: string) => (txt ? <UsernameText userId={txt} /> : ''),
+        render: (txt: string) => (txt ? <UsernameText owner={txt} /> : ''),
       },
       // Column: Last run time
       {

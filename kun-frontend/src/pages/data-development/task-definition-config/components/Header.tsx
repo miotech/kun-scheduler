@@ -249,7 +249,7 @@ export const Header: React.FC<Props> = props => {
           </Descriptions.Item>
           {/* Last modifier */}
           <Descriptions.Item label={t('dataDevelopment.definition.property.updater')}>
-            {draftTaskDef?.lastModifier ? <UsernameText userId={draftTaskDef?.lastModifier} /> : '...'}
+            {draftTaskDef?.lastModifier ? <UsernameText owner={draftTaskDef?.lastModifier} /> : '...'}
           </Descriptions.Item>
           {/* Create time */}
           <Descriptions.Item label={t('dataDevelopment.definition.property.createTime')}>
