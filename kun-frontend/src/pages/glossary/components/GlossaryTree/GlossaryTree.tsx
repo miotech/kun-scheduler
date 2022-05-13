@@ -1,8 +1,8 @@
 // @ts-nocheck
 /* eslint-disable no-underscore-dangle, no-inner-declarations, no-param-reassign */
-import { useHistory, useLocation, formatMessage } from 'umi';
+import { useHistory, formatMessage } from 'umi';
 import React, { memo, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
-import { useUpdateEffect } from 'ahooks';
+import { useUpdateEffect, useMount } from 'ahooks';
 import * as d3 from 'd3';
 import cloneDeep from 'lodash/cloneDeep';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
@@ -11,6 +11,7 @@ import { GlossaryNode } from '@/rematch/models/glossary';
 import useRedux from '@/hooks/useRedux';
 import { fetchGlossariesService } from '@/services/glossary';
 import GlossaryDetail from '@/pages/glossary/glossary-detail/index';
+import useUrlState from '@ahooksjs/use-url-state';
 import { Tree } from './Tree';
 import styles from './GlossaryTree.less';
 
@@ -24,12 +25,11 @@ let tree = null;
 export default memo(
   forwardRef(function GlossaryTree({ rootNode }: Props, ref) {
     const history = useHistory();
-    const location = useLocation();
-    const { dispatch } = useRedux(() => { });
+    const { dispatch } = useRedux(() => {});
 
     const [visible, setVisible] = useState(false);
     const [currentId, setCurrentId] = useState();
-
+    const [routeParams, setRouteParams] = useUrlState();
     const setCurrentIdCache = id => {
       setCurrentId(id);
       currentIdCache = id;
@@ -46,8 +46,20 @@ export default memo(
       setCurrentId: (id: string) => {
         setVisible(true);
         setCurrentIdCache(id);
-      }
+      },
     }));
+
+    useMount(() => {
+      if (routeParams.glossaryId) {
+        setCurrentId(routeParams.glossaryId);
+        setVisible(true);
+      }
+    });
+
+    useUpdateEffect(() => {
+      const glossaryId = currentId || undefined;
+      setRouteParams({ glossaryId });
+    }, [currentId]);
 
     const updateTreeCache = useCallback(() => {
       dispatch.glossary.updateState({
@@ -165,12 +177,7 @@ export default memo(
       addChild(child, currentParentId, id);
       deleteChild(preParentId, id);
     }
-    useEffect(() => {
-      if (location?.query?.glossaryId) {
-        setVisible(true);
-        setCurrentIdCache(location?.query?.glossaryId);
-      }
-    }, [location]);
+
     useUpdateEffect(() => {
       d3.selectAll('rect').each(function textfunc(d) {
         if (d) {

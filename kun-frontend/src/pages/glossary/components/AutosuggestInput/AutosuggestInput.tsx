@@ -34,7 +34,7 @@ export default memo(function AutosuggestInput({ setCurrentId }: Props) {
     value: item.name,
     id: item.gid,
     description: item.description,
-    ancestryGlossaryList: item.ancestryGlossaryList
+    ancestryGlossaryList: item.ancestryGlossaryList,
   }));
 
   const handleSelect = useCallback(
@@ -54,16 +54,26 @@ export default memo(function AutosuggestInput({ setCurrentId }: Props) {
       placeholder={t('glossary.searchGlossary')}
     >
       {options.map((item: any) => (
-        <Option key={item.id} value={item.id}>
-          <div><span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span></div>
-          {item.ancestryGlossaryList && item.ancestryGlossaryList.map((idx: GlossaryChild, index: number) => {
-            return (
-              <span key={idx.id} className={styles.pathName} onClick={(e) => {e.stopPropagation();setCurrentId(idx.id);}}>
-                {' '}
-                {index !== 0 && '->'} {idx.name}
-              </span>
-            );
-          })}
+        <Option key={item.id} value={item.id} className={styles.option}>
+          <div className={styles.label}>
+            <span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span>
+          </div>
+          {item.ancestryGlossaryList &&
+            item.ancestryGlossaryList.map((idx: GlossaryChild, index: number) => {
+              return (
+                <span
+                  key={idx.id}
+                  className={styles.pathName}
+                  onClick={e => {
+                    e.stopPropagation();
+                    setCurrentId(idx.id);
+                  }}
+                >
+                  {' '}
+                  {index !== 0 && '->'} <span className={styles.childName}>{idx.name}</span>
+                </span>
+              );
+            })}
         </Option>
       ))}
     </Select>
