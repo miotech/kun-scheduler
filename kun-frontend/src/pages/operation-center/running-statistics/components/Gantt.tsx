@@ -148,12 +148,12 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
                 <Link
                   to={`/operation-center/running-statistics?taskRunId=${item.taskRunId}&taskName=${item.name}`}
                   className={style.name}
-                  style={{ color: item.taskRunId === taskRunId && '#000' }}
+                  style={{ color: item.taskRunId === taskRunId && 'red' }}
                   data-id="name"
                 >
                   {item.name}
                 </Link>
-                <Link to={`/operation-center/task-run-id/${item.taskRunId}`} target="_blank">
+                <Link to={`/operation-center/task-run-id/${item.taskRunId}`} style={{ zIndex: 999 }} target="_blank">
                   &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
                 </Link>
               </div>

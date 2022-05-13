@@ -1,41 +1,12 @@
 .lineList {
+  margin-top: 30px;
+  border-left: 1px dotted @secondary2;
   .itemContainer {
-    // height: 21px;
-    position: relative;
-    margin-left: 24px;
     &::before {
       content: '';
-      position: absolute;
-      bottom: 50%;
-      left: -24px;
+      display: block;
       width: 16px;
-      height: calc(50% + 12px);
-      display: inline-block;
       border-bottom: 1px dotted @secondary2;
-    }
-    &:not(:first-child) {
-      &::before {
-        border-left: 1px dotted @secondary2;
-      }
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: -24px;
-      width: 16px;
-      height: calc(50% + 6px);
-      display: inline-block;
-    }
-    &:not(:last-child) {
-      &::after {
-        border-left: 1px dotted @secondary2;
-      }
-    }
-
-    &:not(:last-child) {
-      margin-bottom: 16px;
     }
   }
 }

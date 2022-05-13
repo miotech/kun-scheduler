@@ -48,6 +48,7 @@
     "not ie <= 10"
   ],
   "dependencies": {
+    "@ahooksjs/use-url-state": "^3.3.10",
     "@ant-design/icons": "^4.1.0",
     "@dbeining/react-atom": "^4.1.9",
     "@joshoy/quartz-cron-parser": "^0.1.5",
