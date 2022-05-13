@@ -82,6 +82,8 @@ public class SparkConfiguration {
     public static final String SPARK_BASE_COMMAND = "sparkBaseCmd";
     public static final String SPARK_SUBMIT_PARMAS = "sparkSubmitParmas";
     public static final String SPARK_CONF = "sparkConf";
+    public static final String KUN_SPARK_CONF = "kunSparkConf";
+    public static final String DEFAULT_KUN_SPARK_CONF = "${ dataplatform.spark.default.conf }";
     public static final String SPARK_APPLICATION = "application";
     public static final String SPARK_APPLICATION_ARGS = "args";
 

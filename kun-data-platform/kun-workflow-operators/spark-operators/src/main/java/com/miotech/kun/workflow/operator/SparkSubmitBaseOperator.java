@@ -9,6 +9,7 @@ import com.miotech.kun.commons.utils.HdfsFileSystem;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import org.apache.hadoop.conf.Configuration;
+
 import java.io.IOException;
 
 import java.util.*;
@@ -110,7 +111,20 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         String sparkParamsStr = config.getString(SPARK_SUBMIT_PARMAS);
         Map<String, String> sparkSubmitParams = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkParamsStr) ? "{}" : sparkParamsStr);
         String sparkConfStr = config.getString(SPARK_CONF);
-        Map<String, String> sparkConf = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkConfStr) ? "{}" : sparkConfStr);
+        Map<String, String> defaultSparkConf = new HashMap<>();
+
+        try {
+            String defaultSparkConfStr = config.getString(KUN_SPARK_CONF);
+            defaultSparkConf = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(defaultSparkConfStr) ? "{}" : defaultSparkConfStr);
+        } catch (Exception e) {
+            logger.error("ignore illegal default spark conf", e);
+        }
+        logger.debug("default spark conf is {}",defaultSparkConf);
+
+
+        Map<String, String> taskConf = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkConfStr) ? "{}" : sparkConfStr);
+
+        Map<String, String> sparkConf = overrideSparkConfByTask(defaultSparkConf, taskConf);
 
         // add run time configs
         addRunTimeSparkConfs(sparkConf, context);
@@ -205,6 +219,14 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         hdfsFileSystem.renameFiles(path + "/" + latest, path + "/" + validating);
     }
 
+    private Map<String, String> overrideSparkConfByTask(Map<String, String> defaultConf, Map<String, String> taskConf) {
+        Map<String, String> runTimeConf = new HashMap<>(defaultConf);
+        for (Map.Entry<String, String> entry : taskConf.entrySet()) {
+            runTimeConf.put(entry.getKey(), entry.getValue());
+        }
+        return runTimeConf;
+    }
+
     @Override
     public void abort() {
         sparkOperatorUtils.abort();
@@ -222,7 +244,8 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
                 .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
                 .define(CONF_LINEAGE_JAR_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT, true, "the jar used for lineage analysis, in the format `s3a://BUCKET/xxx/xxx.jar` or `hdfs://host:port/xxx/xxx.jar`", CONF_LINEAGE_JAR_PATH)
                 .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
-                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY);
+                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY)
+                .define(KUN_SPARK_CONF, ConfigDef.Type.STRING, DEFAULT_KUN_SPARK_CONF, true, "default key-value spark conf", KUN_SPARK_CONF);
     }
 
     @Override

@@ -41,7 +41,7 @@ public class SparkSQLOperator extends KunOperator {
     public boolean run() {
         if (useLegacySparkSqlOperator) {
             return sparkSqlOperatorV1.run();
-        }else{
+        } else {
             return sparkSqlOperatorV2.run();
         }
     }
@@ -50,7 +50,7 @@ public class SparkSQLOperator extends KunOperator {
     public void abort() {
         if (useLegacySparkSqlOperator) {
             sparkSqlOperatorV1.abort();
-        }else{
+        } else {
             sparkSqlOperatorV2.abort();
         }
     }
@@ -86,7 +86,8 @@ public class SparkSQLOperator extends KunOperator {
                 .define(SPARK_APPLICATION, ConfigDef.Type.STRING, SPARK_SQL_JAR_DEFAULT_VALUE, true, "application class name for java application", SPARK_APPLICATION)
                 .define(SPARK_DATA_LAKE_PACKAGES, ConfigDef.Type.STRING, SPARK_DATA_LAKE_DEFAULT_PACKAGES, true, "data lake dependencies", SPARK_DATA_LAKE_PACKAGES)
                 .define(SPARK_SQL_EXTENSIONS, ConfigDef.Type.STRING, SPARK_DEFAULT_SQL_EXTENSIONS, true, "spark sql extensions", SPARK_SQL_EXTENSIONS)
-                .define(SPARK_SERIALIZER, ConfigDef.Type.STRING, SPARK_DEFAULT_SERIALIZER, true, "spark serializer", SPARK_SERIALIZER);
+                .define(SPARK_SERIALIZER, ConfigDef.Type.STRING, SPARK_DEFAULT_SERIALIZER, true, "spark serializer", SPARK_SERIALIZER)
+                .define(KUN_SPARK_CONF, ConfigDef.Type.STRING, DEFAULT_KUN_SPARK_CONF, true, "default key-value spark conf", KUN_SPARK_CONF);
     }
 
     @Override
@@ -113,7 +114,8 @@ public class SparkSQLOperator extends KunOperator {
                 .addConfig(CONF_S3_SECRET_KEY, config.getString(CONF_S3_SECRET_KEY))
                 .addConfig(SPARK_DATA_LAKE_PACKAGES, config.getString(SPARK_DATA_LAKE_PACKAGES))
                 .addConfig(SPARK_SQL_EXTENSIONS, config.getString(SPARK_SQL_EXTENSIONS))
-                .addConfig(SPARK_SERIALIZER, config.getString(SPARK_SERIALIZER));
+                .addConfig(SPARK_SERIALIZER, config.getString(SPARK_SERIALIZER))
+                .addConfig(KUN_SPARK_CONF,config.getString(KUN_SPARK_CONF));
         return builder.build();
     }
 
