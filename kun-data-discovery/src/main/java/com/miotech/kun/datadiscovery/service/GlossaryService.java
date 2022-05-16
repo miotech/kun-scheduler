@@ -10,16 +10,13 @@ import com.miotech.kun.datadiscovery.persistence.GlossaryRepository;
 import com.miotech.kun.datadiscovery.util.convert.AppBasicConversionService;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -47,6 +44,8 @@ public class GlossaryService extends BaseSecurityService {
     SearchAppService searchAppService;
 
     public static final String COPY_PREFIX = "Copy of ";
+    @Autowired
+    private MetadataService metadataService;
 
 
     public Long getParentId(Long id) {
@@ -252,14 +251,8 @@ public class GlossaryService extends BaseSecurityService {
         if (CollectionUtils.isEmpty(glossaryToDataSetIdList)) {
             return Lists.newArrayList();
         }
-        String suggestColumnUrl = url + "/dataset/id_list";
-
-
-        ParameterizedTypeReference<List<DatasetBasicInfo>> typeRef = new ParameterizedTypeReference<List<DatasetBasicInfo>>() {
-        };
-        ResponseEntity<List<DatasetBasicInfo>> responseEntity = restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(glossaryToDataSetIdList), typeRef);
-        List<DatasetBasicInfo> datasetBasicInfos = responseEntity.getBody();
-        return Objects.requireNonNull(datasetBasicInfos).stream().filter(Objects::nonNull).map(datasetBasicInfo -> AppBasicConversionService.getSharedInstance().convert(datasetBasicInfo, Asset.class)).collect(Collectors.toList());
+        List<DatasetDetail> datasetBasicInfoList = metadataService.getDatasetDetailList(glossaryToDataSetIdList);
+        return Objects.requireNonNull(datasetBasicInfoList).stream().filter(Objects::nonNull).map(datasetBasicInfo -> AppBasicConversionService.getSharedInstance().convert(datasetBasicInfo, Asset.class)).collect(Collectors.toList());
     }
 
 

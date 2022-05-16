@@ -8,11 +8,10 @@ import com.miotech.kun.datadiscovery.model.entity.DataSourceBasicPage;
 import com.miotech.kun.datadiscovery.model.entity.DataSourcePage;
 import com.miotech.kun.datadiscovery.model.entity.DataSourceTemplateVO;
 import com.miotech.kun.datadiscovery.model.entity.DataSourceVO;
+import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
-import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
-import com.miotech.kun.workflow.client.WorkflowClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -31,16 +30,10 @@ import java.util.Map;
 public class DataSourceController {
 
     @Autowired
-    DatasetFieldService datasetFieldService;
-
-    @Autowired
     DataSourceService dataSourceService;
 
     @Autowired
     MetadataService metadataService;
-
-    @Autowired
-    WorkflowClient workflowClient;
 
     @GetMapping("/metadata/datasources/search")
     public RequestResult<DataSourceBasicPage> searchDataSource(BasicSearchRequest basicSearchRequest) {
@@ -53,14 +46,14 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/datasource/add")
-    public RequestResult<DataSourceVO> addDataSource(@RequestBody com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
-        return RequestResult.success(dataSourceService.add(dataSourceVo));
+    public RequestResult<DataSourceVO> addDataSource(@RequestBody DataSourceRequest dataSourceRequest) {
+        return RequestResult.success(dataSourceService.add(dataSourceRequest));
     }
 
     @PostMapping("/metadata/datasource/{id}/update")
     public RequestResult<DataSourceVO> updateDataSource(@PathVariable Long id,
-                                                        @RequestBody com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
-        return RequestResult.success(dataSourceService.update(id, dataSourceVo));
+                                                        @RequestBody DataSourceRequest dataSourceRequest) {
+        return RequestResult.success(dataSourceService.update(id, dataSourceRequest));
     }
 
     @DeleteMapping("/metadata/datasource/{id}")

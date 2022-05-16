@@ -182,8 +182,8 @@ public class MetadataDatasetService implements MetadataServiceFacade {
         return metadataDatasetDao.getDatasetDetail(id);
     }
 
-    public List<DatasetBasicInfo> getDatasetBasicInfoList(List<Long> idList) {
-        return metadataDatasetDao.getDatasetBasicInfoList(idList);
+    public List<DatasetDetail> getDatasetDetailList(List<Long> idList) {
+        return metadataDatasetDao.getDatasetDetailList(idList);
     }
 
     public void updateDataset(Long id, DatasetUpdateRequest updateRequest) {

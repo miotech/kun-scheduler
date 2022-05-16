@@ -3,9 +3,11 @@ package com.miotech.kun.datadiscovery.testing;
 import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
-import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
+import com.miotech.kun.datadiscovery.service.MetadataService;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
@@ -48,7 +50,7 @@ public class LineageAppServiceTest extends DataDiscoveryTestBase {
     @MockBean
     WorkflowClient workflowClient;
     @MockBean
-    DatasetService datasetService;
+    MetadataService metadataService;
     @MockBean
     private DeployedTaskFacade deployedTaskFacade;
 
@@ -150,7 +152,6 @@ public class LineageAppServiceTest extends DataDiscoveryTestBase {
     }
 
 
-
     @Test
     void testGetLineageTasksByNeighbors_fetch_DownStream() {
         LineageTasksRequest lineageTasksRequest = getLineageTasksRequest();
@@ -192,7 +193,7 @@ public class LineageAppServiceTest extends DataDiscoveryTestBase {
         doReturn(createLineageNeighborsGraph(nodeInfo,
                 Lists.newArrayList(upNodeInfo), Lists.newArrayList(downNodeInfo)))
                 .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
-        doReturn(createLineageDatasetBasicList(datasetNodeInfos)).when(datasetService).getDatasets(anyList());
+        doReturn(createLineageDatasetBasicList(datasetNodeInfos)).when(metadataService).getDatasetDetailList(anyList());
         LineageGraph lineageGraph = lineageAppService.getLineageGraph(request);
         assertThat(lineageGraph, is(notNullValue()));
         List<LineageVertex> vertices = lineageGraph.getVertices();
