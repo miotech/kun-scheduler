@@ -4,12 +4,9 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
-import com.miotech.kun.datadiscovery.service.DataSourceService;
-import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
-import com.miotech.kun.workflow.client.WorkflowClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,18 +18,8 @@ import java.util.Optional;
 @RequestMapping("/kun/api/v1")
 @Slf4j
 public class DatasetController {
-
-    @Autowired
-    DatasetFieldService datasetFieldService;
-
-    @Autowired
-    DataSourceService dataSourceService;
-
     @Autowired
     MetadataService metadataService;
-
-    @Autowired
-    WorkflowClient workflowClient;
 
     @GetMapping("/metadata/databases")
     public RequestResult<List<Database>> getDatabases(DatabaseRequest request) {

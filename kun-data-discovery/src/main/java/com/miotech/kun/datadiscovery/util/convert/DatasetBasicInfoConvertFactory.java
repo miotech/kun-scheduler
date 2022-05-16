@@ -2,6 +2,7 @@ package com.miotech.kun.datadiscovery.util.convert;
 
 import com.miotech.kun.datadiscovery.model.entity.Asset;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 
@@ -11,10 +12,10 @@ import org.springframework.core.convert.converter.ConverterFactory;
  * @author: zemin  huang
  * @create: 2022-02-09 09:56
  **/
-public class DatasetBasicInfoConvertFactory implements ConverterFactory<DatasetBasicInfo, Asset> {
+public class DatasetBasicInfoConvertFactory implements ConverterFactory<DatasetDetail, Asset> {
 
     @Override
-    public <T extends Asset> Converter<DatasetBasicInfo, T> getConverter(Class<T> targetType) {
+    public <T extends Asset> Converter<DatasetDetail, T> getConverter(Class<T> targetType) {
         return source -> {
             Asset asset = new Asset();
             asset.setId(source.getGid());

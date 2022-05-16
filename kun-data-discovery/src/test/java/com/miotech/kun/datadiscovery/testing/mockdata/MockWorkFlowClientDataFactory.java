@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscovery.testing.mockdata;
 
-import com.miotech.kun.datadiscovery.model.entity.LineageDatasetBasic;
+import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
@@ -29,6 +30,7 @@ public class MockWorkFlowClientDataFactory {
                 .withDependencies(new ArrayList<>()).build();
 
     }
+
     public static EdgeInfo createEdgeInfo(ArrayList<EdgeTaskInfo> taskInfos) {
         EdgeInfo edgeInfo = EdgeInfo.newBuilder()
                 .withTaskInfos(taskInfos)
@@ -47,19 +49,20 @@ public class MockWorkFlowClientDataFactory {
         return taskInfo_1;
     }
 
-    public   static TaskRun getTaskRun(long id, String dateTimeString, TaskRunStatus success) {
+    public static TaskRun getTaskRun(long id, String dateTimeString, TaskRunStatus success) {
         TaskRun taskRun = TaskRun.newBuilder().withId(id).withStartAt(DateTimeUtils.freezeAt(dateTimeString))
                 .withStatus(success).build();
         return taskRun;
     }
-    public static Map<Long, List<TaskRun>>  createLatestTaskRuns(Long taskId,List<TaskRun> taskRunList) {
-        Map<Long, List<TaskRun>> map=new HashMap<>();
+
+    public static Map<Long, List<TaskRun>> createLatestTaskRuns(Long taskId, List<TaskRun> taskRunList) {
+        Map<Long, List<TaskRun>> map = new HashMap<>();
         List<TaskRun> taskRuns = taskRunList.stream().sorted((r1, r2) -> r2.getId().compareTo(r1.getId())).collect(Collectors.toList());
-        map.put(taskId,taskRuns);
+        map.put(taskId, taskRuns);
         return map;
     }
 
-    public static DatasetLineageInfo createLineageNeighborsGraph(DatasetNodeInfo nodeInfo ,List<DatasetNodeInfo> up,List<DatasetNodeInfo> down) {
+    public static DatasetLineageInfo createLineageNeighborsGraph(DatasetNodeInfo nodeInfo, List<DatasetNodeInfo> up, List<DatasetNodeInfo> down) {
 
         DatasetLineageInfo lineageInfo = DatasetLineageInfo.newBuilder()
                 .withSourceNode(nodeInfo)
@@ -70,7 +73,7 @@ public class MockWorkFlowClientDataFactory {
     }
 
 
-    public static DatasetNodeInfo getDatasetNodeInfo(Long  gid, String dataSetName) {
+    public static DatasetNodeInfo getDatasetNodeInfo(Long gid, String dataSetName) {
         DatasetNodeInfo upNodeInfo = DatasetNodeInfo
                 .newBuilder()
                 .withGid(gid)
@@ -81,7 +84,7 @@ public class MockWorkFlowClientDataFactory {
         return upNodeInfo;
     }
 
-    public static DatasetLineageInfo createLineageNeighbors(ArrayList<Task> upTask, ArrayList<Task> downTask,Long dataSetId) {
+    public static DatasetLineageInfo createLineageNeighbors(ArrayList<Task> upTask, ArrayList<Task> downTask, Long dataSetId) {
         DatasetNodeInfo nodeInfo = DatasetNodeInfo
                 .newBuilder()
                 .withGid(dataSetId)
@@ -95,14 +98,14 @@ public class MockWorkFlowClientDataFactory {
         return lineageInfo;
     }
 
-    public static List<LineageDatasetBasic> createLineageDatasetBasicList(List<DatasetNodeInfo> datasetNodeInfoList) {
-        List<LineageDatasetBasic> lineageDatasetBasicList = datasetNodeInfoList.stream().map(datasetNodeInfo -> {
-            LineageDatasetBasic lineageDatasetBasic = new LineageDatasetBasic();
+    public static List<DatasetDetail> createLineageDatasetBasicList(List<DatasetNodeInfo> datasetNodeInfoList) {
+        List<DatasetDetail> datasetDetailList = datasetNodeInfoList.stream().map(datasetNodeInfo -> {
+            DatasetDetail lineageDatasetBasic = new DatasetDetail();
             lineageDatasetBasic.setGid(datasetNodeInfo.getGid());
             lineageDatasetBasic.setName(datasetNodeInfo.getDatasetName());
             return lineageDatasetBasic;
         }).collect(Collectors.toList());
-        return lineageDatasetBasicList;
+        return datasetDetailList;
 
     }
 

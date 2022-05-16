@@ -62,13 +62,14 @@ public class DatasetController {
     /**
      * Get all task witch produce this data set as it's output
      * by datasetId
+     *
      * @param datasetId
      * @return
      */
     @RouteMapping(url = "/dataset/task/upstream", method = "GET")
-    public List<Long> getUpstreamTaskIdByDataSetId(@QueryParameter Long datasetId){
+    public List<Long> getUpstreamTaskIdByDataSetId(@QueryParameter Long datasetId) {
         Optional<DatasetNode> datasetNodeOptional = lineageService.fetchDatasetNodeById(datasetId);
-        if(datasetNodeOptional.isPresent()){
+        if (datasetNodeOptional.isPresent()) {
             DatasetNode datasetNode = datasetNodeOptional.get();
             return datasetNode.getUpstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toList());
         }
@@ -78,13 +79,14 @@ public class DatasetController {
     /**
      * Get all task witch use this data set as it's input
      * by datasetId
+     *
      * @param datasetId
      * @return
      */
     @RouteMapping(url = "/dataset/task/downstream", method = "GET")
-    public List<Long> getDownStreamTaskIdByDataSetId(@QueryParameter Long datasetId){
+    public List<Long> getDownStreamTaskIdByDataSetId(@QueryParameter Long datasetId) {
         Optional<DatasetNode> datasetNodeOptional = lineageService.fetchDatasetNodeById(datasetId);
-        if(datasetNodeOptional.isPresent()){
+        if (datasetNodeOptional.isPresent()) {
             DatasetNode datasetNode = datasetNodeOptional.get();
             return datasetNode.getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toList());
         }
@@ -93,16 +95,17 @@ public class DatasetController {
 
     /**
      * Get all dataset product by given taskId
+     *
      * @param taskId
      * @return
      */
     @RouteMapping(url = "/dataset/output", method = "GET")
-    public List<Dataset> getOutputDataSetByTaskId(@QueryParameter Long taskId){
-        Set<DatasetNode> outputDataSetNodes =  lineageService.fetchOutletNodes(taskId);
+    public List<Dataset> getOutputDataSetByTaskId(@QueryParameter Long taskId) {
+        Set<DatasetNode> outputDataSetNodes = lineageService.fetchOutletNodes(taskId);
         List<Dataset> outputDataSets = new ArrayList<>();
-        for (DatasetNode datasetNode : outputDataSetNodes){
+        for (DatasetNode datasetNode : outputDataSetNodes) {
             Optional<Dataset> datasetOptional = datasetService.fetchDatasetByGid(datasetNode.getGid());
-            if(datasetOptional.isPresent()){
+            if (datasetOptional.isPresent()) {
                 outputDataSets.add(datasetOptional.get());
             }
         }
@@ -111,16 +114,17 @@ public class DatasetController {
 
     /**
      * Get all dataset used as input by given taskId
+     *
      * @param taskId
      * @return
      */
     @RouteMapping(url = "/dataset/input", method = "GET")
-    public List<Dataset> getInputDataSetByTaskId(@QueryParameter Long taskId){
-        Set<DatasetNode> inputDataSetNodes =  lineageService.fetchInletNodes(taskId);
+    public List<Dataset> getInputDataSetByTaskId(@QueryParameter Long taskId) {
+        Set<DatasetNode> inputDataSetNodes = lineageService.fetchInletNodes(taskId);
         List<Dataset> inputDataSets = new ArrayList<>();
-        for (DatasetNode datasetNode : inputDataSetNodes){
+        for (DatasetNode datasetNode : inputDataSetNodes) {
             Optional<Dataset> datasetOptional = datasetService.fetchDatasetByGid(datasetNode.getGid());
-            if(datasetOptional.isPresent()){
+            if (datasetOptional.isPresent()) {
                 inputDataSets.add(datasetOptional.get());
             }
         }
@@ -130,36 +134,40 @@ public class DatasetController {
 
     /**
      * Get all databases under the specified datasource
+     *
      * @param dataSourceIds
      * @return
      */
     @RouteMapping(url = "/dataset/databases", method = "GET")
-    public List<DatabaseBaseInfo> getDatabases(@QueryParameter List<Long> dataSourceIds){
+    public List<DatabaseBaseInfo> getDatabases(@QueryParameter List<Long> dataSourceIds) {
         return datasetService.getDatabases(dataSourceIds);
     }
 
     /**
      * search by dataset name
+     *
      * @param request
      * @return
      */
     @RouteMapping(url = "/dataset/search", method = "POST")
-    public DatasetBasicSearch searchDatasets(@RequestBody BasicSearchRequest request){
+    public DatasetBasicSearch searchDatasets(@RequestBody BasicSearchRequest request) {
         return datasetService.searchDatasets(request);
     }
 
     /**
      * full text search
+     *
      * @param request
      * @return
      */
     @RouteMapping(url = "/dataset/full-text/search", method = "POST")
-    public DatasetBasicSearch fullTextSearch(@RequestBody DatasetSearchRequest request){
+    public DatasetBasicSearch fullTextSearch(@RequestBody DatasetSearchRequest request) {
         return datasetService.fullTextSearch(request);
     }
 
     /**
      * get dataset detail
+     *
      * @param id
      * @return
      */
@@ -170,38 +178,42 @@ public class DatasetController {
 
     /**
      * get dataset detail  list
+     *
      * @param idList
      * @return
      */
     @RouteMapping(url = "/dataset/id_list", method = "POST")
-    public List<DatasetBasicInfo> getDatasetBasicInfoList(@RequestBody List<Long> idList){
+    public List<DatasetDetail> getDatasetDetailList(@RequestBody List<Long> idList) {
 
-        return datasetService.getDatasetBasicInfoList(idList);
+        return datasetService.getDatasetDetailList(idList);
     }
 
     /**
      * get dataset basic info
+     *
      * @param id
      * @return
      */
     @RouteMapping(url = "/dataset/basic/{id}", method = "GET")
-    public Dataset getBasicDataset(@RouteVariable Long id){
+    public Dataset getBasicDataset(@RouteVariable Long id) {
         return datasetService.fetBasicDatasetByGid(id);
     }
 
     /**
      * get dataset basick  list
+     *
      * @param idList
      * @return
      */
     @RouteMapping(url = "/dataset/basic/id_list", method = "POST")
-    public List<Dataset> getBasicDatasetList(@RequestBody List<Long> idList){
+    public List<Dataset> getBasicDatasetList(@RequestBody List<Long> idList) {
 
         return datasetService.fetchBasicDatasetList(idList);
     }
 
     /**
      * update dataset
+     *
      * @param id
      * @param updateRequest
      * @return
@@ -214,6 +226,7 @@ public class DatasetController {
 
     /**
      * get dataset fields info
+     *
      * @param id
      * @param searchRequest
      * @return
@@ -225,6 +238,7 @@ public class DatasetController {
 
     /**
      * update dataset field info
+     *
      * @param id
      * @param updateRequest
      * @return

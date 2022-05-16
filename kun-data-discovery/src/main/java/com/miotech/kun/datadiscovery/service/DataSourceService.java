@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DataSourceSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
 import com.miotech.kun.datadiscovery.util.JSONUtils;
 import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
@@ -63,13 +64,13 @@ public class DataSourceService extends BaseSecurityService {
     public List<DataSourceTemplateVO> getAllTypes() {
         List<DatasourceTemplate> types = metadataService.getDataSourceTypes();
         return types.stream()
-                .map(type -> new DataSourceTemplateVO(type.getType(),type.getId()))
+                .map(type -> new DataSourceTemplateVO(type.getType(), type.getId()))
                 .collect(Collectors.toList());
     }
 
-    public DataSourceVO add(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
-        fillCreateRequest(dataSourceVo);
-        DataSource ds = metadataService.createDataSource(dataSourceVo.convert());
+    public DataSourceVO add(DataSourceRequest dataSourceRequest) {
+        fillCreateRequest(dataSourceRequest);
+        DataSource ds = metadataService.createDataSource(dataSourceRequest.convert());
         return DataSourceVO.builder()
                 .id(ds.getId())
                 .datasourceType(ds.getDatasourceType().name())
@@ -83,9 +84,9 @@ public class DataSourceService extends BaseSecurityService {
                 .build();
     }
 
-    public DataSourceVO update(Long id, com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
-        fillUpdateRequest(dataSourceVo);
-        DataSource ds = metadataService.updateDataSource(id, dataSourceVo.convert());
+    public DataSourceVO update(Long id, DataSourceRequest dataSourceRequest) {
+        fillUpdateRequest(dataSourceRequest);
+        DataSource ds = metadataService.updateDataSource(id, dataSourceRequest.convert());
         return DataSourceVO.builder()
                 .id(ds.getId())
                 .datasourceType(ds.getDatasourceType().name())
@@ -103,26 +104,26 @@ public class DataSourceService extends BaseSecurityService {
         metadataService.deleteDataSource(id);
     }
 
-    private void fillCreateRequest(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
+    private void fillCreateRequest(DataSourceRequest dataSourceRequest) {
         String username = getCurrentUsername();
-        dataSourceVo.setCreateUser(username);
-        dataSourceVo.setUpdateUser(username);
-        dataSourceVo.setCreateTime(System.currentTimeMillis());
-        dataSourceVo.setUpdateTime(dataSourceVo.getCreateTime());
+        dataSourceRequest.setCreateUser(username);
+        dataSourceRequest.setUpdateUser(username);
+        dataSourceRequest.setCreateTime(System.currentTimeMillis());
+        dataSourceRequest.setUpdateTime(dataSourceRequest.getCreateTime());
     }
 
-    private void fillUpdateRequest(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
+    private void fillUpdateRequest(DataSourceRequest dataSourceRequest) {
         String username = getCurrentUsername();
-        dataSourceVo.setUpdateUser(username);
-        dataSourceVo.setUpdateTime(dataSourceVo.getCreateTime());
+        dataSourceRequest.setUpdateUser(username);
+        dataSourceRequest.setUpdateTime(dataSourceRequest.getCreateTime());
     }
 
-    private Map<String,Object> toFlatMap(ConnectionConfig connectionConfig){
-        Map<String,Object> flatMap = Maps.newHashMap(connectionConfig.getValues());
-        flatMap.put("userConnection",connectionConfig.getUserConnection());
-        flatMap.put("dataConnection",connectionConfig.getDataConnection());
-        flatMap.put("metadataConnection",connectionConfig.getMetadataConnection());
-        flatMap.put("storageConnection",connectionConfig.getStorageConnection());
+    private Map<String, Object> toFlatMap(ConnectionConfig connectionConfig) {
+        Map<String, Object> flatMap = Maps.newHashMap(connectionConfig.getValues());
+        flatMap.put("userConnection", connectionConfig.getUserConnection());
+        flatMap.put("dataConnection", connectionConfig.getDataConnection());
+        flatMap.put("metadataConnection", connectionConfig.getMetadataConnection());
+        flatMap.put("storageConnection", connectionConfig.getStorageConnection());
         return flatMap;
     }
 

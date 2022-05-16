@@ -19,6 +19,7 @@ import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.*;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
 import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskRequest;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -30,6 +31,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -324,6 +326,14 @@ public class MetadataService {
         datasetField.setNotNullPercentage(datasetFieldInfo.getNotNullPercentage());
         datasetField.setDistinctCount(datasetFieldInfo.getDistinctCount());
         return datasetField;
+    }
+
+    public List<DatasetDetail> getDatasetDetailList(List<Long> datasetIdList) {
+        String suggestColumnUrl = url + "/dataset/id_list";
+        ParameterizedTypeReference<List<DatasetDetail>> typeRef = new ParameterizedTypeReference<List<DatasetDetail>>() {
+        };
+        ResponseEntity<List<DatasetDetail>> responseEntity = restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(datasetIdList), typeRef);
+        return responseEntity.getBody();
     }
 
 }

@@ -290,22 +290,22 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         metadataDatasetDao.overwriteOwners(dataset2OfFetch.getGid(), owners2);
         tagDao.overwriteDatasetTags(dataset1OfFetch.getGid(), tags1);
         tagDao.overwriteDatasetTags(dataset2OfFetch.getGid(), tags2);
-        List<Long> datasetIdList=new ArrayList<>();
+        List<Long> datasetIdList = new ArrayList<>();
         datasetIdList.add(dataset1OfFetch.getGid());
         datasetIdList.add(dataset2OfFetch.getGid());
 
-        List<DatasetBasicInfo> datasetBasicInfoList = metadataDatasetDao.getDatasetBasicInfoList(datasetIdList);
-        assertThat(datasetBasicInfoList, notNullValue());
-        assertThat(datasetBasicInfoList.size(), is(datasetIdList.size()));
-        DatasetBasicInfo datasetBasicInfo10 = datasetBasicInfoList.get(0);
-        assertThat(datasetBasicInfo10.getName(), is(dataset1OfFetch.getName()));
-        assertThat(datasetBasicInfo10.getDatasource(), is(dataSource.getName()));
-        assertThat(datasetBasicInfo10.getDatabase(), is(dataset1OfFetch.getDatabaseName()));
+        List<DatasetDetail> datasetDetailList = metadataDatasetDao.getDatasetDetailList(datasetIdList);
+        assertThat(datasetDetailList, notNullValue());
+        assertThat(datasetDetailList.size(), is(datasetIdList.size()));
+        DatasetDetail datasetDetail10 = datasetDetailList.get(0);
+        assertThat(datasetDetail10.getName(), is(dataset1OfFetch.getName()));
+        assertThat(datasetDetail10.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetDetail10.getDatabase(), is(dataset1OfFetch.getDatabaseName()));
 
-        DatasetBasicInfo datasetBasicInfo20 = datasetBasicInfoList.get(1);
-        assertThat(datasetBasicInfo20.getName(), is(dataset2OfFetch.getName()));
-        assertThat(datasetBasicInfo20.getDatasource(), is(dataSource.getName()));
-        assertThat(datasetBasicInfo20.getDatabase(), is(dataset2OfFetch.getDatabaseName()));
+        DatasetDetail datasetDetail20 = datasetDetailList.get(1);
+        assertThat(datasetDetail20.getName(), is(dataset2OfFetch.getName()));
+        assertThat(datasetDetail20.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetDetail20.getDatabase(), is(dataset2OfFetch.getDatabaseName()));
 
     }
 
