@@ -8,6 +8,7 @@ import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefViewPageResult;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
@@ -634,17 +635,17 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         List<TaskDefinition> taskDefinitionList = MockTaskDefinitionFactory.createTaskDefinitions(3);
         TaskDefinition taskDefinition0 = taskDefinitionList.get(0).cloneBuilder()
                 .withName("apple juice")
-                .withCreator("root")
+                .withOwner("root")
                 .withTaskTemplateName("SparkSQL")
                 .build();
         TaskDefinition taskDefinition1 = taskDefinitionList.get(1).cloneBuilder()
                 .withName("apple juice")
-                .withCreator("admin")
+                .withOwner("admin")
                 .withTaskTemplateName("Bash")
                 .build();
         TaskDefinition taskDefinition2 = taskDefinitionList.get(2).cloneBuilder()
                 .withName("boy")
-                .withCreator("admin")
+                .withOwner("admin")
                 .withTaskTemplateName("SparkSQL")
                 .build();
         List<TaskDefinitionView> viewList = prepareListOfViews(3);
@@ -668,7 +669,7 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
         TaskDefinitionViewSearchParams searchParams2 = TaskDefinitionViewSearchParams.builder()
                 .pageNum(1)
                 .pageSize(100)
-                .taskDefCreators(Arrays.asList("admin"))
+                .taskDefOwners(Arrays.asList("root"))
                 .build();
 
         TaskDefinitionViewSearchParams searchParams3 = TaskDefinitionViewSearchParams.builder()
@@ -695,10 +696,10 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
 
         List<Long> resultDefIds2 = new ArrayList<>();
         searchResult2.getRecords().stream().forEach(x -> resultDefIds2.addAll(x.getIncludedTaskDefinitionIds()));
-        assertThat(searchResult2.getRecords().size(), is(2));
-        assertThat(searchResult2.getTotalCount(), is(2));
+        assertThat(searchResult2.getRecords().size(), is(1));
+        assertThat(searchResult2.getTotalCount(), is(1));
         assertThat(new HashSet<>(resultDefIds2),
-                is(new HashSet<>(Arrays.asList(taskDefinition1.getDefinitionId(), taskDefinition2.getDefinitionId()))));
+                is(new HashSet<>(Arrays.asList(taskDefinition0.getDefinitionId()))));
 
         List<Long> resultDefIds3 = new ArrayList<>();
         searchResult3.getRecords().stream().forEach(x -> resultDefIds3.addAll(x.getIncludedTaskDefinitionIds()));
@@ -708,6 +709,42 @@ public class TaskDefinitionViewServiceTest extends DataPlatformTestBase {
                 is(new HashSet<>(Arrays.asList(taskDefinition0.getDefinitionId(), taskDefinition2.getDefinitionId()))));
     }
 
+    @Test
+    public void searchPageWithDanglingTask_shouldSuccess() {
+        //arrange taskDef and taskDefView
+        List<TaskDefinition> taskDefinitionList = MockTaskDefinitionFactory.createTaskDefinitions(3);
+        TaskDefinition taskDefinition0 = taskDefinitionList.get(0).cloneBuilder()
+                .withName("apple juice")
+                .withOwner("root")
+                .withTaskTemplateName("SparkSQL")
+                .build();
+        TaskDefinition taskDefinition1 = taskDefinitionList.get(1).cloneBuilder()
+                .withName("apple juice")
+                .withOwner("admin")
+                .withTaskTemplateName("Bash")
+                .build();
+        List<TaskDefinitionView> viewList = prepareListOfViews(1);
+        TaskDefinitionView view0 = viewList.get(0).cloneBuilder()
+                .withIncludedTaskDefinitions(Collections.singletonList(taskDefinition0)).build();
+        taskDefinitionDao.create(taskDefinition0);
+        taskDefinitionDao.create(taskDefinition1);
+        taskDefinitionViewService.save(view0);
+        //arrange searchParam
+        TaskDefinitionViewSearchParams searchParams = TaskDefinitionViewSearchParams.builder()
+                .pageNum(1)
+                .pageSize(100)
+                .taskDefName("e j")
+                .build();
+        TaskDefViewPageResult searchResult = (TaskDefViewPageResult) taskDefinitionViewService.searchPage(searchParams);
+        List<Long> resultDefIds = new ArrayList<>();
+        searchResult.getRecords().stream().forEach(x -> resultDefIds.addAll(x.getIncludedTaskDefinitionIds()));
+        assertThat(searchResult.getRecords().size(), is(1));
+        assertThat(searchResult.getTotalCount(), is(1));
+        assertThat(searchResult.getAllTasksCount(), is(2));
+        assertThat(searchResult.getDanglingTasksCount(), is(1));
+        assertThat(new HashSet<>(resultDefIds),
+                is(new HashSet<>(Collections.singletonList(taskDefinition0.getDefinitionId()))));
+    }
 
     @Test
     public void searchPage_withInvalidArguments_shouldThrowException() {

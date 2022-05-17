@@ -32,6 +32,8 @@ public class TaskDefinitionDao {
 
     private static final String VIEW_AND_TASK_DEF_RELATION_TABLE_NAME = "kun_dp_view_task_definition_relation";
 
+    private static final Long NO_VIEW_SIGN = -1L;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -90,11 +92,16 @@ public class TaskDefinitionDao {
 
         if (Objects.nonNull(viewIds) && (!viewIds.isEmpty())) {
             whereClause.append(" AND ");
-            String inClausePlaceholders = SQLUtils.generateSqlInClausePlaceholders(viewIds);
-            whereClause.append("(" + TASK_DEF_MODEL_NAME + ".definition_id IN (SELECT task_def_id FROM " +
-                    VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE view_id IN (" + inClausePlaceholders + ")))"
-            );
-            params.addAll(viewIds);
+            if (viewIds.contains(NO_VIEW_SIGN)) {
+                whereClause.append("(" + TASK_DEF_MODEL_NAME + ".definition_id NOT IN (SELECT task_def_id FROM " +
+                        VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + "))");
+            } else {
+                String inClausePlaceholders = SQLUtils.generateSqlInClausePlaceholders(viewIds);
+                whereClause.append("(" + TASK_DEF_MODEL_NAME + ".definition_id IN (SELECT task_def_id FROM " +
+                        VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE view_id IN (" + inClausePlaceholders + ")))"
+                );
+                params.addAll(viewIds);
+            }
         }
 
         List<String> owners = searchRequest.getOwners();

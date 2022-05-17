@@ -3,7 +3,10 @@ package com.miotech.kun.dataplatform.web.common.taskdefinition.dao;
 import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionSearchRequest;
+import com.miotech.kun.dataplatform.web.common.taskdefview.dao.TaskDefinitionViewDao;
+import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,9 @@ public class TaskDefinitionDaoTest extends DataPlatformTestBase {
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
+
+    @Autowired
+    private TaskDefinitionViewDao taskDefinitionViewDao;
 
     @Test
     public void testCreate_TaskDefinition_ok() {
@@ -238,6 +244,55 @@ public class TaskDefinitionDaoTest extends DataPlatformTestBase {
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is(1));
         assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition));
+    }
+
+    @Test
+    public void search_withViewId() {
+        //prepare
+        TaskDefinition taskDefinition1 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDefinition2 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinitionView taskDefinitionView = MockTaskDefinitionViewFactory.createTaskDefView(1L);
+        taskDefinitionView = taskDefinitionView.cloneBuilder()
+                .withIncludedTaskDefinitions(Collections.singletonList(taskDefinition1))
+                .build();
+        taskDefinitionDao.create(taskDefinition1);
+        taskDefinitionDao.create(taskDefinition2);
+        taskDefinitionViewDao.create(taskDefinitionView);
+
+        TaskDefinitionSearchRequest request;
+        PaginationResult<TaskDefinition> taskDefPage;
+
+        //fetch with view id 1L;
+        request = new TaskDefinitionSearchRequest(10, 1,
+                null,
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty(),
+                Collections.singletonList(1L)
+        );
+        taskDefPage = taskDefinitionDao.search(request);
+        //verify
+        assertThat(taskDefPage.getTotalCount(), is(1));
+        assertThat(taskDefPage.getPageSize(), is(10));
+        assertThat(taskDefPage.getPageNum(), is(1));
+        assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition1));
+
+        //fetch no view task definition;
+        request = new TaskDefinitionSearchRequest(10, 1,
+                null,
+                null,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Optional.empty(),
+                Collections.singletonList(-1L)
+        );
+        taskDefPage = taskDefinitionDao.search(request);
+        //verify
+        assertThat(taskDefPage.getTotalCount(), is(1));
+        assertThat(taskDefPage.getPageSize(), is(10));
+        assertThat(taskDefPage.getPageNum(), is(1));
+        assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition2));
     }
 
     @Test

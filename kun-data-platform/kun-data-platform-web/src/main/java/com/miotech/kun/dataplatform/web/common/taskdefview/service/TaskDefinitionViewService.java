@@ -6,6 +6,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionSearchRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefview.dao.TaskDefinitionViewDao;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.*;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
@@ -19,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -66,12 +66,12 @@ public class TaskDefinitionViewService extends BaseSecurityService {
 
         List<TaskDefinitionView> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(finalParams);
 
-        if (Objects.nonNull(searchParams.getTaskDefCreators()) && !searchParams.getTaskDefCreators().isEmpty()) {
-            List<String> taskDefCreators = searchParams.getTaskDefCreators();
+        if (Objects.nonNull(searchParams.getTaskDefOwners()) && !searchParams.getTaskDefOwners().isEmpty()) {
+            List<String> taskDefOwners = searchParams.getTaskDefOwners();
             viewList = viewList.stream()
                     .map(x -> x.cloneBuilder().withIncludedTaskDefinitions(x.getIncludedTaskDefinitions()
                             .stream()
-                            .filter(td -> taskDefCreators.contains(td.getCreator()))
+                            .filter(td -> taskDefOwners.contains(td.getOwner()))
                             .collect(Collectors.toList()))
                             .build())
                     .collect(Collectors.toList());
@@ -99,16 +99,24 @@ public class TaskDefinitionViewService extends BaseSecurityService {
                     .collect(Collectors.toList());
         }
 
+        TaskDefinitionSearchRequest allTasksSearchRequest = new TaskDefinitionSearchRequest(100, 1,
+                searchParams.getTaskDefName(), searchParams.getTaskTemplateName(), null,
+                searchParams.getTaskDefOwners(), Optional.of(false), null);
+        TaskDefinitionSearchRequest danglingTasksSearchRequest = new TaskDefinitionSearchRequest(100, 1,
+                searchParams.getTaskDefName(), searchParams.getTaskTemplateName(), null,
+                searchParams.getTaskDefOwners(), Optional.of(false), Collections.singletonList(-1L));
         List<TaskDefinitionViewVO> viewVOList = viewList.stream()
                 .map(TaskDefinitionViewVO::from)
                 .collect(Collectors.toList());
         Integer totalCount = this.taskDefinitionViewDao.fetchTotalCount(searchParams);
-        return new PageResult<>(
+        return new TaskDefViewPageResult(
                 finalParams.getPageSize(),
                 finalParams.getPageNum(),
                 totalCount,
-                viewVOList
-        );
+                viewVOList,
+                taskDefinitionDao.search(allTasksSearchRequest).getTotalCount(),
+                taskDefinitionDao.search(danglingTasksSearchRequest).getTotalCount()
+                );
     }
 
     /**
