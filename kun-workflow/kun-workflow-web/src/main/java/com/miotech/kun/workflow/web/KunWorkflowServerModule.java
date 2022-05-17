@@ -108,8 +108,6 @@ public class KunWorkflowServerModule extends AppModule {
         }
         executor.injectMembers(injector);
         logger.debug("executor inject member finished");
-        executor.init();
-        logger.debug("executor init finished");
         return executor;
     }
 

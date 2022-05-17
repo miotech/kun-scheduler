@@ -9,6 +9,7 @@ import com.miotech.kun.infra.util.MetadataSysTaskBuilder;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
@@ -40,6 +41,9 @@ public class InitService implements InitializingBean {
     @Inject
     private OperatorUploadService operatorUploadService;
 
+    @Inject
+    private Executor executor;
+
     @Override
     public Order getOrder() {
         return Order.FIRST;
@@ -52,6 +56,8 @@ public class InitService implements InitializingBean {
             initDataBuilder();
             startConsumer();
         }
+        executor.init();
+        logger.debug("executor init finished");
     }
 
 
