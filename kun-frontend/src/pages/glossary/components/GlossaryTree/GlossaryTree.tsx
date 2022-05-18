@@ -141,24 +141,26 @@ export default memo(
     async function addChild(child, parentId, id) {
       if (!parentId) {
         tree.addChildNode({ data: tree.root }, child);
+        setCurrentIdCache(id);
+        updateTreeCache();
       } else {
         d3.selectAll('rect').each(async function textfunc(d) {
           if (d && d.data.id === parentId) {
-            if (!(d.data.children && d.data.children.length)) {
+            if (!d.data.children) {
               await fetchChildren(d.data, d.data.id);
-              tree.updateTree(d);
-              setCurrentIdCache(id);
+              console.log('1');
             } else {
               tree.addChildNode(d, child);
-              d3.select(`[id=count${parentId}]`).text(d.data.children.length);
             }
+            console.log('2');
+
+            d3.select(`[id=count${parentId}]`).text(d.data.children.length);
+            tree.updateTree(d);
+            setCurrentIdCache(id);
+            updateTreeCache();
           }
         });
       }
-      if (id) {
-        setCurrentIdCache(id);
-      }
-      updateTreeCache();
     }
     function deleteChild(parentId, id) {
       if (!parentId) {
@@ -173,8 +175,9 @@ export default memo(
       updateTreeCache();
     }
 
-    async function changeParent(preParentId, currentParentId, id, child) {
-      addChild(child, currentParentId, id);
+    async function changeParent(preParentId, currentParentId, id) {
+      const node = d3.select(`[id=node${id}]`).data();
+      addChild(node[0].data, currentParentId, id);
       deleteChild(preParentId, id);
     }
 

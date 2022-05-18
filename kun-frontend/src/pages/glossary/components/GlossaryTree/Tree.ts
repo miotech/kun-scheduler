@@ -250,6 +250,7 @@ export class Tree {
           canNode.attr('class', styles.nodeText).on('click', () => {
             click(d);
           });
+          canNode.attr('id', `node${d.data.id}`);
         }
       });
 
@@ -278,6 +279,7 @@ export class Tree {
         canNode.attr('class', styles.nodeText).on('click', () => {
           click(d);
         });
+        canNode.attr('id', `text${d.data.id}`);
       }
     });
     // 如果截断了, 需要在title中能hover出来
@@ -400,12 +402,21 @@ export class Tree {
   }
 
   addChildNode(d, child) {
+    let insertNode = child;
+    if (!Array.isArray(child)) {
+      insertNode = [child];
+    }
     const node = d.data;
     if (node.children) {
-      node.children.push(child);
+      insertNode.forEach(item => {
+        const findIndex = node.children.findIndex(idx => idx.id === item.id);
+        if (findIndex === -1) {
+          node.children.unshift(item);
+        }
+      });
     } else {
       node.childrenCount = 1;
-      node.children = [child];
+      node.children = insertNode;
     }
     this.updateTree(d);
   }
