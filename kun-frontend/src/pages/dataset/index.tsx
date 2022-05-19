@@ -1,26 +1,23 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { useHistory, Link } from 'umi';
-import { Input, Table, Tag, Spin } from 'antd';
+import { Input, Table, Tag, Spin, Select } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { useUpdateEffect, useMount } from 'ahooks';
-import {
-  useQueryParams,
-  StringParam,
-  NumberParam,
-  ArrayParam,
-  ObjectParam,
-  withDefault,
-  BooleanParam,
-} from 'use-query-params';
+import { useQueryParams, StringParam, NumberParam, withDefault, BooleanParam } from 'use-query-params';
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
-import { Mode, SearchParams, QueryObj } from '@/rematch/models/dataDiscovery';
-import { Dataset, GlossaryItem, UpstreamTask } from '@/definitions/Dataset.type';
-
+import { SearchParams, QueryObj } from '@/rematch/models/dataDiscovery';
+import {
+  Dataset,
+  GlossaryItem,
+  UpstreamTask,
+  QueryAttributeListBody,
+  ResourceAttributeMap,
+} from '@/definitions/Dataset.type';
+import { queryAttributeList } from '@/services/dataDiscovery';
 import color from '@/styles/color';
-
 import useBackPath from '@/hooks/useBackPath';
 import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
@@ -31,17 +28,7 @@ import getEllipsisString from '@/utils/getEllipsisString';
 import styles from './index.less';
 
 const { Search } = Input;
-
-const orderMap = {
-  descend: 'desc',
-  ascend: 'asc',
-};
-const tableOrderMap = {
-  desc: 'descend',
-  asc: 'ascend',
-};
-
-const getOrder = (order: keyof typeof tableOrderMap | null) => (order ? tableOrderMap[order] : undefined);
+const { Option } = Select;
 
 function computeRowClassname(record: Dataset): string {
   if (record.deleted) {
@@ -57,58 +44,28 @@ export default function DataDiscoveryListView() {
   const { getBackPath } = useBackPath();
 
   const history = useHistory();
-
   const [query, setQuery] = useQueryParams({
     searchContent: StringParam,
-    watermarkMode: withDefault(StringParam, Mode.ABSOLUTE),
-    watermarkAbsoluteValue: ObjectParam,
-    watermarkQuickeValue: StringParam,
-
-    dsTypeList: ArrayParam,
-    ownerList: ArrayParam,
-    tagList: ArrayParam,
-    dsIdList: ArrayParam,
-    dbList: ArrayParam,
-    glossaryIdList: ArrayParam,
-
-    sortKey: StringParam,
-    sortOrder: StringParam,
-
+    datasource: StringParam,
+    database: StringParam,
+    schema: StringParam,
+    type: StringParam,
+    tags: StringParam,
+    owners: StringParam,
     pageNumber: withDefault(NumberParam, 1),
     pageSize: withDefault(NumberParam, 15),
     displayDeleted: BooleanParam,
   });
 
-  const {
-    searchContent,
-    watermarkMode,
-    watermarkAbsoluteValue,
-    watermarkQuickeValue,
-
-    dsTypeList,
-    ownerList,
-    tagList,
-    dsIdList,
-    dbList,
-    glossaryIdList,
-
-    sortKey,
-    sortOrder,
-    pageNumber,
-    pageSize,
-  } = query as QueryObj;
+  const { searchContent, datasource, database, schema, type, tags, owners, pageNumber, pageSize } = query as QueryObj;
 
   const dispatch = useDispatch<RootDispatch>();
-  const {
-    pagination,
-    datasetList,
-
-    dataListFetchLoading,
-  } = useSelector(
+  const { pagination, datasetList, dataListFetchLoading, selectOptions } = useSelector(
     (state: RootState) => ({
       pagination: state.dataDiscovery.pagination,
       datasetList: state.dataDiscovery.datasetList,
       dataListFetchLoading: state.dataDiscovery.dataListFetchLoading,
+      selectOptions: state.dataDiscovery.selectOptions,
     }),
     shallowEqual,
   );
@@ -117,18 +74,13 @@ export default function DataDiscoveryListView() {
 
   const fetchDatasets = useCallback(() => {
     dispatch.dataDiscovery.searchDatasets({
-      searchContent: debounceSearchContent || '',
-      ownerList,
-      tagList,
-      dsTypeList,
-      dsIdList,
-      dbList,
-      glossaryIdList,
-      watermarkMode,
-      watermarkAbsoluteValue,
-      watermarkQuickeValue,
-      sortKey,
-      sortOrder,
+      searchContent: debounceSearchContent,
+      datasource,
+      database,
+      schema,
+      type,
+      tags,
+      owners,
       pagination: {
         pageSize: pageSize || 15,
         pageNumber: pageNumber || 1,
@@ -137,17 +89,12 @@ export default function DataDiscoveryListView() {
   }, [
     dispatch.dataDiscovery,
     debounceSearchContent,
-    ownerList,
-    tagList,
-    dsTypeList,
-    dsIdList,
-    dbList,
-    glossaryIdList,
-    watermarkMode,
-    watermarkAbsoluteValue,
-    watermarkQuickeValue,
-    sortKey,
-    sortOrder,
+    datasource,
+    database,
+    schema,
+    type,
+    tags,
+    owners,
     pageSize,
     pageNumber,
   ]);
@@ -171,6 +118,36 @@ export default function DataDiscoveryListView() {
     [setQuery],
   );
 
+  const getAttributeList = useCallback(
+    async (key: ResourceAttributeMap) => {
+      const params: QueryAttributeListBody = {
+        resourceAttributeName: key,
+        resourceAttributeMap: {
+          datasource,
+          database,
+          schema,
+          type,
+          tags,
+          owners,
+        },
+      };
+      params.resourceAttributeMap[key] = null;
+      const res = await queryAttributeList(params);
+      if (res) {
+        dispatch.dataDiscovery.updateOptions({ key, value: res });
+      }
+    },
+    [datasource, database, schema, type, tags, owners, dispatch],
+  );
+
+  useEffect(() => {
+    getAttributeList(ResourceAttributeMap.datasource);
+    getAttributeList(ResourceAttributeMap.database);
+    getAttributeList(ResourceAttributeMap.schema);
+    getAttributeList(ResourceAttributeMap.type);
+    getAttributeList(ResourceAttributeMap.tags);
+    getAttributeList(ResourceAttributeMap.owners);
+  }, [query]);
   const handleChangeSearch = useCallback(
     e => {
       setFilterQuery({ searchContent: e.target.value });
@@ -187,7 +164,6 @@ export default function DataDiscoveryListView() {
           key: 'name',
           fixed: 'left',
           width: 170,
-          defaultSortOrder: sortKey === 'name' ? getOrder(sortOrder) : undefined,
           render: (name: string) => <span className={styles.nameLink}>{name}</span>,
         },
         {
@@ -195,21 +171,18 @@ export default function DataDiscoveryListView() {
           dataIndex: 'database',
           key: 'databaseName',
           width: 80,
-          defaultSortOrder: sortKey === 'databaseName' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.datasource'),
           dataIndex: 'datasource',
           key: 'datasourceName',
           width: 120,
-          defaultSortOrder: sortKey === 'datasourceName' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
           dataIndex: 'type',
           key: 'type',
           width: 80,
-          defaultSortOrder: sortKey === 'type' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.glossary'),
@@ -248,9 +221,9 @@ export default function DataDiscoveryListView() {
           dataIndex: 'owners',
           key: 'owners',
           width: 300,
-          render: (owners: string[]) => (
+          render: (item: string[]) => (
             <>
-              {(owners || []).map(owner => (
+              {(item || []).map(owner => (
                 <Tag key={owner} className="light-blue-tag" color={color.lightBlue}>
                   {owner}
                 </Tag>
@@ -282,18 +255,18 @@ export default function DataDiscoveryListView() {
           dataIndex: 'tags',
           key: 'tags',
           width: 300,
-          render: (tags: string[]) => (
+          render: (tag: string[]) => (
             <>
-              {(tags || []).map(tag => (
-                <Tag key={tag} className="light-blue-tag" color={color.lightBlue}>
-                  {tag}
+              {(tag || []).map(item => (
+                <Tag key={item} className="light-blue-tag" color={color.lightBlue}>
+                  {item}
                 </Tag>
               ))}
             </>
           ),
         },
       ] as ColumnProps<Dataset>[],
-    [getBackPath, sortKey, sortOrder, t],
+    [getBackPath, t],
   );
 
   const scroll = useMemo(
@@ -329,27 +302,6 @@ export default function DataDiscoveryListView() {
     }),
     [handleChangePage, handleChangePageSize, pageNumber, pageSize, pagination.totalCount],
   );
-
-  const handleChangeTable = useCallback(
-    (_pagination, _filters, sorter, extra) => {
-      const { columnKey, order } = sorter;
-      const { action } = extra;
-      if (columnKey && order && (columnKey !== sortKey || orderMap[order as keyof typeof orderMap] !== sortOrder)) {
-        setFilterQuery({
-          sortKey: columnKey,
-          sortOrder: order ? orderMap[order as 'descend' | 'ascend'] : null,
-        });
-      }
-      if (columnKey && !order && action === 'sort') {
-        setFilterQuery({
-          sortKey: columnKey,
-          sortOrder: null,
-        });
-      }
-    },
-    [setFilterQuery, sortKey, sortOrder],
-  );
-
   return (
     <div className={styles.page}>
       <Card className={styles.content}>
@@ -369,6 +321,30 @@ export default function DataDiscoveryListView() {
             })}
           </div>
 
+          <div className={styles.filterRow}>
+            {Object.keys(ResourceAttributeMap).map(key => (
+              <div className={styles.filterItem} key={key}>
+                <div className={styles.filterItemTitle}>{t(`dataDiscovery.${key}`)}</div>
+                <div className={styles.filterItemSelect}>
+                  <Select
+                    value={query[key]}
+                    onChange={v => {
+                      setFilterQuery({ [key]: v });
+                    }}
+                    showSearch
+                    placeholder={t('dataDiscovery.pleaseSelect')}
+                    allowClear
+                  >
+                    {selectOptions[key as ResourceAttributeMap].map(option => (
+                      <Option key={option} value={option}>
+                        {option}
+                      </Option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+            ))}
+          </div>
           <div className={styles.table}>
             <Spin spinning={dataListFetchLoading}>
               <Table
@@ -378,7 +354,6 @@ export default function DataDiscoveryListView() {
                 size="small"
                 scroll={scroll}
                 pagination={tablePagination}
-                onChange={handleChangeTable}
                 rowClassName={computeRowClassname}
                 onRow={record => ({
                   onClick: () => {

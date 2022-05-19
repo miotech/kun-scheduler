@@ -1,16 +1,9 @@
 import { Pagination, Sort } from '@/definitions/common-types';
-import { Dataset } from '@/definitions/Dataset.type';
+import { Dataset, QueryAttributeListBody } from '@/definitions/Dataset.type';
 
-import {
-  SearchParamsObj,
-  DsFilterItem,
-  DatabaseFilterItem,
-} from '@/rematch/models/dataDiscovery';
-import { get } from '@/utils/requestUtils';
-import {
-  DEFAULT_API_PREFIX,
-  SECURITY_API_PRIFIX,
-} from '@/constants/api-prefixes';
+import { SearchParamsObj } from '@/rematch/models/dataDiscovery';
+import { get, post } from '@/utils/requestUtils';
+import { SECURITY_API_PRIFIX, DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
 export interface FetchAllTagsServiceRespBody {
   tags: string[];
@@ -42,10 +35,7 @@ export interface SearchDatasetsServiceRespBody extends Pagination, Sort {
   datasets: Dataset[];
 }
 
-export async function searchDatasetsService(
-  search: Partial<SearchParamsObj>,
-  pagination: Pagination,
-) {
+export async function searchDatasetsService(search: Partial<SearchParamsObj>, pagination: Pagination) {
   const { pageSize, pageNumber } = pagination;
   const params = {
     pageSize,
@@ -58,23 +48,9 @@ export async function searchDatasetsService(
   });
 }
 
-export interface SearchAllDsServiceResp {
-  datasources: DsFilterItem[];
-}
-
-export async function searchAllDsService(keyword: string) {
-  return get<SearchAllDsServiceResp>('/metadata/datasources/search', {
-    query: {
-      keyword,
-      pageSize: 1000000,
-    },
+export async function queryAttributeList(params: QueryAttributeListBody) {
+  return post('/metadata/attribute/list', {
+    data: params,
     prefix: DEFAULT_API_PREFIX,
-  });
-}
-
-export type FetchAllDbService = DatabaseFilterItem[];
-export async function fetchAllDbService(params?: { dataSourceIds: string[] }) {
-  return get<SearchAllDsServiceResp>('/metadata/databases', {
-    query: params,
   });
 }
