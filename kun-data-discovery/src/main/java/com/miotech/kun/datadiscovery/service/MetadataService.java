@@ -9,12 +9,14 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.datadiscovery.constant.Constants;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.*;
+import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.Watermark;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import com.miotech.kun.datadiscovery.util.convert.AppBasicConversionService;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
+import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
@@ -60,6 +62,8 @@ public class MetadataService {
 
     @Autowired
     private SearchAppService searchAppService;
+    @Autowired
+    private LineageAppService lineageAppService;
 
     public List<Database> getDatabases(DatabaseRequest request) {
         String fullUrl = url + "/dataset/databases";
@@ -81,9 +85,8 @@ public class MetadataService {
         return String.format("?dataSourceIds=%s", StringUtils.join(dataSourceIds, ","));
     }
 
-    public DatasetBasicPage searchDatasets(BasicSearchRequest searchRequests) {
-        UniversalSearchInfo universalSearchInfo = searchAppService.searchDataSet(searchRequests.getPageNumber(),
-                searchRequests.getPageSize(), searchRequests.getKeyword());
+    public DatasetBasicPage searchDatasets(BasicSearchRequest searchRequest) {
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchDataSet(searchRequest);
         List<SearchedInfo> searchedInfoList = universalSearchInfo.getSearchedInfoList();
         DatasetBasicPage searchPage = new DatasetBasicPage();
         List<DatasetBasic> datasetBasicList = searchedInfoList.stream()
@@ -96,17 +99,17 @@ public class MetadataService {
         return searchPage;
     }
 
-    public DatasetBasicPage fullTextSearch(BasicSearchRequest searchRequest) {
-        UniversalSearchInfo universalSearchInfo = searchAppService.searchDataSet(searchRequest.getPageNumber(),
-                searchRequest.getPageSize(), searchRequest.getKeyword());
+    public List<String> fetchResourceAttributeList(ResourceAttributeRequest request) {
+        log.debug("SearchAppService fetchResourceAttributeList  request: {}", request);
+        return searchAppService.fetchResourceAttributeList(ResourceType.DATASET, request);
+    }
+
+    public DatasetBasicPage fullTextSearch(DatasetSearchRequest searchRequest) {
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchFullDataSet(searchRequest);
         List<SearchedInfo> searchedInfoList = universalSearchInfo.getSearchedInfoList();
         DatasetBasicPage searchPage = new DatasetBasicPage();
         List<Long> gids = searchedInfoList.stream().map(SearchedInfo::getGid).collect(Collectors.toList());
-        String upstreamTaskFetchUrl = url + "/lineage/datasets/upstream-task";
-        List<UpstreamTaskInformation> upstreamTaskInformationList = restTemplate.exchange(upstreamTaskFetchUrl, HttpMethod.POST,
-                new HttpEntity<>(new UpstreamTaskRequest(gids)), new ParameterizedTypeReference<List<UpstreamTaskInformation>>() {
-                }).getBody();
-
+        List<UpstreamTaskInformation> upstreamTaskInformationList = lineageAppService.getUpstreamTaskInformation(gids);
         List<Long> taskIds = upstreamTaskInformationList.stream()
                 .flatMap(taskInfo -> taskInfo.getTasks().stream())
                 .map(Task::getId).collect(Collectors.toList());

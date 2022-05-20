@@ -14,14 +14,17 @@ import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
-import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.core.model.task.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.function.Function;
@@ -37,8 +40,11 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class LineageAppService {
-
     public static final int LATEST_TASK_LIMIT = 6;
+    @Value("${metadata.base-url:localhost:8084}")
+    String url;
+    @Autowired
+    RestTemplate restTemplate;
     @Autowired
     WorkflowClient workflowClient;
 
@@ -236,4 +242,12 @@ public class LineageAppService {
                 .collect(Collectors.toMap(LineageTask::getTaskId, task -> task));
 
     }
+
+    public List<UpstreamTaskInformation> getUpstreamTaskInformation(List<Long> datasetList) {
+        String upstreamTaskFetchUrl = url + "/lineage/datasets/upstream-task";
+        return restTemplate.exchange(upstreamTaskFetchUrl, HttpMethod.POST,
+                new HttpEntity<>(new UpstreamTaskRequest(datasetList)), new ParameterizedTypeReference<List<UpstreamTaskInformation>>() {
+                }).getBody();
+    }
+
 }

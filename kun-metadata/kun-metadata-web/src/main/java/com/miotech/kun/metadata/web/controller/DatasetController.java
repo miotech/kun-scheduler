@@ -143,27 +143,6 @@ public class DatasetController {
         return datasetService.getDatabases(dataSourceIds);
     }
 
-    /**
-     * search by dataset name
-     *
-     * @param request
-     * @return
-     */
-    @RouteMapping(url = "/dataset/search", method = "POST")
-    public DatasetBasicSearch searchDatasets(@RequestBody BasicSearchRequest request) {
-        return datasetService.searchDatasets(request);
-    }
-
-    /**
-     * full text search
-     *
-     * @param request
-     * @return
-     */
-    @RouteMapping(url = "/dataset/full-text/search", method = "POST")
-    public DatasetBasicSearch fullTextSearch(@RequestBody DatasetSearchRequest request) {
-        return datasetService.fullTextSearch(request);
-    }
 
     /**
      * get dataset detail
@@ -172,7 +151,7 @@ public class DatasetController {
      * @return
      */
     @RouteMapping(url = "/dataset/{id}", method = "GET")
-    public DatasetDetail getDatasetDetail(@RouteVariable Long id){
+    public DatasetDetail getDatasetDetail(@RouteVariable Long id) {
         return datasetService.getDatasetDetail(id);
     }
 

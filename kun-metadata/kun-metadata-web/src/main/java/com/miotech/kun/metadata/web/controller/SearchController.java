@@ -4,12 +4,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RequestBody;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.metadata.common.service.SearchService;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
+import com.miotech.kun.metadata.core.model.vo.ResourceAttributeInfoRequest;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +41,7 @@ public class SearchController {
      * @return UniversalSearchInfo
      */
     @RouteMapping(url = "/search/full", method = "GET")
-    public UniversalSearchInfo fullSearch(@RequestBody String keyword) {
+    public UniversalSearchInfo fullSearch(@QueryParameter String keyword) {
         logger.debug("SearchController fullTextSearch  keyword: {}", keyword);
         if (StringUtils.isBlank(keyword)) {
             UniversalSearchRequest request = new UniversalSearchRequest();
@@ -79,8 +81,16 @@ public class SearchController {
     }
 
     /**
-     * search
-     *
+     * @param request ResourceAttributeInfoRequest
+     * @return UniversalSearchInfo
+     */
+    @RouteMapping(url = "/search/attribute/list", method = "POST")
+    public List<String> fetchResourceAttributeList(@RequestBody ResourceAttributeInfoRequest request) {
+        logger.debug("SearchController fetchResourceAttributeList  request: {}", request);
+        return searchService.fetchResourceAttributeList(request);
+    }
+
+    /**
      * @param searchedInfo
      * @return
      */

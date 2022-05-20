@@ -22,6 +22,7 @@ public class SearchFilterOption implements Serializable {
     private SearchOperator searchOperator; //first option  is ignore
     private String keyword;
     private Set<SearchContent> searchContents;
+
     @JsonCreator
     public SearchFilterOption(
             @JsonProperty("searchOperator") SearchOperator searchOperator,
@@ -43,6 +44,7 @@ public class SearchFilterOption implements Serializable {
     public Set<SearchContent> getSearchContents() {
         return searchContents;
     }
+
     @JsonIgnore
     public String getSearchContentsWeightString() {
         Set<Character> collect = searchContents.stream().map(SearchContent::getWeight).collect(Collectors.toSet());
@@ -79,5 +81,14 @@ public class SearchFilterOption implements Serializable {
         public SearchFilterOption build() {
             return new SearchFilterOption(searchOperator, keyword, searchContents);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SearchFilterOption{" +
+                "searchOperator=" + searchOperator +
+                ", keyword='" + keyword + '\'' +
+                ", searchContents=" + searchContents +
+                '}';
     }
 }

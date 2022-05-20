@@ -15,29 +15,17 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @NoArgsConstructor
-public class DatasetSearchRequest extends PageInfo {
+public class DatasetSearchRequest extends BasicSearchRequest {
 
-    private String searchContent;
+    private String datasource;
 
-    private List<String> ownerList;
+    private String database;
 
-    private List<String> tagList;
+    private String schema;
 
-    private List<Long> dsTypeList;
+    private String type;
 
-    private List<Long> dsIdList;
+    private String tags;
 
-    private List<String> dbList;
-
-    private Long watermarkStart;
-
-    private Long watermarkEnd;
-
-    private List<Long> glossaryIdList;
-
-    private String sortKey;
-
-    private String sortOrder;
-
-    private Boolean displayDeleted;
+    private String owners;
 }

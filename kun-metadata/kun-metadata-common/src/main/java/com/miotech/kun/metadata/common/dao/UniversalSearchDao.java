@@ -15,6 +15,7 @@ import com.miotech.kun.metadata.core.model.search.ResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.shaded.com.google.common.collect.ImmutableList;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @program: kun
@@ -58,15 +60,24 @@ public class UniversalSearchDao {
             COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME, COLUMN_DELETED};
 
 
-    public List<SearchedInfo> search(List<SearchFilterOption> searchFilterOptionList, Set<String> resourceTypeSet, Integer pageNumber, Integer pageSize) {
+    public List<SearchedInfo> search(List<SearchFilterOption> searchFilterOptionList,
+                                     Set<String> resourceTypeSet, Map<String, Object> resourceAttributeMap,
+                                     boolean showDeleted,
+                                     Integer pageNumber,
+                                     Integer pageSize) {
         String optionsString = new SearchOptionJoiner().add(searchFilterOptionList).toString();
         logger.debug("search options:optionsString:{},resource Type{},limit page{},num{}", optionsString, resourceTypeSet, pageNumber, pageSize);
         if (optionsString.isEmpty()) {
             return Lists.newArrayList();
         }
-        String sql = DefaultSQLBuilder.newBuilder().select(COLUMN_SELECT, similarity(searchFilterOptionList))
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(COLUMN_SELECT, similarity(searchFilterOptionList))
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('"+TS_CONFIG+"',?) and  resource_type in " + collectionToConditionSql(resourceTypeSet) + " and deleted =false ").orderBy("rank desc").getSQL();
+                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('" + TS_CONFIG + "',?) " + " and  resource_type in "
+                        + collectionToConditionSql(resourceTypeSet)
+                        + filterResourceAttributes(resourceAttributeMap)
+                        + showDeleted(showDeleted))
+                .orderBy("rank desc").getSQL();
         String limitSql = toLimitSql(pageNumber, pageSize);
         String resultSql = sql.concat(limitSql);
         List<Object> params = Lists.newArrayList();
@@ -75,11 +86,28 @@ public class UniversalSearchDao {
         return dbOperator.fetchAll(resultSql, UniversalSearchMapper.INSTANCE, params.toArray());
     }
 
-    public List<SearchedInfo> noneKeywordPage(Set<String> resourceTypeSet, Integer pageNumber, Integer pageSize) {
+    private String filterResourceAttributes(Map<String, Object> resourceAttributeMap) {
+        if (MapUtils.isEmpty(resourceAttributeMap)) {
+            return "";
+        }
+        String jsonString = JSONUtils.toJsonString(resourceAttributeMap);
+        return new StringBuilder(" and ").append(COLUMN_RESOURCE_ATTRIBUTE).append(" @>'").append(jsonString).append("'").toString();
+    }
+
+    private String showDeleted(boolean showDeleted) {
+        if (showDeleted) {
+            return "";
+        }
+        return " and deleted =false ";
+    }
+
+    public List<SearchedInfo> noneKeywordPage(Set<String> resourceTypeSet, Map<String, Object> resourceAttributeMap, boolean showDeleted, Integer pageNumber, Integer pageSize) {
         logger.debug("search options:resourceTypeSet:{},limit page{},num{}", resourceTypeSet, pageNumber, pageSize);
-        String sql = DefaultSQLBuilder.newBuilder().select(COLUMN_SELECT)
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(COLUMN_SELECT)
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where("resource_type in " + collectionToConditionSql(resourceTypeSet) + " and deleted =false ").getSQL();
+                .where("resource_type in " + collectionToConditionSql(resourceTypeSet) + filterResourceAttributes(resourceAttributeMap) + showDeleted(showDeleted))
+                .getSQL();
         String limitSql = toLimitSql(pageNumber, pageSize);
         String resultSql = sql.concat(limitSql);
         List<Object> params = Lists.newArrayList();
@@ -101,23 +129,27 @@ public class UniversalSearchDao {
         return sqlString.concat(" as rank");
     }
 
-    public Integer searchCount(List<SearchFilterOption> searchFilterOptionList, Set<String> resourceTypeSet) {
+    public Integer searchCount(List<SearchFilterOption> searchFilterOptionList, Set<String> resourceTypeSet, boolean showDeleted, Map<String, Object> resourceAttributeMap) {
         String optionsString = new SearchOptionJoiner().add(searchFilterOptionList).toString();
         logger.debug("search count options:optionsString:{},resource Type{}", optionsString, resourceTypeSet);
         String sql = DefaultSQLBuilder.newBuilder().select("count(1) as count")
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('"+TS_CONFIG+"',?)  and  resource_type in " + collectionToConditionSql(resourceTypeSet) + " and deleted =false ").getSQL();
+                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('" + TS_CONFIG + "',?)  and  resource_type in " + collectionToConditionSql(resourceTypeSet)
+                        + filterResourceAttributes(resourceAttributeMap)
+                        + showDeleted(showDeleted)).getSQL();
         List<Object> params = Lists.newArrayList();
         params.add(optionsString);
         params.addAll(resourceTypeSet);
         return dbOperator.fetchOne(sql, rs -> rs.getInt("count"), params.toArray());
     }
 
-    public Integer noneKeywordSearchCount(Set<String> resourceTypeSet) {
+    public Integer noneKeywordSearchCount(Set<String> resourceTypeSet, Map<String, Object> resourceAttributeMap, boolean showDeleted) {
         logger.debug("search count resource Type{}", resourceTypeSet);
         String sql = DefaultSQLBuilder.newBuilder().select("count(1) as count")
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(" resource_type in " + collectionToConditionSql(resourceTypeSet) + " and deleted =false ").getSQL();
+                .where(" resource_type in " + collectionToConditionSql(resourceTypeSet)
+                        + filterResourceAttributes(resourceAttributeMap)
+                        + showDeleted(showDeleted)).getSQL();
         List<Object> params = Lists.newArrayList();
         params.addAll(resourceTypeSet);
         return dbOperator.fetchOne(sql, rs -> rs.getInt("count"), params.toArray());
@@ -126,7 +158,6 @@ public class UniversalSearchDao {
     public void update(SearchedInfo searchedInfo) {
         ImmutableList<String> setOptions = ImmutableList.of(COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME);
         ImmutableList<String> options = ImmutableList.of(COLUMN_GID, COLUMN_RESOURCE_TYPE);
-
         ImmutableList<? extends Serializable> params = ImmutableList.of(
                 StringUtils.stripToEmpty(searchedInfo.getName()),
                 StringUtils.stripToEmpty(searchedInfo.getDescription()),
@@ -180,6 +211,22 @@ public class UniversalSearchDao {
                 .set(set(setOptions))
                 .where(and(options)).getSQL();
         dbOperator.update(sql, params.toArray());
+    }
+
+    public List<String> fetchResourceAttributeList(ResourceType resourceType, String resourceAttributeName, Map<String, Object> resourceAttributeMap, Boolean showDeleted) {
+        logger.debug("fetch Resource Attribute List resource Type{}", resourceType);
+        String sql = DefaultSQLBuilder.newBuilder().select("distinct  resource_attribute->>? as attribute").from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH).where(" resource_type = ?"
+                + filterResourceAttributes(resourceAttributeMap)
+                + showDeleted(showDeleted)).orderBy(" attribute ").getSQL();
+        List<Object> params = Lists.newArrayList();
+        params.add(resourceAttributeName);
+        params.add(resourceType.name());
+        List<String> list = dbOperator.fetchAll(sql, rs -> rs.getString("attribute"), params.toArray());
+        if (CollectionUtils.isEmpty(list)) {
+            return Lists.newArrayList();
+        }
+        return list.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
+
     }
 
 

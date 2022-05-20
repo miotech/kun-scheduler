@@ -178,7 +178,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public SearchPage<GlossarySearchedInfo> search(GlossaryBasicSearchRequest searchRequest) {
-        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest.getPageNumber(), searchRequest.getPageSize(), searchRequest.getKeyword());
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchGlossary(searchRequest);
         Stream<SearchedInfo> searchedInfoStream = universalSearchInfo.getSearchedInfoList().stream();
         Long currentId = searchRequest.getCurrentId();
         if (Objects.nonNull(currentId)) {
