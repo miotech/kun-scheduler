@@ -2,6 +2,7 @@ package com.miotech.kun.datadiscovery.model.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.metadata.core.model.vo.Watermark;
 import lombok.Data;
 
 /**
@@ -11,7 +12,7 @@ import lombok.Data;
 @Data
 public class LineageDatasetBasic {
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     Long gid;
 
     String name;

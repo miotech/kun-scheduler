@@ -8,10 +8,8 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.datadiscovery.constant.Constants;
 import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
-import com.miotech.kun.datadiscovery.model.entity.LineageEdge;
-import com.miotech.kun.datadiscovery.model.entity.LineageGraph;
-import com.miotech.kun.datadiscovery.model.entity.LineageTask;
-import com.miotech.kun.datadiscovery.model.entity.LineageVertex;
+import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -40,12 +38,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class LineageAppService {
 
-    public  static final int LATEST_TASK_LIMIT = 6;
+    public static final int LATEST_TASK_LIMIT = 6;
     @Autowired
     WorkflowClient workflowClient;
 
     @Autowired
-    DatasetService datasetService;
+    MetadataService metadataService;
 
 
     public LineageGraph getLineageGraph(LineageGraphRequest request) {
@@ -56,9 +54,9 @@ public class LineageAppService {
                     LineageQueryDirection.valueOf(request.getDirection()),
                     request.getDepth());
         } catch (WorkflowApiException e) {
-           throw  new RuntimeException("workflow api error:",e);
+            throw new RuntimeException("workflow api error:", e);
         }
-        if (Objects.isNull(datasetLineageInfo)||Objects.isNull(datasetLineageInfo.getSourceNode())){
+        if (Objects.isNull(datasetLineageInfo) || Objects.isNull(datasetLineageInfo.getSourceNode())) {
             return lineageGraph;
         }
         DatasetNodeInfo centerNode = datasetLineageInfo.getSourceNode();
@@ -75,17 +73,31 @@ public class LineageAppService {
     }
 
     private void addVertices(LineageGraph lineageGraph, Map<Long, LineageVertex> vertexIdMap) {
-        List<LineageVertex> lineageVertices = datasetService.getDatasets(Lists.newArrayList(vertexIdMap.keySet())).stream()
+        List<LineageVertex> lineageVertices = metadataService.getDatasetDetailList(Lists.newArrayList(vertexIdMap.keySet())).stream()
                 .map(datasetBasic -> {
                     LineageVertex vertex = vertexIdMap.get(datasetBasic.getGid());
-                    vertex.setDatasetBasic(datasetBasic);
+                    LineageDatasetBasic lineageDatasetBasic = getLineageDatasetBasic(datasetBasic);
+                    vertex.setDatasetBasic(lineageDatasetBasic);
                     return vertex;
                 }).collect(Collectors.toList());
         lineageGraph.setVertices(lineageVertices);
     }
 
+
+    private LineageDatasetBasic getLineageDatasetBasic(DatasetDetail datasetBasic) {
+        LineageDatasetBasic lineageDatasetBasic = new LineageDatasetBasic();
+        lineageDatasetBasic.setGid(datasetBasic.getGid());
+        lineageDatasetBasic.setName(datasetBasic.getName());
+        lineageDatasetBasic.setDatasource(datasetBasic.getDatasource());
+        lineageDatasetBasic.setDeleted(datasetBasic.getDeleted());
+        lineageDatasetBasic.setType(datasetBasic.getType());
+        lineageDatasetBasic.setHighWatermark(datasetBasic.getHighWatermark());
+        lineageDatasetBasic.setRowCount(datasetBasic.getRowCount());
+        return lineageDatasetBasic;
+    }
+
     private void addDownstreamEdges(DatasetLineageInfo datasetLineageInfo, LineageGraph lineageGraph, DatasetNodeInfo centerNode, Map<Long, LineageVertex> vertexIdMap) {
-        if (CollectionUtils.isEmpty(datasetLineageInfo.getDownstreamNodes())){
+        if (CollectionUtils.isEmpty(datasetLineageInfo.getDownstreamNodes())) {
             return;
         }
         List<LineageEdge> downstreamEdges = datasetLineageInfo.getDownstreamNodes().stream()
@@ -104,7 +116,7 @@ public class LineageAppService {
                                   LineageGraph lineageGraph,
                                   DatasetNodeInfo centerNode,
                                   Map<Long, LineageVertex> vertexIdMap) {
-        if (CollectionUtils.isEmpty(datasetLineageInfo.getUpstreamNodes())){
+        if (CollectionUtils.isEmpty(datasetLineageInfo.getUpstreamNodes())) {
             return;
         }
         List<LineageEdge> upstreamEdges = datasetLineageInfo.getUpstreamNodes().stream()
@@ -136,7 +148,7 @@ public class LineageAppService {
         Preconditions.checkNotNull(destDatasetGid, "Invalid argument `destDatasetGid`: null");
         EdgeInfo edgeInfo = workflowClient.getLineageEdgeInfo(sourceDatasetGid, destDatasetGid);
         if (Objects.isNull(edgeInfo) || CollectionUtils.isEmpty(edgeInfo.getTaskInfos())) {
-            log.debug("edge info maybe is null or task info is empty, sourceDatasetGid:{} ,destDatasetGid:{}",sourceDatasetGid,destDatasetGid);
+            log.debug("edge info maybe is null or task info is empty, sourceDatasetGid:{} ,destDatasetGid:{}", sourceDatasetGid, destDatasetGid);
             return Lists.newArrayList();
         }
         Map<Long, LineageTask> lineageTaskMap = edgeInfo
@@ -157,7 +169,7 @@ public class LineageAppService {
     }
 
     private List<LineageTask> getLineageTasks(Map<Long, LineageTask> lineageTaskMap) {
-        Map<Long, List<TaskRun>> latestTaskRunsMap = workflowClient.getLatestTaskRuns(new ArrayList<>(lineageTaskMap.keySet()), LATEST_TASK_LIMIT,false);
+        Map<Long, List<TaskRun>> latestTaskRunsMap = workflowClient.getLatestTaskRuns(new ArrayList<>(lineageTaskMap.keySet()), LATEST_TASK_LIMIT, false);
         lineageTaskMap.forEach((taskId, task) -> {
             List<TaskRun> latestTaskRuns = latestTaskRunsMap.get(taskId);
             if (CollectionUtils.isNotEmpty(latestTaskRuns)) {
@@ -199,7 +211,7 @@ public class LineageAppService {
             datasetLineageInfo = workflowClient.getLineageNeighbors(datasetGid, lineageQueryDirection, 1);
         } catch (WorkflowApiException e) {
             log.warn(e.getMessage());
-             return  Maps.newHashMap();
+            return Maps.newHashMap();
         }
         if (Objects.isNull(datasetLineageInfo)) {
             return Maps.newHashMap();

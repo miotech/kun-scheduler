@@ -11,7 +11,7 @@ import lombok.Data;
 @Data
 public class LineageVertex {
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     Long vertexId;
 
     Integer upstreamVertexCount;

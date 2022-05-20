@@ -593,7 +593,7 @@ public class MetadataDatasetDao {
         }, id);
     }
 
-    public List<DatasetBasicInfo> getDatasetBasicInfoList(List<Long> idList) {
+    public List<DatasetDetail> getDatasetDetailList(List<Long> idList) {
         String sql = "select kmd.*, " +
                 "kmdsrct.name as type, " +
                 "kmdsrca.name as datasource_name, " +
@@ -612,16 +612,20 @@ public class MetadataDatasetDao {
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
                 "         left join kun_mt_dataset_stats kmds on kmd.gid = kmds.dataset_gid\n" +
                 "         left join (select dataset_gid, max(last_updated_time) as high_watermark, min(last_updated_time) as low_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n";
-
         String whereClause = "where   kmd.gid in " + toColumnSql(idList.size());
         String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, high_watermark, low_watermark";
 
         sql = sql + whereClause + groupByClause;
-        return dbOperator.fetchAll(sql, rs -> {
-            DatasetBasicInfo dataset = new DatasetBasicInfo();
+        List<DatasetDetail> datasetDetailList = dbOperator.fetchAll(sql, rs -> {
+            DatasetDetail dataset = new DatasetDetail();
             setDatasetBasicField(dataset, rs);
             return dataset;
         }, idList.toArray());
+
+        if (CollectionUtils.isNotEmpty(datasetDetailList)) {
+            datasetDetailList.forEach(datasetBasicInfo -> datasetBasicInfo.setRowCount(getRowCount(datasetBasicInfo.getGid())));
+        }
+        return datasetDetailList;
     }
 
     /**

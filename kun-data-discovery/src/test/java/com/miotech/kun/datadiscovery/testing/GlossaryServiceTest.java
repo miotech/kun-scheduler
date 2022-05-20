@@ -10,7 +10,7 @@ import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
-import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
+import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import org.apache.commons.collections4.CollectionUtils;
@@ -141,14 +141,14 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     }
 
     private void mockDatasetBasicInfoList(List<Long> assetIds) {
-        List<DatasetBasicInfo> collect = assetIds.stream().map(id -> getDatasetBasicInfo(id, "testName" + id)).collect(Collectors.toList());
-        ResponseEntity<List<DatasetBasicInfo>> responseEntity = new ResponseEntity(collect, HttpStatus.OK);
-        when(restTemplate.exchange(anyString(), any(), any(), (ParameterizedTypeReference<List<DatasetBasicInfo>>) any())).thenReturn(responseEntity);
+        List<DatasetDetail> collect = assetIds.stream().map(id -> getDatasetBasicInfo(id, "testName" + id)).collect(Collectors.toList());
+        ResponseEntity<List<DatasetDetail>> responseEntity = new ResponseEntity(collect, HttpStatus.OK);
+        when(restTemplate.exchange(anyString(), any(), any(), (ParameterizedTypeReference<List<DatasetDetail>>) any())).thenReturn(responseEntity);
     }
 
 
-    private DatasetBasicInfo getDatasetBasicInfo(long gid, String name) {
-        DatasetBasicInfo datasetBasicInfo1 = new DatasetBasicInfo();
+    private DatasetDetail getDatasetBasicInfo(long gid, String name) {
+        DatasetDetail datasetBasicInfo1 = new DatasetDetail();
         datasetBasicInfo1.setGid(gid);
         datasetBasicInfo1.setType("dataset");
         datasetBasicInfo1.setName(name);
