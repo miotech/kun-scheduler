@@ -2,14 +2,18 @@ package com.miotech.kun.datadiscovery.testing;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.miotech.kun.datadiscovery.model.bo.CopyOperation;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
+import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,24 +158,6 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         return datasetBasicInfo1;
     }
 
-    @Test
-    void test_copy_parentIsNull() {
-        Long parentId = null;
-        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
-        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
-        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-
-        Glossary glossaryCopy = glossaryService.copy(glossary.getId());
-        assertThat(glossaryCopy.getAssets(), is(glossary.getAssets()));
-        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary.getName())));
-        assertThat(glossaryCopy.getId(), not(glossary.getId()));
-        assertThat(glossaryCopy.getParent(), is(glossary.getParent()));
-        assertThat(glossaryCopy.getDescription(), is(glossary.getDescription()));
-        assertThat(glossaryCopy.getCreateTime(), not(glossary.getCreateTime()));
-        assertThat(glossaryCopy.getUpdateTime(), not(glossary.getUpdateTime()));
-
-    }
 
     /**
      * null->glossary
@@ -467,60 +453,218 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
     }
 
+    @Test
+    void test_copy_ONLY_ONESELF_same_level() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy only oneself g2-1 到1-1 same level
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.ONLY_ONESELF;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary1_1.getParentId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        assertThat(glossaryChildren.getParentId(), is(glossary1_1.getParentId()));
+        assertThat(glossaryChildren.getChildren(), is(notNullValue()));
+        List<GlossaryBasicInfoWithCount> children = glossaryChildren.getChildren();
+        assertThat(children.size(), is(2));
+        GlossaryBasicInfo glossaryCopy = children.get(0);
+        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary2_1.getName())));
+        assertThat(glossaryCopy.getDescription(), is(glossary2_1.getDescription()));
+        assertThat(glossaryCopy.getId(), not(glossary2_1.getId()));
+        assertThat(glossaryCopy.getParentId(), is(glossary1_1.getParentId()));
+        assertThat(children.get(1).getId(), is(glossary1_1.getId()));
+        GlossaryChildren glossaryChildren1 = glossaryService.fetchGlossaryChildren(glossaryCopy.getId());
+        List<GlossaryBasicInfoWithCount> children1 = glossaryChildren1.getChildren();
+        assertTrue(CollectionUtils.isEmpty(children1));
+
+    }
 
     @Test
-    void test_copy() {
-        /**
-         *null->glossary->glossaryChild--->glossarySon1
-         *                           ｜
-         *                           ｜---> glossarySon2
-         */
+    void test_copy_ONLY_ONESELF_children_level() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy only oneself g2-1 到1-1 children level
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.ONLY_ONESELF;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary1_1.getId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        assertThat(glossaryChildren.getParentId(), is(glossary1_1.getId()));
+        assertThat(glossaryChildren.getChildren(), is(notNullValue()));
+        List<GlossaryBasicInfoWithCount> children = glossaryChildren.getChildren();
+        assertThat(children.size(), is(2));
+        Long copyId = children.get(0).getId();
+        Glossary glossaryCopy = glossaryService.fetchGlossary(copyId);
+        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary2_1.getName())));
+        assertThat(glossaryCopy.getDescription(), is(glossary2_1.getDescription()));
+        assertThat(glossaryCopy.getId(), not(glossary2_1.getId()));
+        assertThat(glossaryCopy.getAssets(), is(glossary2_1.getAssets()));
+        assertThat(glossaryCopy.getParentId(), is(glossary1_1.getId()));
+        assertThat(children.get(1).getId(), is(glossary2_1.getId()));
 
-        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
-        Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary", assetList);
-        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
-        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), "glossaryChild", assetList);
-        Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
-        GlossaryRequest glossaryRequestSon1 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon1", assetList);
-        Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon1);
-        GlossaryRequest glossaryRequestSon2 = createGlossaryRequestWithParent(glossaryChild.getId(), "glossarySon2", assetList);
-        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon2);
-
-        Glossary glossaryCopy = glossaryService.copy(glossaryChild.getId());
-//        test self info
-        assertThat(glossaryCopy.getAssets(), is(glossaryChild.getAssets()));
-        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossaryChild.getName())));
-        assertThat(glossaryCopy.getId(), not(glossaryChild.getId()));
-        assertThat(glossaryCopy.getParent(), is(glossaryChild.getParent()));
-        assertThat(glossaryCopy.getDescription(), is(glossaryChild.getDescription()));
-        assertThat(glossaryCopy.getCreateTime(), not(glossaryChild.getCreateTime()));
-        assertThat(glossaryCopy.getUpdateTime(), not(glossaryChild.getUpdateTime()));
-
-//        TEST DEEP COPY
-        List<GlossaryBasicInfo> glossaryBasicChildInfoList = glossaryService.fetchChildrenBasicList(glossaryChild.getId());
-        List<GlossaryBasicInfo> glossaryCopyChildBasicInfoList = glossaryService.fetchChildrenBasicList(glossaryCopy.getId());
-        assertThat(glossaryBasicChildInfoList.size(), is(glossaryCopyChildBasicInfoList.size()));
-        Glossary son2 = glossaryService.fetchGlossary(glossaryBasicChildInfoList.get(0).getId());
-        Glossary copySon2 = glossaryService.fetchGlossary(glossaryCopyChildBasicInfoList.get(0).getId());
-        assertThat(copySon2.getId(), is(not(son2.getId())));
-        assertThat(copySon2.getName(), is(GlossaryService.getCopyName(son2.getName())));
-        assertThat(copySon2.getDescription(), is(son2.getDescription()));
-        assertThat(copySon2.getAssets().size(), is(son2.getAssets().size()));
-        assertThat(copySon2.getAncestryGlossaryList().size(), is(son2.getAncestryGlossaryList().size()));
-        assertThat(copySon2.getParentId(), is(not(son2.getParentId())));
-        Glossary son1 = glossaryService.fetchGlossary(glossaryBasicChildInfoList.get(1).getId());
-        Glossary copySon1 = glossaryService.fetchGlossary(glossaryCopyChildBasicInfoList.get(1).getId());
-        assertThat(copySon1.getId(), is(not(son1.getId())));
-        assertThat(copySon1.getName(), is(GlossaryService.getCopyName(son1.getName())));
-        assertThat(copySon1.getDescription(), is(son1.getDescription()));
-        assertThat(copySon1.getAssets().size(), is(son1.getAssets().size()));
-        assertThat(copySon1.getAncestryGlossaryList().size(), is(son1.getAncestryGlossaryList().size()));
-        assertThat(copySon1.getParentId(), is(not(son1.getParentId())));
+        GlossaryChildren glossaryChildren2 = glossaryService.fetchGlossaryChildren(glossaryCopy.getId());
+        List<GlossaryBasicInfoWithCount> children2 = glossaryChildren2.getChildren();
+        assertTrue(CollectionUtils.isEmpty(children2));
 
 
     }
+
+    @Test
+    void test_copy_CONTAINS_CHILDREN_same_level() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy contains children  g2-1 到1-1 same level
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.CONTAINS_CHILDREN;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary1_1.getParentId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        assertThat(glossaryChildren.getParentId(), is(glossary1_1.getParentId()));
+        assertThat(glossaryChildren.getChildren(), is(notNullValue()));
+        List<GlossaryBasicInfoWithCount> children = glossaryChildren.getChildren();
+        assertThat(children.size(), is(2));
+
+        assertThat(children.get(1).getId(), is(glossary1_1.getId()));
+        Long copy2_1_Id = children.get(0).getId();
+        Glossary glossaryCopy = glossaryService.fetchGlossary(copy2_1_Id);
+        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary2_1.getName())));
+        assertThat(glossaryCopy.getDescription(), is(glossary2_1.getDescription()));
+        assertThat(glossaryCopy.getId(), not(glossary2_1.getId()));
+        assertThat(glossaryCopy.getAssets(), is(glossary2_1.getAssets()));
+        assertThat(glossaryCopy.getParentId(), is(glossary1_1.getParentId()));
+
+        GlossaryChildren glossaryChildren1 = glossaryService.fetchGlossaryChildren(copy2_1_Id);
+        List<GlossaryBasicInfoWithCount> children1 = glossaryChildren1.getChildren();
+        assertThat(children1.size(), is(2));
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        assertThat(children1.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(children1.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+
+
+    }
+
+    @Test
+    void test_copy_CONTAINS_CHILDREN_children_level() {
+
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy contains children  g2-1 到1-1 children level
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.CONTAINS_CHILDREN;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary1_1.getId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        assertThat(glossaryChildren.getParentId(), is(glossary1_1.getId()));
+        assertThat(glossaryChildren.getChildren(), is(notNullValue()));
+        List<GlossaryBasicInfoWithCount> children = glossaryChildren.getChildren();
+        assertThat(children.size(), is(2));
+        assertThat(children.get(1).getId(), is(glossary2_1.getId()));
+        Long copy2_1_Id = children.get(0).getId();
+        Glossary glossaryCopy = glossaryService.fetchGlossary(copy2_1_Id);
+        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary2_1.getName())));
+        assertThat(glossaryCopy.getDescription(), is(glossary2_1.getDescription()));
+        assertThat(glossaryCopy.getId(), not(glossary2_1.getId()));
+        assertThat(glossaryCopy.getAssets(), is(glossary2_1.getAssets()));
+        assertThat(glossaryCopy.getParentId(), is(glossary2_1.getParentId()));
+
+        GlossaryChildren glossaryChildren1 = glossaryService.fetchGlossaryChildren(null);
+        List<GlossaryBasicInfoWithCount> children1 = glossaryChildren1.getChildren();
+        assertThat(children1.size(), is(1));
+        assertThat(children1.get(0).getId(), is(glossary1_1.getId()));
+
+        GlossaryChildren glossaryChildren2 = glossaryService.fetchGlossaryChildren(glossaryCopy.getId());
+        List<GlossaryBasicInfoWithCount> children2 = glossaryChildren2.getChildren();
+        assertThat(children2.size(), is(2));
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        assertThat(children2.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(children2.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+
+
+    }
+
+    @Test
+    void test_copy_ONLY_CHILDREN_same_level() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy only children  g2-1 到1-1 same level
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.ONLY_CHILDREN;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary1_1.getParentId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        assertThat(glossaryChildren.getParentId(), is(glossary1_1.getParentId()));
+        assertThat(glossaryChildren.getChildren(), is(notNullValue()));
+        List<GlossaryBasicInfoWithCount> children = glossaryChildren.getChildren();
+        assertThat(children.size(), is(3));
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        assertThat(children.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(children.get(0).getParentId(), not((glossary3_2.getParentId())));
+        assertThat(children.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+        assertThat(children.get(1).getParentId(), not((glossary3_1.getParentId())));
+        assertThat(children.get(2).getName(), is(glossary1_1.getName()));
+        Long copy3_2_id = children.get(0).getId();
+        Glossary glossaryCopy = glossaryService.fetchGlossary(copy3_2_id);
+        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(glossaryCopy.getDescription(), is(glossary3_2.getDescription()));
+        assertThat(glossaryCopy.getId(), not(glossary3_2.getId()));
+        assertThat(glossaryCopy.getAssets(), is(glossary3_2.getAssets()));
+        assertThat(glossaryCopy.getParentId(), not(glossary3_2.getParentId()));
+        assertThat(glossaryCopy.getParentId(), is(nullValue()));
+    }
+
+    @Test
+    void test_copy_CONTAINS_CHILDREN_throw() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy contains children  g2-1 到1-1 same level
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.CONTAINS_CHILDREN;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary2_1.getId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        GlossaryCopyRequest copyReq1 = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary3_1.getId(), glossary2_1.getId(), copyOperation);
+        assertThrows(IllegalStateException.class, () -> glossaryService.copy(copyReq1));
+        CopyOperation copyOperation_ONLY_CHILDREN = CopyOperation.ONLY_CHILDREN;
+        GlossaryCopyRequest copyReq2 = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary2_1.getId(), glossary2_1.getId(), copyOperation_ONLY_CHILDREN);
+        GlossaryChildren glossaryChildren1 = glossaryService.copy(copyReq2);
+        assertThat(glossaryChildren1, is(notNullValue()));
+        GlossaryCopyRequest copyReq3 = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary3_1.getId(), glossary2_1.getId(), copyOperation_ONLY_CHILDREN);
+        assertThrows(IllegalStateException.class, () -> glossaryService.copy(copyReq3));
+    }
+
+    @Test
+    void test_copy_ONLY_CHILDREN_children_level() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+//        copy only children  g2-1 到1-1 same level
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Glossary glossary2_1 = glossaryTree.get("glossary2_1");
+        CopyOperation copyOperation = CopyOperation.ONLY_CHILDREN;
+        GlossaryCopyRequest copyReq = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary1_1.getId(), glossary2_1.getId(), copyOperation);
+        GlossaryChildren glossaryChildren = glossaryService.copy(copyReq);
+        assertThat(glossaryChildren, is(notNullValue()));
+        assertThat(glossaryChildren.getParentId(), is(glossary1_1.getId()));
+        assertThat(glossaryChildren.getChildren(), is(notNullValue()));
+        List<GlossaryBasicInfoWithCount> children = glossaryChildren.getChildren();
+        assertThat(children.size(), is(3));
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        assertThat(children.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(children.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+        assertThat(children.get(2).getName(), is(glossary2_1.getName()));
+        Long copy3_2_id = children.get(0).getId();
+        Glossary glossaryCopy = glossaryService.fetchGlossary(copy3_2_id);
+
+        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(glossaryCopy.getDescription(), is(glossary3_2.getDescription()));
+        assertThat(glossaryCopy.getId(), not(glossary3_2.getId()));
+        assertThat(glossaryCopy.getAssets(), is(glossary3_2.getAssets()));
+        assertThat(glossaryCopy.getParentId(), is(glossary1_1.getId()));
+
+    }
+
 
     @Test
     public void test_fetchChildrenBasicList_parent_null() {

@@ -1,6 +1,8 @@
 package com.miotech.kun.datadiscovery.testing.mockdata;
 
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.datadiscovery.model.bo.CopyOperation;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
 
 public class MockGlossaryBasicFactory {
@@ -18,4 +20,7 @@ public class MockGlossaryBasicFactory {
         return glossaryBasic;
     }
 
+    public static GlossaryCopyRequest createGlossaryCopyRequest(Long parentId, Long sourceId, CopyOperation copyOperation) {
+        return new GlossaryCopyRequest(parentId, sourceId, copyOperation);
+    }
 }
