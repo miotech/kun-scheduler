@@ -1,30 +1,9 @@
 import produce from 'immer';
-import moment from 'moment';
-import {
-  fetchAllTagsService,
-  fetchAllUsersService,
-  searchDatasetsService,
-  searchAllDsService,
-  fetchAllDbService,
-} from '@/services/dataDiscovery';
+import { fetchAllTagsService, fetchAllUsersService, searchDatasetsService } from '@/services/dataDiscovery';
 import { Pagination } from '@/definitions/common-types';
-import { DbType } from '@/definitions/Database.type';
 import { Dataset } from '@/definitions/Dataset.type';
 
 import { RootDispatch } from '../store';
-
-export interface DataRange {
-  startTime: number | null;
-  endTime: number | null;
-}
-
-export enum Quick {
-  LAST_30_M = 'LAST_30_M',
-  LAST_4_H = 'LAST_4_H',
-  LAST_1_D = 'LAST_1_D',
-  LAST_1_W = 'LAST_1_W',
-  LAST_1_MON = 'LAST_1_MON',
-}
 
 export enum Mode {
   ABSOLUTE = 'absolute',
@@ -33,44 +12,28 @@ export enum Mode {
 
 export interface SearchParams {
   searchContent?: string;
-  ownerList?: string[];
-  tagList?: string[];
-  dsTypeList?: string[];
-  dsIdList?: string[];
-  dbList?: string[];
-  glossaryIdList?: string[];
-  watermarkMode?: Mode;
-  watermarkAbsoluteValue?: DataRange;
-  watermarkQuickeValue?: Quick;
+  datasource: string;
+  database: string;
+  schema: string;
+  type: string;
+  tags: string;
+  owners: string;
   pagination: Pagination;
-  displayDeleted?: boolean;
-
-  sortKey: string | null;
-  sortOrder: 'asc' | 'desc' | null;
 }
 
 export interface SearchParamsObj {
   keyword?: string;
-  watermarkStart?: number;
-  watermarkEnd?: number;
-  ownerList?: string[];
-  tagList?: string[];
-  dsTypeList?: string[];
-  dsIdList?: string[];
-  dbList?: string[];
-  glossaryIdList?: string[];
-
-  sortKey: string | null;
-  sortOrder: 'asc' | 'desc' | null;
+  datasource: string;
+  database: string;
+  schema: string;
+  type: string;
+  tags: string;
+  owners: string;
 }
 
 export interface QueryObj extends SearchParamsObj {
   pageSize: number;
   pageNumber: number;
-
-  watermarkMode?: Mode;
-  watermarkAbsoluteValue?: DataRange;
-  watermarkQuickeValue?: Quick;
 }
 
 export interface DsFilterItem {
@@ -84,16 +47,14 @@ export interface DatabaseFilterItem {
 
 export interface DataDiscoveryState {
   searchContent: string;
-  watermarkMode: Mode;
-  watermarkAbsoluteValue?: DataRange;
-  watermarkQuickeValue?: Quick;
-
-  ownerList?: string[];
-  tagList?: string[];
-  dsTypeList?: DbType[];
-  dsIdList?: string[];
-  dbList?: string[];
-  glossaryIdList?: string[];
+  selectOptions: {
+    datasource: [];
+    database: [];
+    schema: [];
+    type: [];
+    tags: [];
+    owners: [];
+  };
 
   allDbList: DatabaseFilterItem[];
   allOwnerList: string[];
@@ -113,17 +74,14 @@ export interface DataDiscoveryState {
 export const dataDiscovery = {
   state: {
     searchContent: '',
-
-    watermarkMode: Mode.ABSOLUTE,
-    watermarkAbsoluteValue: undefined,
-    watermarkQuickeValue: undefined,
-
-    ownerList: undefined,
-    tagList: undefined,
-    dsTypeList: undefined,
-    dsIdList: undefined,
-    dbList: undefined,
-
+    selectOptions: {
+      datasource: [],
+      database: [],
+      schema: [],
+      type: [],
+      tags: [],
+      owners: [],
+    },
     allDbList: [],
     allOwnerList: [],
     allTagList: [],
@@ -145,6 +103,13 @@ export const dataDiscovery = {
     updateState: (state: DataDiscoveryState, payload: { key: keyof DataDiscoveryState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
+    }),
+    updateOptions: (state: DataDiscoveryState, payload: { key: string; value: any }) => ({
+      ...state,
+      selectOptions: {
+        ...state.selectOptions,
+        [payload.key]: payload.value,
+      },
     }),
     batchUpdateState: (state: DataDiscoveryState, payload: Partial<DataDiscoveryState>) => ({
       ...state,
@@ -198,84 +163,17 @@ export const dataDiscovery = {
           // do nothing
         }
       },
-
       async searchDatasets(payload: SearchParams) {
-        const {
-          searchContent,
-          ownerList,
-          tagList,
-          dsTypeList,
-          dsIdList,
-          dbList,
-          glossaryIdList,
-          sortKey,
-          sortOrder,
-          watermarkMode,
-          watermarkAbsoluteValue,
-          watermarkQuickeValue,
-          pagination,
-        } = payload;
-        let watermarkStart: number | undefined;
-        let watermarkEnd: number | undefined;
-        if (watermarkMode === Mode.ABSOLUTE) {
-          if (watermarkAbsoluteValue?.startTime && Number(watermarkAbsoluteValue.startTime)) {
-            watermarkStart = watermarkAbsoluteValue.startTime || undefined;
-          }
-          if (watermarkAbsoluteValue?.endTime && Number(watermarkAbsoluteValue.endTime)) {
-            watermarkEnd = watermarkAbsoluteValue.endTime || undefined;
-          }
-        }
-
-        if (watermarkMode === Mode.QUICK) {
-          switch (watermarkQuickeValue) {
-            case Quick.LAST_30_M:
-              watermarkStart = moment()
-                .subtract(30, 'minutes')
-                .valueOf();
-              break;
-
-            case Quick.LAST_4_H:
-              watermarkStart = moment()
-                .subtract(4, 'hours')
-                .valueOf();
-              break;
-
-            case Quick.LAST_1_D:
-              watermarkStart = moment()
-                .subtract(1, 'day')
-                .valueOf();
-              break;
-
-            case Quick.LAST_1_W:
-              watermarkStart = moment()
-                .subtract(1, 'week')
-                .valueOf();
-              break;
-
-            case Quick.LAST_1_MON:
-              watermarkStart = moment()
-                .subtract(1, 'month')
-                .valueOf();
-              break;
-
-            default:
-              break;
-          }
-          watermarkEnd = moment().valueOf();
-        }
+        const { searchContent, datasource, database, schema, type, tags, owners, pagination } = payload;
 
         const searchParams: SearchParamsObj = {
           keyword: searchContent,
-          watermarkStart,
-          watermarkEnd,
-          ownerList,
-          tagList,
-          dsTypeList,
-          dsIdList,
-          dbList,
-          glossaryIdList,
-          sortOrder,
-          sortKey,
+          datasource,
+          database,
+          schema,
+          type,
+          tags,
+          owners,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;
@@ -295,32 +193,6 @@ export const dataDiscovery = {
                 },
               });
             }
-          }
-        } catch (e) {
-          // do nothing
-        }
-      },
-      async fetchAllDs(payload: string) {
-        try {
-          const resp = await searchAllDsService(payload);
-          if (resp) {
-            dispatch.dataDiscovery.updateState({
-              key: 'allDsList',
-              value: resp.datasources,
-            });
-          }
-        } catch (e) {
-          // do nothing
-        }
-      },
-      async fetchAllDb(payload?: { dataSourceIds: string[] }) {
-        try {
-          const resp = await fetchAllDbService(payload);
-          if (resp) {
-            dispatch.dataDiscovery.updateState({
-              key: 'allDbList',
-              value: resp,
-            });
           }
         } catch (e) {
           // do nothing

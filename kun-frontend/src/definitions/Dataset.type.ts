@@ -51,3 +51,18 @@ export interface Vertex {
   upstreamVertexCount: number;
   downstreamVertexCount: number;
 }
+
+export enum ResourceAttributeMap {
+  type = 'type',
+  datasource = 'datasource',
+  database = 'database',
+  schema = 'schema',
+  tags = 'tags',
+  owners = 'owners',
+}
+export interface QueryAttributeListBody {
+  resourceAttributeName: string;
+  resourceAttributeMap: {
+    [key in ResourceAttributeMap]?: string | null;
+  };
+}
