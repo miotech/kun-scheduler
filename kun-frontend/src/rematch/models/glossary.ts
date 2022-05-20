@@ -37,7 +37,7 @@ export interface SearchGlossaryItem {
   resourceAttribute: {
     owners: string;
   };
-  ancestryGlossaryList: GlossaryChild[]
+  ancestryGlossaryList: GlossaryChild[];
   deleted: false;
 }
 
@@ -63,6 +63,7 @@ export interface GlossaryDetail {
   updateUser: string;
   updateTime: number | null;
   parent: SearchGlossaryItem | null;
+  parentId: string;
   assets: Asset[] | null;
   ancestryGlossaryList: GlossaryChild[];
 }
@@ -76,6 +77,7 @@ export const getInitGlossaryDetail: () => GlossaryDetail = () => ({
   updateUser: '',
   updateTime: null,
   parent: null,
+  parentId: '',
   assets: [],
   ancestryGlossaryList: [],
 });
@@ -216,15 +218,7 @@ export const glossary = {
         return null;
       },
 
-      async editGlossary(
-        {
-          id,
-          params,
-        }: {
-          id: string;
-          params: EditGlossaryReqBody;
-        },
-      ) {
+      async editGlossary({ id, params }: { id: string; params: EditGlossaryReqBody }) {
         try {
           const resp = await editGlossaryService(id, params);
           if (resp) {

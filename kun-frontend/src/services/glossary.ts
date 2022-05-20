@@ -54,10 +54,15 @@ export async function editGlossaryService(id: string, params: EditGlossaryReqBod
   });
 }
 
-export async function copyGlossaryServicey(id: string) {
-  return post<GlossaryDetail>('/metadata/glossary/copy/:id', {
-    pathParams: { id },
-    data: { id },
+export interface CopyGlossaryReqBody {
+  parentId: string;
+  sourceId: string;
+  copyOperation: string;
+}
+
+export async function copyGlossaryService(params: CopyGlossaryReqBody) {
+  return post('/metadata/glossary/copy', {
+    data: params,
     prefix: DEFAULT_API_PREFIX,
   });
 }

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useHistory } from 'umi';
 import { RouteComponentProps } from 'react-router';
 
-import { Spin, Button, Input, Modal, message, Popconfirm } from 'antd';
+import { Spin, Button, Input, Modal, message, Popover } from 'antd';
 
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
@@ -15,11 +15,12 @@ import {
   GlossaryNode,
   GlossaryChild,
 } from '@/rematch/models/glossary';
-
-import { copyGlossaryServicey } from '@/services/glossary';
+import { useStickyState } from '@/hooks/useStickyState';
 import ParentSearch from './components/ParentSearch/ParentSearch';
 import ChildrenGlossaryList from './components/ChildrenGlossaryList/ChildrenGlossaryList';
 import AssetList from './components/AssetList/AssetList';
+import { PasteContent } from './components/PasteContent/PasteContent';
+
 import styles from './index.less';
 
 interface MatchParams {
@@ -32,7 +33,7 @@ interface Props extends RouteComponentProps<MatchParams> {
   addChild: (child: {}, parentId: string, id?: string) => void;
   editNodeName: (id: string, name: string) => void;
   deleteChild: (parentId: string, id: string) => void;
-  changeParent: (preParentId: string, currentParentId: string, id: string, child: {}) => void;
+  changeParent: (preParentId: string, currentParentId: string, id: string) => void;
   onClose: () => void;
 }
 
@@ -52,9 +53,9 @@ export default function GlossaryDetail({
   const history = useHistory();
 
   const query = useMemo(() => (history.location as any)?.query ?? {}, [history.location]);
-
+  const [visible, setVisible] = useState(false);
   const { selector, dispatch } = useRedux(state => state.glossary);
-
+  const [glossarySticky, setGlossarySticky] = useStickyState<IGlossaryDetail | null>(null, 'glossary');
   const [isEditing, setIsEditing] = useState(false);
   const [preId, setPreId] = useState<string>();
   const [pretName, setPreName] = useState<string>();
@@ -103,18 +104,14 @@ export default function GlossaryDetail({
       });
     };
   }, [currentId, dispatch.glossary]);
-  const copyGlossary = async () => {
-    if (currentId) {
-      const res = await copyGlossaryServicey(currentId);
-      if (res) {
-        const obj = {
-          children: res.glossaryCountList,
-        };
-        message.success(t('common.operateSuccess'));
-        addChild({ ...obj, ...res }, res?.parent?.id, res.id);
-      }
+
+  const copyGlossary = () => {
+    if (currentGlossaryDetail) {
+      setGlossarySticky(currentGlossaryDetail);
+      message.success(t('common.operateSuccess'));
     }
   };
+
   const createChild = (name: string, id: string) => {
     setIsEditing(false);
     setCurrentId('');
@@ -190,7 +187,7 @@ export default function GlossaryDetail({
         if (resp) {
           const preParentId = currentGlossaryDetail?.parent?.id;
           if (preParentId !== params.parentId) {
-            changeParent(preParentId, params.parentId, id, resp);
+            changeParent(preParentId, params.parentId, id);
           }
           editNodeName(id, params.name);
           message.success(t('common.operateSuccess'));
@@ -265,20 +262,31 @@ export default function GlossaryDetail({
     }
     return (
       <>
-        <Button style={{ marginLeft: 'auto' }} size="large" onClick={() => setIsEditing(true)}>
+        <Button style={{ marginLeft: 'auto' }} size="large" onClick={() => setIsEditing(true)} type="primary" ghost>
           {t('common.button.edit')}
         </Button>
-        <Popconfirm
-          title={t('glossary.copy.title')}
-          onConfirm={copyGlossary}
-          okText={t('common.button.confirm')}
-          cancelText={t('common.button.cancel')}
+        <Button style={{ marginLeft: 10 }} size="large" type="primary" ghost onClick={copyGlossary}>
+          {t('common.button.copy')}
+        </Button>
+        <Popover
+          visible={visible}
+          onVisibleChange={(value: boolean) => setVisible(value)}
+          placement="bottom"
+          title={null}
+          content={
+            <PasteContent
+              glossarySticky={glossarySticky}
+              addChild={addChild}
+              setVisible={setVisible}
+              currentGlossaryDetail={currentGlossaryDetail}
+            />
+          }
+          trigger="click"
         >
-          {' '}
-          <Button style={{ marginLeft: 10 }} size="large">
-            {t('common.button.copy')}
+          <Button style={{ marginLeft: 10 }} size="large" type="primary" ghost>
+            {t('common.button.paste')}
           </Button>
-        </Popconfirm>
+        </Popover>
       </>
     );
   };
@@ -312,12 +320,12 @@ export default function GlossaryDetail({
       {inputtingDetail.ancestryGlossaryList && (
         <div className={styles.path}>
           {inputtingDetail.ancestryGlossaryList.map((item: GlossaryChild, index: number) => {
-              return (
-                <span className={styles.pathName} onClick={() => setCurrentId(item.id)}>
-                   {' '}
-                   {index !== 0 && '->'} {item.name}
-                </span>
-              );
+            return (
+              <span className={styles.pathName} onClick={() => setCurrentId(item.id)}>
+                {' '}
+                {index !== 0 && '->'} {item.name}
+              </span>
+            );
           })}
         </div>
       )}
