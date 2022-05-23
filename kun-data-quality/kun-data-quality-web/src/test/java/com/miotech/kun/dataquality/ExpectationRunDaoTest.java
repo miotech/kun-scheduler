@@ -8,14 +8,14 @@ import com.miotech.kun.dataquality.mock.MockValidationResultFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class ExpectationRunDaoTest extends DataQualityTestBase {
 
@@ -90,6 +90,23 @@ public class ExpectationRunDaoTest extends DataQualityTestBase {
         OffsetDateTime theDayBeforeYesterday = today.minusDays(2);
         validationResults = expectationRunDao.fetchByUpdateTimeFromAndPassed(theDayBeforeYesterday, false);
         assertThat(validationResults.size(), is(2));
+    }
+
+
+    @Test
+    public void testDelete() {
+        ValidationResult validationResult = MockValidationResultFactory.create();
+        expectationRunDao.create(validationResult);
+
+        ValidationResult fetched = expectationRunDao.fetchByExpectationId(validationResult.getExpectationId());
+        assertThat(fetched, notNullValue());
+
+        expectationRunDao.deleteByExpectationId(fetched.getExpectationId());
+        try {
+            expectationRunDao.fetchByExpectationId(validationResult.getExpectationId());
+        } catch (Exception e) {
+            assertThat(e, instanceOf(EmptyResultDataAccessException.class));
+        }
     }
 
 }

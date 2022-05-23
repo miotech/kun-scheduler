@@ -51,7 +51,14 @@ public class ExpectationRunDao {
                 validationResult.getUpdateTime());
     }
 
-
+    public void deleteByExpectationId(Long expectationId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(TABLE_NAME)
+                .where("expectation_id = ?")
+                .getSQL();
+        jdbcTemplate.update(sql, expectationId);
+    }
 
     public ValidationResult fetchByExpectationId(Long expectationId) {
         String sql = DefaultSQLBuilder.newBuilder()
