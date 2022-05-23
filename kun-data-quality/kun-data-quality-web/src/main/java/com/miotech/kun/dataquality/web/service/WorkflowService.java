@@ -82,7 +82,7 @@ public class WorkflowService {
     public TaskRun executeExpectation(Long expectationId) {
         Expectation expectation = expectationService.fetchById(expectationId);
         Map<String, Object> taskConfig = new HashMap<>();
-        taskConfig.put("validate-dataset", expectation.getDataset().getGid());
+        taskConfig.put("validate-dataset", JSONUtils.toJsonString(expectation.getDataset()));
         taskConfig.put("operator-hook-class", operatorHookClass);
         taskConfig.put("operator-hook-params", JSONUtils.toJsonString(operatorHookParams.getParams()));
         return executeExpectation(expectationId, taskConfig);

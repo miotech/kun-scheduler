@@ -16,6 +16,7 @@ import java.util.List;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ExpectationRunDaoTest extends DataQualityTestBase {
 
@@ -102,11 +103,8 @@ public class ExpectationRunDaoTest extends DataQualityTestBase {
         assertThat(fetched, notNullValue());
 
         expectationRunDao.deleteByExpectationId(fetched.getExpectationId());
-        try {
-            expectationRunDao.fetchByExpectationId(validationResult.getExpectationId());
-        } catch (Exception e) {
-            assertThat(e, instanceOf(EmptyResultDataAccessException.class));
-        }
+        assertThrows(EmptyResultDataAccessException.class, () -> expectationRunDao.fetchByExpectationId(validationResult.getExpectationId()));
+
     }
 
 }
