@@ -9,6 +9,7 @@ bootJar {
 
 dependencies {
     implementation project(':kun-security:kun-security-common')
+    implementation project(':kun-security:kun-security-facade')
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-app-common')
@@ -32,6 +33,9 @@ dependencies {
     implementation 'com.google.code.gson:gson'
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
+    runtimeOnly 'io.grpc:grpc-netty-shaded'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-stub'
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation('org.springframework.boot:spring-boot-starter-test') {

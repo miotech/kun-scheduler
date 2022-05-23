@@ -87,3 +87,7 @@ springdoc:
 
 frontend:
   url: ${KUN_ROOT_URL:http://localhost:8079}
+
+grpc:
+  server:
+    port: 50051

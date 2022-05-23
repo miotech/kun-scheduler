@@ -1,6 +1,8 @@
 FROM openjdk:8u181-jdk-alpine
 
 RUN apk add --no-cache tini
+RUN apk add gcompat
+ENV LD_PRELOAD=/lib/libgcompat.so.0
 
 WORKDIR /server/target
 
