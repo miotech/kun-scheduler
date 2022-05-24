@@ -5,6 +5,7 @@ import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
+import com.miotech.kun.datadiscovery.service.SecurityRpcClient;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -43,15 +44,8 @@ public class LineageAppServiceTest extends DataDiscoveryTestBase {
 
     @Autowired
     LineageAppService lineageAppService;
-
-
-    @MockBean
-    WorkflowClient workflowClient;
     @MockBean
     MetadataService metadataService;
-    @MockBean
-    private DeployedTaskFacade deployedTaskFacade;
-
 
     private LineageTasksRequest getLineageTasksRequest() {
         LineageQueryDirection lineageQueryDirection = LineageQueryDirection.UPSTREAM;

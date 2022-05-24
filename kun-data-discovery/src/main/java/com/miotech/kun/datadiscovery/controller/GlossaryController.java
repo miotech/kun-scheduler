@@ -4,13 +4,13 @@ import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.*;
-import com.miotech.kun.datadiscovery.model.entity.Glossary;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryId;
-import com.miotech.kun.datadiscovery.model.entity.SearchPage;
+import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author: Melo
@@ -72,5 +72,34 @@ public class GlossaryController {
     @PostMapping("/metadata/glossary/copy")
     public RequestResult<GlossaryChildren> copy(@RequestBody GlossaryCopyRequest glossaryCopyRequest) {
         return RequestResult.success(glossaryService.copy(glossaryCopyRequest));
+    }
+
+    @GetMapping("/role/glossary/operation")
+    public RequestResult<SecurityInfo> getGlossaryOperation(@RequestParam(value = "id", required = false) Long id) {
+        return RequestResult.success(glossaryService.fetchGlossaryOperation(id));
+    }
+
+    @GetMapping("/role/glossary/editor/{id}")
+    public RequestResult<List<String>> getGlossaryEditor(@PathVariable("id") Long id) {
+        Preconditions.checkNotNull(id, "Invalid argument `id`: null");
+        return RequestResult.success(glossaryService.getGlossaryEditorList(id));
+    }
+
+    @PostMapping("/role/addEditor")
+    public RequestResult<Long> addEditor(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
+        String userName = editGlossaryEditerRequest.getUserName();
+        Long id = editGlossaryEditerRequest.getId();
+        Preconditions.checkNotNull(id, "Invalid argument `id`: null");
+        Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
+        return RequestResult.success(glossaryService.addScope(id, userName));
+    }
+
+    @PostMapping("/role/removeEditor")
+    public RequestResult<Long> removeEditor(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
+        String userName = editGlossaryEditerRequest.getUserName();
+        Long id = editGlossaryEditerRequest.getId();
+        Preconditions.checkNotNull(id, "Invalid argument `id`: null");
+        Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
+        return RequestResult.success(glossaryService.removeScope(id, userName));
     }
 }

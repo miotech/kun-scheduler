@@ -90,4 +90,4 @@ frontend:
 
 grpc:
   server:
-    port: 50051
+    port: ${WORKFLOW_RPC_SERVICE_PORT}

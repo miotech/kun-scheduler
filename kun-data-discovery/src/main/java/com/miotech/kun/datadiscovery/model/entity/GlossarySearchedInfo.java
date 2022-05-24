@@ -25,5 +25,7 @@ public class GlossarySearchedInfo {
     private ResourceAttribute resourceAttribute;
     private boolean deleted;
     private List<GlossaryBasicInfo> ancestryGlossaryList;
+    private SecurityInfo securityInfo;
+
 
 }

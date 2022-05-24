@@ -149,5 +149,5 @@ spark:
 grpc:
   server:
     security-host: ${SECURITY_HOST}
-    port: 50051
+    port: ${WORKFLOW_RPC_SERVICE_PORT}
 

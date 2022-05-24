@@ -7,10 +7,7 @@ import com.miotech.kun.datadiscovery.model.entity.DatasetBasic;
 import com.miotech.kun.datadiscovery.model.entity.DatasetBasicPage;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
 import com.miotech.kun.datadiscovery.model.entity.UpstreamTask;
-import com.miotech.kun.datadiscovery.service.GlossaryService;
-import com.miotech.kun.datadiscovery.service.LineageAppService;
-import com.miotech.kun.datadiscovery.service.MetadataService;
-import com.miotech.kun.datadiscovery.service.SearchAppService;
+import com.miotech.kun.datadiscovery.service.*;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockSearchInfoFactory;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
@@ -52,20 +49,11 @@ public class MetadataServiceTest extends DataDiscoveryTestBase {
     @MockBean
     private SearchAppService searchAppService;
 
-    @MockBean
-    private RestTemplate restTemplate;
-
-    @MockBean
-    private WorkflowClient workflowClient;
-
     @SpyBean
     private GlossaryService glossaryService;
 
     @MockBean
-    private DeployedTaskFacade deployedTaskFacade;
-    @MockBean
     private LineageAppService lineageAppService;
-
 
     @Test
     public void testSearchDatasets() {
