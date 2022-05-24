@@ -13,15 +13,13 @@ import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.commons.utils.ArgumentCheckUtils.parseBooleanQueryParameter;
@@ -185,8 +183,13 @@ public class TaskRunController {
     }
 
     @RouteMapping(url = "/taskruns/{taskRunId}/_rerun", method = "POST")
-    public Boolean rerunTaskRuns(@RouteVariable long taskRunId) {
+    public Boolean rerunTaskRun(@RouteVariable long taskRunId) {
         return taskRunService.rerunTaskRun(taskRunId);
+    }
+
+    @RouteMapping(url = "/taskruns/batchRerun", method = "POST")
+    public Boolean rerunTaskRuns(@QueryParameter List<Long> taskRunIds) {
+        return taskRunService.rerunTaskRuns(taskRunIds);
     }
 
     @RouteMapping(url = "/taskruns/{taskRunId}/_abort", method = "PUT")
@@ -200,6 +203,12 @@ public class TaskRunController {
                                       @QueryParameter(defaultValue = "1") int downstreamLevel
     ) {
         return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
+    }
+
+    @RouteMapping(url = "/taskruns/{taskRunId}/getAllDownstream", method = "GET")
+    public List<TaskRun> getTaskRunWithAllDownstream(@RouteVariable Long taskRunId,
+                                                     @QueryParameter List<String> status) {
+        return taskRunService.getTaskRunWithAllDownstream(taskRunId, status.stream().map(TaskRunStatus::valueOf).collect(Collectors.toSet()));
     }
 
     @RouteMapping(url = "/taskruns/gantt", method = "GET")

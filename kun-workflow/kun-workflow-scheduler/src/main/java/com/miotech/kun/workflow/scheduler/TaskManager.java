@@ -94,31 +94,44 @@ public class TaskManager {
     }
 
     /**
-     * taskRun status must be finished
+     * taskRun status must be success, failed, check_failed
      *
      * @param taskRun
      */
     public boolean retry(TaskRun taskRun) {
-        checkState(taskRun.getStatus().isFailure(), "taskRun status must be failed ");
+        checkState(taskRun.getStatus().allowRetry(), "taskRun status must be allowed to retry");
         // Does the same re-run request invoked in another threads?
         if (rerunningTaskRunIds.put(taskRun.getId(), Boolean.TRUE) != null) {
             logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRun.getId());
             return false;
         }
         try {
+            //0. prepare task attempt
             TaskAttempt taskAttempt = createTaskAttempt(taskRun, false);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
 
+            //1. post reschedule event
             TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE, taskAttempt.getId());
             eventBus.post(taskRunTransitionEvent);
 
-            List<Long> taskRunShouldBeCreated = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
-            logger.debug("taskRuns {} will change status from upstream failed to created", taskRunShouldBeCreated);
+            //2. fetch task run should be crated
+            List<Long> taskRunShouldBeCreated = taskRun.getStatus().isFailure()?
+                    updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED))
+                    : new ArrayList<>();
+            taskRunShouldBeCreated.add(taskRun.getId());
+
+            //3. update taskrun term_at to null
             taskRunDao.resetTaskRunTimestampToNull(taskRunShouldBeCreated, "term_at");
 
+            //4. update conditions' result which use this task run as condition to be false;
             updateTaskRunConditions(taskRunShouldBeCreated, TaskRunStatus.CREATED);
-            updateRestrictedTaskRunsStatus(taskRunShouldBeCreated);
+
+            //5. update taskruns in created which need to be blocked as blocked
+            List<Long> restrictedTaskRunIds = fetchRestrictedTaskRunsToBeUpdatedIds(Collections.singletonList(taskRun.getId()));
+            List<Long> taskRunIdsWithBlocked = taskRunDao.fetchTaskRunIdsWithBlockType(restrictedTaskRunIds);
+            taskRunDao.updateTaskRunStatusByTaskRunId(taskRunIdsWithBlocked, TaskRunStatus.BLOCKED, Collections.singletonList(TaskRunStatus.CREATED));
+
             trigger();
             return true;
         } catch (Exception e) {
@@ -257,8 +270,22 @@ public class TaskManager {
     }
 
     private void updateRestrictedTaskRunsStatus(List<Long> taskRunIds) {
-        if (taskRunIds.isEmpty()) return;
+        if (taskRunIds.isEmpty()) {
+            return;
+        }
 
+        List<Long> restrictedTaskRunIds = fetchRestrictedTaskRunsToBeUpdatedIds(taskRunIds);
+
+        List<TaskRunStatus> allowToUpdateStatus = Arrays.asList(TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
+
+        List<Long> taskRunIdsWithBlocked = taskRunDao.fetchTaskRunIdsWithBlockType(restrictedTaskRunIds);
+        taskRunDao.updateTaskRunStatusByTaskRunId(taskRunIdsWithBlocked, TaskRunStatus.BLOCKED, allowToUpdateStatus);
+
+        restrictedTaskRunIds.removeAll(taskRunIdsWithBlocked);
+        taskRunDao.updateTaskRunStatusByTaskRunId(restrictedTaskRunIds, TaskRunStatus.CREATED, allowToUpdateStatus);
+    }
+
+    private List<Long> fetchRestrictedTaskRunsToBeUpdatedIds(List<Long> taskRunIds) {
         List<Condition> conditions = taskRunIds.stream()
                 .map(x -> new Condition(Collections.singletonMap("taskRunId", x.toString())))
                 .collect(Collectors.toList());
@@ -269,13 +296,7 @@ public class TaskManager {
         List<Long> taskRunIdsNotProcess = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
         restrictedTaskRunIds.removeAll(taskRunIdsNotProcess);
 
-        List<TaskRunStatus> allowToUpdateStatus = Arrays.asList(TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
-
-        List<Long> taskRunIdsWithBlocked = taskRunDao.fetchTaskRunIdsWithBlockType(restrictedTaskRunIds);
-        taskRunDao.updateTaskRunStatusByTaskRunId(taskRunIdsWithBlocked, TaskRunStatus.BLOCKED, allowToUpdateStatus);
-
-        restrictedTaskRunIds.removeAll(taskRunIdsWithBlocked);
-        taskRunDao.updateTaskRunStatusByTaskRunId(restrictedTaskRunIds, TaskRunStatus.CREATED, allowToUpdateStatus);
+        return restrictedTaskRunIds;
     }
 
     private void submitSatisfyTaskAttemptToExecutor() {

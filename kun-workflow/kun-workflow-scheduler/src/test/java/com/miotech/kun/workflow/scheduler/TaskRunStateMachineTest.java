@@ -49,6 +49,7 @@ public class TaskRunStateMachineTest extends DatabaseTestBase {
         TaskAttempt runningAttempt = prepareAttempt(task, TaskRunStatus.RUNNING);
         TaskAttempt failedAttempt = prepareAttempt(task, TaskRunStatus.FAILED);
         TaskAttempt checkAttempt = prepareAttempt(task, TaskRunStatus.CHECK);
+        TaskAttempt successAttempt = prepareAttempt(task, TaskRunStatus.SUCCESS);
 
         //prepare event
         TaskRunTransitionEvent createToQueuedEvent = createEvent(createdAttempt, TaskRunTransitionEventType.SUBMIT);
@@ -67,6 +68,7 @@ public class TaskRunStateMachineTest extends DatabaseTestBase {
         TaskRunTransitionEvent runningToAbort = createEvent(runningAttempt, TaskRunTransitionEventType.ABORT);
         TaskRunTransitionEvent blockToAbort = createEvent(blockedAttempt, TaskRunTransitionEventType.ABORT);
         TaskRunTransitionEvent checkToAbort = createEvent(checkAttempt, TaskRunTransitionEventType.ABORT);
+        TaskRunTransitionEvent successToCreated = createEvent(successAttempt, TaskRunTransitionEventType.RESCHEDULE);
 
 
         return Stream.of(
@@ -85,7 +87,8 @@ public class TaskRunStateMachineTest extends DatabaseTestBase {
                 Arguments.of(queuedAttempt, queueToAbort, TaskRunStatus.ABORTED),
                 Arguments.of(runningAttempt, runningToAbort, TaskRunStatus.ABORTED),
                 Arguments.of(blockedAttempt, blockToAbort, TaskRunStatus.ABORTED),
-                Arguments.of(checkAttempt, checkToAbort, TaskRunStatus.ABORTED)
+                Arguments.of(checkAttempt, checkToAbort, TaskRunStatus.ABORTED),
+                Arguments.of(successAttempt, successToCreated, TaskRunStatus.CREATED)
         );
     }
 

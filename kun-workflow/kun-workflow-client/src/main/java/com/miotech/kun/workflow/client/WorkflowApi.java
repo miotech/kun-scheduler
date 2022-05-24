@@ -292,6 +292,14 @@ public class WorkflowApi {
         return post(url, Maps.newHashMap(), Object.class);
     }
 
+    public Object restartTaskRuns(List<Long> taskRunIds) {
+        String taskRunIdsString = taskRunIds.stream().map(Objects::toString).collect(Collectors.joining(","));
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/batchRerun")
+                .addQueryParameter("taskRunIds", taskRunIdsString.toString())
+                .build();
+        return post(url, Maps.newHashMap(), Object.class);
+    }
+
     public TaskRunState getTaskRunStatus(Long taskRunId) {
         HttpUrl url = buildUrl(API_TASK_RUNS)
                 .addPathSegment(taskRunId.toString())
@@ -416,6 +424,20 @@ public class WorkflowApi {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
         return sendRequest(getRequest, new TypeReference<Map<Long, List<TaskRun>>>() {
+        });
+    }
+
+    public List<TaskRun> getTaskRunWithAllDownstream(Long taskRunId, List<TaskRunStatus> filterStatus) {
+        HttpUrl url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("getAllDownstream")
+                .addQueryParameter("status", filterStatus.stream().map(Enum::name).collect(Collectors.joining(",")))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<List<TaskRun>>() {
         });
     }
 

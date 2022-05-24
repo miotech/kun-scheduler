@@ -88,4 +88,8 @@ public enum TaskRunStatus {
     public boolean isReady(){
         return !isCreated() && !isUpstreamFailed() && !isBlocking();
     }
+
+    public boolean allowRetry() {
+        return this == SUCCESS || this == FAILED || this == CHECK_FAILED;
+    }
 }
