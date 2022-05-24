@@ -17,6 +17,7 @@ import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
@@ -34,29 +35,28 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
 import java.io.*;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class TaskRunServiceTest extends CommonTestBase {
     private TaskRunService taskRunService;
@@ -514,7 +514,7 @@ public class TaskRunServiceTest extends CommonTestBase {
 
         // Process
         Exception ex = assertThrows(IllegalStateException.class, () -> taskRunService.rerunTaskRun(taskRunFailed.getId()));
-        assertEquals("taskRun status must be failed ", ex.getMessage());
+        assertEquals("taskRun status must be terminated", ex.getMessage());
     }
 
     @Test
@@ -1044,5 +1044,70 @@ public class TaskRunServiceTest extends CommonTestBase {
         //fetch the up&downstream for taskRun4, trace 72h, all included
         TaskRunGanttChartVO result4 = taskRunService.getTaskRunGantt(taskRuns.get(5).getId(), 72);
         assertThat(result4.getInfoList().size(), is(5));
+    }
+
+    @Test
+    public void getTaskRunWithAllDownstream_shouldInTopologicalOrder() {
+        //prepare
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(5, "0>>1;0>>2;1>>3;0>>4;3>>4;2>>4");
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;0>>2;1>>3;0>>4;3>>4;2>>4");
+        for (TaskRun taskRun : taskRuns) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+
+        // input is in topological order 0 1 2 3 4
+        // taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRuns.get(0).getId());
+        // fetch result order is 0 1 2 4 3 not in topological order
+
+        //process
+        List<TaskRun> results = taskRunService.getTaskRunWithAllDownstream(taskRuns.get(0).getId(), Collections.singleton(TaskRunStatus.CREATED));
+
+        //verify: result is in topological order
+        assertThat(results.get(0).getId(), is(taskRuns.get(0).getId()));
+        assertThat(results.get(1).getId(), is(taskRuns.get(1).getId()));
+        assertThat(results.get(2).getId(), is(taskRuns.get(2).getId()));
+        assertThat(results.get(3).getId(), is(taskRuns.get(3).getId()));
+        assertThat(results.get(4).getId(), is(taskRuns.get(4).getId()));
+    }
+
+    @Disabled
+    @Test
+    public void rerunWithDownstream_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder()
+                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Collections.singletonList(taskRun1.getId())).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+            eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, taskAttempt.getTaskName(), taskAttempt.getTaskId()));
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        //TODO: 执行TaskManager retry方法时 post的taskRunTransitionEvent没有被TaskRunStateMachine(注入且start了)接收到
+        taskRunService.rerunTaskRuns(Arrays.asList(taskRun1.getId(), taskRun2.getId()));
+        System.out.println(taskRunDao.fetchTaskRunById(taskRun1.getId()).get().getStatus());
+
+
+        await().atMost(120, TimeUnit.SECONDS).until(() -> {
+            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(taskRun2.getId() + 2);
+            return s.isPresent() && (s.get().isFinished());
+        });
+
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attemptProps2.getId(), Matchers.is(taskRun2.getId()+2));
+        assertThat(attemptProps2.getAttempt(), Matchers.is(2));
+        assertThat(attemptProps2.getStatus(), Matchers.is(TaskRunStatus.SUCCESS));
     }
 }

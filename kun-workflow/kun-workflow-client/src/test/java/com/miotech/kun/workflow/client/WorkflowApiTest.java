@@ -8,12 +8,11 @@ import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import org.hamcrest.MatcherAssert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.workflow.client.mock.MockingFactory.*;
@@ -327,4 +326,28 @@ public class WorkflowApiTest extends MockServerTestBase {
         Boolean result = wfApi.removeTaskRunDependency(taskRunId, Lists.newArrayList(upstreamId));
         assertThat(result, is(true));
     }
+
+    @Test
+    public void restartTaskRuns_shouldWork() {
+        TaskRun taskRun1 = mockTaskRun(1l);
+        List<TaskRun> taskRuns = Collections.singletonList(taskRun1);
+        mockPost("/taskruns/batchRerun?taskRunIds=" + taskRun1.getId(), "", JSONUtils.toJsonString(true));
+        Boolean result = (Boolean) wfApi.restartTaskRuns(Collections.singletonList(taskRun1.getId()));
+        Assertions.assertTrue(result);
+    }
+
+    @Test
+    public void getTaskRunWithAllDownstream_shouldWork() {
+        TaskRun taskRun = mockTaskRun();
+        taskRun.setStatus(TaskRunStatus.SUCCESS);
+        List<TaskRunStatus> filterStatus = Collections.singletonList(TaskRunStatus.SUCCESS);
+        String filterStatusString = filterStatus.stream().map(Enum::name).collect(Collectors.joining(","));
+        List<TaskRun> mockResult = Collections.singletonList(taskRun);
+        mockGet("/taskruns/" + taskRun.getId() + "/getAllDownstream?status=" + filterStatusString, JSONUtils.toJsonString(mockResult));
+        List<TaskRun> result = wfApi.getTaskRunWithAllDownstream(taskRun.getId(), filterStatus);
+        MatcherAssert.assertThat(result, sameBeanAs(mockResult));
+
+
+    }
+
 }

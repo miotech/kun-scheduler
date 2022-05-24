@@ -53,7 +53,7 @@ public class TaskRunStateMachine implements InitializingBean {
         taskRunStateMap.put(TaskRunStatus.FAILED, new TaskRunFailed());
         taskRunStateMap.put(TaskRunStatus.ABORTED, new TaskRunAborted());
         taskRunStateMap.put(TaskRunStatus.ERROR, new TaskRunError());
-
+        taskRunStateMap.put(TaskRunStatus.SUCCESS, new TaskRunSuccess());
     }
 
     public void start() {

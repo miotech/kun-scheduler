@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.web.controller;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
@@ -21,10 +22,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/")
@@ -220,6 +218,23 @@ public class DeployedTaskController {
         } else {
             return RequestResult.error(404, "task definition id not found");
         }
+    }
+
+    @PostMapping("/deployed-taskruns/restart")
+    @ApiOperation("Rerun list of taskruns immediately")
+    public RequestResult<Object> restartTaskRuns(@RequestParam List<Long> taskRunIds) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunIds), "task run id cannot be null");
+        workflowClient.restartTaskRuns(taskRunIds);
+        return RequestResult.success(new AcknowledgementVO("Operation acknowledged"));
+    }
+
+    @GetMapping("/deployed-taskruns/{taskRunId}/getDownstream")
+    @ApiOperation("Get list of finished downstream taskruns")
+    public RequestResult<List<TaskRun>> fetchTaskRunWithAllDownstream(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        List<TaskRunStatus> filterStatus = Arrays.asList(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED, TaskRunStatus.CHECK_FAILED, TaskRunStatus.ABORTED, TaskRunStatus.UPSTREAM_FAILED);
+        List<TaskRun> taskRuns = workflowClient.getTaskRunWithAllDownstream(taskRunId, filterStatus);
+        return RequestResult.success(taskRuns);
     }
 
     @PostMapping("/deployed-taskruns/{taskRunId}/_restart")

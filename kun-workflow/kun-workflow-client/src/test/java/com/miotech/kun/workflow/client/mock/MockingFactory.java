@@ -50,10 +50,34 @@ public class MockingFactory {
                 .build();
     }
 
+    public static  Task mockTask(Long taskId, Long operatorId) {
+        return Task.newBuilder()
+                .withId(taskId)
+                .withName("test" + WorkflowIdGenerator.nextTaskId())
+                .withDescription("")
+                .withConfig(Config.EMPTY)
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?", ZoneOffset.UTC.getId()))
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .withQueueName("default")
+                .withOperatorId(operatorId)
+                .build();
+    }
+
     public static  TaskRun mockTaskRun() {
         return TaskRun.newBuilder()
                 .withId(1L)
                 .withTask(mockTask())
+                .withQueueName("default")
+                .withStartAt(DateTimeUtils.now())
+                .withEndAt(DateTimeUtils.now())
+                .build();
+    }
+
+    public static  TaskRun mockTaskRun(Long taskRunId) {
+        return TaskRun.newBuilder()
+                .withId(taskRunId)
+                .withTask(mockTask(taskRunId, 1L))
                 .withQueueName("default")
                 .withStartAt(DateTimeUtils.now())
                 .withEndAt(DateTimeUtils.now())
