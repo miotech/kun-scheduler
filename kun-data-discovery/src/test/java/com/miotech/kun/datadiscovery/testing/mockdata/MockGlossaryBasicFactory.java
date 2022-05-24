@@ -6,6 +6,7 @@ import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
+import com.miotech.kun.datadiscovery.model.enums.SecurityModule;
 
 public class MockGlossaryBasicFactory {
 
@@ -45,4 +46,6 @@ public class MockGlossaryBasicFactory {
     public static GlossaryCopyRequest createGlossaryCopyRequest(Long parentId, Long sourceId, CopyOperation copyOperation) {
         return new GlossaryCopyRequest(parentId, sourceId, copyOperation);
     }
+
+
 }

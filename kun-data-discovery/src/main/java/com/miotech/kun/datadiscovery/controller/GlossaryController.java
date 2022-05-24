@@ -4,10 +4,7 @@ import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.*;
-import com.miotech.kun.datadiscovery.model.entity.Glossary;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryId;
-import com.miotech.kun.datadiscovery.model.entity.SearchPage;
+import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -72,5 +69,20 @@ public class GlossaryController {
     @PostMapping("/metadata/glossary/copy")
     public RequestResult<GlossaryChildren> copy(@RequestBody GlossaryCopyRequest glossaryCopyRequest) {
         return RequestResult.success(glossaryService.copy(glossaryCopyRequest));
+    }
+
+    @GetMapping("/role/glossary/operation/{id}")
+    public RequestResult<SecurityInfo> getGlossaryOperation(@PathVariable("id") Long id) {
+        return RequestResult.success(glossaryService.fetchGlossaryOperation(id));
+    }
+
+    @PostMapping("/role/addEditor")
+    public RequestResult<Long> addEditor(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
+        return RequestResult.success(glossaryService.addScope(editGlossaryEditerRequest.getSourceSystemId(), editGlossaryEditerRequest.getUserName()));
+    }
+
+    @PostMapping("/role/removeEditor")
+    public RequestResult<Long> removeEditor(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
+        return RequestResult.success(glossaryService.removeScope(editGlossaryEditerRequest.getSourceSystemId(), editGlossaryEditerRequest.getUserName()));
     }
 }

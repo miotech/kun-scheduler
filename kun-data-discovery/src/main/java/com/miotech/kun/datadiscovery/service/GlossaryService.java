@@ -1,28 +1,34 @@
 package com.miotech.kun.datadiscovery.service;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.datadiscovery.model.enums.*;
 import com.miotech.kun.datadiscovery.persistence.GlossaryRepository;
 import com.miotech.kun.datadiscovery.util.convert.AppBasicConversionService;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
-import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
+import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
+import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
+import com.miotech.kun.security.facade.rpc.ScopeRole;
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,6 +41,8 @@ import java.util.stream.Stream;
 @Service
 @Slf4j
 public class GlossaryService extends BaseSecurityService {
+    public static final String COPY_PREFIX = "Copy of ";
+
     @Value("${metadata.base-url:localhost:8084}")
     String url;
 
@@ -44,17 +52,19 @@ public class GlossaryService extends BaseSecurityService {
     GlossaryRepository glossaryRepository;
     @Autowired
     SearchAppService searchAppService;
-
-    public static final String COPY_PREFIX = "Copy of ";
     @Autowired
     private MetadataService metadataService;
+    @Autowired
+    private SecurityRpcClient securityRpcClient;
 
 
     public Long getParentId(Long id) {
+        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
         return glossaryRepository.getParentId(id);
     }
 
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
+        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
         return glossaryRepository.updateGraph(getCurrentUsername(), id, glossaryGraphRequest);
     }
 
@@ -66,6 +76,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public Glossary createGlossary(GlossaryRequest glossaryRequest) {
+        checkAuth(null, GlossaryUserOperation.ADD_GLOSSARY);
         Long id = add(glossaryRequest);
         return fetchGlossary(id);
     }
@@ -102,17 +113,24 @@ public class GlossaryService extends BaseSecurityService {
     public GlossaryChildren fetchGlossaryChildren(Long parentId) {
         GlossaryChildren glossaryChildren = new GlossaryChildren();
         glossaryChildren.setParentId(parentId);
-        glossaryChildren.setChildren(glossaryRepository.findChildrenCountList(parentId));
+        List<GlossaryBasicInfoWithCount> childrenCountList = glossaryRepository.findChildrenCountList(parentId)
+                .stream()
+                .peek(glossaryBasicInfoWithCount -> glossaryBasicInfoWithCount.setSecurityInfo(fetchGlossaryOperation(glossaryBasicInfoWithCount.getId())))
+                .filter(glossaryBasicInfoWithCount -> glossaryBasicInfoWithCount.getSecurityInfo().getOperations().contains(GlossaryUserOperation.READ_GLOSSARY))
+                .collect(Collectors.toList());
+        glossaryChildren.setChildren(childrenCountList);
         return glossaryChildren;
     }
 
     public Glossary fetchGlossary(Long id) {
+        SecurityInfo securityInfo = checkAuth(id, GlossaryUserOperation.READ_GLOSSARY);
         GlossaryBasicInfo glossaryBasicInfo = getGlossaryBasicInfo(id);
         if (Objects.isNull(glossaryBasicInfo)) {
             throw new IllegalArgumentException("glossary does not exist,id:" + id);
         }
 
         Glossary glossary = AppBasicConversionService.getSharedInstance().convert(glossaryBasicInfo, Glossary.class);
+        glossary.setSecurityInfo(securityInfo);
         if (Objects.nonNull(glossaryBasicInfo.getParentId()) && glossaryBasicInfo.getParentId() != 0) {
             GlossaryBasicInfo parentGlossaryBasicInfo = getGlossaryBasicInfo(glossaryBasicInfo.getParentId());
             glossary.setParent(parentGlossaryBasicInfo);
@@ -126,11 +144,10 @@ public class GlossaryService extends BaseSecurityService {
             glossary.setChildrenCount(children.size());
             glossary.setGlossaryCountList(children);
         }
-
         return glossary;
     }
 
-    public Map<Long, List<GlossaryBasicInfo>> findAncestryList(Collection<Long> collectionId) {
+    private Map<Long, List<GlossaryBasicInfo>> findAncestryList(Collection<Long> collectionId) {
         Map<Long, List<GlossaryBasicInfo>> listMap = new HashMap<>();
         List<GlossaryBasicInfo> ancestryList = glossaryRepository.findAncestryList(collectionId);
         Map<Long, GlossaryBasicInfo> map = ancestryList.stream().collect(Collectors.toMap(GlossaryBasicInfo::getId, v -> v, (v1, v2) -> v1));
@@ -159,6 +176,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
+        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
         OffsetDateTime now = DateTimeUtils.now();
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
@@ -172,9 +190,14 @@ public class GlossaryService extends BaseSecurityService {
         return glossary;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        glossaryRepository.delete(getCurrentUsername(), id);
-        searchAppService.removeGlossarySearchInfo(id);
+        checkAuth(id, GlossaryUserOperation.REMOVE_GLOSSARY);
+        String currentUsername = getCurrentUsername();
+        List<Long> deleteIdList = glossaryRepository.delete(currentUsername, id);
+        if (CollectionUtils.isNotEmpty(deleteIdList)) {
+            deleteIdList.forEach(currentId -> searchAppService.removeGlossarySearchInfo(id));
+        }
     }
 
     public SearchPage<GlossarySearchedInfo> search(GlossaryBasicSearchRequest searchRequest) {
@@ -203,7 +226,17 @@ public class GlossaryService extends BaseSecurityService {
     private List<GlossarySearchedInfo> getGlossarySearchedInfos(List<SearchedInfo> searchedInfoList) {
         Set<Long> set = searchedInfoList.stream().map(SearchedInfo::getGid).collect(Collectors.toSet());
         Map<Long, List<GlossaryBasicInfo>> ancestryGlossaryMap = findAncestryList(set);
-        return searchedInfoList.stream().map(searchedInfo -> AppBasicConversionService.getSharedInstance().convert(searchedInfo, GlossarySearchedInfo.class)).filter(Objects::nonNull).peek(glossarySearchedInfo -> glossarySearchedInfo.setAncestryGlossaryList(ancestryGlossaryMap.get(glossarySearchedInfo.getGid()))).collect(Collectors.toList());
+        return searchedInfoList.stream()
+                .map(searchedInfo -> AppBasicConversionService.getSharedInstance().convert(searchedInfo, GlossarySearchedInfo.class))
+                .filter(Objects::nonNull)
+                .filter(this::canSearch)
+                .peek(glossarySearchedInfo -> glossarySearchedInfo.setAncestryGlossaryList(ancestryGlossaryMap.get(glossarySearchedInfo.getGid())))
+                .collect(Collectors.toList());
+    }
+
+    private boolean canSearch(GlossarySearchedInfo glossarySearchedInfo) {
+        SecurityInfo securityInfo = fetchGlossaryOperation(glossarySearchedInfo.getGid());
+        return securityInfo.getOperations().contains(GlossaryUserOperation.SEARCH_GLOSSARY);
     }
 
     /**
@@ -213,6 +246,8 @@ public class GlossaryService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     public GlossaryChildren copy(GlossaryCopyRequest copyReq) {
+        checkAuth(copyReq.getSourceId(), GlossaryUserOperation.COPY_GLOSSARY);
+        checkAuth(copyReq.getParentId(), GlossaryUserOperation.EDIT_GLOSSARY_CHILD);
         log.debug("copy info:{}", copyReq);
         Long parentId = copyReq.getParentId();
         Long sourceId = copyReq.getSourceId();
@@ -309,4 +344,82 @@ public class GlossaryService extends BaseSecurityService {
     }
 
 
+    private SecurityInfo checkAuth(Long sourceSystemId, GlossaryUserOperation glossaryUserOperation) {
+        SecurityInfo securityInfo = fetchGlossaryOperation(sourceSystemId);
+        Set<UserOperation> operations = securityInfo.getOperations();
+        if (CollectionUtils.isNotEmpty(operations) && operations.contains(glossaryUserOperation)) {
+            return securityInfo;
+        }
+        String msg = String.format("You do not have permission to perform this operation：%s,id:%s", sourceSystemId, glossaryUserOperation.name());
+        log.error(msg);
+        throw new PermissionDeniedDataAccessException(msg, new RuntimeException(msg));
+    }
+
+    public SecurityInfo fetchGlossaryOperation(Long sourceSystemId) {
+        SecurityModule securityModule = SecurityModule.GLOSSARY;
+        SecurityInfo securityInfo = new SecurityInfo();
+        securityInfo.setSourceSystemId(sourceSystemId);
+        securityInfo.setSecurityModule(securityModule);
+        KunRole role = GlossaryRole.GLOSSARY_VIEWER;
+        securityInfo.setKunRole(role);
+        securityInfo.setOperations(role.getUserOperation());
+        KunRole userRole = getUserRole();
+//        GLOSSARY_MANAGER :Max permission
+        if (userRole.equals(GlossaryRole.GLOSSARY_MANAGER)) {
+            role = GlossaryRole.GLOSSARY_MANAGER;
+            securityInfo.setKunRole(role);
+            securityInfo.setOperations(role.getUserOperation());
+            return securityInfo;
+        }
+        if (Objects.isNull(sourceSystemId)) {
+            return securityInfo;
+        }
+        if (userRole.equals(GlossaryRole.GLOSSARY_EDITOR)) {
+            securityInfo.addUserOperation(GlossaryUserOperation.COPY_GLOSSARY);
+        }
+        List<GlossaryBasicInfo> ancestryList = glossaryRepository.findAncestryList(Lists.newArrayList(sourceSystemId));
+        List<String> ancestryIdList = ancestryList.stream().map(glossaryBasicInfo -> glossaryBasicInfo.getId().toString()).collect(Collectors.toList());
+        RoleOnSpecifiedResourcesResp roleOnSpecifiedResources = securityRpcClient.findRoleOnSpecifiedResources(securityModule.name(), ancestryIdList);
+        if (Objects.isNull(roleOnSpecifiedResources)) {
+            return securityInfo;
+        }
+        List<ScopeRole> scopeRolesList = roleOnSpecifiedResources.getScopeRolesList();
+        if (CollectionUtils.isEmpty(scopeRolesList)) {
+            return securityInfo;
+        }
+        Map<String, ? extends KunRole> roleMap = securityModule.getRoleMap();
+        role = scopeRolesList.stream().map(scopeRole -> roleMap.get(scopeRole.getRolename())).max(Comparator.comparing(KunRole::rank)).get();
+        securityInfo.setKunRole(role);
+        Set<UserOperation> userOperations = Sets.newHashSet(role.getUserOperation());
+        securityInfo.addUserOperations(userOperations);
+        return securityInfo;
+    }
+
+    private @NotNull KunRole getUserRole() {
+        SecurityModule securityModule = SecurityModule.GLOSSARY;
+        RoleOnSpecifiedModuleResp roleOnSpecifiedModule = securityRpcClient.findRoleOnSpecifiedModule(securityModule.name());
+        if (Objects.isNull(roleOnSpecifiedModule)) {
+            return GlossaryRole.GLOSSARY_VIEWER;
+        }
+        Map<String, ? extends KunRole> roleMap = securityModule.getRoleMap();
+        return roleMap.get(roleOnSpecifiedModule.getRolename());
+
+
+    }
+
+    public Long addScope(Long sourceSystemId, String userName) {
+        checkAuth(sourceSystemId, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
+        String moduleName = SecurityModule.GLOSSARY.name();
+        GlossaryRole role = GlossaryRole.GLOSSARY_EDITOR;
+        securityRpcClient.addScopeOnSpecifiedRole(moduleName, role.name(), userName, Lists.newArrayList(sourceSystemId.toString()));
+        return sourceSystemId;
+    }
+
+    public Long removeScope(Long sourceSystemId, String userName) {
+        checkAuth(sourceSystemId, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
+        String moduleName = SecurityModule.GLOSSARY.name();
+        GlossaryRole role = GlossaryRole.GLOSSARY_EDITOR;
+        securityRpcClient.deleteScopeOnSpecifiedRole(moduleName, role.name(), userName, Lists.newArrayList(sourceSystemId.toString()));
+        return sourceSystemId;
+    }
 }

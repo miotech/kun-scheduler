@@ -5,6 +5,7 @@ import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.ResourceAttributeRequest;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.datadiscovery.service.SearchAppService;
+import com.miotech.kun.datadiscovery.service.SecurityRpcClient;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockSearchInfoFactory;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
@@ -49,12 +50,7 @@ public class SearchAppServiceTest extends DataDiscoveryTestBase {
     private String url;
     @Autowired
     private SearchAppService searchAppService;
-    @MockBean
-    private RestTemplate restTemplate;
-    @MockBean
-    private DeployedTaskFacade deployedTaskFacade;
-    @MockBean
-    private WorkflowClient workflowClient;
+
 
     @Test
     public void test_full_search() {

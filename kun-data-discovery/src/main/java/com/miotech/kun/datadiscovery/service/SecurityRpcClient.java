@@ -1,15 +1,18 @@
 package com.miotech.kun.datadiscovery.service;
 
-import com.miotech.kun.security.facade.rpc.SecurityGrpc;
+import com.miotech.kun.security.facade.rpc.*;
+import com.miotech.kun.security.service.BaseSecurityService;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 @Component
-public class SecurityRpcClient {
+public class SecurityRpcClient extends BaseSecurityService {
 
     @Value("${grpc.server.security-host}")
     private String grpcSecurityHost;
@@ -21,12 +24,47 @@ public class SecurityRpcClient {
     public static SecurityGrpc.SecurityBlockingStub stub;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         channel = ManagedChannelBuilder
                 .forAddress(grpcSecurityHost, grpcServerPort)
                 .usePlaintext()
                 .build();
         stub = SecurityGrpc.newBlockingStub(channel);
+    }
+
+    public RoleOnSpecifiedResourcesResp findRoleOnSpecifiedResources(String moduleName, List<String> sourceSystemIds) {
+        RoleOnSpecifiedResourcesReq roleOnSpecifiedResourcesReq =
+                RoleOnSpecifiedResourcesReq.newBuilder().addAllSourceSystemIds(sourceSystemIds).setModule(moduleName).setUsername(getCurrentUsername()).build();
+        return stub.findRoleOnSpecifiedResources(roleOnSpecifiedResourcesReq);
+    }
+
+    public void addScopeOnSpecifiedRole(String moduleName, String roleName, String userName, List<String> sourceSystemIds) {
+        if (StringUtils.isBlank(userName)) {
+            userName = getCurrentUsername();
+        }
+        UpdateScopeOnSpecifiedRoleReq updateScopeOnSpecifiedRoleReq = UpdateScopeOnSpecifiedRoleReq.newBuilder()
+                .setModule(moduleName)
+                .setUsername(userName)
+                .setRolename(roleName)
+                .addAllSourceSystemIds(sourceSystemIds).build();
+        stub.addScopeOnSpecifiedRole(updateScopeOnSpecifiedRoleReq);
+    }
+
+    public void deleteScopeOnSpecifiedRole(String moduleName, String roleName, String userName, List<String> sourceSystemIds) {
+        if (StringUtils.isBlank(userName)) {
+            userName = getCurrentUsername();
+        }
+        UpdateScopeOnSpecifiedRoleReq updateScopeOnSpecifiedRoleReq = UpdateScopeOnSpecifiedRoleReq.newBuilder()
+                .setModule(moduleName)
+                .setUsername(userName)
+                .setRolename(roleName)
+                .addAllSourceSystemIds(sourceSystemIds).build();
+        stub.deleteScopeOnSpecifiedRole(updateScopeOnSpecifiedRoleReq);
+    }
+
+    public RoleOnSpecifiedModuleResp findRoleOnSpecifiedModule(String moduleName) {
+        RoleOnSpecifiedModuleReq roleOnSpecifiedModuleReq = RoleOnSpecifiedModuleReq.newBuilder().setModule(moduleName).setUsername(getCurrentUsername()).build();
+        return stub.findRoleOnSpecifiedModule(roleOnSpecifiedModuleReq);
     }
 
 }
