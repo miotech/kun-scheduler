@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
+import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
 import com.miotech.kun.dataquality.web.model.TemplateType;
 import com.miotech.kun.dataquality.web.model.bo.*;
 import com.miotech.kun.dataquality.web.model.entity.*;
@@ -42,6 +43,9 @@ public class DataQualityService extends BaseSecurityService {
 
     @Autowired
     private ExpectationDao expectationDao;
+
+    @Autowired
+    private ExpectationRunDao expectationRunDao;
 
     @Autowired
     private WorkflowService workflowService;
@@ -142,6 +146,7 @@ public class DataQualityService extends BaseSecurityService {
     public void deleteExpectation(Long id) {
         workflowService.deleteTaskByCase(id);
         expectationDao.deleteById(id);
+        expectationRunDao.deleteByExpectationId(id);
         expectationDao.deleteAllRelatedDataset(id);
     }
 
