@@ -30,6 +30,8 @@ export interface DataDevelopmentModelState {
   backUrl: string | null;
   definitionFormDirty: boolean;
   taskDefViewsList: TaskDefinitionViewBase[];
+  allTasksCount: number;
+  danglingTasksCount: number;
   selectedTaskDefView: TaskDefinitionViewBase | null;
   taskTemplates: TaskTemplate[];
   recordCount: number;

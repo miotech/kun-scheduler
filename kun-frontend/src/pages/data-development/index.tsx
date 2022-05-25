@@ -100,7 +100,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       keyword: taskDefViewSearchKeyword,
       taskDefName: filters.name || undefined,
       taskTemplateName: filters.taskTemplateName || undefined,
-      taskDefCreators: filters.creators as any,
+      taskDefOwners: filters.creators as any,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskDefViewSearchKeyword, filters.name, filters.taskTemplateName, filters.creators]);
@@ -116,6 +116,10 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
   useEffect(() => {
     if (searchTaskDefinitionViewsRecords?.records) {
+      dispatch.dataDevelopment.setTaskDefinitionViewsListCount({
+        allTasksCount: searchTaskDefinitionViewsRecords?.allTasksCount,
+        danglingTasksCount: searchTaskDefinitionViewsRecords?.danglingTasksCount,
+      });
       dispatch.dataDevelopment.setTaskDefinitionViewsList(searchTaskDefinitionViewsRecords.records);
     }
   }, [dispatch.dataDevelopment, searchTaskDefinitionViewsRecords?.records]);

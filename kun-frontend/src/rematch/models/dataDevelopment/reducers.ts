@@ -53,6 +53,18 @@ export const reducers = {
       taskDefViewsList: payload,
     };
   },
+
+  setTaskDefinitionViewsListCount: (
+    state: ModelState,
+    payload: { allTasksCount: number; danglingTasksCount: number },
+  ): ModelState => {
+    return {
+      ...state,
+      allTasksCount: payload.allTasksCount,
+      danglingTasksCount: payload.danglingTasksCount,
+    };
+  },
+
   addTaskDefinitionViewsToList: (state: ModelState): ModelState => {
     return {
       ...state,

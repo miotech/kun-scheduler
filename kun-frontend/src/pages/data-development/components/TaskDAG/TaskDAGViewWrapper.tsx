@@ -34,47 +34,47 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
 
   const containerRef = React.useRef() as any;
 
-  const [ isLoading, setIsLoading ] = useState<boolean>(false);
-  const [ taskDefinitions, setTaskDefinitions ] = useState<TaskDefinition[]>([]);
-  const [ viewportResetHookValue, setViewportResetHookValue ] = useState<number>(Date.now());
-  const [ panzoomTool, setPanzoomTool ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [taskDefinitions, setTaskDefinitions] = useState<TaskDefinition[]>([]);
+  const [viewportResetHookValue, setViewportResetHookValue] = useState<number>(Date.now());
+  const [panzoomTool, setPanzoomTool] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
 
   useEffect(() => {
-    setIsLoading(true);
-    if (taskDefViewId == null) {
-      fetchAllTaskDefinitions()
-        .then(taskDefPayloads => {
-          if (taskDefPayloads) {
-            setTaskDefinitions(taskDefPayloads);
-            setViewportResetHookValue(Date.now());
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      fetchAllTaskDefinitionsByViewId(taskDefViewId)
-        .then(taskDefPayloads => {
-          if (taskDefPayloads) {
-            setTaskDefinitions(taskDefPayloads);
-            setViewportResetHookValue(Date.now());
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (taskDefViewId !== '-1') {
+      setIsLoading(true);
+      if (taskDefViewId == null) {
+        fetchAllTaskDefinitions()
+          .then(taskDefPayloads => {
+            if (taskDefPayloads) {
+              setTaskDefinitions(taskDefPayloads);
+              setViewportResetHookValue(Date.now());
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      } else {
+        fetchAllTaskDefinitionsByViewId(taskDefViewId)
+          .then(taskDefPayloads => {
+            if (taskDefPayloads) {
+              setTaskDefinitions(taskDefPayloads);
+              setViewportResetHookValue(Date.now());
+            }
+          })
+          .finally(() => {
+            setIsLoading(false);
+          });
+      }
     }
-  }, [
-    taskDefViewId,
-  ]);
+  }, [taskDefViewId]);
 
-  const drawerVisible =  selectedTaskDefIds.length === 1;
+  const drawerVisible = selectedTaskDefIds.length === 1;
 
-  const drawerTaskDef = useMemo(() => (
-    selectedTaskDefIds.length >= 1 ?
-      find(taskDefinitions, taskDef => taskDef.id === selectedTaskDefIds[0]) :
-      null
-  ), [selectedTaskDefIds, taskDefinitions]);
+  const drawerTaskDef = useMemo(
+    () =>
+      selectedTaskDefIds.length >= 1 ? find(taskDefinitions, taskDef => taskDef.id === selectedTaskDefIds[0]) : null,
+    [selectedTaskDefIds, taskDefinitions],
+  );
 
   const renderTools = () => {
     if (!selectedTaskDefIds.length) {
@@ -82,11 +82,13 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
     }
     // else
     return (
-      <Button onClick={() => {
-        if (props.setAddToOtherViewModalVisible) {
-          props.setAddToOtherViewModalVisible(true);
-        }
-      }}>
+      <Button
+        onClick={() => {
+          if (props.setAddToOtherViewModalVisible) {
+            props.setAddToOtherViewModalVisible(true);
+          }
+        }}
+      >
         Add to other views ({selectedTaskDefIds.length} Items)
       </Button>
     );
@@ -108,7 +110,7 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
           setPanzoomTool={setPanzoomTool}
         />
         <DAGNodeInfoDrawer
-          visible={drawerVisible && (panzoomTool !== 'box-select')}
+          visible={drawerVisible && panzoomTool !== 'box-select'}
           currentTaskDef={drawerTaskDef}
           getContainer={containerRef.current || false}
         />
