@@ -17,6 +17,9 @@ import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefini
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.web.exception.UpstreamTaskNotPublishedException;
 import com.miotech.kun.monitor.facade.alert.TaskNotifyConfigFacade;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.event.BaseOperationEvent;
+import com.miotech.kun.operationrecord.common.model.OperationType;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -32,6 +35,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class DeployService extends BaseSecurityService {
+
+    @Autowired
+    private DeployService deployService;
 
     @Autowired
     private DeployDao deployDao;
@@ -190,8 +196,8 @@ public class DeployService extends BaseSecurityService {
         } while(!workingQueue.isEmpty());
     }
 
-    @Transactional
-    public Deploy deployFast(Long definitionId, CommitRequest request) {
+    @OperationRecord(event = "#operationEvent")
+    public Deploy recordAndDeploy(Long definitionId, CommitRequest request, BaseOperationEvent<Long> operationEvent) {
         // commit first
         TaskCommit commit = commitService.commit(definitionId, request.getMessage());
         List<Long> commitIds = Collections.singletonList(commit.getId());
@@ -200,6 +206,13 @@ public class DeployService extends BaseSecurityService {
         // create a deploy and publish
         Deploy deploy = create(deployRequest);
         return publish(deploy.getId());
+    }
+
+    @Transactional
+    public Deploy deployFast(Long definitionId, CommitRequest request) {
+        String operator = getCurrentUser().getUsername();
+        BaseOperationEvent<Long> operationEvent = new BaseOperationEvent(operator, OperationType.TASK_DEFINITION_DEPLOY, definitionId);
+        return deployService.recordAndDeploy(definitionId, request, operationEvent);
     }
 
     /**

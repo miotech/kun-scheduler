@@ -74,11 +74,14 @@ dependencies {
     implementation project(':kun-db-schema:kun-app-db-schema')
     implementation project(':kun-security:kun-security-common')
     implementation project(':kun-monitor:kun-monitor-facade')
+    implementation project(':kun-monitor:kun-monitor-facade')
+    implementation project(':kun-operation-record:kun-operation-record-common')
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'org.postgresql:postgresql'
     implementation 'io.springfox:springfox-boot-starter:3.0.0'

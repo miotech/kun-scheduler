@@ -21,6 +21,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-client')
     implementation project(':kun-db-schema:kun-app-db-schema')
+    implementation project(":kun-commons:kun-commons-pubsub")
 
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
