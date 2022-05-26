@@ -12,6 +12,9 @@ executor:
     operatorDir: ${OPERATOR_DIR:/server/lib}
     commandDir: ${COMMAND_DIR:/server/lib}
     type: ${STORAGE_TYPE:LOCAL}
+  executorRpcConfig:
+    executorRpcHost: ${KUN_INFRA_HOST:127.0.0.1}
+    executorRpcPort: ${EXECUTOR_RPC_PORT:10201}
 
 #  kind: kubernetes
 #   config:
@@ -72,7 +75,7 @@ flyway:
 
 rpc:
   registry: redis://${DB_REDIS_IP}:6379/
-  port: ${WORKFLOW_RPC_SERVICE_PORT}
+  port: ${WORKFLOW_RPC_SERVICE_PORT:10201}
 
 neo4j:
   uri: bolt://${DB_NEO4J_IP}:7687/

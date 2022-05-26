@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.Props;
@@ -110,6 +111,18 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         @Provides
         @Singleton
         public DataSource createDataSource() {
+            HikariConfig config = new HikariConfig();
+            config.setUsername(postgres.getUsername());
+            config.setPassword(postgres.getPassword());
+            config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
+            config.setDriverClassName("org.postgresql.Driver");
+            return new HikariDataSource(config);
+        }
+
+        @Provides
+        @Singleton
+        @Named("executorDatasource")
+        public DataSource getExecutorDatasource(){
             HikariConfig config = new HikariConfig();
             config.setUsername(postgres.getUsername());
             config.setPassword(postgres.getPassword());

@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.model.worker;
 
+import javax.sql.DataSource;
+
 public class DatabaseConfig {
 
     private String datasourceUrl;
@@ -11,6 +13,8 @@ public class DatabaseConfig {
     private String neo4juri;
     private String neo4jUser;
     private String neo4jPassword;
+    private String executorRpcHost;
+    private String executorRpcPort;
 
     public String getDatasourceUrl() {
         return datasourceUrl;
@@ -82,5 +86,21 @@ public class DatabaseConfig {
 
     public void setNeo4jPassword(String neo4jPassword) {
         this.neo4jPassword = neo4jPassword;
+    }
+
+    public String getExecutorRpcHost() {
+        return executorRpcHost;
+    }
+
+    public void setExecutorRpcHost(String executorRpcHost) {
+        this.executorRpcHost = executorRpcHost;
+    }
+
+    public String getExecutorRpcPort() {
+        return executorRpcPort;
+    }
+
+    public void setExecutorRpcPort(String executorRpcPort) {
+        this.executorRpcPort = executorRpcPort;
     }
 }

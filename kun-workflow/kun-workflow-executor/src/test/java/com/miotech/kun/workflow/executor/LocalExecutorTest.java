@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
@@ -17,6 +18,8 @@ import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
+import com.miotech.kun.workflow.common.rpc.ExecutorFacadeImpl;
+import com.miotech.kun.workflow.common.rpc.ExecutorServer;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -35,6 +38,7 @@ import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstanceKind;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.executor.config.ExecutorConfig;
+import com.miotech.kun.workflow.executor.config.ExecutorRpcConfig;
 import com.miotech.kun.workflow.executor.local.*;
 import com.miotech.kun.workflow.executor.mock.*;
 import com.miotech.kun.workflow.testing.event.EventCollector;
@@ -44,7 +48,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
-import com.zaxxer.hikari.HikariDataSource;
+import io.grpc.ServerBuilder;
 import org.joor.Reflect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +69,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.miotech.kun.commons.utils.CloseableUtils.closeIfPossible;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -100,6 +105,10 @@ public class LocalExecutorTest extends CommonTestBase {
     @Inject
     private DataSource dataSource;
 
+    @Inject
+    @Named("executorDatasource")
+    private DataSource executorDatasource;
+
     private LocalProcessMonitor workerMonitor;
 
     private WorkerLifeCycleManager workerLifeCycleManager;
@@ -117,6 +126,11 @@ public class LocalExecutorTest extends CommonTestBase {
 
     @Inject
     private Injector injector;
+
+    @Inject
+    private ExecutorFacadeImpl executorFacade;
+
+    private ExecutorServer executorServer;
 
 
     private Props props;
@@ -178,6 +192,10 @@ public class LocalExecutorTest extends CommonTestBase {
         executorConfig.setKind("local");
         executorConfig.setName("local");
         executorConfig.setLabel("local");
+        ExecutorRpcConfig rpcConfig = new ExecutorRpcConfig();
+        rpcConfig.setExecutorRpcHost("127.0.0.1");
+        rpcConfig.setExecutorRpcPort("10201");
+        executorConfig.setExecutorRpcConfig(rpcConfig);
 
         executor = new LocalExecutor(executorConfig);
         localQueueManager = new LocalQueueManage(executorConfig, spyBackend);
@@ -191,6 +209,8 @@ public class LocalExecutorTest extends CommonTestBase {
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
         taskRunStateMachine.start();
+        //start rpc server
+        startExecutorRpc();
     }
 
     @AfterEach
@@ -199,10 +219,11 @@ public class LocalExecutorTest extends CommonTestBase {
         workerLifeCycleManager.shutdown();
         workerMonitor.stop();
         super.tearDown();
+        closeIfPossible(dataSource);
+        closeIfPossible(executorDatasource);
         try {
-            ((HikariDataSource) dataSource).close();
+            executorServer.stop();
         } catch (Exception e) {
-
         }
 
     }
@@ -1397,6 +1418,20 @@ public class LocalExecutorTest extends CommonTestBase {
                 CheckResultEvent checkResultEvent = new CheckResultEvent(taskRunId, validateResult);
                 mockEventSubscriber.receiveEvent(checkResultEvent);
             }
+        }
+    }
+
+    private void startExecutorRpc() {
+        //start rpc server
+        try {
+            logger.debug("going to start rpc server...");
+            Integer rpcPort = 10201;
+            ServerBuilder serverBuilder = ServerBuilder.forPort(rpcPort)
+                    .addService(executorFacade);
+            executorServer = new ExecutorServer(serverBuilder,rpcPort);
+            executorServer.start();
+        } catch (Throwable e) {
+            logger.error("start executor rpc server failed", e);
         }
     }
 }

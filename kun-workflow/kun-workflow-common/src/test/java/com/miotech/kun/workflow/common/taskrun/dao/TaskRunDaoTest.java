@@ -3,6 +3,8 @@ package com.miotech.kun.workflow.common.taskrun.dao;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -16,6 +18,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.*;
+import com.miotech.kun.workflow.testing.factory.MockDataStoreFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
@@ -1335,6 +1338,9 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
         taskRunDao.createTaskRun(taskRun4);
+
+        DataStore dataStore = MockDataStoreFactory.getMockDataStore(DataStoreType.HIVE_TABLE,"aa","bb");
+        taskRunDao.updateTaskRunInletsOutlets(taskRun1.getId(),Arrays.asList(dataStore),new ArrayList<>());
 
         List<Long> taskRunShouldBeCreated = taskRunDao.taskRunShouldBeCreated(Arrays.asList(taskRun3.getId(),taskRun4.getId()));
 

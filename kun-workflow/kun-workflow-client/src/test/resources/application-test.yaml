@@ -14,6 +14,9 @@ executor:
     operatorDir: ${OPERATOR_DIR:/server/lib}
     commandDir: ${COMMAND_DIR:/server/lib}
     type: ${STORAGE_TYPE:LOCAL}
+  executorRpcConfig:
+    executorRpcHost: ${KUN_INFRA_HOST:127.0.0.1}
+    executorRpcPort: ${EXECUTOR_RPC_PORT:10201}
 
 resource:
   libDirectory: /tmp

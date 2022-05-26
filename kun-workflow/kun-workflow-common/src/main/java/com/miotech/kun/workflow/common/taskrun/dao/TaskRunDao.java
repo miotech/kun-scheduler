@@ -624,8 +624,8 @@ public class TaskRunDao {
 
     public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus,
                                                 @Nullable OffsetDateTime termAt, List<TaskRunStatus> filterStatusList) {
-        Preconditions.checkNotNull(taskRunIds,"taskRunIds should not be null");
-        Preconditions.checkNotNull(filterStatusList,"filterStatusList should not be null");
+        Preconditions.checkNotNull(taskRunIds, "taskRunIds should not be null");
+        Preconditions.checkNotNull(filterStatusList, "filterStatusList should not be null");
 
         if (taskRunIds.size() == 0) {
             return;
@@ -640,7 +640,7 @@ public class TaskRunDao {
             updateTaskRun.set("term_at=?");
         }
         String taskRunWhereCase = "id in (" + repeatJoin("?", ",", taskRunIds.size()) + ")";
-        if ( filterStatusList.size() != 0) {
+        if (filterStatusList.size() != 0) {
             taskRunWhereCase += " and status in (" + repeatJoin("?", ",", filterStatusList.size()) + ")";
         }
         updateTaskRun.where(taskRunWhereCase);
@@ -1106,6 +1106,26 @@ public class TaskRunDao {
         );
         return taskAttempt;
     }
+
+    //just for test
+    public Integer testRpc(Long id,Long taskId){
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert("id","task_id")
+                .into("kun_wf_test_hudi_task")
+                .asPrepared()
+                .getSQL();
+        return dbOperator.update(sql,id,taskId);
+    }
+
+    public OffsetDateTime testGetObject(Long taskRunId){
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("created_at")
+                .from(TASK_RUN_TABLE_NAME)
+                .where("id = ?")
+                .getSQL();
+        return dbOperator.fetchOne(sql,rs -> rs.getObject("created_at",OffsetDateTime.class),taskRunId);
+    }
+
 
     public Optional<TaskRunStatus> fetchTaskAttemptStatus(Long taskAttemptId) {
         checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
@@ -1847,20 +1867,20 @@ public class TaskRunDao {
         dbOperator.update(sql, status.name(), taskRunId);
     }
 
-    public List<Long> taskRunShouldBeCreated(List<Long> taskRunIds){
-        if(taskRunIds.size() == 0){
+    public List<Long> taskRunShouldBeCreated(List<Long> taskRunIds) {
+        if (taskRunIds.size() == 0) {
             return new ArrayList<>();
         }
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("id")
                 .from(TASK_RUN_TABLE_NAME)
                 .where("id in (" + repeatJoin("?", ",", taskRunIds.size()) +
-                        ") and jsonb_array_length(failed_upstream_task_run_ids) = 0 and status = ?" )
+                        ") and jsonb_array_length(failed_upstream_task_run_ids) = 0 and status = ?")
                 .getSQL();
         List<Object> params = new ArrayList<>();
         params.addAll(taskRunIds);
         params.add(TaskRunStatus.UPSTREAM_FAILED.name());
-        return dbOperator.fetchAll(sql,rs -> rs.getLong("id"),params.toArray());
+        return dbOperator.fetchAll(sql, rs -> rs.getLong("id"), params.toArray());
     }
 
     public void updateTaskRunDependencyByTaskRunIds(List<Long> taskRunIds, DependencyStatus status) {
@@ -1902,10 +1922,10 @@ public class TaskRunDao {
                 .asPrepared()
                 .getSQL();
         return dbOperator.fetchAll(sql, rs -> TaskRunStat.newBuilder()
-                        .withId(rs.getLong("task_run_id"))
-                        .withAverageRunningTime(rs.getLong("average_running_time"))
-                        .withAverageQueuingTime(rs.getLong("average_queuing_time"))
-                        .build(), taskRunIds.toArray());
+                .withId(rs.getLong("task_run_id"))
+                .withAverageRunningTime(rs.getLong("average_running_time"))
+                .withAverageQueuingTime(rs.getLong("average_queuing_time"))
+                .build(), taskRunIds.toArray());
     }
 
     public static class TaskRunDependencyMapper implements ResultSetMapper<TaskRunDependency> {
@@ -1990,7 +2010,7 @@ public class TaskRunDao {
                     .withPriority(rs.getInt(TASK_RUN_MODEL_NAME + "_priority"))
                     .withExecuteTarget(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_target"),
                             ExecuteTarget.class, ExecuteTarget.newBuilder().build()))
-                    .withExecutorLabel(rs.getString(TASK_RUN_MODEL_NAME +  "_executor_label"))
+                    .withExecutorLabel(rs.getString(TASK_RUN_MODEL_NAME + "_executor_label"))
                     .build();
         }
     }
@@ -2033,7 +2053,7 @@ public class TaskRunDao {
                     .withPriority(rs.getInt(column("priority", tableAlias)))
                     .withRetryTimes(rs.getInt(column("retry_times", tableAlias)))
                     .withExecutorLabel(rs.getString(column("executor_label", tableAlias)))
-                    .withRuntimeLabel(rs.getString(column("runtime_label",tableAlias)))
+                    .withRuntimeLabel(rs.getString(column("runtime_label", tableAlias)))
                     .build();
         }
     }

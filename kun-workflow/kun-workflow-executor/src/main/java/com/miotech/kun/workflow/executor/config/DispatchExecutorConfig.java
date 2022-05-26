@@ -6,6 +6,7 @@ public class DispatchExecutorConfig {
 
     private String kind;
     private String defaultExecutor;
+    private String executorRpcPort;
     private List<ExecutorConfig> executorConfigList;
 
     public String getKind() {
@@ -30,5 +31,13 @@ public class DispatchExecutorConfig {
 
     public void setDefaultExecutor(String defaultExecutor) {
         this.defaultExecutor = defaultExecutor;
+    }
+
+    public String getExecutorRpcPort() {
+        return executorRpcPort;
+    }
+
+    public void setExecutorRpcPort(String executorRpcPort) {
+        this.executorRpcPort = executorRpcPort;
     }
 }
