@@ -10,11 +10,12 @@ import AssetAutoSuggest from '../AssetAutoSuggest/AssetAutoSuggest';
 import styles from './AssetList.less';
 
 interface Props {
-  isEditting: boolean;
+  isEditting: boolean | undefined;
   assetList: Asset[];
   onChange: (value: (Asset | null)[]) => void;
   onDeleteSingleAsset: (assetId: string) => void;
   onAddSingleAsset: (asset: Asset) => void;
+  hasPermission: boolean | undefined;
 }
 
 export default memo(function AssetList({
@@ -23,6 +24,7 @@ export default memo(function AssetList({
   onChange,
   onDeleteSingleAsset,
   onAddSingleAsset,
+  hasPermission,
 }: Props) {
   const { getBackPath } = useBackPath();
   const handleChange = useCallback(
@@ -98,7 +100,9 @@ export default memo(function AssetList({
                     <div>{asset.description}</div>
                   </div>
                 </div>
-                <CloseOutlined style={{ marginLeft: 4 }} onClick={() => handleDeleteSingleAsset(asset.id)} />
+                {hasPermission && (
+                  <CloseOutlined style={{ marginLeft: 4 }} onClick={() => handleDeleteSingleAsset(asset.id)} />
+                )}
               </div>
             ))}
           {isAdding && (
@@ -111,16 +115,18 @@ export default memo(function AssetList({
             />
           )}
         </LineList>
-        <div className={styles.addButtonCon}>
-          <div
-            className={styles.addButton}
-            onClick={() => {
-              setIsAdding(true);
-            }}
-          >
-            <PlusOutlined />
+        {hasPermission && (
+          <div className={styles.addButtonCon}>
+            <div
+              className={styles.addButton}
+              onClick={() => {
+                setIsAdding(true);
+              }}
+            >
+              <PlusOutlined />
+            </div>
           </div>
-        </div>
+        )}
       </>
     );
   }
