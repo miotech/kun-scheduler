@@ -113,6 +113,8 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
         databaseConfig.setNeo4juri(props.get("neo4j.uri"));
         databaseConfig.setNeo4jUser(props.get("neo4j.username"));
         databaseConfig.setNeo4jPassword(props.get("neo4j.password"));
+        databaseConfig.setExecutorRpcHost(executorConfig.getExecutorRpcConfig().getExecutorRpcHost());
+        databaseConfig.setExecutorRpcPort(executorConfig.getExecutorRpcConfig().getExecutorRpcPort());
         return databaseConfig;
     }
 

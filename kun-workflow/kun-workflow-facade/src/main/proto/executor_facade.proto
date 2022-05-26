@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+option java_package = "com.miotech.kun.workflow.facade.rpc";
+option java_multiple_files = true;
+option java_outer_classname = "ExecutorFacadeProto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+message QueryRequest {
+  string sql = 1;
+  string connectionId = 2;
+  bool autoCommit = 3;
+}
+
+message QueryResp {
+  string rsId = 1;
+  string exception = 2;
+}
+
+message UpdateRequest {
+  string sql = 1;
+  string connectionId = 2;
+  bool autoCommit = 3;
+}
+
+message UpdateResp {
+  int32 rows = 1;
+  string exception = 2;
+}
+
+message RsNextRequest{
+  string rsId = 1;
+}
+
+message RsGetString{
+  string rsId = 1;
+  string index = 2;
+  string label = 3;
+}
+
+message RsNextResp{
+  bool  hasNext = 1;
+  string exception = 2;
+}
+
+message RsGetStringResp{
+  string result = 1;
+  string exception = 2;
+}
+
+message RsCloseRequest{
+  string rsId = 1;
+}
+
+message RsCloseResp{
+  bool isClosed = 1;
+  string exception = 2;
+}
+
+message RsMetadataRequest{
+  string rsId = 1;
+}
+
+message RsMetadataResp{
+  int32 columnCount = 1;
+  repeated string columnName = 2;
+  repeated string columnLabel = 3;
+  string exception = 4;
+}
+
+message RsGetObjectRequest{
+  string rsId = 1;
+  string index = 2;
+  string label = 3;
+  string type = 4;
+}
+
+message RsGetObjectResp{
+  string result = 1;
+  string exception = 2;
+}
+
+message GetConnectionResp{
+  string connectionId = 1;
+  string exception = 2;
+}
+
+message CloseConnection{
+  string connectionId = 1;
+}
+
+message CloseConnectionResp{
+  string exception = 1;
+}
+
+message CommitConnection{
+  string connectionId = 1;
+}
+
+message CommitConnectionResp{
+  string exception = 1;
+}
+
+message RollBackConnection{
+  string connectionId = 1;
+}
+
+message RollBackConnectionResp{
+  string exception = 1;
+}
+
+
+service ExecutorFacade {
+  rpc executeQuery (QueryRequest) returns (QueryResp);
+  rpc executeUpdate (UpdateRequest) returns (UpdateResp);
+  rpc next(RsNextRequest) returns (RsNextResp);
+  rpc getString(RsGetString) returns (RsGetStringResp);
+  rpc closeRs(RsCloseRequest) returns (RsCloseResp);
+  rpc getMetadata(RsMetadataRequest) returns (RsMetadataResp);
+  rpc getObject(RsGetObjectRequest) returns (RsGetObjectResp);
+  rpc getConnection(google.protobuf.Empty) returns(GetConnectionResp);
+  rpc closeConnection(CloseConnection) returns(CloseConnectionResp);
+  rpc commitConnection(CommitConnection) returns(CommitConnectionResp);
+  rpc rollBackConnection(RollBackConnection) returns(RollBackConnectionResp);
+}

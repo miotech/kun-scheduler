@@ -1,7 +1,33 @@
+plugins {
+    id 'com.google.protobuf' version '0.8.17'
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.19.2"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.45.1'
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {
+                outputSubDir = 'java'
+            }
+        }
+    }
+}
+
+
 dependencies {
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-workflow:kun-workflow-core")
-    implementation project(":kun-workflow:kun-workflow-common")
+    runtimeOnly 'io.grpc:grpc-netty-shaded'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'javax.annotation:javax.annotation-api'
 
     testImplementation project(":kun-commons:kun-commons-testing")
 }

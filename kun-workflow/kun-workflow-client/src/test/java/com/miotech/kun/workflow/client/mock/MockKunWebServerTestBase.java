@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.client.mock;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.Props;
@@ -22,10 +24,12 @@ import org.testcontainers.containers.Neo4jContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import javax.sql.DataSource;
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import static com.miotech.kun.commons.utils.CloseableUtils.closeIfPossible;
 import static org.awaitility.Awaitility.await;
 
 public class MockKunWebServerTestBase extends GuiceTestBase {
@@ -39,6 +43,13 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     protected static PostgreSQLContainer postgresContainer;
     protected static Neo4jContainer neo4jContainer;
     protected static GenericContainer redisContainer;
+    @Inject
+    private DataSource dataSource;
+
+    @Inject
+    @Named("executorDatasource")
+    private DataSource executorDatasource;
+
 
     static {
         // postgresql
@@ -91,6 +102,8 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
 
     @AfterEach
     public void tearDown() {
+        closeIfPossible(dataSource); // close HikariDatasource
+        closeIfPossible(executorDatasource);
         webServer.shutdown();
     }
 

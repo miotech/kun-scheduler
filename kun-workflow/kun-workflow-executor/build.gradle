@@ -23,6 +23,9 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'org.jooq:joor-java-8'
     implementation 'com.google.inject.extensions:guice-assistedinject'
+    runtimeOnly 'io.grpc:grpc-netty-shaded'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-stub'
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")

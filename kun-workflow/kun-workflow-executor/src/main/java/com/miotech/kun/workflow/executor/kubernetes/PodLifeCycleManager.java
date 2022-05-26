@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.google.common.io.Files;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.FtlUtils;
@@ -236,6 +237,13 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         logger.debug("building pod env,taskAttemptId = {}", taskAttempt.getId());
         List<EnvVar> envVarList = new ArrayList<>();
         addVar(envVarList, "execCommandFile", POD_LIB_DIR + "/" + taskAttempt.getId());
+        //set rpc config
+        String rpcHost = System.getenv().get("KUN_INFRA_HOST");
+        if(Strings.isNullOrEmpty(rpcHost)){
+            rpcHost = "kun-infra";
+        }
+        addVar(envVarList,"executorRpcHost",rpcHost);
+        addVar(envVarList,"executorRpcPort","10201");
         configDBEnv(envVarList);
         return envVarList;
     }
