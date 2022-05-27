@@ -1,0 +1,28 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'java'
+    id "io.freefair.lombok"
+    id "org.sonarqube"
+    id "com.gorylenko.gradle-git-properties" version "2.2.3"
+}
+
+repositories {
+    mavenCentral()
+}
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    implementation project(":kun-commons:kun-commons-pubsub")
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+
+    testImplementation project(':kun-commons:kun-commons-testing')
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:neo4j"
+    testImplementation "org.testcontainers:postgresql"
+}

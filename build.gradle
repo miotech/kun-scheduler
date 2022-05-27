@@ -54,6 +54,7 @@ subprojects {
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
                 implementation "org.yaml:snakeyaml:1.21"
+                implementation 'com.google.code.gson:gson:2.8.6'
                 implementation "com.fasterxml.jackson.core:jackson-core:2.11.0"
                 implementation "com.fasterxml.jackson.core:jackson-databind:2.11.0"
                 implementation 'com.fasterxml.jackson.core:jackson-annotations:2.11.0'

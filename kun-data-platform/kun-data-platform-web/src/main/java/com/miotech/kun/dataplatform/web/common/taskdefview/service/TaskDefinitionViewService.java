@@ -10,6 +10,8 @@ import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionS
 import com.miotech.kun.dataplatform.web.common.taskdefview.dao.TaskDefinitionViewDao;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.*;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -133,6 +135,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
     }
 
     @Transactional
+    @OperationRecord(type = OperationRecordType.TASK_VIEW_CREATE, args = {"#createRequest"})
     public TaskDefinitionView create(CreateTaskDefViewRequest createRequest) {
         Preconditions.checkNotNull(createRequest);
         TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
@@ -179,6 +182,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      * @return Updated task definition view model object
      */
     @Transactional
+    @OperationRecord(type = OperationRecordType.TASK_VIEW_UPDATE, args = {"#viewId", "#request"})
     public TaskDefinitionView update(Long viewId, UpdateTaskDefViewRequest request) {
         return update(viewId, request, getCurrentUser().getUsername());
     }
@@ -251,6 +255,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      * @return true if found and removed successfully. false if target view not found.
      */
     @Transactional
+    @OperationRecord(type = OperationRecordType.TASK_VIEW_DELETE, args = {"#id"})
     public boolean deleteById(Long id) {
         Preconditions.checkNotNull(id);
         return this.taskDefinitionViewDao.deleteById(id);

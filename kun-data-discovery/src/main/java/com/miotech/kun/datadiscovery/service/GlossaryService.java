@@ -14,6 +14,8 @@ import com.miotech.kun.datadiscovery.util.convert.AppBasicConversionService;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.common.KunRole;
 import com.miotech.kun.security.common.UserOperation;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
@@ -77,6 +79,7 @@ public class GlossaryService extends BaseSecurityService {
         return glossaryRepository.getGlossariesByDataset(datasetGid);
     }
 
+    @OperationRecord(type = OperationRecordType.GLOSSARY_CREATE, args = {"#glossaryRequest"})
     public Glossary createGlossary(GlossaryRequest glossaryRequest) {
         Long id = add(glossaryRequest);
         return fetchGlossary(id);
@@ -182,6 +185,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_UPDATE, args = {"#id", "#glossaryRequest"})
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
         GlossaryBasicInfo glossaryBasicInfo = getGlossaryBasicInfo(id);
@@ -207,6 +211,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_DELETE, args = {"#id"})
     public void delete(Long id) {
         checkAuth(id, GlossaryUserOperation.REMOVE_GLOSSARY);
         String currentUsername = getCurrentUsername();
@@ -261,6 +266,7 @@ public class GlossaryService extends BaseSecurityService {
      */
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_COPY_PASTE, args = {"#copyReq"})
     public GlossaryChildren copy(GlossaryCopyRequest copyReq) {
         checkAuth(copyReq.getSourceId(), GlossaryUserOperation.COPY_GLOSSARY);
         log.debug("copy info:{}", copyReq);

@@ -32,6 +32,7 @@ dependencies {
     implementation project(":kun-data-quality:kun-data-quality-core")
     implementation project(":kun-data-quality:kun-data-quality-facade")
     implementation project(':kun-data-platform:kun-data-platform-facade')
+    implementation project(':kun-operation-record:kun-operation-record-common')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'

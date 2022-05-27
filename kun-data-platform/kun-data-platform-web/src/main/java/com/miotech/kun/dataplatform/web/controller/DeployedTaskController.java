@@ -7,6 +7,8 @@ import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.*;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskRunLogVO;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -222,6 +224,7 @@ public class DeployedTaskController {
 
     @PostMapping("/deployed-taskruns/{taskRunId}/_restart")
     @ApiOperation("Rerun a single taskrun instance immediately")
+    @OperationRecord(type = OperationRecordType.TASK_RERUN, args = {"#taskRunId"})
     public RequestResult<TaskRun> restartTaskRunInstance(@PathVariable Long taskRunId) {
         Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
         TaskRun taskRun = workflowClient.restartTaskRun(taskRunId);
@@ -230,6 +233,7 @@ public class DeployedTaskController {
 
     @PutMapping("/deployed-taskruns/{taskRunId}/_abort")
     @ApiOperation("Rerun a single taskrun instance immediately")
+    @OperationRecord(type = OperationRecordType.TASK_ABORT, args = {"#taskRunId"})
     public RequestResult<TaskRun> stopTaskRunInstance(@PathVariable Long taskRunId) {
         Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
         TaskRun taskRun = workflowClient.stopTaskRun(taskRunId);

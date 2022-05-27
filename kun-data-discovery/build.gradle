@@ -46,6 +46,7 @@ dependencies {
 	implementation project(':kun-security:kun-security-common')
 	implementation project(':kun-security:kun-security-facade')
 	implementation project(':kun-data-platform:kun-data-platform-facade')
+	implementation project(':kun-operation-record:kun-operation-record-common')
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
