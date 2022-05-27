@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+option java_package = "com.miotech.kun.security.facade.rpc";
+option java_multiple_files = true;
+option java_outer_classname = "SecurityProto";
+
+message RoleOnSpecifiedModuleReq {
+  string username = 1;
+  string module = 2;
+}
+
+message RoleOnSpecifiedModuleResp {
+  string username = 1;
+  string module = 2;
+  string rolename = 3;
+}
+
+message RoleOnSpecifiedResourcesReq {
+  string username = 1;
+  string module = 2;
+  repeated string sourceSystemIds = 3;
+}
+
+message ScopeRole {
+  string rolename = 1;
+  string sourceSystemId = 2;
+}
+
+message RoleOnSpecifiedResourcesResp {
+  string username = 1;
+  string module = 2;
+  repeated ScopeRole scopeRoles = 3;
+}
+
+message UpdateScopeOnSpecifiedRoleReq {
+  string username = 1;
+  string rolename = 2;
+  string module = 3;
+  repeated string sourceSystemIds = 4;
+}
+
+message UsersOnSpecifiedRoleReq {
+  string module = 1;
+  string rolename = 2;
+  string sourceSystemId = 3;
+}
+
+message UsersOnSpecifiedRoleResp {
+  repeated string usernames = 1;
+}
+
+service Security {
+  rpc findUsersOnSpecifiedRole (UsersOnSpecifiedRoleReq) returns (UsersOnSpecifiedRoleResp);
+  rpc findRoleOnSpecifiedModule (RoleOnSpecifiedModuleReq) returns (RoleOnSpecifiedModuleResp);
+  rpc findRoleOnSpecifiedResources (RoleOnSpecifiedResourcesReq) returns (RoleOnSpecifiedResourcesResp);
+  rpc addScopeOnSpecifiedRole (UpdateScopeOnSpecifiedRoleReq) returns (google.protobuf.Empty);
+  rpc deleteScopeOnSpecifiedRole (UpdateScopeOnSpecifiedRoleReq) returns (google.protobuf.Empty);
+}

@@ -7,7 +7,8 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.datadiscovery.model.bo.*;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
 import com.miotech.kun.datadiscovery.util.BasicMapper;
@@ -137,7 +138,7 @@ public class GlossaryRepository extends BaseRepository {
 
     @Transactional(rollbackFor = Exception.class)
     public Long insert(GlossaryRequest glossaryRequest) {
-        log.debug("glossaryRequest:{}",glossaryRequest);
+        log.debug("glossaryRequest:{}", glossaryRequest);
         String kmgSql = "insert into kun_mt_glossary values " + toValuesSql(1, 10);
         Long glossaryId = IdGenerator.getInstance().nextId();
         String createUser = glossaryRequest.getCreateUser();
@@ -307,11 +308,10 @@ public class GlossaryRepository extends BaseRepository {
     }
 
 
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(String currentUserName, Long id) {
+    public List<Long> delete(String currentUserName, Long id) {
         OffsetDateTime now = now();
         updatePrevId(id, currentUserName, now);
-        deleteRecursively(id, currentUserName, now);
+        return deleteRecursively(id, currentUserName, now);
     }
 
     private void updatePrevId(Long id, String updateUser, OffsetDateTime updateTime) {
@@ -324,13 +324,13 @@ public class GlossaryRepository extends BaseRepository {
         jdbcTemplate.update(updatePrevIdSql, updateUser, updateTime, prevId, nextGlossary.getId());
     }
 
-    private void deleteRecursively(Long glossaryId, String currentUserName, OffsetDateTime updateTime) {
+    public List<Long> deleteRecursively(Long glossaryId, String currentUserName, OffsetDateTime updateTime) {
         List<Long> ids = findSelfDescendants(glossaryId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(ids)) {
-            return;
+        if (CollectionUtils.isNotEmpty(ids)) {
+            removeGlossary(ids, currentUserName, updateTime);
+            removeGlossaryRef(ids, currentUserName, updateTime);
         }
-        removeGlossary(ids, currentUserName, updateTime);
-        removeGlossaryRef(ids, currentUserName, updateTime);
+        return ids;
     }
 
     private void removeGlossaryRef(List<Long> glossaryIdList, String currentUserName, OffsetDateTime updateTime) {

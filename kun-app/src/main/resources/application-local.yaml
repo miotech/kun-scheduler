@@ -145,3 +145,9 @@ spark:
     url:
     username:
     password:
+
+grpc:
+  server:
+    security-host: ${SECURITY_HOST}
+    port: ${WORKFLOW_RPC_SERVICE_PORT}
+

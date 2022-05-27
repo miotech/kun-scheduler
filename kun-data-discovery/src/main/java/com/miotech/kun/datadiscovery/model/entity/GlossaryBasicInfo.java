@@ -47,4 +47,6 @@ public class GlossaryBasicInfo {
 
     private boolean deleted;
 
+    private SecurityInfo securityInfo;
+
 }

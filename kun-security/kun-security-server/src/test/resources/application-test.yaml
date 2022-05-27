@@ -28,3 +28,7 @@ security:
 
 frontend:
   url: ${KUN_ROOT_URL:http://localhost:8079}
+
+grpc:
+  server:
+    port: ${WORKFLOW_RPC_SERVICE_PORT}

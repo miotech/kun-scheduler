@@ -7,27 +7,30 @@ import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.datadiscovery.model.enums.GlossaryRole;
+import com.miotech.kun.datadiscovery.model.enums.GlossaryUserOperation;
+import com.miotech.kun.datadiscovery.model.enums.SecurityModule;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
-import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.datadiscovery.testing.mockdata.MockSecurityRpcClientFactory;
 import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
-import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
+import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
+import com.miotech.kun.security.facade.rpc.ScopeRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.datadiscovery.testing.mockdata.MockSearchInfoFactory.mockSearchGlossary;
@@ -36,24 +39,23 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
-    @MockBean
-    WorkflowClient workflowClient;
-
-    @MockBean
-    private RestTemplate restTemplate;
 
     @Autowired
     GlossaryService glossaryService;
 
-    @MockBean
-    private DeployedTaskFacade deployedTaskFacade;
 
+    @BeforeEach
+    public void mockRoleManager() {
+        RoleOnSpecifiedModuleResp glossaryManagerRole = MockSecurityRpcClientFactory.mockRoleOnSpecifiedModule("test", GlossaryRole.GLOSSARY_MANAGER);
+        Mockito.when(securityRpcClient.findRoleOnSpecifiedModule(SecurityModule.GLOSSARY.name())).thenReturn(glossaryManagerRole);
+    }
 
     @Test
     void test_getParentIdIsNull() {
@@ -262,7 +264,7 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
      * glossarySon2  parent glossaryChild->glossary2
      */
     @Test
-    void test_update_throw_Exption() {
+    void test_update_throw_Exception() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
         GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, "glossary1", assetList);
@@ -546,7 +548,6 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
     @Test
     void test_copy_CONTAINS_CHILDREN_children_level() {
-
         Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
 //        copy contains children  g2-1 到1-1 children level
         Glossary glossary1_1 = glossaryTree.get("glossary1_1");
@@ -781,7 +782,6 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
      * ｜---> glossarySon2
      */
     private Map<String, Glossary> mockTreeMap(String name1_1, String name2_1, String name3_1, String name3_2) {
-
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Map<String, Glossary> glossaries = Maps.newLinkedHashMap();
         Long parentId = null;
@@ -822,7 +822,6 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
     @Test
     public void test_search_simple() {
-
         Map<String, Glossary> glossaries = mockTreeMap("glossary", "glossaryChild", "glossarySon1", "glossarySon2");
         Glossary glossaryChild = glossaries.get("glossaryChild");
         String keyword1 = "ch";
@@ -938,6 +937,131 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThrows("A glossary with the same name is not allowed at the same level  name:" + newName, RuntimeException.class, () -> glossaryService.update(glossarySon1.getId(), glossaryUpdateRequest3));
 
 
+    }
+
+    @Test
+    public void test_fetch_glossary_manager_operation() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Long glossary1_1Id = glossary1_1.getId();
+        SecurityModule securityModule = SecurityModule.GLOSSARY;
+        GlossaryRole role = GlossaryRole.GLOSSARY_MANAGER;
+        SecurityInfo securityInfo = glossaryService.fetchGlossaryOperation(glossary1_1Id);
+        assertThat(securityInfo, notNullValue());
+        assertThat(securityInfo.getSecurityModule(), is(securityModule));
+        assertThat(securityInfo.getKunRole(), is(role));
+        assertThat(securityInfo.getSourceSystemId(), is(glossary1_1Id));
+        assertThat(securityInfo.getOperations(), is(role.getUserOperation()));
+    }
+
+    @Test
+    public void test_fetch_operation() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        Long glossary1_1Id = glossary1_1.getId();
+        GlossaryRole glossaryViewer = GlossaryRole.GLOSSARY_VIEWER;
+        mockRole(glossaryViewer);
+        SecurityInfo securityInfo = glossaryService.fetchGlossaryOperation(glossary1_1Id);
+        assertThat(securityInfo, notNullValue());
+        assertThat(securityInfo.getSecurityModule(), is(SecurityModule.GLOSSARY));
+        assertThat(securityInfo.getKunRole(), is(glossaryViewer));
+        assertThat(securityInfo.getSourceSystemId(), is(glossary1_1Id));
+        assertThat(securityInfo.getOperations(), is(glossaryViewer.getUserOperation()));
+    }
+
+    @Test
+    public void test_fetch_Inherit_permissions_operation() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        mockRole(GlossaryRole.GLOSSARY_EDITOR);
+        Glossary glossary1_1 = glossaryTree.get("glossary1_1");
+        GlossaryRole glossaryEditor = GlossaryRole.GLOSSARY_EDITOR;
+        Long glossary1_1Id = glossary1_1.getId();
+        ScopeRole scopeRole1_1 = ScopeRole.newBuilder().setRolename(glossaryEditor.getName()).setSourceSystemId(glossary1_1Id.toString()).build();
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        Long glossary3_1Id = glossary3_1.getId();
+        GlossaryRole glossaryViewer = GlossaryRole.GLOSSARY_VIEWER;
+        SecurityModule securityModule = SecurityModule.GLOSSARY;
+        ScopeRole scopeRole3_1 = ScopeRole.newBuilder().setRolename(glossaryViewer.getName()).setSourceSystemId(glossary3_1Id.toString()).build();
+        RoleOnSpecifiedResourcesResp resourcesResp = MockSecurityRpcClientFactory.mockUserRoleRespGlossary("test", ImmutableList.of(scopeRole1_1, scopeRole3_1));
+        Mockito.when(securityRpcClient.findRoleOnSpecifiedResources(Mockito.eq(securityModule.name()), anyList())).thenReturn(resourcesResp);
+        SecurityInfo securityInfo = glossaryService.fetchGlossaryOperation(glossary3_1Id);
+        assertThat(securityInfo, notNullValue());
+        assertThat(securityInfo.getSecurityModule(), is(securityModule));
+        assertThat(securityInfo.getKunRole().getName(), not(scopeRole3_1.getRolename()));
+        assertThat(securityInfo.getKunRole().getName(), is(scopeRole1_1.getRolename()));
+        assertThat(securityInfo.getSourceSystemId(), is(glossary3_1Id));
+        assertThat(securityInfo.getOperations(), is(glossaryEditor.getUserOperation()));
+    }
+
+    @Test
+    public void test_fetch_copy_operation() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        Long glossary3_2Id = glossary3_2.getId();
+        Long glossary3_1Id = glossary3_1.getId();
+        GlossaryRole glossaryEditor = GlossaryRole.GLOSSARY_EDITOR;
+        GlossaryRole glossaryViewer = GlossaryRole.GLOSSARY_VIEWER;
+        SecurityModule securityModule = SecurityModule.GLOSSARY;
+        ScopeRole scopeRole3_1 = ScopeRole.newBuilder().setRolename(glossaryViewer.getName()).setSourceSystemId(glossary3_1Id.toString()).build();
+        mockRole(glossaryEditor);
+        RoleOnSpecifiedResourcesResp resourcesResp = MockSecurityRpcClientFactory.mockUserRoleRespGlossary("test", ImmutableList.of(scopeRole3_1));
+        Mockito.when(securityRpcClient.findRoleOnSpecifiedResources(Mockito.eq(securityModule.name()), anyList())).thenReturn(resourcesResp);
+        SecurityInfo securityInfo = glossaryService.fetchGlossaryOperation(glossary3_1Id);
+        assertThat(securityInfo, notNullValue());
+        assertThat(securityInfo.getSecurityModule(), is(securityModule));
+        assertThat(securityInfo.getKunRole().getName(), is(scopeRole3_1.getRolename()));
+        assertThat(securityInfo.getSourceSystemId(), is(glossary3_1Id));
+        assertThat(securityInfo.getOperations(), not(glossaryViewer.getUserOperation()));
+        assertThat(securityInfo.getOperations().size(), is(glossaryViewer.getUserOperation().size() + 1));
+        assertTrue(securityInfo.getOperations().contains(GlossaryUserOperation.COPY_GLOSSARY));
+    }
+
+    @Test
+    public void test_fetch_function_operation() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Long glossary3_2Id = glossary3_2.getId();
+        GlossaryRole glossaryEditor = GlossaryRole.GLOSSARY_EDITOR;
+        ScopeRole scopeRole3_2 = ScopeRole.newBuilder().setRolename(glossaryEditor.getName()).setSourceSystemId(glossary3_2Id.toString()).build();
+
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        Long glossary3_1Id = glossary3_1.getId();
+        GlossaryRole glossaryViewer = GlossaryRole.GLOSSARY_VIEWER;
+        SecurityModule securityModule = SecurityModule.GLOSSARY;
+        ScopeRole scopeRole3_1 = ScopeRole.newBuilder().setRolename(glossaryViewer.getName()).setSourceSystemId(glossary3_1Id.toString()).build();
+
+        mockRole(glossaryEditor);
+        RoleOnSpecifiedResourcesResp resourcesResp1 = MockSecurityRpcClientFactory.mockUserRoleRespGlossary("test", ImmutableList.of(scopeRole3_1));
+        Mockito.when(securityRpcClient.findRoleOnSpecifiedResources(Mockito.eq(securityModule.name()), Mockito.argThat(argument -> argument.contains(glossary3_1Id.toString())))).thenReturn(resourcesResp1);
+        RoleOnSpecifiedResourcesResp resourcesResp2 = MockSecurityRpcClientFactory.mockUserRoleRespGlossary("test", ImmutableList.of(scopeRole3_2));
+        Mockito.when(securityRpcClient.findRoleOnSpecifiedResources(Mockito.eq(securityModule.name()), Mockito.argThat(argument -> argument.contains(glossary3_2Id.toString())))).thenReturn(resourcesResp2);
+        GlossaryCopyRequest copyRequest = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary3_2.getParentId(), glossary3_1.getId(), CopyOperation.CONTAINS_CHILDREN);
+        assertThrows(PermissionDeniedDataAccessException.class, () -> glossaryService.copy(copyRequest));
+        GlossaryCopyRequest copyRequest1 = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary3_2.getId(), glossary3_1.getId(), CopyOperation.CONTAINS_CHILDREN);
+        assertThat(glossaryService.copy(copyRequest1), notNullValue());
+    }
+
+    @Test
+    public void test_add_scope() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        glossaryService.addScope(glossary3_2.getId(), "test1");
+
+    }
+
+    @Test
+    public void test_remove_scope() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        glossaryService.removeScope(glossary3_2.getId(), "test1");
+
+
+    }
+
+    public void mockRole(GlossaryRole role) {
+        RoleOnSpecifiedModuleResp glossaryManagerRole = MockSecurityRpcClientFactory.mockRoleOnSpecifiedModule("test", role);
+        Mockito.when(securityRpcClient.findRoleOnSpecifiedModule(SecurityModule.GLOSSARY.name())).thenReturn(glossaryManagerRole);
     }
 
 }

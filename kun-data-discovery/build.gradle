@@ -44,6 +44,7 @@ dependencies {
 	implementation project(':kun-commons:kun-commons-utils')
 	implementation project(':kun-app-common')
 	implementation project(':kun-security:kun-security-common')
+	implementation project(':kun-security:kun-security-facade')
 	implementation project(':kun-data-platform:kun-data-platform-facade')
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
@@ -55,6 +56,9 @@ dependencies {
 	implementation 'com.google.code.gson:gson'
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.springdoc:springdoc-openapi-ui'
+	runtimeOnly 'io.grpc:grpc-netty-shaded'
+	implementation 'io.grpc:grpc-protobuf'
+	implementation 'io.grpc:grpc-stub'
 
 	testImplementation project(':kun-commons:kun-commons-testing')
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
