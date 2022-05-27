@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useHistory } from 'umi';
 import { RouteComponentProps } from 'react-router';
-
+import { queryGlossaryRole } from '@/services/glossary';
 import { Spin, Button, Input, Modal, message, Popover } from 'antd';
-
+import { useRequest } from 'ahooks';
+import { Operation } from '@/definitions/Glossary.type';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 import useI18n from '@/hooks/useI18n';
@@ -19,6 +20,7 @@ import { useStickyState } from '@/hooks/useStickyState';
 import ParentSearch from './components/ParentSearch/ParentSearch';
 import ChildrenGlossaryList from './components/ChildrenGlossaryList/ChildrenGlossaryList';
 import AssetList from './components/AssetList/AssetList';
+import Editor from './components/Editor/Editor';
 import { PasteContent } from './components/PasteContent/PasteContent';
 
 import styles from './index.less';
@@ -62,6 +64,15 @@ export default function GlossaryDetail({
 
   const { currentGlossaryDetail, fetchCurrentGlossaryDetailLoading } = selector;
   const [inputtingDetail, setInputtingDetail] = useState<IGlossaryDetail>(getInitGlossaryDetail());
+
+  const queryGlossaryRoleRequest = useRequest(queryGlossaryRole, {
+    manual: true,
+  });
+
+  const GLossaryRole = useMemo(() => {
+    return queryGlossaryRoleRequest?.data?.operations;
+  }, [queryGlossaryRoleRequest.data]);
+
   useEffect(() => {
     if (currentGlossaryDetail) {
       setInputtingDetail(currentGlossaryDetail);
@@ -94,6 +105,8 @@ export default function GlossaryDetail({
           });
         }
       });
+
+      queryGlossaryRoleRequest.runAsync(currentId);
     } else {
       setIsEditing(true);
     }
@@ -227,9 +240,11 @@ export default function GlossaryDetail({
       if (currentId) {
         return (
           <>
-            <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" danger onClick={showConfirm}>
-              {t('common.button.delete')}
-            </Button>
+            {GLossaryRole && GLossaryRole.includes(Operation.REMOVE_GLOSSARY) && (
+              <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" danger onClick={showConfirm}>
+                {t('common.button.delete')}
+              </Button>
+            )}
             <Button style={{ marginRight: 16 }} size="large" onClick={handleClickCancel}>
               {t('common.button.cancel')}
             </Button>
@@ -261,33 +276,39 @@ export default function GlossaryDetail({
       );
     }
     return (
-      <>
-        <Button style={{ marginLeft: 'auto' }} size="large" onClick={() => setIsEditing(true)} type="primary" ghost>
-          {t('common.button.edit')}
-        </Button>
-        <Button style={{ marginLeft: 10 }} size="large" type="primary" ghost onClick={copyGlossary}>
-          {t('common.button.copy')}
-        </Button>
-        <Popover
-          visible={visible}
-          onVisibleChange={(value: boolean) => setVisible(value)}
-          placement="bottom"
-          title={null}
-          content={
-            <PasteContent
-              glossarySticky={glossarySticky}
-              addChild={addChild}
-              setVisible={setVisible}
-              currentGlossaryDetail={currentGlossaryDetail}
-            />
-          }
-          trigger="click"
-        >
-          <Button style={{ marginLeft: 10 }} size="large" type="primary" ghost>
-            {t('common.button.paste')}
+      <div style={{ marginLeft: 'auto' }}>
+        {GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY) && (
+          <Button size="large" onClick={() => setIsEditing(true)} type="primary" ghost>
+            {t('common.button.edit')}
           </Button>
-        </Popover>
-      </>
+        )}
+        {GLossaryRole && GLossaryRole.includes(Operation.COPY_GLOSSARY) && (
+          <Button style={{ marginLeft: 10 }} size="large" type="primary" ghost onClick={copyGlossary}>
+            {t('common.button.copy')}
+          </Button>
+        )}
+        {GLossaryRole && GLossaryRole.includes(Operation.PASTE_GLOSSARY) && (
+          <Popover
+            visible={visible}
+            onVisibleChange={(value: boolean) => setVisible(value)}
+            placement="bottom"
+            title={null}
+            content={
+              <PasteContent
+                glossarySticky={glossarySticky}
+                addChild={addChild}
+                setVisible={setVisible}
+                currentGlossaryDetail={currentGlossaryDetail}
+              />
+            }
+            trigger="click"
+          >
+            <Button style={{ marginLeft: 10 }} size="large" type="primary" ghost>
+              {t('common.button.paste')}
+            </Button>
+          </Popover>
+        )}
+      </div>
     );
   };
 
@@ -374,9 +395,14 @@ export default function GlossaryDetail({
 
           <div className={styles.inputBlock}>
             <div className={styles.funcTitleRow}>
-              <div className={styles.funcTitleRowlabel}>{t('glossary.childGlossary')}</div>
+              <div className={styles.funcTitleRowlabel}>
+                {t('glossary.childGlossary')}
+                {(glossaryNode?.children ?? []).length > 0 && (
+                  <span style={{ marginLeft: 4 }}>({glossaryNode?.children?.length})</span>
+                )}
+              </div>
 
-              {!isEditing && (
+              {!isEditing && GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY_CHILD) && (
                 <Button size="small" onClick={() => createChild(inputtingDetail.name, inputtingDetail.id)}>
                   {t('glossary.childGlossary.create')}
                 </Button>
@@ -386,6 +412,11 @@ export default function GlossaryDetail({
               <ChildrenGlossaryList setCurrentId={setCurrentId} childList={glossaryNode?.children ?? []} />
             </div>
           </div>
+
+          <Editor
+            hasPermission={GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY_EDITOR)}
+            id={currentId}
+          />
         </div>
         <div className={styles.rightArea}>
           <div className={styles.inputBlock}>
@@ -397,8 +428,9 @@ export default function GlossaryDetail({
             </div>
             <div>
               <AssetList
-                isEditting={isEditing}
+                isEditting={isEditing && GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY_RESOURCE)}
                 assetList={inputtingDetail?.assets || []}
+                hasPermission={GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY_RESOURCE)}
                 onChange={handleChangeAssets}
                 onDeleteSingleAsset={handleDeleteSingleAsset}
                 onAddSingleAsset={handleAddSingleAsset}

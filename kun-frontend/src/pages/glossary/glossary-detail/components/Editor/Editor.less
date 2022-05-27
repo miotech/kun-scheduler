@@ -1,0 +1,39 @@
+
+.childItem {
+  display: flex;
+  align-items: baseline;
+  position: relative;
+  left: 25px;
+  top: -8px;  
+  height: 40px;
+  .user {
+    position: relative;
+    top: -2px;
+    width: 250px;
+    left: 10px;
+  }
+}
+.addButtonCon{
+  height: 48px;
+  align-items: center;
+  display: flex;
+  .addButton {
+    cursor: pointer;
+    height: 28px;
+    width: 28px;
+    border: 1px solid @borderColor;
+    background-color: rgba(231, 231, 231, 0.3);
+    border-radius: 3px;
+    .flexCenter();
+  }
+}
+.deleteButton {
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 28px;
+  width: 28px;
+  border: 1px solid @borderColor;
+  margin-left: 12px;
+  background-color: rgba(231, 231, 231, 0.3);
+  .flexCenter();
+}

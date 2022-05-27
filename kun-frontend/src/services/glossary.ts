@@ -1,6 +1,7 @@
 import { GlossaryChild, SearchGlossaryItem, GlossaryDetail, Asset } from '@/rematch/models/glossary';
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
+import { GlossaryRoleResponse, GlossaryEditorParams } from '@/definitions/Glossary.type';
 
 export interface FetchGlossariesResp {
   parentId: string;
@@ -93,6 +94,34 @@ export async function updateGlossaryOrderService(id: string, prevId?: string) {
     data: {
       prevId,
     },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function queryGlossaryRole(id?: string) {
+  return get<GlossaryRoleResponse>('/role/glossary/operation', {
+    query: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function queryGlossaryEditor(id: string) {
+  return get<[]>('/role/glossary/editor/:id', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function addGlossaryEditor(params: GlossaryEditorParams) {
+  return post('/role/addEditor', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function removeGlossaryEditor(params: GlossaryEditorParams) {
+  return post('/role/removeEditor', {
+    data: params,
     prefix: DEFAULT_API_PREFIX,
   });
 }
