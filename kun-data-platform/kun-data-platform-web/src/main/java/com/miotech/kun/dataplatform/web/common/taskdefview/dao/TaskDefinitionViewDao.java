@@ -140,15 +140,15 @@ public class TaskDefinitionViewDao {
         }
 
         if ((Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty())
-                || Objects.nonNull(searchParams.getTaskDefCreators()) || Objects.nonNull(searchParams.getTaskTemplateName())) {
+                || Objects.nonNull(searchParams.getTaskDefOwners()) || Objects.nonNull(searchParams.getTaskTemplateName())) {
             StringBuilder subWhereClauseBuilder = new StringBuilder();
             if (Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty()) {
                 subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
                 paramsList.add(searchParams.getTaskDefName());
             }
-            if (Objects.nonNull(searchParams.getTaskDefCreators()) && !searchParams.getTaskDefCreators().isEmpty()) {
-                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".creator IN (" + SQLUtils.generateSqlInClausePlaceholders(searchParams.getTaskDefCreators()) + ")) AND ");
-                paramsList.addAll(searchParams.getTaskDefCreators());
+            if (Objects.nonNull(searchParams.getTaskDefOwners()) && !searchParams.getTaskDefOwners().isEmpty()) {
+                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".owner IN (" + SQLUtils.generateSqlInClausePlaceholders(searchParams.getTaskDefOwners()) + ")) AND ");
+                paramsList.addAll(searchParams.getTaskDefOwners());
             }
             if (Objects.nonNull(searchParams.getTaskTemplateName()) && !searchParams.getTaskTemplateName().isEmpty()) {
                 subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".task_template_name = ?) AND");
