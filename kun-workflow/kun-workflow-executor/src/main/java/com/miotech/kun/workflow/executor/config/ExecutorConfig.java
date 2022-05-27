@@ -18,6 +18,7 @@ public class ExecutorConfig {
     private String kind;
     private Map<String, String> storage;
     private List<ResourceQueue> resourceQueues;
+    private ExecutorRpcConfig executorRpcConfig;
     private String label;
 
     public String getName() {
@@ -58,5 +59,13 @@ public class ExecutorConfig {
 
     public void setLabel(String label) {
         this.label = label;
+    }
+
+    public ExecutorRpcConfig getExecutorRpcConfig() {
+        return executorRpcConfig;
+    }
+
+    public void setExecutorRpcConfig(ExecutorRpcConfig executorRpcConfig) {
+        this.executorRpcConfig = executorRpcConfig;
     }
 }

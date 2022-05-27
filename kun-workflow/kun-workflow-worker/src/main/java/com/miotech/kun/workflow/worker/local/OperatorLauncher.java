@@ -28,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -62,7 +63,7 @@ public class OperatorLauncher {
                 new LocalWorkerModule(props)
         );
         OperatorLauncher operatorLauncher = injector.getInstance(OperatorLauncher.class);
-        Thread exitHook = new Thread(() ->{
+        Thread exitHook = new Thread(() -> {
             operatorLauncher.cancel();
         });
 
@@ -98,6 +99,12 @@ public class OperatorLauncher {
         }
         if (databaseConfig.getNeo4jPassword() != null) {
             props.put("neo4j.password", databaseConfig.getNeo4jPassword());
+        }
+        if (databaseConfig.getExecutorRpcHost() != null) {
+            props.put("executorRpcHost", databaseConfig.getExecutorRpcHost());
+        }
+        if (databaseConfig.getExecutorRpcPort() != null) {
+            props.put("executorRpcPort", databaseConfig.getExecutorRpcPort());
         }
         return props;
     }
@@ -184,8 +191,8 @@ public class OperatorLauncher {
         }
     }
 
-    private void waitFinished(){
-        while (!finished){
+    private void waitFinished() {
+        while (!finished) {
             Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
         }
     }

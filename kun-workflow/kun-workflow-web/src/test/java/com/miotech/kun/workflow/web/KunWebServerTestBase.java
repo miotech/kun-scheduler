@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
@@ -56,6 +57,10 @@ public class KunWebServerTestBase extends GuiceTestBase {
     @Inject
     private DataSource dataSource;
 
+    @Inject
+    @Named("executorDatasource")
+    private DataSource executorDatasource;
+
     @Override
     protected void configuration() {
         super.configuration();
@@ -82,6 +87,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     public void tearDown() {
         // TODO: move these cleaning logic to a proper location
         closeIfPossible(dataSource); // close HikariDatasource
+        closeIfPossible(executorDatasource);
         executor = injector.getInstance(Executor.class);
         executor.shutdown();
         webServer.shutdown();

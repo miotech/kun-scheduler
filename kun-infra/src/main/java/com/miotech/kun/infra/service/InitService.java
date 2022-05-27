@@ -9,9 +9,13 @@ import com.miotech.kun.infra.util.MetadataSysTaskBuilder;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
+import com.miotech.kun.workflow.common.rpc.ExecutorServer;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
+import com.miotech.kun.workflow.common.rpc.ExecutorFacadeImpl;
+import io.grpc.ServerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +44,14 @@ public class InitService implements InitializingBean {
     @Inject
     private OperatorUploadService operatorUploadService;
 
+    @Inject
+    private Executor executor;
+
+    @Inject
+    private ExecutorFacadeImpl executorFacade;
+
+    private ExecutorServer executorServer;
+
     @Override
     public Order getOrder() {
         return Order.FIRST;
@@ -52,6 +64,11 @@ public class InitService implements InitializingBean {
             initDataBuilder();
             startConsumer();
         }
+        executor.init();
+        logger.debug("executor init finished");
+        startExecutorRpc();
+        logger.debug("executor rpc server started");
+
     }
 
 
@@ -135,5 +152,19 @@ public class InitService implements InitializingBean {
     private void configureDB() {
         DatabaseSetup setup = new DatabaseSetup(dataSource, props);
         setup.start();
+    }
+
+    private void startExecutorRpc() {
+        //start rpc server
+        try {
+            logger.debug("going to start rpc server...");
+            Integer rpcPort = props.getInt("rpc.port");
+            ServerBuilder serverBuilder = ServerBuilder.forPort(rpcPort)
+                    .addService(executorFacade);
+            executorServer = new ExecutorServer(serverBuilder, rpcPort);
+            executorServer.start();
+        } catch (Throwable e) {
+            logger.error("start executor rpc server failed", e);
+        }
     }
 }

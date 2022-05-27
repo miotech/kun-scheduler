@@ -41,6 +41,7 @@ dependencies {
     implementation 'io.fabric8:kubernetes-client'
     implementation 'com.google.inject.extensions:guice-assistedinject'
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
+    implementation "com.zaxxer:HikariCP"
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation project(':kun-commons:kun-commons-testing')

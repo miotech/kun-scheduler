@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
@@ -30,11 +31,14 @@ import com.miotech.kun.workflow.executor.local.PublicEventHandler;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.web.service.RecoverService;
 import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import javax.sql.DataSource;
 import java.util.List;
 
 public class KunWorkflowServerModule extends AppModule {
@@ -108,9 +112,21 @@ public class KunWorkflowServerModule extends AppModule {
         }
         executor.injectMembers(injector);
         logger.debug("executor inject member finished");
-        executor.init();
-        logger.debug("executor init finished");
         return executor;
+    }
+
+    @Provides
+    @Singleton
+    @Named("executorDatasource")
+    public DataSource getExecutorDatasource(Props props){
+        HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(props.getInt("datasource.minimumIdle", 10));
+        config.setMaximumPoolSize(props.getInt("datasource.maxPoolSize", 30));
+        config.setJdbcUrl(props.get("datasource.jdbcUrl"));
+        config.setUsername(props.get("datasource.username"));
+        config.setPassword(props.get("datasource.password"));
+        config.setDriverClassName(props.get("datasource.driverClassName"));
+        return new HikariDataSource(config);
     }
 
 
