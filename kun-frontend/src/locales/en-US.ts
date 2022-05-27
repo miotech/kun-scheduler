@@ -335,6 +335,7 @@ export default {
   'dataDevelopment.transferModal.targetTitle': 'View tasks',
   'dataDevelopment.transferModal.title': 'Edit tasks of current view',
   'dataDevelopment.allTasks': 'All Tasks',
+  'dataDevelopment.danglingTasks': 'Dangling Tasks',
   'dataDevelopment.displayType.dag': 'DAG mode',
   'dataDevelopment.displayType.list': 'List mode',
   'dataDevelopment.submitAll': 'Submit all',

@@ -9,12 +9,17 @@ import {
 import { PaginationRespBody } from '@/definitions/common-types';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
+interface TaskDefinitionViewsResponse<T = any> extends PaginationRespBody {
+  records: T[];
+  allTasksCount: number;
+  danglingTasksCount: number;
+}
 /**
  * Search task definition views
  * @param searchParams
  */
 export async function searchTaskDefinitionViews(searchParams: SearchTaskDefinitionViewParams) {
-  return get<PaginationRespBody<TaskDefinitionViewVO>>('/task-def-views', {
+  return get<TaskDefinitionViewsResponse<TaskDefinitionViewVO>>('/task-def-views', {
     prefix: API_DATA_PLATFORM_PREFIX,
     query: {
       keyword: searchParams.keyword,
@@ -24,7 +29,7 @@ export async function searchTaskDefinitionViews(searchParams: SearchTaskDefiniti
       sortOrder: searchParams.sortOrder,
       taskDefName: searchParams.taskDefName,
       taskTemplateName: searchParams.taskTemplateName,
-      taskDefCreators: searchParams.taskDefCreators,
+      taskDefOwners: searchParams.taskDefOwners,
     },
     mockCode: 'task-def-views.search',
   });

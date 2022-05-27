@@ -4,9 +4,9 @@ import { PaginationReqBody, SortReqBody } from '@/definitions/common-types';
 export interface TaskDefinitionViewBase {
   id: string;
   name: string;
-  creator: string;
-  createTime: string;
-  updateTime: string;
+  creator?: string;
+  createTime?: string;
+  updateTime?: string;
 }
 
 export interface TaskDefinitionView extends TaskDefinitionViewBase {
@@ -14,7 +14,7 @@ export interface TaskDefinitionView extends TaskDefinitionViewBase {
 }
 
 export interface TaskDefinitionViewVO extends TaskDefinitionViewBase {
-  includedTaskDefinitionIds: string[];
+  includedTaskDefinitionIds?: string[];
 }
 
 export interface TaskDefinitionViewUpdateVO {
@@ -31,5 +31,5 @@ export interface SearchTaskDefinitionViewParams
   creator?: string | number;
   taskDefName?: string;
   taskTemplateName?: string;
-  taskDefCreators?: string[];
+  taskDefOwners?: string[];
 }

@@ -331,6 +331,7 @@ export default {
   'dataDevelopment.transferModal.targetTitle': '视图任务',
   'dataDevelopment.transferModal.title': '修改当前视图任务',
   'dataDevelopment.allTasks': '全部任务',
+  'dataDevelopment.danglingTasks': '未定义view的任务',
   'dataDevelopment.displayType.dag': 'DAG 模式',
   'dataDevelopment.displayType.list': '列表模式',
   'dataDevelopment.submitAll': '全部提交',

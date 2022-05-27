@@ -63,13 +63,18 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
       });
     }
   }, [doFetch, selector.filters, selector.filters.creators, selector.filters.name, selector.filters.taskTemplateName]);
-
+  const danglingTasksCount = useMemo(() => {
+    return {
+      id: '-1',
+      name: t('dataDevelopment.danglingTasks'),
+    };
+  }, [t]);
   useEffect(() => {
     dispatch.dataDevelopment.setRecordCount(data?.totalCount ?? 0);
   }, [data, dispatch.dataDevelopment]);
 
   const viewItems = useMemo(() => {
-    let viewItemsDOMs = views.map(view => (
+    const viewItemsDOMs = views.map(view => (
       <TaskViewListItem
         key={`${view.id}`}
         view={view}
@@ -79,20 +84,42 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
       />
     ));
     if (allowAllTaskDefsView) {
-      viewItemsDOMs = [
+      if (selector.displayType === 'LIST') {
+        viewItemsDOMs.unshift(
+          <TaskViewListItem
+            view={danglingTasksCount}
+            displayName={t('dataDevelopment.danglingTasks')}
+            onSelect={onSelectItem}
+            key="all-items"
+            selected={selectedView?.id === '-1'}
+            count={selector.danglingTasksCount}
+          />,
+        );
+      }
+      viewItemsDOMs.unshift(
         <TaskViewListItem
           view={null}
           displayName={t('dataDevelopment.allTasks')}
           onSelect={onSelectItem}
           key="all-items"
           selected={selectedView == null}
-          count={selector.recordCount}
+          count={selector.allTasksCount}
         />,
-        ...viewItemsDOMs,
-      ];
+      );
     }
     return viewItemsDOMs;
-  }, [allowAllTaskDefsView, onEdit, onSelectItem, selectedView, selector.recordCount, t, views]);
+  }, [
+    allowAllTaskDefsView,
+    onEdit,
+    onSelectItem,
+    danglingTasksCount,
+    selectedView,
+    selector.allTasksCount,
+    selector.danglingTasksCount,
+    selector.displayType,
+    t,
+    views,
+  ]);
 
   const handleViewSearch = useCallback(
     function handleViewSearch(ev) {
