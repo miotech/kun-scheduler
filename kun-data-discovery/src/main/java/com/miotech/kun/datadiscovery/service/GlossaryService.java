@@ -184,7 +184,15 @@ public class GlossaryService extends BaseSecurityService {
     @Transactional(rollbackFor = Exception.class)
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
-        checkAuth(glossaryRequest.getParentId(), GlossaryUserOperation.EDIT_GLOSSARY_CHILD);
+        GlossaryBasicInfo glossaryBasicInfo = getGlossaryBasicInfo(id);
+        if (!Objects.equals(glossaryBasicInfo.getParentId(), glossaryRequest.getParentId())) {
+            Long parentId = glossaryRequest.getParentId();
+            if (Objects.isNull(parentId)) {
+                checkAuth(parentId, GlossaryUserOperation.ADD_GLOSSARY);
+            } else {
+                checkAuth(parentId, GlossaryUserOperation.EDIT_GLOSSARY_CHILD);
+            }
+        }
         OffsetDateTime now = DateTimeUtils.now();
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
