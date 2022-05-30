@@ -25,13 +25,11 @@ public class PropsTest {
         props.put("boolean", true);
         props.put("long", 435464567352l);
         props.put("double", 345654.456756);
-        props.put("stringList","one,two,three");
         assertThat(props.getInt("int"), is(333));
         assertThat(props.getString("str"), is("sss"));
         assertThat(props.getBoolean("boolean"), is(true));
         assertThat(props.getLong("long"), is(435464567352l));
         assertThat(props.getDouble("double"), is(345654.456756));
-        assertThat(props.getStringList("stringList"),containsInRelativeOrder("one","two","three"));
         assertThat(props.getInt("inValidInt",123), is(123));
         assertThat(props.getString("inValidaStr","string"), is("string"));
         assertThat(props.getBoolean("inValidBoolean",false), is(false));
