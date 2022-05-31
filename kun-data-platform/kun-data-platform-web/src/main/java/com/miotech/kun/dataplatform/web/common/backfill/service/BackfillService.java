@@ -9,6 +9,8 @@ import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.web.common.backfill.dao.BackfillDao;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillCreateInfo;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -51,6 +53,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
     }
 
     /** 创建一个 backfill 并立即执行 */
+    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_CREATE, args = {"#createInfo"})
     public Backfill createAndRun(BackfillCreateInfo createInfo) {
         // 单次 backfill 不允许每次执行超过 MAX_BACKFILL_TASKS (目前为 100) 个 task。原因：
         // (1) 查询 taskRuns 需要多次请求 workflow API，效率低

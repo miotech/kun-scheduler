@@ -1,0 +1,29 @@
+package com.miotech.kun.operationrecord.common.model;
+
+public enum OperationRecordType {
+
+    TASK_DEFINITION_CREATE
+    , TASK_DEFINITION_UPDATE
+    , TASK_DEFINITION_DELETE
+    , TASK_DEFINITION_DEPLOY
+
+    , TASK_VIEW_CREATE
+    , TASK_VIEW_UPDATE
+    , TASK_VIEW_DELETE
+
+    , TASK_BACKFILL_CREATE
+
+    , TASK_RERUN
+    , TASK_ABORT
+
+    , GLOSSARY_CREATE
+    , GLOSSARY_UPDATE
+    , GLOSSARY_DELETE
+    , GLOSSARY_COPY_PASTE
+
+    , EXPECTATION_CREATE
+    , EXPECTATION_UPDATE
+    , EXPECTATION_DELETE
+    ;
+
+}

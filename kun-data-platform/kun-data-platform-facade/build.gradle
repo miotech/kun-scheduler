@@ -11,7 +11,10 @@ repositories {
 dependencies {
     implementation project(':kun-monitor:kun-monitor-facade')
     implementation project(':kun-commons:kun-commons-utils')
+    implementation project(":kun-commons:kun-commons-pubsub")
     implementation project(':kun-security:kun-security-common')
+    implementation project(':kun-operation-record:kun-operation-record-common')
+    implementation project(':kun-app-common')
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'com.googlecode.json-simple:json-simple'

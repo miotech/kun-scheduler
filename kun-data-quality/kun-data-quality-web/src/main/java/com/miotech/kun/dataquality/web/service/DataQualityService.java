@@ -14,6 +14,8 @@ import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import com.miotech.kun.dataquality.web.utils.Constants;
 import com.miotech.kun.dataquality.web.utils.SQLParser;
 import com.miotech.kun.dataquality.web.utils.SQLValidator;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import lombok.extern.slf4j.Slf4j;
@@ -124,6 +126,7 @@ public class DataQualityService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.EXPECTATION_CREATE, args = {"#expectationRequest"})
     public Long createExpectation(ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
         Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
@@ -143,6 +146,7 @@ public class DataQualityService extends BaseSecurityService {
         return expectation.getExpectationId();
     }
 
+    @OperationRecord(type = OperationRecordType.EXPECTATION_DELETE, args = {"#id"})
     public void deleteExpectation(Long id) {
         workflowService.deleteTaskByCase(id);
         expectationDao.deleteById(id);
@@ -151,6 +155,7 @@ public class DataQualityService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.EXPECTATION_UPDATE, args = {"#id", "#expectationRequest"})
     public void updateExpectation(Long id, ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
         Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());

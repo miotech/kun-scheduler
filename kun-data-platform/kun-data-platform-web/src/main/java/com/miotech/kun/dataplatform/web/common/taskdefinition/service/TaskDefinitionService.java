@@ -27,6 +27,8 @@ import com.miotech.kun.dataplatform.web.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.monitor.facade.alert.TaskNotifyConfigFacade;
 import com.miotech.kun.monitor.facade.sla.SlaFacade;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
@@ -133,6 +135,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         return taskDefinitionDao.search(searchRequest);
     }
 
+    @OperationRecord(type = OperationRecordType.TASK_DEFINITION_CREATE, args = {"#props"})
     public TaskDefinition create(CreateTaskDefinitionRequest props) {
         Preconditions.checkNotNull(props);
         String taskName = props.getName();
@@ -182,6 +185,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
      * @return
      */
     @Transactional
+    @OperationRecord(type = OperationRecordType.TASK_DEFINITION_UPDATE, args = {"#definitionId", "#request"})
     public TaskDefinition update(Long definitionId,
                                  UpdateTaskDefinitionRequest request) {
         TaskDefinition taskDefinition = find(definitionId);
@@ -316,6 +320,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         Preconditions.checkArgument(nonExisted.isEmpty(), "Task DefinitionId not existed " + String.join(",", nonExisted));
     }
 
+    @OperationRecord(type = OperationRecordType.TASK_DEFINITION_DELETE, args = {"#taskDefId"})
     public void delete(Long taskDefId) {
         Optional<TaskDefinition> taskDefinition = taskDefinitionDao.fetchById(taskDefId);
         if (taskDefinition.isPresent()) {

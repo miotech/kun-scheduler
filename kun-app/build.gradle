@@ -28,6 +28,7 @@ dependencies {
     implementation project(':kun-monitor')
     implementation project(':kun-data-quality')
     implementation project(':kun-openapi')
+    implementation project(':kun-operation-record')
 
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
