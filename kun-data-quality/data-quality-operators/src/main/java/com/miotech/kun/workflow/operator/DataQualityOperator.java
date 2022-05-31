@@ -1,26 +1,33 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.commons.query.service.ConfigService;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.commons.utils.MapProps;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsProvider;
 import com.miotech.kun.dataquality.core.assertion.Assertion;
 import com.miotech.kun.dataquality.core.assertion.AssertionSample;
 import com.miotech.kun.dataquality.core.expectation.AssertionResult;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
+import com.miotech.kun.dataquality.core.hooks.DataQualityCheckOperationHook;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
+import com.miotech.kun.dataquality.core.model.DataQualityOperatorContext;
 import com.miotech.kun.dataquality.core.model.OperatorHookParams;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
-import com.miotech.kun.dataquality.core.hooks.DataQualityCheckOperationHook;
-import com.miotech.kun.dataquality.core.model.DataQualityOperatorContext;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.miotech.kun.workflow.operator.DataQualityConfiguration.*;
 
@@ -38,20 +45,19 @@ public class DataQualityOperator extends KunOperator {
     private DataQualityOperatorContext dataQualityContext;
     private DataQualityCheckOperationHook operationHook;
 
+    private Props props;
+    private Injector injector;
+
     @Override
     public void init() {
         OperatorContext context = getContext();
-        ConfigService configService = ConfigService.getInstance();
         Config config = context.getConfig();
-        configService.setMetadataDataSourceUrl(config.getString(METADATA_DATASOURCE_URL));
-        configService.setMetadataDataSourceUsername(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME));
-        configService.setMetadataDataSourcePassword(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD));
-        configService.setMetadataDataSourceDriverClass(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS));
-        configService.setInfraBaseUrl(config.getString(INFRA_BASE_URL));
 
-        dataQualityClient = DataQualityClient.getInstance();
+        props = buildPropsFromVariable(config);
+        injector = Guice.createInjector(new DataQualityModule(props));
 
-        String caseIdStr = context.getConfig().getString("caseId");
+        dataQualityClient = injector.getInstance(DataQualityClient.class);
+        String caseIdStr = props.getString(DATAQUALITY_CASE_ID);
         if (StringUtils.isEmpty(caseIdStr)) {
             logger.error("Data quality case id is empty.");
             throw new IllegalArgumentException("Data quality case id is empty.");
@@ -59,19 +65,20 @@ public class DataQualityOperator extends KunOperator {
         caseId = Long.valueOf(caseIdStr);
         caseRunId = context.getTaskRunId();
 
-        String datasetJson = config.getString(VALIDATE_DATASET);
+        String datasetJson = props.getString(VALIDATE_DATASET);
         logger.debug("trigger dataset is " + datasetJson);
         Dataset triggerDataset = JSONUtils.jsonToObject(datasetJson, Dataset.class);
         logger.debug("building data quality operator context with dataset {}", triggerDataset.getGid());
         dataQualityContext = DataQualityOperatorContext.newBuilder()
                 .withDataset(triggerDataset)
                 .build();
-        String className = config.getString(OPERATOR_HOOK_CLASS);
+        String className = props.getString(OPERATOR_HOOK_CLASS);
         OperatorHookParams hookParams = new OperatorHookParams();
-        hookParams.setParams(JSONUtils.jsonStringToStringMap(config.getString(OPERATOR_HOOK_PARAMS)));
+        hookParams.setParams(JSONUtils.jsonStringToStringMap(props.getString(OPERATOR_HOOK_PARAMS)));
         operationHook = initHook(className, hookParams);
-
     }
+
+
 
     @Override
     public boolean run() {
@@ -80,7 +87,7 @@ public class DataQualityOperator extends KunOperator {
                 .withUpdateTime(DateTimeUtils.now());
         try {
             logger.info("prepare to execute the test case: {}", caseId);
-            Expectation expectation = dataQualityClient.getExpectation(caseId);
+            Expectation expectation = dataQualityClient.findById(caseId);
             Metrics metrics = expectation.getMetrics();
             Assertion assertion = expectation.getAssertion();
             logger.info("assertion: {}", JSONUtils.toJsonString(assertion));
@@ -133,6 +140,25 @@ public class DataQualityOperator extends KunOperator {
     @Override
     public Resolver getResolver() {
         return new NopResolver();
+    }
+
+    private Props buildPropsFromVariable(Config config) {
+        Props props = new Props();
+        Map<String,Object> map = new HashMap<>();
+
+        map.put(METADATA_DATASOURCE_URL, config.getString(METADATA_DATASOURCE_URL));
+        map.put(METADATA_DATASOURCE_USERNAME, config.getString(METADATA_DATASOURCE_USERNAME));
+        map.put(METADATA_DATASOURCE_PASSWORD, config.getString(METADATA_DATASOURCE_PASSWORD));
+        map.put(METADATA_DATASOURCE_DIRVER_CLASS, config.getString(METADATA_DATASOURCE_DIRVER_CLASS));
+        map.put(DATAQUALITY_CASE_ID, config.getString(DATAQUALITY_CASE_ID));
+        map.put(INFRA_BASE_URL, config.getString(INFRA_BASE_URL));
+        map.put(VALIDATE_DATASET, config.getString(VALIDATE_DATASET));
+        map.put(OPERATOR_HOOK_CLASS, config.getString(OPERATOR_HOOK_CLASS));
+        map.put(OPERATOR_HOOK_PARAMS, config.getString(OPERATOR_HOOK_PARAMS));
+
+        PropsProvider runTimeProvider = new MapProps(map);
+        props.addPropsProvider(runTimeProvider);
+        return props;
     }
 
     private DataQualityCheckOperationHook initHook(String className, OperatorHookParams hookParams) {

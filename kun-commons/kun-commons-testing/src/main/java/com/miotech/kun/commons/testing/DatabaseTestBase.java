@@ -42,6 +42,10 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         flywayLocation = "kun-infra/";
     }
 
+    protected void setFlywayLocation(String flywayLocation){
+        this.flywayLocation = flywayLocation;
+    }
+
     protected List<String> ignoredTables() {
         return ImmutableList.of("kun_mt_datasource_type", "kun_mt_dataset_field_mapping");
     }

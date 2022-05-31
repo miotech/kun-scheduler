@@ -19,6 +19,7 @@ dependencies {
     implementation rootProject.files('libs/simba-athena-jdbc-driver-2.0.2.jar')
     implementation 'org.postgresql:postgresql'
     implementation "commons-dbutils:commons-dbutils"
+    implementation "com.zaxxer:HikariCP"
     implementation 'org.freemarker:freemarker:2.3.30'
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation "org.apache.hadoop:hadoop-aws:2.7.3"
@@ -26,6 +27,13 @@ dependencies {
     implementation("org.apache.hadoop:hadoop-hdfs:2.7.3") {
         exclude group: 'javax.servlet', module: 'servlet-api'
     }
+
+    testImplementation project(":kun-commons:kun-commons-testing")
+    testImplementation project(":kun-db-schema:kun-app-db-schema")
+    testImplementation "junit:junit"
+    testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:postgresql"
 }
 
 shadowJar {
