@@ -286,3 +286,29 @@ export async function removeTaskrunDependency(taskRunId: string, upstreamTaskRun
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
+
+/**
+ * 查询下游任务
+ * @param taskRunId
+ */
+export async function queryDownstreamTaskruns(taskRunId: string) {
+  return get<TaskRun[]>('/deployed-taskruns/:taskRunId/getDownstream', {
+    pathParams: {
+      taskRunId,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
+
+/**
+ * 重跑下游任务
+ * @param taskRunId
+ */
+export async function restartTaskrun(taskRunIds: string[]) {
+  return post('/deployed-taskruns/restart', {
+    query: {
+      taskRunIds,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}

@@ -9,12 +9,14 @@ import useI18n from '@/hooks/useI18n';
 import getLatestAttempt from '@/utils/getLatestAttempt';
 import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import Icon, { StepForwardOutlined, CaretDownOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import Icon, { StepForwardOutlined, CaretDownOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 import { dayjs } from '@/utils/datetime-utils';
 import { TaskAttempt } from '@/definitions/TaskAttempt.type';
+import { taskColorConfig } from '@/constants/colorConfig';
 import { DependenceRemove } from './DependenceRemove';
+import TaskRerunModal from './TaskRerunModal';
 import styles from './TaskRunsTable.less';
 
 interface TaskRunsTableProps {
@@ -63,6 +65,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
   const t = useI18n();
   const [visible, setVisible] = useState<boolean>(false);
   const [currentId, setCurrentId] = useState<string>('');
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   const {
     tableData = [],
@@ -78,6 +81,29 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
     setSelectedAttemptMap,
     refreshTaskRun = () => {},
   } = props;
+
+  const menuRerun = (taskRunId: string) => {
+    return (
+      <Menu>
+        <Menu.Item key="rerun">
+          <Button
+            icon={<SyncOutlined />}
+            size="small"
+            type="text"
+            style={{ color: taskColorConfig.RUNNING }}
+            // disabled={stopDisabled}
+            onClick={() => {
+              setIsModalVisible(true);
+              setCurrentId(taskRunId);
+            }}
+          >
+            {/* 重跑及下游任务 */}
+            {t('taskRun.rerunDownstream.button')}
+          </Button>
+        </Menu.Item>
+      </Menu>
+    );
+  };
 
   const menu = (taskRunId: string) => {
     return (
@@ -255,25 +281,30 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
             <span>
               <Space size="small">
                 {stopDisabled ? (
-                  <Popconfirm
-                    title={t('taskRun.rerun.alert')}
-                    onConfirm={ev => {
-                      ev?.stopPropagation();
-                      onClickRerunTaskRun(taskRun);
-                    }}
-                  >
-                    <Button
-                      icon={<Icon component={RerunIcon} />}
-                      size="small"
-                      disabled={!stopDisabled}
-                      onClick={ev => {
-                        ev.stopPropagation();
-                      }}
-                    >
-                      {/* 重新运行 */}
-                      {t('taskRun.rerun')}
-                    </Button>
-                  </Popconfirm>
+                  <Dropdown overlay={() => menuRerun(taskRun.id)}>
+                    <Space size="small">
+                      <Popconfirm
+                        title={t('taskRun.rerun.alert')}
+                        onConfirm={ev => {
+                          ev?.stopPropagation();
+                          onClickRerunTaskRun(taskRun);
+                        }}
+                      >
+                        <Button
+                          icon={<Icon component={RerunIcon} />}
+                          size="small"
+                          disabled={!stopDisabled}
+                          onClick={ev => {
+                            ev.stopPropagation();
+                          }}
+                        >
+                          {/* 重新运行 */}
+                          {t('taskRun.rerun')}
+                        </Button>
+                      </Popconfirm>
+                      <CaretDownOutlined />
+                    </Space>
+                  </Dropdown>
                 ) : (
                   <Dropdown overlay={() => menu(taskRun.id)}>
                     <Space size="small">
@@ -350,12 +381,22 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         }}
         onRow={handleRowEvents}
       />
-      <DependenceRemove
-        refreshTaskRun={refreshTaskRun}
-        visible={visible}
-        currentId={currentId}
-        onCancel={() => setVisible(false)}
-      />
+      {visible && (
+        <DependenceRemove
+          refreshTaskRun={refreshTaskRun}
+          visible={visible}
+          currentId={currentId}
+          onCancel={() => setVisible(false)}
+        />
+      )}
+      {isModalVisible && (
+        <TaskRerunModal
+          refreshTaskRun={refreshTaskRun}
+          taskRunId={currentId}
+          isModalVisible={isModalVisible}
+          setIsModalVisible={setIsModalVisible}
+        />
+      )}
     </>
   );
 };
