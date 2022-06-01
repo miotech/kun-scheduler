@@ -332,13 +332,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
 
+        TaskRun fetchedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+
+        System.out.println(fetchedTaskRun3.getFailedUpstreamTaskRunIds().size());
+
         taskManager.retry(taskRun1);
 
-        TaskRun fetchedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+        fetchedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
         //re-check when test is available
-        MatcherAssert.assertThat(fetchedTaskRun3.getFailedUpstreamTaskRunIds().size(), is(1));
+        System.out.println(fetchedTaskRun3.getFailedUpstreamTaskRunIds().size());
 
-        Boolean result = taskManager.retry(taskRun2);
+        Boolean result = taskManager.retry(taskRun3);
 
         MatcherAssert.assertThat(result, is(false));
 
