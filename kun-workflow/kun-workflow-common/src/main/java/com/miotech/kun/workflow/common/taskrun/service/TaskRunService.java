@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common.taskrun.service;
 
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -33,6 +34,10 @@ import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.tuple.Triple;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleDirectedGraph;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -461,6 +466,13 @@ public class TaskRunService {
 
     }
 
+    public boolean rerunTaskRuns(List<Long> taskRunIds) {
+        for (Long taskRunId : taskRunIds) {
+            rerunTaskRun(taskRunId);
+        }
+        return true;
+    }
+
     public boolean abortTaskRun(Long taskRunId) {
         TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
 
@@ -574,5 +586,33 @@ public class TaskRunService {
         vo.setAttempts(attempts);
         vo.setFailedUpstreamTaskRuns(failedUpstreamTaskRuns);
         return vo;
+    }
+
+    public List<TaskRun> getTaskRunWithAllDownstream(Long taskRunId, Set<TaskRunStatus> filterStatus) {
+        List<Long> taskRunCandidateIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
+        List<TaskRun> taskRuns = taskRunDao.fetchTaskRunsByIds(taskRunCandidateIds)
+                .stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(x -> filterStatus.contains(x.getStatus()))
+                .collect(Collectors.toList());
+        taskRuns.add(0, taskRunDao.fetchTaskRunById(taskRunId).get());
+
+        List<Long> taskRunIds = taskRuns.stream().map(TaskRun::getId).collect(Collectors.toList());
+        Map<Long, TaskRun> idToTaskRunMap = new HashMap<>();
+        taskRuns.forEach(x -> idToTaskRunMap.put(x.getId(), x));
+        Graph<TaskRun, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
+        taskRuns.forEach(graph::addVertex);
+        for (TaskRun taskRun : taskRuns) {
+            List<Long> dependentTaskRunIds =  taskRun.getDependentTaskRunIds();
+            dependentTaskRunIds.retainAll(taskRunIds);
+            dependentTaskRunIds.forEach(x -> graph.addEdge(idToTaskRunMap.get(x), taskRun));
+        }
+        TopologicalOrderIterator<TaskRun, DefaultEdge> iterator = new TopologicalOrderIterator<>(graph);
+        List<TaskRun> results = new ArrayList<>();
+        while (iterator.hasNext()) {
+            results.add(iterator.next());
+        }
+        return results;
     }
 }

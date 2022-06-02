@@ -242,6 +242,13 @@ public interface WorkflowClient {
     TaskRun restartTaskRun(Long taskRunId);
 
     /**
+     * Restart a list of taskRuns
+     * @param taskRunIds list of id of target task runs
+     * @return
+     */
+    void restartTaskRuns(List<Long> taskRunIds);
+
+    /**
      * stop taskRuns
      * @param taskRunIds
      * * @return
@@ -349,5 +356,12 @@ public interface WorkflowClient {
      * @param upstreamTaskRunIds
      */
     void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds);
+
+    /**
+     *  Get list of taskrun and its all downstreams in filter status
+     * @param taskRunId id of root task run
+     * @param filterStatus filter status
+     */
+    List<TaskRun> getTaskRunWithAllDownstream(Long taskRunId, List<TaskRunStatus> filterStatus);
 
 }

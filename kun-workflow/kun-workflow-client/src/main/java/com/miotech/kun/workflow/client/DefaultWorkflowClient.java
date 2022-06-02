@@ -282,6 +282,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public void restartTaskRuns(List<Long> taskRunIds) {
+        wfApi.restartTaskRuns(taskRunIds);
+    }
+
+    @Override
     public void stopTaskRuns(List<Long> taskRunIds) {
         for (Long taskRunId : taskRunIds) {
             wfApi.stopTaskRun(taskRunId);
@@ -312,6 +317,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
         return wfApi.getLineageNeighbors(datasetGid, direction, depth);
+    }
+
+    @Override
+    public List<TaskRun> getTaskRunWithAllDownstream(Long taskRunId, List<TaskRunStatus> filterStatus) {
+        return wfApi.getTaskRunWithAllDownstream(taskRunId, filterStatus);
     }
 
     @Override
