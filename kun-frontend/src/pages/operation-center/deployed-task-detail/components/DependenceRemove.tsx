@@ -1,7 +1,7 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { Table, message, Modal } from 'antd';
 import { StatusText } from '@/components/StatusText';
-import { useRequest, useUpdateEffect } from 'ahooks';
+import { useRequest } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
 import { queryUpstreamTaskruns, removeTaskrunDependency } from '@/services/task-deployments/deployed-tasks';
 import { TaskRun } from '@/definitions/TaskRun.type';
@@ -41,11 +41,11 @@ export const DependenceRemove: React.FC<Props> = memo(function DependenceRemove(
     manual: true,
   });
 
-  useUpdateEffect(() => {
+  useEffect(() => {
     if (currentId) {
       run(currentId);
     }
-  }, [currentId]);
+  }, [currentId, run]);
 
   const rowSelection = {
     selectedRowKeys,
