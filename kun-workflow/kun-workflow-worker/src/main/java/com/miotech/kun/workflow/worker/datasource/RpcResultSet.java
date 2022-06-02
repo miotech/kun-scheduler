@@ -51,37 +51,65 @@ public class RpcResultSet implements ResultSet {
 
     @Override
     public boolean getBoolean(int columnIndex) throws SQLException {
-        return Boolean.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return false;
+        }
+        return Boolean.valueOf(result);
     }
 
     @Override
     public byte getByte(int columnIndex) throws SQLException {
-        return Byte.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Byte.valueOf(result);
     }
 
     @Override
     public short getShort(int columnIndex) throws SQLException {
-        return Short.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Short.valueOf(result);
     }
 
     @Override
     public int getInt(int columnIndex) throws SQLException {
-        return Integer.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Integer.valueOf(result);
     }
 
     @Override
     public long getLong(int columnIndex) throws SQLException {
-        return Long.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Long.valueOf(result);
     }
 
     @Override
     public float getFloat(int columnIndex) throws SQLException {
-        return Float.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Float.valueOf(result);
     }
 
     @Override
     public double getDouble(int columnIndex) throws SQLException {
-        return Double.valueOf(getString(columnIndex));
+        String result = getString(columnIndex);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Double.valueOf(result);
     }
 
     @Override
@@ -133,37 +161,65 @@ public class RpcResultSet implements ResultSet {
 
     @Override
     public boolean getBoolean(String columnLabel) throws SQLException {
-        return Boolean.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return false;
+        }
+        return Boolean.valueOf(result);
     }
 
     @Override
     public byte getByte(String columnLabel) throws SQLException {
-        return Byte.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Byte.valueOf(result);
     }
 
     @Override
     public short getShort(String columnLabel) throws SQLException {
-        return Short.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Short.valueOf(result);
     }
 
     @Override
     public int getInt(String columnLabel) throws SQLException {
-        return Integer.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Integer.valueOf(result);
     }
 
     @Override
     public long getLong(String columnLabel) throws SQLException {
-        return Long.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Long.valueOf(result);
     }
 
     @Override
     public float getFloat(String columnLabel) throws SQLException {
-        return Float.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Float.valueOf(result);
     }
 
     @Override
     public double getDouble(String columnLabel) throws SQLException {
-        return Double.valueOf(getString(columnLabel));
+        String result = getString(columnLabel);
+        if(Strings.isNullOrEmpty(result)){
+            return 0;
+        }
+        return Double.valueOf(result);
     }
 
     @Override
