@@ -73,9 +73,10 @@ public abstract class AbstractQueueManager {
                 throw new NoSuchElementException("no such queue,name = " + taskAttempt.getQueueName());
             }
             logger.debug("submit taskAttempt = {} to queue = {}", taskAttempt.getId(), queue.getName());
-            queue.add(taskAttempt);
+            //post event must before behavior to ensure status transition events order
             TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.SUBMIT,taskAttempt.getId());
             eventBus.post(taskRunTransitionEvent);
+            queue.add(taskAttempt);
         } finally {
             lock.unlock();
         }
