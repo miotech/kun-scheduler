@@ -540,8 +540,8 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThat(children1.size(), is(2));
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
         Glossary glossary3_1 = glossaryTree.get("glossary3_1");
-        assertThat(children1.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
-        assertThat(children1.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+        assertThat(children1.get(0).getName(), is(glossary3_2.getName()));
+        assertThat(children1.get(1).getName(), is(glossary3_1.getName()));
 
 
     }
@@ -579,8 +579,8 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThat(children2.size(), is(2));
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
         Glossary glossary3_1 = glossaryTree.get("glossary3_1");
-        assertThat(children2.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
-        assertThat(children2.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+        assertThat(children2.get(0).getName(), is(glossary3_2.getName()));
+        assertThat(children2.get(1).getName(), is(glossary3_1.getName()));
 
 
     }
@@ -601,14 +601,14 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThat(children.size(), is(3));
         Glossary glossary3_1 = glossaryTree.get("glossary3_1");
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
-        assertThat(children.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(children.get(0).getName(), is(glossary3_2.getName()));
         assertThat(children.get(0).getParentId(), not((glossary3_2.getParentId())));
-        assertThat(children.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+        assertThat(children.get(1).getName(), is(glossary3_1.getName()));
         assertThat(children.get(1).getParentId(), not((glossary3_1.getParentId())));
         assertThat(children.get(2).getName(), is(glossary1_1.getName()));
         Long copy3_2_id = children.get(0).getId();
         Glossary glossaryCopy = glossaryService.fetchGlossary(copy3_2_id);
-        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(glossaryCopy.getName(), is(glossary3_2.getName()));
         assertThat(glossaryCopy.getDescription(), is(glossary3_2.getDescription()));
         assertThat(glossaryCopy.getId(), not(glossary3_2.getId()));
         assertThat(glossaryCopy.getAssets(), is(glossary3_2.getAssets()));
@@ -630,8 +630,8 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThrows(IllegalStateException.class, () -> glossaryService.copy(copyReq1));
         CopyOperation copyOperation_ONLY_CHILDREN = CopyOperation.ONLY_CHILDREN;
         GlossaryCopyRequest copyReq2 = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary2_1.getId(), glossary2_1.getId(), copyOperation_ONLY_CHILDREN);
-        GlossaryChildren glossaryChildren1 = glossaryService.copy(copyReq2);
-        assertThat(glossaryChildren1, is(notNullValue()));
+//        same name
+        assertThrows(IllegalStateException.class, () -> glossaryService.copy(copyReq2));
         GlossaryCopyRequest copyReq3 = MockGlossaryBasicFactory.createGlossaryCopyRequest(glossary3_1.getId(), glossary2_1.getId(), copyOperation_ONLY_CHILDREN);
         assertThrows(IllegalStateException.class, () -> glossaryService.copy(copyReq3));
     }
@@ -652,13 +652,13 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         assertThat(children.size(), is(3));
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
         Glossary glossary3_1 = glossaryTree.get("glossary3_1");
-        assertThat(children.get(0).getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
-        assertThat(children.get(1).getName(), is(GlossaryService.getCopyName(glossary3_1.getName())));
+        assertThat(children.get(0).getName(), is(glossary3_2.getName()));
+        assertThat(children.get(1).getName(), is(glossary3_1.getName()));
         assertThat(children.get(2).getName(), is(glossary2_1.getName()));
         Long copy3_2_id = children.get(0).getId();
         Glossary glossaryCopy = glossaryService.fetchGlossary(copy3_2_id);
 
-        assertThat(glossaryCopy.getName(), is(GlossaryService.getCopyName(glossary3_2.getName())));
+        assertThat(glossaryCopy.getName(), is(glossary3_2.getName()));
         assertThat(glossaryCopy.getDescription(), is(glossary3_2.getDescription()));
         assertThat(glossaryCopy.getId(), not(glossary3_2.getId()));
         assertThat(glossaryCopy.getAssets(), is(glossary3_2.getAssets()));
