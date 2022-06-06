@@ -24,13 +24,14 @@ public class ExpectationRunDao {
 
     private static final String TABLE_NAME = "kun_dq_expectation_run";
     private static final List<String> COLUMNS = ImmutableList.of("id", "expectation_id", "passed", "execution_result", "assertion_result", "continuous_failing_count", "update_time");
+    private static final List<String> INSERT_COLUMNS = ImmutableList.of("expectation_id", "passed", "execution_result", "assertion_result", "continuous_failing_count", "update_time");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public void create(ValidationResult validationResult) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .insert(COLUMNS.toArray(new String[0]))
+                .insert(INSERT_COLUMNS.toArray(new String[0]))
                 .into(TABLE_NAME)
                 .asPrepared()
                 .getSQL();
@@ -42,7 +43,6 @@ public class ExpectationRunDao {
         }
 
         jdbcTemplate.update(sql,
-                IdGenerator.getInstance().nextId(),
                 validationResult.getExpectationId(),
                 validationResult.isPassed(),
                 validationResult.getExecutionResult(),
