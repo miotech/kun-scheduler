@@ -2,17 +2,16 @@ package com.miotech.kun.monitor.alert.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.monitor.facade.model.alert.SystemDefaultNotifierConfig;
 import com.miotech.kun.monitor.facade.model.alert.NotifierUserConfig;
+import com.miotech.kun.monitor.facade.model.alert.SystemDefaultNotifierConfig;
 import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
-import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
+import com.miotech.kun.workflow.core.pubsub.RedisStreamEventSubscriber;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import io.lettuce.core.RedisClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,8 +22,14 @@ public class AlertEventNotifyConfig {
     @Value("${redis.host}")
     private String redisHost = null;
 
-    @Value("${redis.notify-channel:kun-notify}")
-    private String channel;
+    @Value("${redis.stream-key}")
+    private String streamKey;
+
+    @Value("${redis.alert.group}")
+    private String group;
+
+    @Value("${redis.alert.consumer}")
+    private String consumer;
 
     @Value("${notify.systemDefault.triggerType:ON_FAIL}")
     private String systemDefaultConfigTriggerTypeStr;
@@ -34,8 +39,8 @@ public class AlertEventNotifyConfig {
 
     @Bean("alert-subscriber")
     public EventSubscriber getRedisSubscriber() {
-        JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
-        return new RedisEventSubscriber(channel, jedisPool);
+        RedisClient redisClient = RedisClient.create(String.format("redis://%s", redisHost));
+        return new RedisStreamEventSubscriber(streamKey, group, consumer, redisClient);
     }
 
     @Bean

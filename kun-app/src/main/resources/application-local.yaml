@@ -44,6 +44,19 @@ infra:
 redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
+  stream-key: kun-notify
+  operation-record:
+    group: operation-record-group
+    consumer: operation-record-consumer
+  data-quality:
+    group: data-quality-group
+    consumer: data-quality-consumer
+  alert:
+    group: alert-group
+    consumer: alert-consumer
+  sla:
+    group: sla-group
+    consumer: sla-consumer
 
 management:
   endpoints:

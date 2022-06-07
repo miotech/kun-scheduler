@@ -40,6 +40,7 @@ dependencies {
     implementation "org.flywaydb:flyway-core"
     implementation 'org.apache.commons:commons-email'
     implementation "com.cronutils:cron-utils"
+    implementation 'io.lettuce:lettuce-core'
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-data-platform:kun-data-platform-web')

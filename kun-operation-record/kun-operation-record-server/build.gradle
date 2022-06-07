@@ -31,6 +31,7 @@ dependencies {
     implementation 'redis.clients:jedis'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'io.lettuce:lettuce-core'
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

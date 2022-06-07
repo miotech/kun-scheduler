@@ -87,6 +87,11 @@ neo4j:
 redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
+  stream-key: kun-notify
+  workflow:
+    group: workflow-group
+    consumer: workflow-consumer
+
 
 env: local
 
