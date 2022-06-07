@@ -2,6 +2,7 @@ package com.miotech.kun.datadiscovery.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.protobuf.ProtocolStringList;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
@@ -21,6 +22,7 @@ import com.miotech.kun.security.common.UserOperation;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
 import com.miotech.kun.security.facade.rpc.ScopeRole;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -82,6 +84,8 @@ public class GlossaryService extends BaseSecurityService {
     @OperationRecord(type = OperationRecordType.GLOSSARY_CREATE, args = {"#glossaryRequest"})
     public Glossary createGlossary(GlossaryRequest glossaryRequest) {
         Long id = add(glossaryRequest);
+        String owner = getCurrentUsername();
+        addOwner(id, owner);
         return fetchGlossary(id);
     }
 
@@ -385,6 +389,7 @@ public class GlossaryService extends BaseSecurityService {
         securityInfo.setKunRole(role);
         securityInfo.setOperations(role.getUserOperation());
         KunRole userRole = getUserRole();
+        log.debug("userRole:{}",userRole);
 //        GLOSSARY_MANAGER :Max permission
         if (userRole.equals(GlossaryRole.GLOSSARY_MANAGER)) {
             role = GlossaryRole.GLOSSARY_MANAGER;
@@ -435,32 +440,27 @@ public class GlossaryService extends BaseSecurityService {
         if (Objects.isNull(roleOnSpecifiedModule)) {
             return GlossaryRole.GLOSSARY_VIEWER;
         }
+        ProtocolStringList rolenamesList = roleOnSpecifiedModule.getRolenamesList();
+        log.debug("rolenamesList:{}",rolenamesList);
+        if (CollectionUtils.isEmpty(rolenamesList)) {
+            return GlossaryRole.GLOSSARY_VIEWER;
+        }
         Map<String, KunRole> roleMap = securityModule.getRoleMap();
-        return Optional.ofNullable(roleMap.get(roleOnSpecifiedModule.getRolename())).orElse(GlossaryRole.GLOSSARY_VIEWER);
+        return rolenamesList.stream().map(roleMap::get).max(Comparator.comparing(KunRole::rank)).orElse(GlossaryRole.GLOSSARY_VIEWER);
 
 
     }
 
-    public Long addScope(Long id, String userName) {
-        if (userName.equals(getCurrentUsername())) {
-            log.warn("You cannot add yourself");
-            throw new IllegalStateException("You cannot add yourself");
-        }
+    private Long addScope(Long id, String userName, GlossaryRole role) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
         String moduleName = SecurityModule.GLOSSARY.name();
-        GlossaryRole role = GlossaryRole.GLOSSARY_EDITOR;
         securityRpcClient.addScopeOnSpecifiedRole(moduleName, role.name(), userName, Lists.newArrayList(id.toString()));
         return id;
     }
 
-    public Long removeScope(Long id, String userName) {
-        if (userName.equals(getCurrentUsername())) {
-            log.warn("You cannot add yourself");
-            throw new IllegalStateException("You cannot remove yourself");
-        }
+    private Long removeScope(Long id, String userName, GlossaryRole role) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
         String moduleName = SecurityModule.GLOSSARY.name();
-        GlossaryRole role = GlossaryRole.GLOSSARY_EDITOR;
         securityRpcClient.deleteScopeOnSpecifiedRole(moduleName, role.name(), userName, Lists.newArrayList(id.toString()));
         return id;
     }
@@ -469,5 +469,13 @@ public class GlossaryService extends BaseSecurityService {
         String moduleName = SecurityModule.GLOSSARY.name();
         String role = GlossaryRole.GLOSSARY_EDITOR.name();
         return securityRpcClient.getGlossaryEditorList(moduleName, role, id);
+    }
+
+    public Long addOwner(Long id, String owner) {
+        return addScope(id, owner, GlossaryRole.GLOSSARY_EDITOR);
+    }
+
+    public Long removeOwner(Long id, String owner) {
+        return removeScope(id, owner, GlossaryRole.GLOSSARY_EDITOR);
     }
 }

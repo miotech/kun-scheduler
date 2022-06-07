@@ -86,20 +86,20 @@ public class GlossaryController {
     }
 
     @PostMapping("/role/addEditor")
-    public RequestResult<Long> addEditor(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
+    public RequestResult<Long> addOwner(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
         String userName = editGlossaryEditerRequest.getUserName();
         Long id = editGlossaryEditerRequest.getId();
         Preconditions.checkNotNull(id, "Invalid argument `id`: null");
         Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
-        return RequestResult.success(glossaryService.addScope(id, userName));
+        return RequestResult.success(glossaryService.addOwner(id, userName));
     }
 
     @PostMapping("/role/removeEditor")
-    public RequestResult<Long> removeEditor(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
+    public RequestResult<Long> removeOwner(@RequestBody EditGlossaryEditerRequest editGlossaryEditerRequest) {
         String userName = editGlossaryEditerRequest.getUserName();
         Long id = editGlossaryEditerRequest.getId();
         Preconditions.checkNotNull(id, "Invalid argument `id`: null");
         Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
-        return RequestResult.success(glossaryService.removeScope(id, userName));
+        return RequestResult.success(glossaryService.removeOwner(id, userName));
     }
 }
