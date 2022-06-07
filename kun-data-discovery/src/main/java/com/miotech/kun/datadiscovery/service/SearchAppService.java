@@ -1,21 +1,15 @@
 package com.miotech.kun.datadiscovery.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.type.MapType;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.ResourceAttributeRequest;
-import com.miotech.kun.datadiscovery.model.entity.Database;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
-import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
-import com.miotech.kun.metadata.core.model.search.DataSetResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.GlossaryResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
@@ -25,7 +19,6 @@ import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanInfoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -34,8 +27,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponents;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -57,7 +48,7 @@ public class SearchAppService {
     RestTemplate restTemplate;
 
     /**
-     * @param keyword and
+     * @param keyword
      * @return UniversalSearchInfo
      */
     public UniversalSearchInfo fullSearch(String keyword) {
@@ -78,7 +69,7 @@ public class SearchAppService {
 
     public UniversalSearchInfo searchFullDataSet(DatasetSearchRequest searchRequest) {
         Map<String, Object> resourceAttributeMap = getDatasetSearchResourceAttributeMap(searchRequest);
-        UniversalSearchRequest universalSearchRequest = getUniversalSearchRequest(Sets.newHashSet(SearchContent.NAME, SearchContent.DESCRIPTION),
+        UniversalSearchRequest universalSearchRequest = getUniversalSearchRequest(Sets.newHashSet(SearchContent.values()),
                 ResourceType.DATASET, searchRequest, resourceAttributeMap);
         return getUniversalSearchInfo(universalSearchRequest);
     }
