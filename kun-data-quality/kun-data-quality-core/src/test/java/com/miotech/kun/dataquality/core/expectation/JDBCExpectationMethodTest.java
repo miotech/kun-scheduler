@@ -1,4 +1,4 @@
-package com.miotech.kun.dataquality.core;
+package com.miotech.kun.dataquality.core.expectation;
 
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataquality.core.expectation.JDBCExpectationMethod;

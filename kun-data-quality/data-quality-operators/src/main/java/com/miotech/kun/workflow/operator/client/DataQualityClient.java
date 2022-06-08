@@ -2,25 +2,20 @@ package com.miotech.kun.workflow.operator.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
-import com.miotech.kun.commons.query.datasource.MetadataDataSource;
-import com.miotech.kun.commons.query.service.ConfigService;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.assertion.Assertion;
-import com.miotech.kun.dataquality.core.expectation.Dataset;
-import com.miotech.kun.dataquality.core.expectation.Expectation;
-import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
-import com.miotech.kun.dataquality.core.expectation.ValidationResult;
-import com.miotech.kun.dataquality.core.expectation.CaseType;
+import com.miotech.kun.dataquality.core.expectation.*;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import com.miotech.kun.workflow.operator.DataQualityConfiguration;
-import com.miotech.kun.workflow.operator.utils.DataSourceClient;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.postgresql.util.PGobject;
@@ -34,6 +29,7 @@ import java.util.List;
  * @author: Jie Chen
  * @created: 2020/7/14
  */
+@Singleton
 public class DataQualityClient {
 
     private static final String EXPECTATION_TABLE_NAME = "kun_dq_expectation";
@@ -47,13 +43,16 @@ public class DataQualityClient {
 
     private static final List<String> EXPECTATION_METRICS_COLLECTION_COLUMNS = ImmutableList.of("expectation_id", "execution_result", "collected_at");
 
-    private DatabaseOperator databaseOperator;
+    private final DatabaseOperator databaseOperator;
+    private final DataSourceClient dataSourceClient;
 
-    private DataQualityClient() {
-        databaseOperator = new DatabaseOperator(MetadataDataSource.getInstance().getMetadataDataSource());
+    @Inject
+    public DataQualityClient(DatabaseOperator databaseOperator, DataSourceClient dataSourceClient) {
+        this.databaseOperator = databaseOperator;
+        this.dataSourceClient = dataSourceClient;
     }
 
-    public Expectation getExpectation(Long caseId) {
+    public Expectation findById(Long id) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(EXPECTATION_COLUMNS.toArray(new String[0]))
                 .from(EXPECTATION_TABLE_NAME)
@@ -83,7 +82,7 @@ public class DataQualityClient {
                 builder.withDataset(dataset);
             }
             return builder.build();
-        }, caseId);
+        }, id);
     }
 
 
@@ -120,6 +119,17 @@ public class DataQualityClient {
         databaseOperator.update(updateStatusSql, status, caseRunId);
     }
 
+    public List<ValidationResult> fetchByExpectationId(Long expectationId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(EXPECTATION_RUN_INSERT_COLUMNS.toArray(new String[0]))
+                .from(EXPECTATION_RUN_TABLE_NAME)
+                .where("expectation_id = ?")
+                .orderBy("id desc")
+                .limit(1)
+                .getSQL();
+        return databaseOperator.fetchAll(sql, DataQualityClientRowMapper.INSTANCE, expectationId);
+    }
+
     public void recordMetricsCollectedResult(Long expectationId, MetricsCollectedResult metricsCollectedResult) {
         String insertSql = DefaultSQLBuilder.newBuilder()
                 .insert(EXPECTATION_METRICS_COLLECTION_COLUMNS.toArray(new String[0]))
@@ -140,14 +150,6 @@ public class DataQualityClient {
 
         return JSONUtils.jsonToObject(executionResult, new TypeReference<MetricsCollectedResult<String>>() {
         });
-    }
-
-    private static class SingletonHolder {
-        private static DataQualityClient instance = new DataQualityClient();
-    }
-
-    public static DataQualityClient getInstance() {
-        return DataQualityClient.SingletonHolder.instance;
     }
 
     private Long getLatestFailingCount(Long expectationId) {
@@ -193,15 +195,28 @@ public class DataQualityClient {
 
     private Dataset buildDataset(ResultSet rs) throws SQLException {
         Long datasetGid = rs.getLong("dataset_gid");
-        Long dataSourceId = fetchDataSourceIdByGid(datasetGid);
-        DataSourceClient client = new DataSourceClient(ConfigService.getInstance().getProperties().get(DataQualityConfiguration.INFRA_BASE_URL));
-        DataSource dataSourceById = client.getDataSourceById(dataSourceId);
+        Long dataSourceId = dataSourceClient.getDataSourceIdByGid(datasetGid);
+        DataSource dataSourceById = dataSourceClient.getDataSourceById(dataSourceId);
         return Dataset.builder().gid(datasetGid).dataSource(dataSourceById).build();
     }
 
-    private Long fetchDataSourceIdByGid(Long datasetGid) {
-        String sql = "select datasource_id from kun_mt_dataset where gid = ?";
-        return databaseOperator.fetchOne(sql, rs -> rs.getLong("datasource_id"), datasetGid);
+    private static class DataQualityClientRowMapper implements ResultSetMapper<ValidationResult> {
+        public static final DataQualityClient.DataQualityClientRowMapper INSTANCE = new DataQualityClient.DataQualityClientRowMapper();
+
+        @Override
+        public ValidationResult map(ResultSet rs) throws SQLException {
+            String assertionResultStr = rs.getString("assertion_result");
+            return ValidationResult.newBuilder()
+                    .withExpectationId(rs.getLong("expectation_id"))
+                    .withPassed(rs.getBoolean("passed"))
+                    .withExecutionResult(rs.getString("execution_result"))
+                    .withAssertionResults(StringUtils.isBlank(assertionResultStr) ? null : JSONUtils.jsonToObject(assertionResultStr,
+                            new TypeReference<List<AssertionResult>>() {
+                            }))
+                    .withContinuousFailingCount(rs.getLong("continuous_failing_count"))
+                    .withUpdateTime(com.miotech.kun.workflow.utils.DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
+                    .build();
+        }
     }
 
 }
