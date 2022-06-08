@@ -38,7 +38,7 @@ public class DataQualityClient {
     private static final List<String> EXPECTATION_COLUMNS = ImmutableList.of("id", "name", "types", "description", "method",
             "metrics_config", "assertion_config", "trigger", "dataset_gid", "task_id", "case_type", "create_time",
             "update_time", "create_user", "update_user");
-    private static final List<String> EXPECTATION_RUN_INSERT_COLUMNS = ImmutableList.of("id", "expectation_id", "passed", "execution_result",
+    private static final List<String> EXPECTATION_RUN_INSERT_COLUMNS = ImmutableList.of("expectation_id", "passed", "execution_result",
             "assertion_result", "continuous_failing_count", "update_time");
 
     private static final List<String> EXPECTATION_METRICS_COLLECTION_COLUMNS = ImmutableList.of("expectation_id", "execution_result", "collected_at");
@@ -100,7 +100,6 @@ public class DataQualityClient {
                 .getSQL();
 
         databaseOperator.create(sql,
-                IdGenerator.getInstance().nextId(),
                 vr.getExpectationId(),
                 vr.isPassed(),
                 vr.getExecutionResult(),
