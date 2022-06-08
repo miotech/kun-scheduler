@@ -29,4 +29,9 @@ public class TaskRunCreated extends BasicTaskRunState {
         return TaskRunStatus.BLOCKED;
     }
 
+    @Override
+    protected TaskRunStatus onSkip() {
+        return TaskRunStatus.SKIPPED;
+    }
+
 }

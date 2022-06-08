@@ -52,6 +52,9 @@ public class BasicTaskRunState implements TaskRunState{
             case ABORT:
                 nextStatus = onAbort();
                 break;
+            case SKIP:
+                nextStatus = onSkip();
+                break;
             default:
                 //do nothing
         }
@@ -103,7 +106,10 @@ public class BasicTaskRunState implements TaskRunState{
     }
 
     protected TaskRunStatus onAwake(){
-        throw new IllegalStateException("CheckFailed is not support for status : " + taskRunStatus);
+        throw new IllegalStateException("Awake is not support for status : " + taskRunStatus);
+    }
+    protected TaskRunStatus onSkip() {
+        throw new IllegalStateException("Skip is not support for status: " + taskRunStatus);
     }
 
     @Override

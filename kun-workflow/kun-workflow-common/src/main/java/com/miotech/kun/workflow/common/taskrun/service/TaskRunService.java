@@ -483,6 +483,18 @@ public class TaskRunService {
         return executor.cancel(attempt.getId());
     }
 
+    public boolean skipTaskRun(Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "Argument `taskRunId` should not be null");
+        Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
+        logger.info("Trying to re-run taskrun instance with id = {}.", taskRunId);
+        if (!taskRunOptional.isPresent()) {
+            logger.warn("Cannot rerun taskrun instance with id = {}. Reason: task run does not exists.", taskRunId);
+            return false;
+        }
+        TaskRun taskRun = taskRunOptional.get();
+        return scheduler.skip(taskRun);
+    }
+
     public String logPathOfTaskAttempt(Long taskAttemptId) {
         String logDir = props.getString("resource.logDirectory", "logs");
         String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));

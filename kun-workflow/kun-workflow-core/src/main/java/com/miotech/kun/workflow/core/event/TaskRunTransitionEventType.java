@@ -12,7 +12,8 @@ public enum TaskRunTransitionEventType {
     FAILED,
     CHECK_SUCCESS,
     CHECK_FAILED,
-    EXCEPTION
+    EXCEPTION,
+    SKIP
 
 
 }

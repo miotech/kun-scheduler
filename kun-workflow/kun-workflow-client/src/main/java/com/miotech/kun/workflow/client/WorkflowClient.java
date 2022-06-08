@@ -256,6 +256,13 @@ public interface WorkflowClient {
     void stopTaskRuns(List<Long> taskRunIds);
 
     /**
+     * skip a taskrun
+     * @param taskRunId
+     * @return
+     */
+    TaskRun skipTaskRun(Long taskRunId);
+
+    /**
      * Get latest N task runs of given task id with filter taskRun status
      * @param taskId id of task
      * @param filterStatus task run status used to filter

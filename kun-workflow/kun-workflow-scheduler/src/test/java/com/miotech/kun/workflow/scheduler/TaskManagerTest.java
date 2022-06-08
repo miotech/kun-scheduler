@@ -1364,6 +1364,123 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps5.getStatus(), is(TaskRunStatus.SUCCESS));
     }
 
+    //scenario: 1>>2
+    // 1 fail, 2-> upstream_failed
+    // skip 1, 2: created->success
+    @Test
+    public void skipFailedTaskRun_downstreamShouldBeCreated(){
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        taskList.forEach(x -> taskDao.create(x));
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1)) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2));
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        TaskRun submitted1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        MatcherAssert.assertThat(submitted1.getStatus(), is(TaskRunStatus.FAILED));
+        TaskRun submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        MatcherAssert.assertThat(submitted2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+
+        taskManager.skip(submitted1);
+        awaitUntilAttemptDone(taskRun2.getId() + 1);
+
+        submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        MatcherAssert.assertThat(submitted2.getStatus(), is(TaskRunStatus.SUCCESS));
+    }
+
+    // scenario: taskrun 1>>2 3>>4, 2 is 4's predecessor respectively
+    // when 1 fail & 3 success, 2 is upstream_fail and 4 is created (ready to run)
+    // skip 1, 2 able to run: created->running, 4 is blocked by 2
+    @Test
+    public void skipFailedTaskRun_downstreamSuccessorShouldBeBlocked() throws InterruptedException {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = taskList.get(0);
+        Task task2 = taskList.get(1).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
+                .build();
+
+        List<TaskRun> taskRunList1 = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        List<TaskRun> taskRunList2 = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        TaskRun taskRun1 = taskRunList1.get(0);
+        TaskRun taskRun2 = taskRunList1.get(1);
+        TaskRun taskRun3 = taskRunList2.get(0);
+        TaskRun taskRun4 = taskRunList2.get(1).cloneBuilder()
+                .withTaskRunConditions(Arrays.asList(createCondition(taskRun2, ConditionType.TASKRUN_PREDECESSOR_FINISH, false),
+                        createCondition(taskRun3, ConditionType.TASKRUN_DEPENDENCY_SUCCESS, false))).build();
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1)) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else if (taskAttemptId.equals(taskRun2.getId() + 1)) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.RUNNING);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.CREATED, TaskRunStatus.RUNNING));
+            } else if (taskAttemptId.equals(taskRun3.getId() + 1)){
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3, taskRun4));
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        TaskRun submitted1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        MatcherAssert.assertThat(submitted1.getStatus(), is(TaskRunStatus.FAILED));
+        TaskRun submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        MatcherAssert.assertThat(submitted2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        TaskRun submitted3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+        MatcherAssert.assertThat(submitted3.getStatus(), is(TaskRunStatus.SUCCESS));
+        TaskRun submitted4 = taskRunDao.fetchTaskRunById(taskRun4.getId()).get();
+        MatcherAssert.assertThat(submitted4.getStatus(), is(TaskRunStatus.CREATED));
+
+        taskManager.skip(submitted1);
+        TimeUnit.SECONDS.sleep(2);
+
+        submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        MatcherAssert.assertThat(submitted2.getStatus(), is(TaskRunStatus.RUNNING));
+        submitted3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+        MatcherAssert.assertThat(submitted3.getStatus(), is(TaskRunStatus.SUCCESS));
+        submitted4 = taskRunDao.fetchTaskRunById(taskRun4.getId()).get();
+        MatcherAssert.assertThat(submitted4.getStatus(), is(TaskRunStatus.BLOCKED));
+    }
+
+    @Test
+    public void skipNotAllowedTaskRun_shouldThrowException() {
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun().cloneBuilder()
+                .withStatus(TaskRunStatus.RUNNING).build();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun));
+
+        assertThrows("This taskRun is not allowed to skip. Status not match", IllegalStateException.class, () ->  taskManager.skip(taskRun));
+    }
+
 
     private TaskRunCondition createCondition(TaskRun taskRun, ConditionType conditionType, boolean result) {
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()

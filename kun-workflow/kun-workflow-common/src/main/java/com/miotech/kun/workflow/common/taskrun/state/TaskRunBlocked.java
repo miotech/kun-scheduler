@@ -9,16 +9,24 @@ public class TaskRunBlocked extends BasicTaskRunState {
         super(TaskRunStatus.BLOCKED);
     }
 
+    @Override
     protected TaskRunStatus onAbort(){
         return TaskRunStatus.ABORTED;
     }
 
+    @Override
     protected TaskRunStatus onAwake(){
         return TaskRunStatus.CREATED;
     }
 
+    @Override
     protected TaskRunStatus onUpstreamFailed(){
         return TaskRunStatus.UPSTREAM_FAILED;
+    }
+
+    @Override
+    protected TaskRunStatus onSkip() {
+        return TaskRunStatus.SKIPPED;
     }
 
 }

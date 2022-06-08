@@ -41,6 +41,11 @@ public class LocalScheduler implements Scheduler {
     }
 
     @Override
+    public boolean skip(TaskRun taskRun) {
+        return taskManager.skip(taskRun);
+    }
+
+    @Override
     public void trigger() {
         taskManager.trigger();
     }

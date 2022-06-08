@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.*;
@@ -1108,4 +1109,26 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(attemptProps2.getAttempt(), Matchers.is(2));
         assertThat(attemptProps2.getStatus(), Matchers.is(TaskRunStatus.SUCCESS));
     }
+
+    @Test
+    public void skipNotExistedTaskRun_shouldFalse() {
+        TaskRun taskRun = prepareData().cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED).build();
+        Boolean result = taskRunService.skipTaskRun(2L);
+        assertThat(result, is(false));
+    }
+
+    @Test
+    public void skipTaskRun_shouldSuccess() {
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED).build();
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun));
+        Boolean result = taskRunService.skipTaskRun(taskRun.getId());
+        assertThat(result, is(true));
+    }
+
+
 }

@@ -222,6 +222,7 @@ public class DeployedTaskController {
 
     @PostMapping("/deployed-taskruns/restart")
     @ApiOperation("Rerun list of taskruns immediately")
+    @OperationRecord(type = OperationRecordType.TASK_RERUN, args = {"#taskRunIds"})
     public RequestResult<Object> restartTaskRuns(@RequestParam List<Long> taskRunIds) {
         Preconditions.checkArgument(Objects.nonNull(taskRunIds), "task run id cannot be null");
         workflowClient.restartTaskRuns(taskRunIds);
@@ -254,4 +255,14 @@ public class DeployedTaskController {
         TaskRun taskRun = workflowClient.stopTaskRun(taskRunId);
         return RequestResult.success(taskRun);
     }
+
+    @PutMapping("/deployed-taskruns/{taskRunId}/_skip")
+    @ApiOperation("Skip a taskrun instance")
+    @OperationRecord(type = OperationRecordType.TASK_SKIP, args =  {"#taskRunId"})
+    public RequestResult<TaskRun> skipTaskRunInstance(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        TaskRun taskRun = workflowClient.skipTaskRun(taskRunId);
+        return RequestResult.success(taskRun);
+    }
+
 }

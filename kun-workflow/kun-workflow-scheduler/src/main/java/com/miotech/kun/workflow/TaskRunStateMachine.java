@@ -75,7 +75,7 @@ public class TaskRunStateMachine implements InitializingBean {
         TaskRunStatus nextStatus = taskRunState.doTransition(taskRunTransitionEvent);
         logger.debug("taskRun: {} change status from {} to {} ", taskAttempt.getTaskRun().getId(), taskRunStatus, nextStatus);
         if (nextStatus == null) {
-            throw new IllegalStateException("taskRunEvent = " + taskRunTransitionEvent.getType() + "is not expect for status : " + taskRunStatus);
+            throw new IllegalStateException("taskRunEvent = " + taskRunTransitionEvent.getType() + " is not expect for status : " + taskRunStatus);
         }
         postTransition(taskAttempt, taskRunStatus, nextStatus);
     }
@@ -101,7 +101,7 @@ public class TaskRunStateMachine implements InitializingBean {
             startAt = now;
         } else if (nextStatus.isTermState()) {
             termAt = now;
-            if (nextStatus.isFinished()) {
+            if (nextStatus.isFinished() && !nextStatus.isSkipped()) {
                 endAt = now;
             }
         }
