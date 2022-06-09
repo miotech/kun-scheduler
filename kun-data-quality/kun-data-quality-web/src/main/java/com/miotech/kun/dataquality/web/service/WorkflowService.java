@@ -34,6 +34,8 @@ import java.util.Map;
 @Slf4j
 public class WorkflowService {
 
+    private static final String DATA_QUALITY_QUEUE_NAME = "data-quality";
+
     @Autowired
     WorkflowClient workflowClient;
 
@@ -162,6 +164,7 @@ public class WorkflowService {
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withOperatorId(savedOperator.getId())
+                .withQueueName(DATA_QUALITY_QUEUE_NAME)
                 .build();
     }
 
