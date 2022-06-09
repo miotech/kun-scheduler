@@ -32,6 +32,7 @@ public class SecurityService extends SecurityGrpc.SecurityImplBase {
 
         RoleOnSpecifiedModuleResp.Builder builder = RoleOnSpecifiedModuleResp.newBuilder()
                 .setUsername(userRoleOnModuleResp.getUsername())
+                .addAllRolenames(userRoleOnModuleResp.getRolenames())
                 .setModule(userRoleOnModuleResp.getModule());
 
         RoleOnSpecifiedModuleResp userRoleResp = builder.build();
