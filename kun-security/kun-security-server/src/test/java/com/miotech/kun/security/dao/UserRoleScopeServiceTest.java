@@ -2,19 +2,16 @@ package com.miotech.kun.security.dao;
 
 import com.miotech.kun.security.SecurityTestBase;
 import com.miotech.kun.security.factory.MockUpdateScopeRequestFactory;
+import com.miotech.kun.security.factory.MockUserRoleOnModuleReqFactory;
 import com.miotech.kun.security.factory.MockUserRoleRequestFactory;
-import com.miotech.kun.security.model.bo.ResourceRole;
-import com.miotech.kun.security.model.bo.UpdateScopeRequest;
-import com.miotech.kun.security.model.bo.UserRoleRequest;
-import com.miotech.kun.security.model.bo.UserRoleWithScope;
+import com.miotech.kun.security.model.bo.*;
 import com.miotech.kun.security.service.UserRoleScopeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 
 public class UserRoleScopeServiceTest extends SecurityTestBase {
 
@@ -173,6 +170,60 @@ public class UserRoleScopeServiceTest extends SecurityTestBase {
         ResourceRole resourceRole = userRoleWithScope.getResourceRoles().get(0);
         assertThat(resourceRole.getSourceSystemId(), is("id_1"));
         assertThat(resourceRole.getRolename(), nullValue());
+    }
+
+    /**
+     * prepare data：
+     * username     module          rolename    source_system_id
+     * admin        test_module     viewer      id_1
+     * admin        test_module     editor      id_2
+     *
+     * query param:
+     * username     module
+     * admin        test_module
+     *
+     * should return:
+     * username     module          rolenames
+     * admin        test_module     [viewer,editor]
+     *
+     */
+    @Test
+    public void testFindRoleOnSpecifiedModule_case1() {
+        UpdateScopeRequest updateScopeRequest1 = MockUpdateScopeRequestFactory.create("admin", "test_module", "viewer", ImmutableList.of("id_1"));
+        userRoleScopeService.addScopeOnSpecifiedRole(updateScopeRequest1);
+        UpdateScopeRequest updateScopeRequest2 = MockUpdateScopeRequestFactory.create("admin", "test_module", "editor", ImmutableList.of("id_2"));
+        userRoleScopeService.addScopeOnSpecifiedRole(updateScopeRequest2);
+
+        UserRoleOnModuleReq userRoleOnModuleReq = MockUserRoleOnModuleReqFactory.create("test_module", "admin");
+        UserRoleOnModuleResp roleOnSpecifiedModule = userRoleScopeService.findRoleOnSpecifiedModule(userRoleOnModuleReq);
+        assertThat(roleOnSpecifiedModule.getRolenames(), containsInAnyOrder("viewer", "editor"));
+    }
+
+    /**
+     * prepare data：
+     * username     module          rolename    source_system_id
+     * admin        test_module     viewer      id_1
+     * admin        test_module     editor      id_2
+     *
+     * query param:
+     * username     module
+     * root         test_module
+     *
+     * should return:
+     * username     module          rolenames
+     * root         test_module     []
+     *
+     */
+    @Test
+    public void testFindRoleOnSpecifiedModule_case2() {
+        UpdateScopeRequest updateScopeRequest1 = MockUpdateScopeRequestFactory.create("admin", "test_module", "viewer", ImmutableList.of("id_1"));
+        userRoleScopeService.addScopeOnSpecifiedRole(updateScopeRequest1);
+        UpdateScopeRequest updateScopeRequest2 = MockUpdateScopeRequestFactory.create("admin", "test_module", "editor", ImmutableList.of("id_2"));
+        userRoleScopeService.addScopeOnSpecifiedRole(updateScopeRequest2);
+
+        UserRoleOnModuleReq userRoleOnModuleReq = MockUserRoleOnModuleReqFactory.create("test_module", "root");
+        UserRoleOnModuleResp roleOnSpecifiedModule = userRoleScopeService.findRoleOnSpecifiedModule(userRoleOnModuleReq);
+        assertThat(roleOnSpecifiedModule.getRolenames(), emptyIterable());
     }
 
 }

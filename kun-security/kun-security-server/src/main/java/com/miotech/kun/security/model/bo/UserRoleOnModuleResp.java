@@ -3,6 +3,8 @@ package com.miotech.kun.security.model.bo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 public class UserRoleOnModuleResp {
@@ -11,7 +13,7 @@ public class UserRoleOnModuleResp {
 
     private String module;
 
-    private String rolename;
+    private Set<String> rolenames;
 
     public UserRoleOnModuleResp(String username, String module) {
         this.username = username;

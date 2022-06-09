@@ -7,6 +7,7 @@ import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
 import com.miotech.kun.security.facade.rpc.ScopeRole;
 import com.miotech.kun.security.model.UserInfo;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
@@ -23,11 +24,11 @@ public class MockSecurityRpcClientFactory {
         userInfo.setUsername(userName);
         SecurityContextHolder.setUserInfo(userInfo);
         String securityModule = SecurityModule.GLOSSARY.name();
-        String roleName = role.name();
+        List<String> roleNames = ImmutableList.of(role.name());
 
         return RoleOnSpecifiedModuleResp.newBuilder()
                 .setModule(securityModule)
-                .setRolename(roleName)
+                .addAllRolenames(roleNames)
                 .setUsername(userName)
                 .build();
     }
