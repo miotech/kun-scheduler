@@ -1,0 +1,30 @@
+.container {
+  height: 100%;
+  display: flex;
+
+
+  .conLeft {
+    height: 100%;
+    padding:16px;
+    .autosuggestInputContainer {
+      margin: 15px 0;
+    }
+    .treeListContainer {
+      height: calc(100% - 100px);
+      overflow-y: scroll;
+    }
+  }
+  .conRight {
+    height: 100%;
+    overflow-y: scroll;
+    padding: 20px;
+  }
+}
+:global {
+  .reflex-container.vertical > .reflex-splitter,
+  .reflex-splitter {
+    border-left: 1px solid #efefef !important;
+    border-right: 1px solid #efefef !important;;
+    width: 12px !important;;
+  }
+}

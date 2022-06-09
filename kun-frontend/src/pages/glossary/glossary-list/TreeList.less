@@ -1,0 +1,58 @@
+.titleRender {
+  display: flex;
+  align-items: center;
+  width: 200px;
+
+  .title {
+    max-width: 80px;
+    overflow: hidden;
+    height: 24px;
+  }
+
+  .des {
+    margin-left: 5px;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    height: 24px;
+    color: @grayFontColor;
+  }
+}
+
+:global {
+  .ant-tree.ant-tree-directory .ant-tree-treenode-selected::before {
+    background: rgba(73, 169, 222, 0.1) !important;
+
+  }
+  .ant-tree-title {
+    color: @darkGray;
+  }
+  .ant-tree-node-selected {
+    color: @blue ;
+
+    .ant-tree-title {
+      color: @blue;
+    }
+
+    .ant-tree-iconEle {
+      color: @blue  !important;
+    }
+
+  }
+
+  .ant-tree-treenode-selected .ant-tree-switcher {
+    color: @blue !important;
+
+  }
+
+  .ant-tree-node-content-wrapper {
+    display: flex;
+  }
+}
+
+.popover {
+  max-width: 300px;
+  color: @grayFontColor;
+  word-wrap: break-word;
+}

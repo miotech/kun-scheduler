@@ -33,9 +33,9 @@ interface Props extends RouteComponentProps<MatchParams> {
   currentId?: string;
   setCurrentId: (id: string) => void;
   addChild: (child: {}, parentId: string, id?: string) => void;
-  editNodeName: (id: string, name: string) => void;
+  editNodeName: (id: string, name: string, parentId: string) => void;
   deleteChild: (parentId: string, id: string) => void;
-  changeParent: (preParentId: string, currentParentId: string, id: string) => void;
+  changeParent: (preParentId: string, currentParentId: string, id?: string) => void;
   onClose: () => void;
 }
 
@@ -202,7 +202,7 @@ export default function GlossaryDetail({
           if (preParentId !== params.parentId) {
             changeParent(preParentId, params.parentId, id);
           }
-          editNodeName(id, params.name);
+          editNodeName(id, params.name, params.parentId);
           message.success(t('common.operateSuccess'));
           setIsEditing(false);
         }
@@ -240,12 +240,7 @@ export default function GlossaryDetail({
       if (currentId) {
         return (
           <>
-            {GLossaryRole && GLossaryRole.includes(Operation.REMOVE_GLOSSARY) && (
-              <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" danger onClick={showConfirm}>
-                {t('common.button.delete')}
-              </Button>
-            )}
-            <Button style={{ marginRight: 16 }} size="large" onClick={handleClickCancel}>
+            <Button style={{ marginLeft: 16, marginRight: 16 }} size="large" onClick={handleClickCancel}>
               {t('common.button.cancel')}
             </Button>
             <Button
@@ -261,7 +256,7 @@ export default function GlossaryDetail({
       }
       return (
         <>
-          <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" onClick={handleClickCreateCancel}>
+          <Button style={{ marginLeft: 16, marginRight: 16 }} size="large" onClick={handleClickCreateCancel}>
             {t('common.button.cancel')}
           </Button>
           <Button
@@ -277,6 +272,11 @@ export default function GlossaryDetail({
     }
     return (
       <div style={{ marginLeft: 'auto' }}>
+        {GLossaryRole && GLossaryRole.includes(Operation.REMOVE_GLOSSARY) && (
+          <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" danger onClick={showConfirm}>
+            {t('common.button.delete')}
+          </Button>
+        )}
         {GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY) && (
           <Button size="large" onClick={() => setIsEditing(true)} type="primary" ghost>
             {t('common.button.edit')}

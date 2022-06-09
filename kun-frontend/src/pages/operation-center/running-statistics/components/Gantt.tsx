@@ -60,7 +60,8 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
   const onMouseMove = useCallback(
     (e, item) => {
       const left = e.clientX - 86;
-      if (e.target.getAttribute('data-id') !== 'name') {
+      const dataId = e.target.getAttribute('data-id');
+      if (['barRunFailed', 'barRun', 'barWait'].includes(dataId)) {
         document.getElementById('line').style.transform = `translateX(${left}px)`;
         document.getElementById('line').style.display = 'block';
 
@@ -135,10 +136,18 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
                 data-tip={ReactDOMServer.renderToString(<TooltipHtml t={t} />)}
                 data-html
               >
-                <div className={style.barWait} style={{ width: `${item.waitWidth}px` }} />
-                {item.status === 'SUCCESS' && <div className={style.barRun} style={{ width: `${item.runWidth}px` }} />}
+                <div className={style.barWait} style={{ width: `${item.waitWidth}px` }} data-id="barWait" />
+                {item.status === 'SUCCESS' && (
+                  <div className={style.barRun} style={{ width: `${item.runWidth}px` }} data-id="barRun" />
+                )}
                 {item.status === 'FAILED' && (
-                  <div className={style.barRunFailed} style={{ width: `${item.runWidth}px` }} />
+                  <div
+                    className={style.barRunFailed}
+                    style={{
+                      width: `${item.runWidth}px`,
+                    }}
+                    data-id="barRunFailed"
+                  />
                 )}
 
                 <div

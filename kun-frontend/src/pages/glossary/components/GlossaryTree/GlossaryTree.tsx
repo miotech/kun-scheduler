@@ -135,7 +135,10 @@ export default memo(
     }, [dispatch.glossary, history, click, fetchChildren, onClose]);
 
     async function editNodeName(id, newName) {
+      const node = d3.select(`[id=node${id}]`).data();
+      node[0].data.name = newName;
       d3.select(`[id=text${id}]`).text(newName);
+      updateTreeCache();
     }
 
     async function addChild(child, parentId, id) {
@@ -148,12 +151,9 @@ export default memo(
           if (d && d.data.id === parentId) {
             if (!d.data.children) {
               await fetchChildren(d.data, d.data.id);
-              console.log('1');
             } else {
               tree.addChildNode(d, child);
             }
-            console.log('2');
-
             d3.select(`[id=count${parentId}]`).text(d.data.children.length);
             tree.updateTree(d);
             setCurrentIdCache(id);

@@ -29,6 +29,11 @@ export interface GlossaryNode extends GlossaryChild {
   verticalIndex?: number;
 }
 
+export interface GlossaryListNode extends GlossaryChild {
+  children?: GlossaryNode[];
+  isLeaf?: boolean;
+}
+
 export interface SearchGlossaryItem {
   gid: string;
   resourceType: string;
@@ -85,6 +90,7 @@ export const getInitGlossaryDetail: () => GlossaryDetail = () => ({
 export interface GlossaryState {
   searchContent: string;
   glossaryData: GlossaryNode | null;
+  glossaryListData: GlossaryNode | null;
   fetchRootLoading: boolean;
   autoSuggestGlossaryList: SearchGlossaryItem[];
   currentGlossaryDetail: GlossaryDetail | null;
@@ -99,6 +105,8 @@ export const glossary = {
   state: {
     searchContent: '',
     glossaryData: null,
+    glossaryListData: null,
+    expandedKeys: [],
     fetchRootLoading: false,
     autoSuggestGlossaryList: [],
     currentGlossaryDetail: null,

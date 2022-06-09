@@ -4,6 +4,7 @@ import { dataDiscovery } from './dataDiscovery';
 import { datasetDetail } from './datasetDetail';
 import { dataSettings } from './dataSettings';
 import { glossary } from './glossary';
+import { glossaryList } from './glossary/glossaryList';
 import { dataDevelopment } from './dataDevelopment';
 import { scheduledTasks } from './operationCenter/scheduledTasks';
 import { deployedTaskDetail } from './operationCenter/deployedTaskDetail';
@@ -18,6 +19,7 @@ export interface RootModel {
   datasetDetail: typeof datasetDetail;
   dataSettings: typeof dataSettings;
   glossary: typeof glossary;
+  glossaryList: typeof glossaryList;
   dataDevelopment: typeof dataDevelopment;
   scheduledTasks: typeof scheduledTasks;
   backfillTasks: typeof backfillTasks;
@@ -33,6 +35,7 @@ export const models: RootModel = {
   datasetDetail,
   dataSettings,
   glossary,
+  glossaryList,
   dataDevelopment,
   scheduledTasks,
   backfillTasks,

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useMemo } from 'react';
+import React, { useCallback, useRef, useMemo, useState } from 'react';
 import { Button } from 'antd';
 
 import useI18n from '@/hooks/useI18n';
@@ -8,14 +8,20 @@ import Card from '@/components/Card/Card';
 import { useRequest } from 'ahooks';
 
 import { queryGlossaryRole } from '@/services/glossary';
-import { Operation } from '@/definitions/Glossary.type';
+import { Operation, GlossaryDisplayType } from '@/definitions/Glossary.type';
 import AutosuggestInput from './components/AutosuggestInput/AutosuggestInput';
 import GlossaryTree from './components/GlossaryTree/GlossaryTree';
-
+import GlossaryListView from './glossary-list';
+import { DisplayTypeSwitch } from './components/DisplayTypeSwitch';
 import styles from './index.less';
 
 export default function Glossary() {
   const t = useI18n();
+  const glossaryDisplayTypeStorage = localStorage.getItem('glossaryDisplayType') as GlossaryDisplayType;
+  const [glossaryDisplayType, setGlossaryDisplayType] = useState<GlossaryDisplayType>(
+    glossaryDisplayTypeStorage || GlossaryDisplayType.RELATION,
+  );
+
   const childrenRef = useRef(null);
   const { selector } = useRedux<any>(state => state.glossary);
 
@@ -32,6 +38,11 @@ export default function Glossary() {
     return queryGlossaryRoleRequest?.data?.operations;
   }, [queryGlossaryRoleRequest.data]);
 
+  const changeDisplayType = (type: GlossaryDisplayType) => {
+    setGlossaryDisplayType(type);
+    localStorage.setItem('glossaryDisplayType', type);
+  };
+
   return (
     <div className={styles.page}>
       <Card className={styles.titleRow}>
@@ -42,13 +53,29 @@ export default function Glossary() {
           </Button>
         )}
       </Card>
-      <div className={styles.autosuggestInputContainer}>
-        <AutosuggestInput setCurrentId={setCurrentId} />
-      </div>
 
-      <Card className={styles.glossaryTreeContainer}>
-        <GlossaryTree ref={childrenRef} rootNode={selector.glossaryData} />
-      </Card>
+      {glossaryDisplayType === GlossaryDisplayType.RELATION && (
+        <>
+          <div className={styles.autosuggestInputContainer}>
+            <DisplayTypeSwitch currentType={glossaryDisplayType} onChange={changeDisplayType} />
+            <span style={{ marginLeft: '20px' }} />
+            <AutosuggestInput setCurrentId={setCurrentId} />
+          </div>
+          <Card className={styles.glossaryTreeContainer}>
+            <GlossaryTree ref={childrenRef} rootNode={selector.glossaryData} />
+          </Card>
+        </>
+      )}
+
+      {glossaryDisplayType === GlossaryDisplayType.LIST && (
+        <Card className={styles.glossaryListContainer}>
+          <GlossaryListView
+            ref={childrenRef}
+            glossaryDisplayType={glossaryDisplayType}
+            changeDisplayType={changeDisplayType}
+          />
+        </Card>
+      )}
     </div>
   );
 }
