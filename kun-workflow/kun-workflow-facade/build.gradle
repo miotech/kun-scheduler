@@ -1,5 +1,6 @@
 plugins {
     id 'com.google.protobuf' version '0.8.17'
+    id 'idea'
 }
 
 protobuf {
@@ -20,6 +21,13 @@ protobuf {
     }
 }
 
+def generatedSourcesDir = file('$buildDir/generated/source')
+idea {
+    module {
+        sourceDirs += generatedSourcesDir
+        generatedSourceDirs += generatedSourcesDir
+    }
+}
 
 dependencies {
     implementation project(":kun-commons:kun-commons-utils")
