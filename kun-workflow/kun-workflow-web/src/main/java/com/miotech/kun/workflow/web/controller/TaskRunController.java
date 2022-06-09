@@ -251,7 +251,7 @@ public class TaskRunController {
     }
 
     @RouteMapping(url = "/taskruns/removeDependency", method = "PUT")
-    public Object changeTaskRunPriority(@QueryParameter long taskRunId, @QueryParameter List<Long> upstreamTaskRunIds) {
+    public Object removeTaskRunDependency(@QueryParameter long taskRunId, @QueryParameter List<Long> upstreamTaskRunIds) {
         return taskRunService.removeDependency(taskRunId, upstreamTaskRunIds);
     }
 }
