@@ -3,12 +3,12 @@ package com.miotech.kun.security.service;
 import com.google.common.collect.Lists;
 import com.miotech.kun.security.dao.UserRoleScopeDao;
 import com.miotech.kun.security.model.bo.*;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -21,12 +21,8 @@ public class UserRoleScopeService {
     public UserRoleOnModuleResp findRoleOnSpecifiedModule(UserRoleOnModuleReq req) {
         UserRoleOnModuleResp resp = new UserRoleOnModuleResp(req.getUsername(), req.getModule());
         List<UserRoleScope> userRoleScopes = userRoleScopeDao.findByUsernameAndModule(req.getUsername(), req.getModule());
-        if (CollectionUtils.isEmpty(userRoleScopes)) {
-            return resp;
-        }
-
-        String rolename = userRoleScopes.get(0).getRolename();
-        resp.setRolename(rolename);
+        Set<String> rolenames = userRoleScopes.stream().map(UserRoleScope::getRolename).collect(Collectors.toSet());
+        resp.setRolenames(rolenames);
         return resp;
     }
 

@@ -14,7 +14,7 @@ message RoleOnSpecifiedModuleReq {
 message RoleOnSpecifiedModuleResp {
   string username = 1;
   string module = 2;
-  string rolename = 3;
+  repeated string rolenames = 3;
 }
 
 message RoleOnSpecifiedResourcesReq {
