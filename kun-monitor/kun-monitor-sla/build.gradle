@@ -41,6 +41,7 @@ dependencies {
     implementation 'org.apache.commons:commons-email'
     implementation "com.cronutils:cron-utils"
     implementation 'org.neo4j:neo4j-jdbc-driver:3.5.1'
+    implementation 'io.lettuce:lettuce-core'
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-data-platform:kun-data-platform-web')

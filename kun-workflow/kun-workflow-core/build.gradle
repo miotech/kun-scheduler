@@ -10,4 +10,9 @@ dependencies {
     implementation "org.apache.kafka:kafka-clients"
     implementation 'redis.clients:jedis'
     implementation "org.neo4j:neo4j-ogm-core"
+    implementation 'io.lettuce:lettuce-core'
+    implementation 'io.netty:netty-common'
+
+    testImplementation "org.testcontainers:testcontainers"
+
 }

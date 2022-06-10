@@ -47,6 +47,7 @@ dependencies {
     implementation("org.apache.hadoop:hadoop-hdfs:2.7.3") {
         exclude group: 'javax.servlet', module: 'servlet-api'
     }
+    implementation 'io.lettuce:lettuce-core'
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-metadata:kun-metadata-core')

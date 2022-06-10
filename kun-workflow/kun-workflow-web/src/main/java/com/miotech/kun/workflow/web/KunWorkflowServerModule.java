@@ -18,8 +18,8 @@ import com.miotech.kun.workflow.common.taskrun.service.TaskRunStatistic;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
-import com.miotech.kun.workflow.core.pubsub.RedisEventPublisher;
-import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
+import com.miotech.kun.workflow.core.pubsub.RedisStreamEventPublisher;
+import com.miotech.kun.workflow.core.pubsub.RedisStreamEventSubscriber;
 import com.miotech.kun.workflow.executor.DispatchExecutor;
 import com.miotech.kun.workflow.executor.ExecutorKind;
 import com.miotech.kun.workflow.executor.config.DispatchExecutorConfig;
@@ -33,10 +33,9 @@ import com.miotech.kun.workflow.web.service.RecoverService;
 import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import io.lettuce.core.RedisClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -70,8 +69,8 @@ public class KunWorkflowServerModule extends AppModule {
     @Provides
     public EventPublisher createRedisPublisher() {
         if (props.containsKey("redis.host")) {
-            JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), props.getString("redis.host"));
-            return new RedisEventPublisher(props.getString("redis.notify-channel"), jedisPool);
+            RedisClient redisClient = RedisClient.create(String.format("redis://%s", props.getString("redis.host")));
+            return new RedisStreamEventPublisher(props.getString("redis.stream-key"), redisClient);
         }
 
         return new NopEventPublisher();
@@ -80,8 +79,11 @@ public class KunWorkflowServerModule extends AppModule {
     @Provides
     public EventSubscriber createSubscriber(){
         if (props.containsKey("redis.host")) {
-            JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), props.getString("redis.host"));
-            return new RedisEventSubscriber(props.getString("redis.notify-channel"), jedisPool);
+            RedisClient redisClient = RedisClient.create(String.format("redis://%s", props.getString("redis.host")));
+            return new RedisStreamEventSubscriber(props.getString("redis.stream-key"),
+                    props.getString("redis.workflow.group"),
+                    props.getString("redis.workflow.consumer"),
+                    redisClient);
         }
 
         return new NopEventSubscriber();

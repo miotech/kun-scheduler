@@ -17,7 +17,7 @@ public class MockTestOperationEventFactory {
 
     public static OperationRecordEvent create(Long id) {
         String operator = "admin";
-        OperationRecordEvent<Long> testOperationEvent = new OperationRecordEvent(operator, OperationRecordType.TASK_DEFINITION_EDIT, id);
+        OperationRecordEvent<Long> testOperationEvent = new OperationRecordEvent(operator, OperationRecordType.TASK_DEFINITION_UPDATE, id);
         testOperationEvent.setStatus(OperationRecordStatus.SUCCESS.name());
         return testOperationEvent;
     }
