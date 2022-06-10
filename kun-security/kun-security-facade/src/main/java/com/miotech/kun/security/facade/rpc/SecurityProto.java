@@ -65,34 +65,34 @@ public final class SecurityProto {
     java.lang.String[] descriptorData = {
       "\n\025user_role_scope.proto\032\033google/protobuf" +
       "/empty.proto\"<\n\030RoleOnSpecifiedModuleReq" +
-      "\022\020\n\010username\030\001 \001(\t\022\016\n\006module\030\002 \001(\t\"O\n\031Ro" +
+      "\022\020\n\010username\030\001 \001(\t\022\016\n\006module\030\002 \001(\t\"P\n\031Ro" +
       "leOnSpecifiedModuleResp\022\020\n\010username\030\001 \001(" +
-      "\t\022\016\n\006module\030\002 \001(\t\022\020\n\010rolename\030\003 \001(\t\"X\n\033R" +
-      "oleOnSpecifiedResourcesReq\022\020\n\010username\030\001" +
-      " \001(\t\022\016\n\006module\030\002 \001(\t\022\027\n\017sourceSystemIds\030" +
-      "\003 \003(\t\"5\n\tScopeRole\022\020\n\010rolename\030\001 \001(\t\022\026\n\016" +
-      "sourceSystemId\030\002 \001(\t\"`\n\034RoleOnSpecifiedR" +
-      "esourcesResp\022\020\n\010username\030\001 \001(\t\022\016\n\006module" +
-      "\030\002 \001(\t\022\036\n\nscopeRoles\030\003 \003(\0132\n.ScopeRole\"l" +
-      "\n\035UpdateScopeOnSpecifiedRoleReq\022\020\n\010usern" +
-      "ame\030\001 \001(\t\022\020\n\010rolename\030\002 \001(\t\022\016\n\006module\030\003 " +
-      "\001(\t\022\027\n\017sourceSystemIds\030\004 \003(\t\"S\n\027UsersOnS" +
-      "pecifiedRoleReq\022\016\n\006module\030\001 \001(\t\022\020\n\010rolen" +
-      "ame\030\002 \001(\t\022\026\n\016sourceSystemId\030\003 \001(\t\"-\n\030Use" +
-      "rsOnSpecifiedRoleResp\022\021\n\tusernames\030\001 \003(\t" +
-      "2\265\003\n\010Security\022O\n\030findUsersOnSpecifiedRol" +
-      "e\022\030.UsersOnSpecifiedRoleReq\032\031.UsersOnSpe" +
-      "cifiedRoleResp\022R\n\031findRoleOnSpecifiedMod" +
-      "ule\022\031.RoleOnSpecifiedModuleReq\032\032.RoleOnS" +
-      "pecifiedModuleResp\022[\n\034findRoleOnSpecifie" +
-      "dResources\022\034.RoleOnSpecifiedResourcesReq" +
-      "\032\035.RoleOnSpecifiedResourcesResp\022Q\n\027addSc" +
-      "opeOnSpecifiedRole\022\036.UpdateScopeOnSpecif" +
-      "iedRoleReq\032\026.google.protobuf.Empty\022T\n\032de" +
-      "leteScopeOnSpecifiedRole\022\036.UpdateScopeOn" +
-      "SpecifiedRoleReq\032\026.google.protobuf.Empty" +
-      "B6\n#com.miotech.kun.security.facade.rpcB" +
-      "\rSecurityProtoP\001b\006proto3"
+      "\t\022\016\n\006module\030\002 \001(\t\022\021\n\trolenames\030\003 \003(\t\"X\n\033" +
+      "RoleOnSpecifiedResourcesReq\022\020\n\010username\030" +
+      "\001 \001(\t\022\016\n\006module\030\002 \001(\t\022\027\n\017sourceSystemIds" +
+      "\030\003 \003(\t\"5\n\tScopeRole\022\020\n\010rolename\030\001 \001(\t\022\026\n" +
+      "\016sourceSystemId\030\002 \001(\t\"`\n\034RoleOnSpecified" +
+      "ResourcesResp\022\020\n\010username\030\001 \001(\t\022\016\n\006modul" +
+      "e\030\002 \001(\t\022\036\n\nscopeRoles\030\003 \003(\0132\n.ScopeRole\"" +
+      "l\n\035UpdateScopeOnSpecifiedRoleReq\022\020\n\010user" +
+      "name\030\001 \001(\t\022\020\n\010rolename\030\002 \001(\t\022\016\n\006module\030\003" +
+      " \001(\t\022\027\n\017sourceSystemIds\030\004 \003(\t\"S\n\027UsersOn" +
+      "SpecifiedRoleReq\022\016\n\006module\030\001 \001(\t\022\020\n\010role" +
+      "name\030\002 \001(\t\022\026\n\016sourceSystemId\030\003 \001(\t\"-\n\030Us" +
+      "ersOnSpecifiedRoleResp\022\021\n\tusernames\030\001 \003(" +
+      "\t2\265\003\n\010Security\022O\n\030findUsersOnSpecifiedRo" +
+      "le\022\030.UsersOnSpecifiedRoleReq\032\031.UsersOnSp" +
+      "ecifiedRoleResp\022R\n\031findRoleOnSpecifiedMo" +
+      "dule\022\031.RoleOnSpecifiedModuleReq\032\032.RoleOn" +
+      "SpecifiedModuleResp\022[\n\034findRoleOnSpecifi" +
+      "edResources\022\034.RoleOnSpecifiedResourcesRe" +
+      "q\032\035.RoleOnSpecifiedResourcesResp\022Q\n\027addS" +
+      "copeOnSpecifiedRole\022\036.UpdateScopeOnSpeci" +
+      "fiedRoleReq\032\026.google.protobuf.Empty\022T\n\032d" +
+      "eleteScopeOnSpecifiedRole\022\036.UpdateScopeO" +
+      "nSpecifiedRoleReq\032\026.google.protobuf.Empt" +
+      "yB6\n#com.miotech.kun.security.facade.rpc" +
+      "B\rSecurityProtoP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -110,7 +110,7 @@ public final class SecurityProto {
     internal_static_RoleOnSpecifiedModuleResp_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_RoleOnSpecifiedModuleResp_descriptor,
-        new java.lang.String[] { "Username", "Module", "Rolename", });
+        new java.lang.String[] { "Username", "Module", "Rolenames", });
     internal_static_RoleOnSpecifiedResourcesReq_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_RoleOnSpecifiedResourcesReq_fieldAccessorTable = new

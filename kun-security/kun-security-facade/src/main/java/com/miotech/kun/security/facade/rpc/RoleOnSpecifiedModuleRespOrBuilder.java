@@ -32,14 +32,27 @@ public interface RoleOnSpecifiedModuleRespOrBuilder extends
       getModuleBytes();
 
   /**
-   * <code>string rolename = 3;</code>
-   * @return The rolename.
+   * <code>repeated string rolenames = 3;</code>
+   * @return A list containing the rolenames.
    */
-  java.lang.String getRolename();
+  java.util.List<java.lang.String>
+      getRolenamesList();
   /**
-   * <code>string rolename = 3;</code>
-   * @return The bytes for rolename.
+   * <code>repeated string rolenames = 3;</code>
+   * @return The count of rolenames.
+   */
+  int getRolenamesCount();
+  /**
+   * <code>repeated string rolenames = 3;</code>
+   * @param index The index of the element to return.
+   * @return The rolenames at the given index.
+   */
+  java.lang.String getRolenames(int index);
+  /**
+   * <code>repeated string rolenames = 3;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the rolenames at the given index.
    */
   com.google.protobuf.ByteString
-      getRolenameBytes();
+      getRolenamesBytes(int index);
 }

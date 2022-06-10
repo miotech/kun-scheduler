@@ -18,7 +18,7 @@ private static final long serialVersionUID = 0L;
   private RoleOnSpecifiedModuleResp() {
     username_ = "";
     module_ = "";
-    rolename_ = "";
+    rolenames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
   }
 
   @java.lang.Override
@@ -41,6 +41,7 @@ private static final long serialVersionUID = 0L;
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
+    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields =
         com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
@@ -65,8 +66,11 @@ private static final long serialVersionUID = 0L;
           }
           case 26: {
             java.lang.String s = input.readStringRequireUtf8();
-
-            rolename_ = s;
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+              rolenames_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00000001;
+            }
+            rolenames_.add(s);
             break;
           }
           default: {
@@ -84,6 +88,9 @@ private static final long serialVersionUID = 0L;
       throw new com.google.protobuf.InvalidProtocolBufferException(
           e).setUnfinishedMessage(this);
     } finally {
+      if (((mutable_bitField0_ & 0x00000001) != 0)) {
+        rolenames_ = rolenames_.getUnmodifiableView();
+      }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
     }
@@ -177,42 +184,39 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int ROLENAME_FIELD_NUMBER = 3;
-  private volatile java.lang.Object rolename_;
+  public static final int ROLENAMES_FIELD_NUMBER = 3;
+  private com.google.protobuf.LazyStringList rolenames_;
   /**
-   * <code>string rolename = 3;</code>
-   * @return The rolename.
+   * <code>repeated string rolenames = 3;</code>
+   * @return A list containing the rolenames.
    */
-  @java.lang.Override
-  public java.lang.String getRolename() {
-    java.lang.Object ref = rolename_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      rolename_ = s;
-      return s;
-    }
+  public com.google.protobuf.ProtocolStringList
+      getRolenamesList() {
+    return rolenames_;
   }
   /**
-   * <code>string rolename = 3;</code>
-   * @return The bytes for rolename.
+   * <code>repeated string rolenames = 3;</code>
+   * @return The count of rolenames.
    */
-  @java.lang.Override
+  public int getRolenamesCount() {
+    return rolenames_.size();
+  }
+  /**
+   * <code>repeated string rolenames = 3;</code>
+   * @param index The index of the element to return.
+   * @return The rolenames at the given index.
+   */
+  public java.lang.String getRolenames(int index) {
+    return rolenames_.get(index);
+  }
+  /**
+   * <code>repeated string rolenames = 3;</code>
+   * @param index The index of the value to return.
+   * @return The bytes of the rolenames at the given index.
+   */
   public com.google.protobuf.ByteString
-      getRolenameBytes() {
-    java.lang.Object ref = rolename_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      rolename_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+      getRolenamesBytes(int index) {
+    return rolenames_.getByteString(index);
   }
 
   private byte memoizedIsInitialized = -1;
@@ -235,8 +239,8 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(module_)) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, module_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(rolename_)) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, rolename_);
+    for (int i = 0; i < rolenames_.size(); i++) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, rolenames_.getRaw(i));
     }
     unknownFields.writeTo(output);
   }
@@ -253,8 +257,13 @@ private static final long serialVersionUID = 0L;
     if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(module_)) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, module_);
     }
-    if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(rolename_)) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, rolename_);
+    {
+      int dataSize = 0;
+      for (int i = 0; i < rolenames_.size(); i++) {
+        dataSize += computeStringSizeNoTag(rolenames_.getRaw(i));
+      }
+      size += dataSize;
+      size += 1 * getRolenamesList().size();
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -275,8 +284,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getUsername())) return false;
     if (!getModule()
         .equals(other.getModule())) return false;
-    if (!getRolename()
-        .equals(other.getRolename())) return false;
+    if (!getRolenamesList()
+        .equals(other.getRolenamesList())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -292,8 +301,10 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getUsername().hashCode();
     hash = (37 * hash) + MODULE_FIELD_NUMBER;
     hash = (53 * hash) + getModule().hashCode();
-    hash = (37 * hash) + ROLENAME_FIELD_NUMBER;
-    hash = (53 * hash) + getRolename().hashCode();
+    if (getRolenamesCount() > 0) {
+      hash = (37 * hash) + ROLENAMES_FIELD_NUMBER;
+      hash = (53 * hash) + getRolenamesList().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -431,8 +442,8 @@ private static final long serialVersionUID = 0L;
 
       module_ = "";
 
-      rolename_ = "";
-
+      rolenames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000001);
       return this;
     }
 
@@ -459,9 +470,14 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp buildPartial() {
       com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp result = new com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp(this);
+      int from_bitField0_ = bitField0_;
       result.username_ = username_;
       result.module_ = module_;
-      result.rolename_ = rolename_;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        rolenames_ = rolenames_.getUnmodifiableView();
+        bitField0_ = (bitField0_ & ~0x00000001);
+      }
+      result.rolenames_ = rolenames_;
       onBuilt();
       return result;
     }
@@ -518,8 +534,14 @@ private static final long serialVersionUID = 0L;
         module_ = other.module_;
         onChanged();
       }
-      if (!other.getRolename().isEmpty()) {
-        rolename_ = other.rolename_;
+      if (!other.rolenames_.isEmpty()) {
+        if (rolenames_.isEmpty()) {
+          rolenames_ = other.rolenames_;
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          ensureRolenamesIsMutable();
+          rolenames_.addAll(other.rolenames_);
+        }
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -550,6 +572,7 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+    private int bitField0_;
 
     private java.lang.Object username_ = "";
     /**
@@ -703,78 +726,112 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.lang.Object rolename_ = "";
-    /**
-     * <code>string rolename = 3;</code>
-     * @return The rolename.
-     */
-    public java.lang.String getRolename() {
-      java.lang.Object ref = rolename_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        rolename_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    private com.google.protobuf.LazyStringList rolenames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureRolenamesIsMutable() {
+      if (!((bitField0_ & 0x00000001) != 0)) {
+        rolenames_ = new com.google.protobuf.LazyStringArrayList(rolenames_);
+        bitField0_ |= 0x00000001;
+       }
     }
     /**
-     * <code>string rolename = 3;</code>
-     * @return The bytes for rolename.
+     * <code>repeated string rolenames = 3;</code>
+     * @return A list containing the rolenames.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getRolenamesList() {
+      return rolenames_.getUnmodifiableView();
+    }
+    /**
+     * <code>repeated string rolenames = 3;</code>
+     * @return The count of rolenames.
+     */
+    public int getRolenamesCount() {
+      return rolenames_.size();
+    }
+    /**
+     * <code>repeated string rolenames = 3;</code>
+     * @param index The index of the element to return.
+     * @return The rolenames at the given index.
+     */
+    public java.lang.String getRolenames(int index) {
+      return rolenames_.get(index);
+    }
+    /**
+     * <code>repeated string rolenames = 3;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the rolenames at the given index.
      */
     public com.google.protobuf.ByteString
-        getRolenameBytes() {
-      java.lang.Object ref = rolename_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        rolename_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+        getRolenamesBytes(int index) {
+      return rolenames_.getByteString(index);
     }
     /**
-     * <code>string rolename = 3;</code>
-     * @param value The rolename to set.
+     * <code>repeated string rolenames = 3;</code>
+     * @param index The index to set the value at.
+     * @param value The rolenames to set.
      * @return This builder for chaining.
      */
-    public Builder setRolename(
+    public Builder setRolenames(
+        int index, java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureRolenamesIsMutable();
+      rolenames_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string rolenames = 3;</code>
+     * @param value The rolenames to add.
+     * @return This builder for chaining.
+     */
+    public Builder addRolenames(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  
-      rolename_ = value;
+  ensureRolenamesIsMutable();
+      rolenames_.add(value);
       onChanged();
       return this;
     }
     /**
-     * <code>string rolename = 3;</code>
+     * <code>repeated string rolenames = 3;</code>
+     * @param values The rolenames to add.
      * @return This builder for chaining.
      */
-    public Builder clearRolename() {
-      
-      rolename_ = getDefaultInstance().getRolename();
+    public Builder addAllRolenames(
+        java.lang.Iterable<java.lang.String> values) {
+      ensureRolenamesIsMutable();
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(
+          values, rolenames_);
       onChanged();
       return this;
     }
     /**
-     * <code>string rolename = 3;</code>
-     * @param value The bytes for rolename to set.
+     * <code>repeated string rolenames = 3;</code>
      * @return This builder for chaining.
      */
-    public Builder setRolenameBytes(
+    public Builder clearRolenames() {
+      rolenames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000001);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string rolenames = 3;</code>
+     * @param value The bytes of the rolenames to add.
+     * @return This builder for chaining.
+     */
+    public Builder addRolenamesBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-      
-      rolename_ = value;
+      ensureRolenamesIsMutable();
+      rolenames_.add(value);
       onChanged();
       return this;
     }

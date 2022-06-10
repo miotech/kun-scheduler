@@ -1043,18 +1043,20 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     }
 
     @Test
-    public void test_add_scope() {
+    public void test_add_owner() {
         Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
-        glossaryService.addScope(glossary3_2.getId(), "test1");
+        Long id = glossaryService.addOwner(glossary3_2.getId(), "test1");
+        assertThat(id, is(glossary3_2.getId()));
 
     }
 
     @Test
-    public void test_remove_scope() {
+    public void test_remove_owner() {
         Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
-        glossaryService.removeScope(glossary3_2.getId(), "test1");
+        Long id = glossaryService.removeOwner(glossary3_2.getId(), "test1");
+        assertThat(id, is(glossary3_2.getId()));
 
 
     }
