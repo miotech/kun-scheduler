@@ -10,9 +10,8 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
-import java.util.ArrayList;
+import java.time.OffsetDateTime;
 import java.util.Calendar;
-import java.util.List;
 
 
 /**
@@ -41,7 +40,7 @@ public class RpcPreparedStatement implements PreparedStatement {
         this.executorRpcClient = executorRpcClient;
         this.connectionConfig = connectionConfig;
         int parameterCounts = StringUtils.countMatches(sql, '?');
-        logger.debug("params count = ?", parameterCounts);
+        logger.debug("params count = {}", parameterCounts);
         params = new String[parameterCounts];
     }
 
@@ -160,6 +159,8 @@ public class RpcPreparedStatement implements PreparedStatement {
     public void setObject(int parameterIndex, Object x) throws SQLException {
         if (x instanceof String) {
             setString(parameterIndex, addQuotes((String) x));
+        } else if(x instanceof OffsetDateTime){
+            setString(parameterIndex, addQuotes(x.toString()));
         } else {
             setString(parameterIndex, x.toString());
         }
