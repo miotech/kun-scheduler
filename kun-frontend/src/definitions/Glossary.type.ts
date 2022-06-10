@@ -22,3 +22,8 @@ export interface GlossaryEditorParams {
   userName: string;
   id: string;
 }
+
+export enum GlossaryDisplayType {
+  RELATION = 'RELATION',
+  LIST = 'LIST',
+}
