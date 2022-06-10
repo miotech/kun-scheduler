@@ -98,7 +98,7 @@ public class GlossaryService extends BaseSecurityService {
         glossaryRequest.setUpdateTime(now);
         if (haveDuplicateName(null, parentId, glossaryRequest.getName())) {
             log.warn("A glossary with the same name is not allowed at the same level  name parent id:{},name:{}", parentId, glossaryRequest.getName());
-            throw new RuntimeException("A glossary with the same name is not allowed at the same level  name:" + glossaryRequest.getName());
+            throw new IllegalStateException("A glossary with the same name is not allowed at the same level  name:" + glossaryRequest.getName());
         }
         Long gid = glossaryRepository.insert(glossaryRequest);
         searchAppService.saveOrUpdateGlossarySearchInfo(getGlossaryBasicInfo(gid));
@@ -296,7 +296,7 @@ public class GlossaryService extends BaseSecurityService {
             log.error("The copied node cannot be a parent node:parentId{},sourceId:{}", parentId, sourceId);
             throw new IllegalStateException("The copied node cannot be a parent node");
         }
-        copyRecursively(parentId, sourceId, Lists.newArrayList());
+        copyRecursively(parentId, sourceId, Lists.newArrayList(), true);
 
     }
 
@@ -310,25 +310,25 @@ public class GlossaryService extends BaseSecurityService {
         Collections.reverse(oldChildren);
         ArrayList<Long> newGlossaryList = Lists.newArrayList();
         if (CollectionUtils.isNotEmpty(oldChildren)) {
-            oldChildren.forEach(glossary -> copyRecursively(parentId, glossary.getId(), newGlossaryList));
+            oldChildren.forEach(glossary -> copyRecursively(parentId, glossary.getId(), newGlossaryList, false));
         }
     }
 
-    private void copyOnlyOneSelf(Long parentId, Long sourceId) {
+    private Long copyOnlyOneSelf(Long parentId, Long sourceId) {
         GlossaryBasicInfo oldGlossaryBasicInfo = getGlossaryBasicInfo(sourceId);
-        copySelf(oldGlossaryBasicInfo, parentId);
+        return copySelf(oldGlossaryBasicInfo, parentId, true);
     }
 
-    private void copyRecursively(@Nullable Long parentId, Long sourceId, List<Long> newGlossaryList) {
+    private void copyRecursively(@Nullable Long parentId, Long sourceId, List<Long> newGlossaryList, boolean replaceName) {
         GlossaryBasicInfo oldGlossaryBasicInfo = getGlossaryBasicInfo(sourceId);
         List<GlossaryBasicInfo> oldChildren = fetchChildrenBasicList(oldGlossaryBasicInfo.getId());
-        Long newGlossaryId = copySelf(oldGlossaryBasicInfo, parentId);
+        Long newGlossaryId = copySelf(oldGlossaryBasicInfo, parentId, replaceName);
         newGlossaryList.add(newGlossaryId);
         if (CollectionUtils.isNotEmpty(oldChildren)) {
             Collections.reverse(oldChildren);
             oldChildren.stream()
                     .filter(child -> !newGlossaryList.contains(child.getId()))
-                    .forEach(glossary -> copyRecursively(newGlossaryId, glossary.getId(), newGlossaryList));
+                    .forEach(glossary -> copyRecursively(newGlossaryId, glossary.getId(), newGlossaryList, false));
         }
     }
 
@@ -338,9 +338,13 @@ public class GlossaryService extends BaseSecurityService {
 
     }
 
-    private Long copySelf(GlossaryBasicInfo oldGlossaryBasicInfo, Long parentId) {
+    private Long copySelf(GlossaryBasicInfo oldGlossaryBasicInfo, Long parentId, boolean replaceName) {
         GlossaryRequest glossaryRequest = new GlossaryRequest();
-        glossaryRequest.setName(getCopyName(oldGlossaryBasicInfo.getName()));
+        String copyName = oldGlossaryBasicInfo.getName();
+        if (replaceName) {
+            copyName = getCopyName(oldGlossaryBasicInfo.getName());
+        }
+        glossaryRequest.setName(copyName);
         glossaryRequest.setParentId(parentId);
         glossaryRequest.setDescription(oldGlossaryBasicInfo.getDescription());
         List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(oldGlossaryBasicInfo.getId());
