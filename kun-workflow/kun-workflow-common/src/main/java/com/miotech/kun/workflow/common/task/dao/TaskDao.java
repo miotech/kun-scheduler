@@ -53,7 +53,7 @@ public class TaskDao {
 
     public static final String TASK_TAGS_MODEL_NAME = "task_tags";
 
-    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority","retries","retry_delay","check_type","executor_label");
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority", "retries", "retry_delay", "check_type", "executor_label");
 
     private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
@@ -247,7 +247,7 @@ public class TaskDao {
                 );
             }
             inClauseIdSet = results.stream().map((queryDirection == DependencyDirection.UPSTREAM) ?
-                    TaskDependency::getUpstreamTaskId : TaskDependency::getDownstreamTaskId)
+                            TaskDependency::getUpstreamTaskId : TaskDependency::getDownstreamTaskId)
                     .collect(Collectors.toList());
             remainingIteration -= 1;
         }
@@ -362,12 +362,12 @@ public class TaskDao {
         String whereClause = StringUtils.joinWith(" OR ", whereSubClauses.toArray());
 
         String taskIdColumn = TASK_TAGS_MODEL_NAME + ".task_id";
-        SQLBuilder sqlBuilder =  DefaultSQLBuilder.newBuilder()
+        SQLBuilder sqlBuilder = DefaultSQLBuilder.newBuilder()
                 .select(taskIdColumn)
                 .from(TASK_TAGS_TABLE_NAME, TASK_TAGS_MODEL_NAME)
                 .where(whereClause)
                 .groupBy(taskIdColumn);
-        if(tags.size() > 1){
+        if (tags.size() > 1) {
             sqlBuilder.having("count(1) = ?");
             // should match all tags as required
             params.add(tags.size());
@@ -973,8 +973,8 @@ public class TaskDao {
                     .withTags(new ArrayList<>())
                     .withQueueName(rs.getString(TASK_MODEL_NAME + "_queue_name"))
                     .withPriority(rs.getInt(TASK_MODEL_NAME + "_priority"))
-                    .withRetries(rs.getInt(TASK_MODEL_NAME+"_retries"))
-                    .withRetryDelay(rs.getInt(TASK_MODEL_NAME+"_retry_delay"))
+                    .withRetries(rs.getInt(TASK_MODEL_NAME + "_retries"))
+                    .withRetryDelay(rs.getInt(TASK_MODEL_NAME + "_retry_delay"))
                     .withCheckType(CheckType.valueOf(rs.getString(TASK_MODEL_NAME + "_check_type")))
                     .withExecutorLabel(rs.getString(TASK_MODEL_NAME + "_executor_label"))
                     .build();

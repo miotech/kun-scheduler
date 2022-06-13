@@ -85,7 +85,6 @@ public class MCEBuilder {
                 if (loadSchemaResult.getGid() < 0) {
                     continue;
                 }
-
                 // 发送消息
             } catch (Exception e) {
                 logger.error("Load schema error: ", e);
