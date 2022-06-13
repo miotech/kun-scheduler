@@ -1043,22 +1043,39 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     }
 
     @Test
+    public void test_add_owner_checkAuth() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Long id = glossaryService.addOwner(glossary3_2.getId(), "test1", true);
+        assertThat(id, is(glossary3_2.getId()));
+    }
+
+    @Test
     public void test_add_owner() {
         Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
-        Long id = glossaryService.addOwner(glossary3_2.getId(), "test1");
+        GlossaryRole glossaryEditor = GlossaryRole.GLOSSARY_EDITOR;
+        mockRole(glossaryEditor);
+        Long id = glossaryService.addOwner(glossary3_2.getId(), "test1", false);
         assertThat(id, is(glossary3_2.getId()));
+    }
 
+    @Test
+    public void test_remove_owner_checkAuth() {
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Long id = glossaryService.removeOwner(glossary3_2.getId(), "test1", true);
+        assertThat(id, is(glossary3_2.getId()));
     }
 
     @Test
     public void test_remove_owner() {
         Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
         Glossary glossary3_2 = glossaryTree.get("glossary3_2");
-        Long id = glossaryService.removeOwner(glossary3_2.getId(), "test1");
+        GlossaryRole glossaryEditor = GlossaryRole.GLOSSARY_EDITOR;
+        mockRole(glossaryEditor);
+        Long id = glossaryService.removeOwner(glossary3_2.getId(), "test1", false);
         assertThat(id, is(glossary3_2.getId()));
-
-
     }
 
     public void mockRole(GlossaryRole role) {

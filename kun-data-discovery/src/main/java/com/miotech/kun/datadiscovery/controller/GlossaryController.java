@@ -91,7 +91,7 @@ public class GlossaryController {
         Long id = editGlossaryEditerRequest.getId();
         Preconditions.checkNotNull(id, "Invalid argument `id`: null");
         Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
-        return RequestResult.success(glossaryService.addOwner(id, userName));
+        return RequestResult.success(glossaryService.addOwner(id, userName, true));
     }
 
     @PostMapping("/role/removeEditor")
@@ -100,6 +100,6 @@ public class GlossaryController {
         Long id = editGlossaryEditerRequest.getId();
         Preconditions.checkNotNull(id, "Invalid argument `id`: null");
         Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
-        return RequestResult.success(glossaryService.removeOwner(id, userName));
+        return RequestResult.success(glossaryService.removeOwner(id, userName, true));
     }
 }
