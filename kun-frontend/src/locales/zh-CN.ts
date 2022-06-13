@@ -473,6 +473,8 @@ export default {
   'taskRun.rerunDownstream.table.status': '实例状态',
   'taskRun.rerun.alert': '确认重新运行该实例吗？',
   'taskRun.abort.alert': '确认停止该实例吗？',
+  'taskRun.skip.alert': '确认跳过该实例吗？',
+  'taskRun.skip': '跳过任务',
   'taskRun.property.attempt.jumpToLatest': '跳转至最新一次运行',
   'monitoringDashboard.title': '数据监控',
   'monitoringDashboard.dataDiscovery.title': '数据发现',

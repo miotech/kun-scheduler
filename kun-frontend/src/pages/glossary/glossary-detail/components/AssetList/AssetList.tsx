@@ -82,9 +82,16 @@ export default memo(function AssetList({
               <div className={styles.childItem} key={asset!.id}>
                 <FileTextOutlined />
                 <div className={styles.right}>
-                  <Link to={getBackPath(`/data-discovery/dataset/${asset!.id}`)}>
-                    <span className={styles.name}>{getAssetNameWithDatasource(asset)}</span>
-                  </Link>
+                  {!asset.deleted && (
+                    <Link to={getBackPath(`/data-discovery/dataset/${asset!.id}`)}>
+                      <span className={styles.name}>{getAssetNameWithDatasource(asset)}</span>
+                    </Link>
+                  )}
+                  {asset.deleted && (
+                    <div className={styles.disabled}>
+                      <span className={styles.name}>{getAssetNameWithDatasource(asset)}</span>
+                    </div>
+                  )}
                   <div style={{ marginLeft: 8 }}>
                     <span> {asset.owner?.[0]}</span>
                     {asset.database && (

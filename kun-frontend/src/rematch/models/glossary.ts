@@ -55,6 +55,7 @@ export interface Asset {
   name: string;
   datasource: string;
   database: string;
+  deleted: boolean;
   description: string;
   owner: string[];
 }

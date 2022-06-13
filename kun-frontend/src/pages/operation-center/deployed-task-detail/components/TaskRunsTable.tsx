@@ -9,12 +9,18 @@ import useI18n from '@/hooks/useI18n';
 import getLatestAttempt from '@/utils/getLatestAttempt';
 import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import Icon, { StepForwardOutlined, CaretDownOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import Icon, {
+  StepForwardOutlined,
+  CaretDownOutlined,
+  CloseCircleOutlined,
+  SyncOutlined,
+  CheckCircleOutlined,
+} from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 import { dayjs } from '@/utils/datetime-utils';
 import { TaskAttempt } from '@/definitions/TaskAttempt.type';
-import { taskColorConfig } from '@/constants/colorConfig';
+import { skipTaskrun } from '@/services/task-deployments/deployed-tasks';
 import { DependenceRemove } from './DependenceRemove';
 import TaskRerunModal from './TaskRerunModal';
 import styles from './TaskRunsTable.less';
@@ -67,6 +73,9 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
   const [currentId, setCurrentId] = useState<string>('');
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
+  const [popConfirmVisible, setPopConfirmVisible] = useState(false);
+  const [popConfirmLoading, setPopConfirmLoading] = useState(false);
+
   const {
     tableData = [],
     pageNum = 1,
@@ -82,51 +91,141 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
     refreshTaskRun = () => {},
   } = props;
 
-  const menuRerun = (taskRunId: string) => {
-    return (
-      <Menu>
-        <Menu.Item key="rerun">
-          <Button
-            icon={<SyncOutlined />}
-            size="small"
-            type="text"
-            style={{ color: taskColorConfig.RUNNING }}
-            // disabled={stopDisabled}
-            onClick={() => {
-              setIsModalVisible(true);
-              setCurrentId(taskRunId);
-            }}
-          >
-            {/* 重跑及下游任务 */}
-            {t('taskRun.rerunDownstream.button')}
-          </Button>
-        </Menu.Item>
-      </Menu>
-    );
-  };
+  const onClickSkipTaskRun = useCallback(
+    async (taskRun: TaskRun) => {
+      const res = await skipTaskrun(taskRun.id);
+      if (res) {
+        refreshTaskRun();
+      }
+    },
+    [refreshTaskRun],
+  );
 
-  const menu = (taskRunId: string) => {
-    return (
-      <Menu>
-        <Menu.Item key="dependence">
-          <Button
-            icon={<CloseCircleOutlined />}
-            size="small"
-            type="text"
-            style={{ color: 'rgb(178,164,112)' }}
-            // disabled={stopDisabled}
-            onClick={() => {
-              setVisible(true);
-              setCurrentId(taskRunId);
-            }}
-          >
-            {/* 解除依赖 */}
-            {t('taskRun.dependence')}
-          </Button>
-        </Menu.Item>
-      </Menu>
-    );
-  };
+  const DropdownMenu = useCallback(
+    (taskRun: TaskRun) => {
+      const stopDisabled = taskRunAlreadyComplete(taskRun.status);
+
+      return (
+        <Menu>
+          {stopDisabled && (
+            <Menu.Item key="rerun">
+              <Popconfirm
+                title={t('taskRun.rerun.alert')}
+                visible={popConfirmVisible}
+                okButtonProps={{ loading: popConfirmLoading }}
+                onCancel={() => setPopConfirmVisible(false)}
+                onConfirm={async () => {
+                  setPopConfirmLoading(true);
+                  await onClickRerunTaskRun(taskRun);
+                  setPopConfirmLoading(false);
+                  setPopConfirmVisible(false);
+                }}
+              >
+                <Button
+                  icon={<Icon component={RerunIcon} />}
+                  size="small"
+                  type="text"
+                  onClick={() => {
+                    setPopConfirmVisible(true);
+                  }}
+                >
+                  {/* 重新运行 */}
+                  {t('taskRun.rerun')}
+                </Button>
+              </Popconfirm>
+            </Menu.Item>
+          )}
+          {!stopDisabled && (
+            <Menu.Item key="stopTask">
+              <Space size="small">
+                <Popconfirm
+                  title={t('taskRun.abort.alert')}
+                  disabled={stopDisabled}
+                  onConfirm={ev => {
+                    ev?.stopPropagation();
+                    onClickStopTaskRun(taskRun);
+                  }}
+                >
+                  <Button
+                    icon={<Icon component={StopIcon} />}
+                    size="small"
+                    type="text"
+                    onClick={ev => {
+                      ev.stopPropagation();
+                    }}
+                  >
+                    {/* 中止 */}
+                    {t('taskRun.abort')}
+                  </Button>
+                </Popconfirm>
+              </Space>
+            </Menu.Item>
+          )}
+          {stopDisabled && (
+            <Menu.Item key="rerunDownstream">
+              <Button
+                icon={<SyncOutlined />}
+                size="small"
+                type="text"
+                onClick={() => {
+                  setIsModalVisible(true);
+                  setCurrentId(taskRun.id);
+                }}
+              >
+                {/* 重跑及下游任务 */}
+                {t('taskRun.rerunDownstream.button')}
+              </Button>
+            </Menu.Item>
+          )}
+          {!stopDisabled && (
+            <Menu.Item key="dependence">
+              <Button
+                icon={<CloseCircleOutlined />}
+                size="small"
+                type="text"
+                onClick={() => {
+                  setVisible(true);
+                  setCurrentId(taskRun.id);
+                }}
+              >
+                {/* 解除依赖 */}
+                {t('taskRun.dependence')}
+              </Button>
+            </Menu.Item>
+          )}
+          {['FAILED', 'ABORTED', 'CHECK_FAILED'].includes(taskRun.status) && (
+            <Menu.Item key="skip">
+              <Popconfirm
+                title={t('taskRun.skip.alert')}
+                onConfirm={ev => {
+                  ev?.stopPropagation();
+                  onClickSkipTaskRun(taskRun);
+                }}
+              >
+                <Button icon={<CheckCircleOutlined />} size="small" type="text">
+                  {/* 任务跳过 */}
+                  {t('taskRun.skip')}
+                </Button>
+              </Popconfirm>
+            </Menu.Item>
+          )}
+        </Menu>
+      );
+    },
+    [
+      onClickStopTaskRun,
+      setVisible,
+      setCurrentId,
+      onClickRerunTaskRun,
+      onClickSkipTaskRun,
+      popConfirmVisible,
+      popConfirmLoading,
+      setPopConfirmVisible,
+      setPopConfirmLoading,
+      t,
+    ],
+  );
+
   const getCorrespondingAttempt = useCallback(
     (record: TaskRun) => {
       if (!selectedAttemptMap[record.id]) {
@@ -275,71 +374,22 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         title: '',
         key: 'operations',
         width: 140,
+        align: 'center',
         render: (txt, taskRun) => {
-          const stopDisabled = taskRunAlreadyComplete(taskRun.status);
           return (
-            <span>
-              <Space size="small">
-                {stopDisabled ? (
-                  <Dropdown overlay={() => menuRerun(taskRun.id)}>
-                    <Space size="small">
-                      <Popconfirm
-                        title={t('taskRun.rerun.alert')}
-                        onConfirm={ev => {
-                          ev?.stopPropagation();
-                          onClickRerunTaskRun(taskRun);
-                        }}
-                      >
-                        <Button
-                          icon={<Icon component={RerunIcon} />}
-                          size="small"
-                          disabled={!stopDisabled}
-                          onClick={ev => {
-                            ev.stopPropagation();
-                          }}
-                        >
-                          {/* 重新运行 */}
-                          {t('taskRun.rerun')}
-                        </Button>
-                      </Popconfirm>
-                      <CaretDownOutlined />
-                    </Space>
-                  </Dropdown>
-                ) : (
-                  <Dropdown overlay={() => menu(taskRun.id)}>
-                    <Space size="small">
-                      <Popconfirm
-                        title={t('taskRun.abort.alert')}
-                        disabled={stopDisabled}
-                        onConfirm={ev => {
-                          ev?.stopPropagation();
-                          onClickStopTaskRun(taskRun);
-                        }}
-                      >
-                        <Button
-                          icon={<Icon component={StopIcon} />}
-                          size="small"
-                          danger
-                          disabled={stopDisabled}
-                          onClick={ev => {
-                            ev.stopPropagation();
-                          }}
-                        >
-                          {/* 中止 */}
-                          {t('taskRun.abort')}
-                        </Button>
-                      </Popconfirm>
-                      <CaretDownOutlined />
-                    </Space>
-                  </Dropdown>
-                )}
-              </Space>
-            </span>
+            <Dropdown overlay={() => DropdownMenu(taskRun)}>
+              <a onClick={e => e.preventDefault()}>
+                <Space>
+                  {t('common.column.action')}
+                  <CaretDownOutlined />
+                </Space>
+              </a>
+            </Dropdown>
           );
         },
       },
     ],
-    [getCorrespondingAttempt, onClickRerunTaskRun, onClickStopTaskRun, selectedAttemptMap, setSelectedAttemptMap, t],
+    [getCorrespondingAttempt, selectedAttemptMap, DropdownMenu, setSelectedAttemptMap, t],
   );
 
   const handleRowEvents = useCallback(

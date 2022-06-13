@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Tree, Popover } from 'antd';
 import { GlossaryListNode } from '@/rematch/models/glossary';
 import useRedux from '@/hooks/useRedux';
+
 import styles from './TreeList.less';
 
 const { DirectoryTree } = Tree;

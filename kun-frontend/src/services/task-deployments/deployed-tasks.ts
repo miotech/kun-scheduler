@@ -312,3 +312,16 @@ export async function restartTaskrun(taskRunIds: string[]) {
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
+
+/**
+ * 跳过任务
+ * @param taskRunId
+ */
+export async function skipTaskrun(taskRunId: string) {
+  return put('/deployed-taskruns/:taskRunId/_skip', {
+    pathParams: {
+      taskRunId,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
