@@ -12,6 +12,7 @@ dependencies {
     implementation "org.neo4j:neo4j-ogm-core"
     implementation 'io.lettuce:lettuce-core'
     implementation 'io.netty:netty-common'
+    implementation 'org.apache.commons:commons-pools'
 
     testImplementation "org.testcontainers:testcontainers"
 

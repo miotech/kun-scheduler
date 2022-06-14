@@ -8,6 +8,9 @@ import com.miotech.kun.workflow.core.event.EventMapper;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.support.ConnectionPoolSupport;
+import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,21 +22,24 @@ public class RedisStreamEventPublisher implements EventPublisher {
     public static final String MESSAGE_KEY = "msg";
     private static Logger logger = LoggerFactory.getLogger(RedisStreamEventPublisher.class);
 
-    private RedisClient redisClient;
+    private final RedisClient redisClient;
 
-    private String streamKey;
+    private final GenericObjectPool<StatefulRedisConnection<String, String>> genericObjectPool;
+
+    private final String streamKey;
+
 
     public RedisStreamEventPublisher(String streamKey, RedisClient redisClient){
         this.streamKey = streamKey;
         this.redisClient = redisClient;
+        this.genericObjectPool =
+                ConnectionPoolSupport.createGenericObjectPool(() -> redisClient.connect(), new GenericObjectPoolConfig());
     }
 
     @Override
     public void publish(Event event) {
-        StatefulRedisConnection<String, String> connection = redisClient.connect();
-        RedisCommands<String, String> redisCommands = connection.sync();
-
-        try {
+        try (StatefulRedisConnection<String, String> connection = genericObjectPool.borrowObject()) {
+            RedisCommands<String, String> redisCommands = connection.sync();
             Map<String, String> message = Maps.newHashMap();
             String eventJsonStr = EventMapper.toJson(event);
             message.put(MESSAGE_KEY, eventJsonStr);
