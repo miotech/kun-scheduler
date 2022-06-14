@@ -81,11 +81,12 @@ public class GlossaryService extends BaseSecurityService {
         return glossaryRepository.getGlossariesByDataset(datasetGid);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @OperationRecord(type = OperationRecordType.GLOSSARY_CREATE, args = {"#glossaryRequest"})
     public Glossary createGlossary(GlossaryRequest glossaryRequest) {
         Long id = add(glossaryRequest);
         String owner = getCurrentUsername();
-        addOwner(id, owner);
+        addOwner(id, owner, false);
         return fetchGlossary(id);
     }
 
@@ -221,7 +222,7 @@ public class GlossaryService extends BaseSecurityService {
         String currentUsername = getCurrentUsername();
         List<Long> deleteIdList = glossaryRepository.delete(currentUsername, id);
         if (CollectionUtils.isNotEmpty(deleteIdList)) {
-            deleteIdList.forEach(currentId -> searchAppService.removeGlossarySearchInfo(id));
+            deleteIdList.forEach(deleteId -> searchAppService.removeGlossarySearchInfo(deleteId));
         }
     }
 
@@ -393,7 +394,7 @@ public class GlossaryService extends BaseSecurityService {
         securityInfo.setKunRole(role);
         securityInfo.setOperations(role.getUserOperation());
         KunRole userRole = getUserRole();
-        log.debug("userRole:{}",userRole);
+        log.debug("userRole:{}", userRole);
 //        GLOSSARY_MANAGER :Max permission
         if (userRole.equals(GlossaryRole.GLOSSARY_MANAGER)) {
             role = GlossaryRole.GLOSSARY_MANAGER;
@@ -445,7 +446,7 @@ public class GlossaryService extends BaseSecurityService {
             return GlossaryRole.GLOSSARY_VIEWER;
         }
         ProtocolStringList rolenamesList = roleOnSpecifiedModule.getRolenamesList();
-        log.debug("rolenamesList:{}",rolenamesList);
+        log.debug("rolenamesList:{}", rolenamesList);
         if (CollectionUtils.isEmpty(rolenamesList)) {
             return GlossaryRole.GLOSSARY_VIEWER;
         }
@@ -456,14 +457,12 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     private Long addScope(Long id, String userName, GlossaryRole role) {
-        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
         String moduleName = SecurityModule.GLOSSARY.name();
         securityRpcClient.addScopeOnSpecifiedRole(moduleName, role.name(), userName, Lists.newArrayList(id.toString()));
         return id;
     }
 
     private Long removeScope(Long id, String userName, GlossaryRole role) {
-        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
         String moduleName = SecurityModule.GLOSSARY.name();
         securityRpcClient.deleteScopeOnSpecifiedRole(moduleName, role.name(), userName, Lists.newArrayList(id.toString()));
         return id;
@@ -475,11 +474,17 @@ public class GlossaryService extends BaseSecurityService {
         return securityRpcClient.getGlossaryEditorList(moduleName, role, id);
     }
 
-    public Long addOwner(Long id, String owner) {
+    public Long addOwner(Long id, String owner, boolean checkAuth) {
+        if (checkAuth) {
+            checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
+        }
         return addScope(id, owner, GlossaryRole.GLOSSARY_EDITOR);
     }
 
-    public Long removeOwner(Long id, String owner) {
+    public Long removeOwner(Long id, String owner, boolean checkAuth) {
+        if (checkAuth) {
+            checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
+        }
         return removeScope(id, owner, GlossaryRole.GLOSSARY_EDITOR);
     }
 }
