@@ -19,21 +19,22 @@ public class RedisStreamEventPublisher implements EventPublisher {
     public static final String MESSAGE_KEY = "msg";
     private static Logger logger = LoggerFactory.getLogger(RedisStreamEventPublisher.class);
 
-    private RedisClient redisClient;
+    private final RedisClient redisClient;
 
-    private String streamKey;
+    private final StatefulRedisConnection<String, String> connection;
+
+    private final String streamKey;
 
     public RedisStreamEventPublisher(String streamKey, RedisClient redisClient){
         this.streamKey = streamKey;
         this.redisClient = redisClient;
+        this.connection = redisClient.connect();
     }
 
     @Override
     public void publish(Event event) {
-        StatefulRedisConnection<String, String> connection = redisClient.connect();
-        RedisCommands<String, String> redisCommands = connection.sync();
-
         try {
+            RedisCommands<String, String> redisCommands = connection.sync();
             Map<String, String> message = Maps.newHashMap();
             String eventJsonStr = EventMapper.toJson(event);
             message.put(MESSAGE_KEY, eventJsonStr);

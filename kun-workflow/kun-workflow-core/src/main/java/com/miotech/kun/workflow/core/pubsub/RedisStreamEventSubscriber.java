@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 
 import static com.miotech.kun.workflow.core.pubsub.RedisStreamEventPublisher.MESSAGE_KEY;
 
@@ -25,6 +24,7 @@ public class RedisStreamEventSubscriber implements EventSubscriber {
     private final String group;
     private final String consumer;
     private final RedisClient redisClient;
+    private final StatefulRedisConnection<String, String> connection;
 
 
     public RedisStreamEventSubscriber(String streamKey, String group, String consumer, RedisClient redisClient) {
@@ -32,6 +32,7 @@ public class RedisStreamEventSubscriber implements EventSubscriber {
         this.group = group;
         this.consumer = consumer;
         this.redisClient = redisClient;
+        this.connection = redisClient.connect();
     }
 
     @Override
@@ -49,7 +50,6 @@ public class RedisStreamEventSubscriber implements EventSubscriber {
 
         @Override
         public void run() {
-            StatefulRedisConnection<String, String> connection = redisClient.connect();
             RedisCommands<String, String> redisCommands = connection.sync();
             try {
                 redisCommands.xgroupCreate(XReadArgs.StreamOffset.latest(streamKey), group, XGroupCreateArgs.Builder.mkstream());
