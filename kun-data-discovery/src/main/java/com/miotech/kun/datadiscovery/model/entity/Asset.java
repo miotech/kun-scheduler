@@ -28,4 +28,6 @@ public class Asset {
 
     private String description;
 
+    private Boolean deleted;
+
 }
