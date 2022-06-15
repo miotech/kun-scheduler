@@ -32,7 +32,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     @Override
     public void executeQuery(QueryRequest queryRequest, StreamObserver<QueryResp> responseObserver) {
         String sql = queryRequest.getSql();
-        logger.debug("going to execute query with sql : {}", sql);
         try {
             String connectionId = queryRequest.getConnectionId();
             Connection connection = connectionPool.get(connectionId);
@@ -56,7 +55,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     @Override
     public void executeUpdate(UpdateRequest updateRequest, StreamObserver<UpdateResp> responseObserver) {
         String sql = updateRequest.getSql();
-        logger.debug("execute update sql = {}", sql);
         try (Connection connection = dataSource.getConnection()) {
             int rows = connection.prepareStatement(sql).executeUpdate();
             UpdateResp resp = UpdateResp.newBuilder().setRows(rows).build();
@@ -70,7 +68,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     @Override
     public void next(RsNextRequest rsNextRequest, StreamObserver<RsNextResp> responseObserver) {
         String rsId = rsNextRequest.getRsId();
-        logger.debug("get next of rs = {}", rsId);
         ResultSet resultSet = resultSetMapPool.get(rsId);
         if (resultSet == null) {
             logger.error("resultSet with id = {} ,not exits", rsId);
@@ -87,7 +84,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
 
     @Override
     public void getString(RsGetString rsGetString, StreamObserver<RsGetStringResp> responseObserver) {
-        logger.debug("going to get string from resultset,request is {}", rsGetString);
         String rsId = rsGetString.getRsId();
         ResultSet resultSet = resultSetMapPool.get(rsId);
         if (resultSet == null) {
@@ -95,21 +91,18 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
         }
         String result = null;
         if (!Strings.isNullOrEmpty(rsGetString.getIndex())) {
-            logger.debug("get result by index");
             try {
                 result = resultSet.getString(Integer.valueOf(rsGetString.getIndex()));
             } catch (Throwable e) {
                 logger.error("failed to get string by index : {}", rsGetString.getIndex(), e);
             }
         } else {
-            logger.debug("get result by lable");
             try {
                 result = resultSet.getString(rsGetString.getLabel());
             } catch (Throwable e) {
                 logger.error("failed to get string by lable : {}", rsGetString.getLabel(), e);
             }
         }
-        logger.debug("get string result is {}", result);
         RsGetStringResp.Builder respOrBuilder = RsGetStringResp.newBuilder();
         if (result != null) {
             respOrBuilder.setResult(result);
@@ -123,7 +116,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     @Override
     public void closeRs(RsCloseRequest rsCloseRequest, StreamObserver<RsCloseResp> responseObserver) {
         String rsId = rsCloseRequest.getRsId();
-        logger.debug("going to close resultSet , rsId = {}", rsId);
         ResultSet resultSet = resultSetMapPool.get(rsId);
         PreparedStatement statement = statementPool.get(rsId);
         try {
@@ -138,7 +130,7 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
             RsCloseResp rsCloseResp = RsCloseResp.newBuilder().setIsClosed(true).build();
             responseObserver.onNext(rsCloseResp);
         } catch (SQLException e) {
-            logger.debug("failed to close resultSet , rsId = {}", rsCloseRequest.getRsId(), e);
+            logger.error("failed to close resultSet , rsId = {}", rsCloseRequest.getRsId(), e);
         }
         responseObserver.onCompleted();
 
@@ -146,7 +138,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
 
     @Override
     public void getMetadata(RsMetadataRequest rsMetadataRequest, StreamObserver<RsMetadataResp> responseObserver) {
-        logger.debug("going to get metadata of resultSet , request is {}", rsMetadataRequest);
         String rsId = rsMetadataRequest.getRsId();
         ResultSet resultSet = resultSetMapPool.get(rsId);
         if (resultSet == null) {
@@ -179,7 +170,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
 
     @Override
     public void getObject(RsGetObjectRequest request, StreamObserver<RsGetObjectResp> responseObserver) {
-        logger.debug("going to get object from resultset,request is {}", request);
         String rsId = request.getRsId();
         ResultSet resultSet = resultSetMapPool.get(rsId);
         if (resultSet == null) {
@@ -198,7 +188,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
             logger.error("failed to get object,request is {}", request, e);
         }
 
-        logger.debug("get string result is {}", result);
         RsGetObjectResp.Builder respOrBuilder = RsGetObjectResp.newBuilder();
         if (result != null) {
             respOrBuilder.setResult(result);
@@ -215,7 +204,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
         try {
             Connection connection = dataSource.getConnection();
             String connectionId = String.valueOf(IdGenerator.getInstance().nextId());
-            logger.debug("get connection connection with id {}",connectionId);
             connectionPool.put(connectionId, connection);
             respBuilder.setConnectionId(connectionId);
         } catch (Throwable e) {
@@ -231,7 +219,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     public void closeConnection(CloseConnection request, StreamObserver<CloseConnectionResp> responseObserver) {
         CloseConnectionResp.Builder respBuilder = CloseConnectionResp.newBuilder();
         String connectionId = request.getConnectionId();
-        logger.debug("going to close connection {}",connectionId);
         try {
             Connection connection = connectionPool.get(connectionId);
             connection.close();
@@ -249,7 +236,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     public void commitConnection(CommitConnection request, StreamObserver<CommitConnectionResp> responseObserver) {
         CommitConnectionResp.Builder respBuilder = CommitConnectionResp.newBuilder();
         String connectionId = request.getConnectionId();
-        logger.debug("going to commit connection {}",connectionId);
         try {
             Connection connection = connectionPool.get(connectionId);
             connection.commit();
@@ -266,7 +252,6 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     public void rollBackConnection(RollBackConnection request, StreamObserver<RollBackConnectionResp> responseObserver){
         RollBackConnectionResp.Builder respBuilder = RollBackConnectionResp.newBuilder();
         String connectionId = request.getConnectionId();
-        logger.debug("going to rollback connection {}",connectionId);
         try {
             Connection connection = connectionPool.get(connectionId);
             connection.rollback();
