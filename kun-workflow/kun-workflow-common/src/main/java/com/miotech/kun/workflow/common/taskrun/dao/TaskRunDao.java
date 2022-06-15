@@ -733,6 +733,24 @@ public class TaskRunDao {
         }
     }
 
+    public void removeFailedUpstreamTaskRunIds(List<Long> taskRunIds, List<Long> failedUpstreamTaskRunIdsToBeRemoved) {
+        if (failedUpstreamTaskRunIdsToBeRemoved.isEmpty()) {
+            return;
+        }
+
+        String filterFailedUpstreamTaskRunId = failedUpstreamTaskRunIdsToBeRemoved.stream().map(x -> "'" + x + "'").collect(Collectors.joining(","));
+        String filterTaskRunId = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .set("failed_upstream_task_run_ids = failed_upstream_task_run_ids::jsonb - array[" + filterFailedUpstreamTaskRunId + "]")
+                .where("id in (" + filterTaskRunId + ")" )
+                .getSQL();
+        List<Object> params = new ArrayList<>();
+        params.addAll(taskRunIds);
+        dbOperator.update(sql, params.toArray());
+    }
+
+
     public List<TaskRun> fetchFailedUpstreamTaskRuns(Long taskRunId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("failed_upstream_task_run_ids")
@@ -1540,6 +1558,9 @@ public class TaskRunDao {
     }
 
     public List<Long> fetchRestrictedTaskRunIdsFromConditions(List<Condition> conditions) {
+        if (conditions.isEmpty()) {
+            return Collections.emptyList();
+        }
         String conditionSQL = DefaultSQLBuilder.newBuilder()
                 .select("task_run_id")
                 .from(CONDITION_TABLE_NAME)

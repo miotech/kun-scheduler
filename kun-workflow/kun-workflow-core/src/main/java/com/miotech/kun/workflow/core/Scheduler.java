@@ -34,4 +34,9 @@ public interface Scheduler {
      * trigger runnable taskRun to start
      */
     public void trigger();
+
+    /**
+     * remove taskrun's selected upstream taskrun dependency
+     */
+    public boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds);
 }

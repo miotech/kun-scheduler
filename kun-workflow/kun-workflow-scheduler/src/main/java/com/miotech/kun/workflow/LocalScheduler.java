@@ -49,4 +49,9 @@ public class LocalScheduler implements Scheduler {
     public void trigger() {
         taskManager.trigger();
     }
+
+    @Override
+    public boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
+        return taskManager.removeDependency(taskRunId, upstreamTaskRunIds);
+    }
 }
