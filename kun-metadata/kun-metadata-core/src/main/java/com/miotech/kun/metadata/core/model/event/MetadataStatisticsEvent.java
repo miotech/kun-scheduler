@@ -3,8 +3,9 @@ package com.miotech.kun.metadata.core.model.event;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.miotech.kun.commons.pubsub.event.PublicEvent;
 
-public class MetadataStatisticsEvent {
+public class MetadataStatisticsEvent extends PublicEvent {
 
     private final EventType eventType;
 

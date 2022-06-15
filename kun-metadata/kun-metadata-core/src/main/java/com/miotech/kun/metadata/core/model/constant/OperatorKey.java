@@ -16,8 +16,9 @@ public class OperatorKey {
     public static final String DATASOURCE_PASSWORD = "datasource.password";
     public static final String DATASOURCE_DRIVER_CLASS_NAME = "datasource.driverClassName";
     public static final String EXTRACT_STATS = "extract_stats";
-    public static final String BROKERS = "brokers";
-    public static final String MSE_TOPIC = "mseTopic";
+    public static final String REDIS_HOST = "redisHost";
+    public static final String STREAM_KEY = "streamKey";
+
     public static final String MSE_URL = "mseUrl";
     public static final String CATALOGER_BLACK_LIST = "catalogerBlackList";
     public static final String CATALOGER_WHITE_LIST = "catalogerWhiteList";

@@ -87,6 +87,8 @@ public class MCEOperator extends KunOperator {
                 .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, "driverClassName", "driverClassName")
                 .define(DEPLOY_MODE, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, DEPLOY_MODE, DEPLOY_MODE)
                 .define(DATASOURCE_ID, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, DATASOURCE_ID, DATASOURCE_ID)
+                .define(REDIS_HOST, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, REDIS_HOST, REDIS_HOST)
+                .define(STREAM_KEY, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, STREAM_KEY, STREAM_KEY)
                 .define(GID, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, GID, GID)
                 .define(MCE, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MCE, MCE)
                 .define(MSE_URL, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MSE_URL, MSE_URL)
@@ -107,6 +109,8 @@ public class MCEOperator extends KunOperator {
 
         map.put(DEPLOY_MODE, operatorContext.getConfig().getString(DEPLOY_MODE));
         map.put(DATASOURCE_ID, operatorContext.getConfig().getString(DATASOURCE_ID));
+        props.put(REDIS_HOST, operatorContext.getConfig().getString(REDIS_HOST));
+        props.put(STREAM_KEY, operatorContext.getConfig().getString(STREAM_KEY));
         map.put(GID, operatorContext.getConfig().getString(GID));
         map.put(MCE, operatorContext.getConfig().getString(MCE));
         map.put(MSE_URL, operatorContext.getConfig().getString(MSE_URL));

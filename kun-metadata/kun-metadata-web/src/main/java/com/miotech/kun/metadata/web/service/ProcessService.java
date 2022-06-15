@@ -211,6 +211,8 @@ public class ProcessService {
         conf.put(PropKey.PASSWORD, props.get(PropKey.PASSWORD));
         conf.put(PropKey.DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
         conf.put(PropKey.DEPLOY_MODE, deployMode.name());
+        conf.put(PropKey.REDIS_HOST, props.getString("redis.host"));
+        conf.put(PropKey.STREAM_KEY, props.getString("redis.metadata-stream-key"));
         conf.put(PropKey.MSE_URL, props.getString(INFRA_URL) + "/mse/_execute");
 
         switch (deployMode) {

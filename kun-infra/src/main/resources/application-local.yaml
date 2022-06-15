@@ -88,6 +88,7 @@ redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
   stream-key: kun-notify
+  metadata-stream-key: kun-notify-metadata
   workflow:
     group: workflow-group
     consumer: workflow-consumer
@@ -99,12 +100,4 @@ infra:
   url: http://${KUN_INFRA_HOST}:${KUN_INFRA_PORT}
   cronExpr: 0 0 12 * * ?
 
-
-kafka:
-  bootstrapServers: 127.0.0.1:9092
-  mceTopicName: kun-metadata-mce
-  mseTopicName: kun-metadata-mse-dev
-  mceGroupId: 87f367957a9b49c48ce708fae38a158c
-  mseGroupId: 18bf66dc2c4249baa45618c43fae51b5
-  pushMode: off
-
+pushMode: off
