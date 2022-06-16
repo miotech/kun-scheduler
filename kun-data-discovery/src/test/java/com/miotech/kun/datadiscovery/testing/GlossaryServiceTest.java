@@ -2,6 +2,7 @@ package com.miotech.kun.datadiscovery.testing;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.datadiscovery.model.bo.CopyOperation;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryCopyRequest;
@@ -1076,6 +1077,39 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         mockRole(glossaryEditor);
         Long id = glossaryService.removeOwner(glossary3_2.getId(), "test1", false);
         assertThat(id, is(glossary3_2.getId()));
+    }
+
+    @Test
+    public void test_add_glossary_resource() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList, "glossary");
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+        Set<Long> all = new HashSet<>(assetList);
+        List<Long> addList = ImmutableList.of(2L, 3L, 4L);
+        all.addAll(addList);
+
+        assertTrue(glossaryService.addGlossaryResource(glossary.getId(), addList));
+        Glossary afterGlossary = glossaryService.fetchGlossary(glossary.getId());
+        assertTrue(afterGlossary.getAssets().stream().allMatch(asset -> all.contains(asset.getId())));
+    }
+
+    @Test
+    public void test_remove_glossary_resource() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList, "glossary");
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+        Set<Long> all = new HashSet<>(assetList);
+        List<Long> removeList = ImmutableList.of(2L, 3L);
+        all.removeAll(removeList);
+
+        assertTrue(glossaryService.removeGlossaryResource(glossary.getId(), removeList));
+        mockDatasetBasicInfoList(Lists.newArrayList(all));
+        Glossary afterGlossary = glossaryService.fetchGlossary(glossary.getId());
+        assertTrue(afterGlossary.getAssets().stream().allMatch(asset -> all.contains(asset.getId())));
     }
 
     public void mockRole(GlossaryRole role) {

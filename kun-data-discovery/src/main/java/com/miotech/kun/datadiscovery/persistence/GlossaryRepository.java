@@ -21,6 +21,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.constraints.NotNull;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -64,7 +65,7 @@ public class GlossaryRepository extends BaseRepository {
 
     }
 
-    @Transactional(rollbackFor = Exception.class)
+
     public Long updateGraph(String currentUsername, Long id, GlossaryGraphRequest glossaryGraphRequest) {
         OffsetDateTime now = now();
         String sql1 = DefaultSQLBuilder.newBuilder()
@@ -136,7 +137,6 @@ public class GlossaryRepository extends BaseRepository {
     }
 
 
-    @Transactional(rollbackFor = Exception.class)
     public Long insert(GlossaryRequest glossaryRequest) {
         log.debug("glossaryRequest:{}", glossaryRequest);
         String kmgSql = "insert into kun_mt_glossary values " + toValuesSql(1, 10);
@@ -174,12 +174,12 @@ public class GlossaryRepository extends BaseRepository {
         );
 
         if (!CollectionUtils.isEmpty(glossaryRequest.getAssetIds())) {
-            insertGlossaryDatasetRef(glossaryRequest.getAssetIds(), glossaryId, glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
+            insertGlossaryDatasetRef(glossaryId, glossaryRequest.getAssetIds(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
         }
         return glossaryId;
     }
 
-    public void insertGlossaryDatasetRef(Collection<Long> assetIds, Long glossaryId, String updateUser, OffsetDateTime updateTime) {
+    public void insertGlossaryDatasetRef(Long glossaryId, Collection<Long> assetIds, String updateUser, OffsetDateTime updateTime) {
         if (CollectionUtils.isEmpty(assetIds)) {
             return;
         }
@@ -207,7 +207,6 @@ public class GlossaryRepository extends BaseRepository {
         return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, paramsList.toArray());
     }
 
-    @Transactional(rollbackFor = Exception.class)
     public void update(Long id, GlossaryRequest glossaryRequest) {
         GlossaryBasicInfo glossaryBaseInfo = findGlossaryBaseInfo(id);
         List<Object> sqlParams = new ArrayList<>();
@@ -221,7 +220,7 @@ public class GlossaryRepository extends BaseRepository {
                 .set("name=?", "description=?", "update_user=?", "update_time=?")
                 .where("id = ? and deleted=false").getSQL();
         jdbcTemplate.update(basicUpdateSql, sqlParams.toArray());
-        updateAssets(id, glossaryRequest.getAssetIds(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
+        updateWholeAssets(id, glossaryRequest.getAssetIds(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
         move(glossaryBaseInfo, glossaryRequest.getParentId(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
     }
 
@@ -295,15 +294,14 @@ public class GlossaryRepository extends BaseRepository {
         return query;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public void updateAssets(Long id, List<Long> assetIds, String updateUser, OffsetDateTime updateTime) {
+    private void updateWholeAssets(Long id, List<Long> assetIds, String updateUser, OffsetDateTime updateTime) {
         List<Long> oldList = findGlossaryToDataSetIdList(id);
         Collection<Long> intersection = CollectionUtils.intersection(assetIds, oldList);
         Collection<Long> subtractRemove = CollectionUtils.subtract(oldList, intersection);
         removeGlossaryRef(id, Lists.newArrayList(subtractRemove), updateUser, updateTime);
         Collection<Long> subtractAdd = CollectionUtils.subtract(assetIds, intersection);
         if (CollectionUtils.isNotEmpty(subtractAdd)) {
-            insertGlossaryDatasetRef(subtractAdd, id, updateUser, updateTime);
+            insertGlossaryDatasetRef(id, subtractAdd, updateUser, updateTime);
         }
     }
 
@@ -328,12 +326,12 @@ public class GlossaryRepository extends BaseRepository {
         List<Long> ids = findSelfDescendants(glossaryId).stream().map(GlossaryBasicInfo::getId).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(ids)) {
             removeGlossary(ids, currentUserName, updateTime);
-            removeGlossaryRef(ids, currentUserName, updateTime);
+            removeGlossaryRefByGlossaryIdList(ids, currentUserName, updateTime);
         }
         return ids;
     }
 
-    private void removeGlossaryRef(List<Long> glossaryIdList, String currentUserName, OffsetDateTime updateTime) {
+    public void removeGlossaryRefByGlossaryIdList(List<Long> glossaryIdList, String currentUserName, OffsetDateTime updateTime) {
         String unbindSQL = DefaultSQLBuilder.newBuilder().update(TABLE_KUN_MT_GLOSSARY_TO_DATASET_REF)
                 .set("update_user=?", "update_time=?", "deleted=true ").where("glossary_id in " + collectionToConditionSql(glossaryIdList)).getSQL();
         List<Object> paramList = Lists.newArrayList();
@@ -343,7 +341,7 @@ public class GlossaryRepository extends BaseRepository {
         jdbcTemplate.update(unbindSQL, paramList.toArray());
     }
 
-    private void removeGlossaryRef(Long glossaryId, Collection<Long> datasetIdList, String updateUser, OffsetDateTime updateTime) {
+    public void removeGlossaryRef(Long glossaryId, Collection<Long> datasetIdList, String updateUser, OffsetDateTime updateTime) {
         if (CollectionUtils.isEmpty(datasetIdList)) {
             return;
         }
@@ -398,13 +396,17 @@ public class GlossaryRepository extends BaseRepository {
         return glossaryBasicInfo;
     }
 
-
+    @NotNull
     public List<Long> findGlossaryToDataSetIdList(Long glossaryId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("dataset_id").
                 from(TABLE_KUN_MT_GLOSSARY_TO_DATASET_REF, ALIAS_KUN_MT_GLOSSARY_TO_DATASET_REF)
                 .where("glossary_id=? and deleted=false").getSQL();
-        return jdbcTemplate.queryForList(sql, Long.class, glossaryId);
+        List<Long> datasetIds = jdbcTemplate.queryForList(sql, Long.class, glossaryId);
+        if (CollectionUtils.isEmpty(datasetIds)) {
+            return Lists.newArrayList();
+        }
+        return datasetIds;
 
     }
 
