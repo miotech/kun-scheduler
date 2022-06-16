@@ -4,8 +4,8 @@ import { Link } from 'umi';
 import { useQueryParams, StringParam } from 'use-query-params';
 import { RouteComponentProps } from 'react-router';
 import numeral from 'numeral';
-import { FileTextOutlined } from '@ant-design/icons';
-import { Spin, Button, message, Select, Input, Divider, Table } from 'antd';
+import { FileTextOutlined, CloseOutlined, PlusCircleOutlined } from '@ant-design/icons';
+import { Spin, Button, message, Select, Input, Divider, Table, Popconfirm } from 'antd';
 import { TablePaginationConfig } from 'antd/lib/table';
 import Card from '@/components/Card/Card';
 
@@ -16,18 +16,19 @@ import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
 import BackButton from '@/components/BackButton/BackButton';
 import useBackPath from '@/hooks/useBackPath';
-import { Watermark } from '@/definitions/Dataset.type';
-import { Column } from '@/rematch/models/datasetDetail';
+import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
+import { Column, DatasetDetailState } from '@/rematch/models/datasetDetail';
 import { LineageDirection } from '@/services/lineage';
 
 import { DatasetPullProcessVO } from '@/services/datasetDetail';
+import { addGlossaryDateset, removeGlossaryDateset } from '@/services/glossary';
 import { useInterval } from 'ahooks';
+import AutosuggestInput from '@/pages/glossary/components/AutosuggestInput/AutosuggestInput';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
 // import DataQualityTable from './components/DataQualityTable/DataQualityTable';
 import LineageStreamTaskTable from './components/LineageStreamTaskTable/LineageStreamTaskTable';
-
 import styles from './index.less';
 
 interface MatchParams {
@@ -61,7 +62,7 @@ export default function DatasetDetail({ match }: Props) {
   const t = useI18n();
   const { getBackPath } = useBackPath();
 
-  const { selector, dispatch } = useRedux(state => state.datasetDetail);
+  const { selector, dispatch } = useRedux<DatasetDetailState>(state => state.datasetDetail);
   const {
     selector: { allOwnerList, allTagList, latestPullProcess, latestPullProcessIsLoading, deleted },
   } = useRedux(state => ({
@@ -76,7 +77,7 @@ export default function DatasetDetail({ match }: Props) {
   const debounceColumnKeyword = useDebounce(selector.columnsKeyword, 500);
 
   const currentId = match.params.datasetId;
-
+  const [isAddGlossary, setIsAddGlossary] = useState(false);
   const [fetchDetailLoading, setFetchDetailLoading] = useState(false);
   const [fetchColumnsLoading, setFetchColumnsLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
@@ -389,6 +390,32 @@ export default function DatasetDetail({ match }: Props) {
     ],
   );
 
+  const handleAddGlossary = useCallback(
+    async (glossaryId: string) => {
+      const res = await addGlossaryDateset({ id: glossaryId, assetIds: [currentId] });
+      if (res) {
+        setIsAddGlossary(false);
+        setFetchDetailLoading(true);
+        dispatch.datasetDetail.fetchDatasetDetail(currentId).then(() => {
+          setFetchDetailLoading(false);
+        });
+      }
+    },
+    [currentId, dispatch.datasetDetail],
+  );
+
+  const handleDeleteGlossary = useCallback(
+    async (glossaryId: string) => {
+      const res = await removeGlossaryDateset({ id: glossaryId, assetIds: [currentId] });
+      if (res) {
+        setFetchDetailLoading(true);
+        dispatch.datasetDetail.fetchDatasetDetail(currentId).then(() => {
+          setFetchDetailLoading(false);
+        });
+      }
+    },
+    [currentId, dispatch.datasetDetail],
+  );
   return (
     <div className={styles.page}>
       <BackButton defaultUrl="/data-discovery/dataset" />
@@ -467,22 +494,35 @@ export default function DatasetDetail({ match }: Props) {
               <Divider className={styles.divider} />
 
               <div className={styles.inputRow}>
-                {selector.glossaries && selector.glossaries.length > 0 && (
-                  <div className={styles.glossaryRow}>
-                    <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.glossary')}</div>
+                <div className={styles.glossaryRow}>
+                  <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.glossary')}</div>
 
-                    <div className={styles.glossaryContent}>
-                      {selector.glossaries.map(glossary => (
+                  <div className={styles.glossaryContent}>
+                    {selector.glossaries &&
+                      selector.glossaries.map((glossary: GlossaryItem) => (
                         <div key={glossary.id} className={styles.glossaryItem}>
                           <FileTextOutlined style={{ marginRight: 4 }} />
                           <Link to={getBackPath(`/data-discovery/glossary?glossaryId=${glossary.id}`)}>
                             <div className={styles.glossaryName}>{glossary.name}</div>
                           </Link>
+                          <Popconfirm
+                            title={t('glossary.delete.title')}
+                            onConfirm={() => handleDeleteGlossary(glossary.id)}
+                          >
+                            <CloseOutlined className={styles.delete} />
+                          </Popconfirm>
                         </div>
                       ))}
-                    </div>
+                    {!isAddGlossary && (
+                      <PlusCircleOutlined className={styles.addGlossaryButton} onClick={() => setIsAddGlossary(true)} />
+                    )}
+                    {isAddGlossary && (
+                      <div className={styles.addGlossarySelect}>
+                        <AutosuggestInput onBlur={() => setIsAddGlossary(false)} onSelect={handleAddGlossary} />
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
                 <div className={styles.shortInputRow}>
                   <div className={styles.infoBlock} style={{ minWidth: 380 }}>

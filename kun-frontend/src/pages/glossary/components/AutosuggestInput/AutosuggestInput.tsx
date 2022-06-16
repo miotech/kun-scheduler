@@ -8,9 +8,11 @@ import styles from './AutosuggestInput.less';
 
 const { Option } = Select;
 interface Props {
-  setCurrentId: (id: string) => void;
+  onSelect: (id: string) => void; // 选择option事件
+  onPathClick?: (id: string) => void; // 点击option路径事件
+  onBlur?: () => void;
 }
-export default memo(function AutosuggestInput({ setCurrentId }: Props) {
+export default memo(function AutosuggestInput({ onPathClick, onSelect, onBlur }: Props) {
   const t = useI18n();
 
   const { selector, dispatch } = useRedux(state => state.glossary);
@@ -39,9 +41,9 @@ export default memo(function AutosuggestInput({ setCurrentId }: Props) {
 
   const handleSelect = useCallback(
     (v, option) => {
-      setCurrentId(option.value);
+      onSelect(option.value);
     },
-    [setCurrentId],
+    [onSelect],
   );
 
   return (
@@ -50,6 +52,7 @@ export default memo(function AutosuggestInput({ setCurrentId }: Props) {
       filterOption={false}
       onSelect={handleSelect}
       onSearch={handleSearch}
+      onBlur={onBlur}
       showSearch
       placeholder={t('glossary.searchGlossary')}
     >
@@ -58,7 +61,8 @@ export default memo(function AutosuggestInput({ setCurrentId }: Props) {
           <div className={styles.label}>
             <span className={styles.name}>{item.value}</span> <span className={styles.des}> {item.description}</span>
           </div>
-          {item.ancestryGlossaryList &&
+          {onPathClick &&
+            item.ancestryGlossaryList &&
             item.ancestryGlossaryList.map((idx: GlossaryChild, index: number) => {
               return (
                 <span
@@ -66,7 +70,7 @@ export default memo(function AutosuggestInput({ setCurrentId }: Props) {
                   className={styles.pathName}
                   onClick={e => {
                     e.stopPropagation();
-                    setCurrentId(idx.id);
+                    onPathClick(idx.id);
                   }}
                 >
                   {' '}
