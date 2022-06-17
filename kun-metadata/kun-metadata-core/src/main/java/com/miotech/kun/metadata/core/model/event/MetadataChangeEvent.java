@@ -3,8 +3,9 @@ package com.miotech.kun.metadata.core.model.event;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.miotech.kun.commons.pubsub.event.PublicEvent;
 
-public class MetadataChangeEvent {
+public class MetadataChangeEvent extends PublicEvent {
 
     private final EventType eventType;
 
@@ -18,19 +19,23 @@ public class MetadataChangeEvent {
 
     private final String tableName;
 
+    private final Long bizTime;
+
     @JsonCreator
     public MetadataChangeEvent(@JsonProperty("eventType") EventType eventType,
                                @JsonProperty("dataSourceType") DataSourceType dataSourceType,
                                @JsonProperty("dataSourceId") long dataSourceId,
                                @JsonProperty("databaseName") String databaseName,
                                @JsonProperty("schemaName") String schemaName,
-                               @JsonProperty("tableName") String tableName) {
+                               @JsonProperty("tableName") String tableName,
+                               @JsonProperty("bizTime") Long bizTime) {
         this.eventType = eventType;
         this.dataSourceType = dataSourceType;
         this.dataSourceId = dataSourceId;
         this.databaseName = databaseName;
         this.schemaName = schemaName;
         this.tableName = tableName;
+        this.bizTime = bizTime;
     }
 
     public EventType getEventType() {
@@ -55,6 +60,10 @@ public class MetadataChangeEvent {
 
     public String getTableName() {
         return tableName;
+    }
+
+    public Long getBizTime() {
+        return bizTime;
     }
 
     public enum EventType {
@@ -99,6 +108,7 @@ public class MetadataChangeEvent {
         private String databaseName;
         private String schemaName;
         private String tableName;
+        private Long bizTime;
 
         private Builder() {
         }
@@ -133,8 +143,13 @@ public class MetadataChangeEvent {
             return this;
         }
 
+        public Builder withBizTime(Long bizTime) {
+            this.bizTime = bizTime;
+            return this;
+        }
+
         public MetadataChangeEvent build() {
-            return new MetadataChangeEvent(eventType, dataSourceType, dataSourceId, databaseName, schemaName, tableName);
+            return new MetadataChangeEvent(eventType, dataSourceType, dataSourceId, databaseName, schemaName, tableName, bizTime);
         }
     }
 }

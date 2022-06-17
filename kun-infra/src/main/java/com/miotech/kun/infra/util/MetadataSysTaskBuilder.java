@@ -68,8 +68,8 @@ public class MetadataSysTaskBuilder {
         confBuilder.addConfig(PropKey.DRIVER_CLASS_NAME, props.getString(PropKey.DRIVER_CLASS_NAME));
         confBuilder.addConfig(PropKey.DEPLOY_MODE, DataBuilderDeployMode.DATASOURCE.name());
         confBuilder.addConfig(PropKey.DATASOURCE_ID, dataSourceId);
-        confBuilder.addConfig(PropKey.BROKERS, props.getString("kafka.bootstrapServers"));
-        confBuilder.addConfig(PropKey.MSE_TOPIC, props.getString("kafka.mseTopicName"));
+        confBuilder.addConfig(PropKey.REDIS_HOST, props.getString("redis.host"));
+        confBuilder.addConfig(PropKey.STREAM_KEY, props.getString("redis.metadata-stream-key"));
 
         return confBuilder.build();
     }

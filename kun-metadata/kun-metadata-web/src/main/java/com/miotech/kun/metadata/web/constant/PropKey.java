@@ -15,8 +15,8 @@ public class PropKey {
     public static final String CRON_EXPR = "workflow.cronExpr";
     public static final String INFRA_URL = "infra.url";
     public static final String MCE = "mce";
-    public static final String BROKERS = "brokers";
-    public static final String MSE_TOPIC = "mseTopic";
+    public static final String REDIS_HOST = "redisHost";
+    public static final String STREAM_KEY = "streamKey";
     public static final String MSE_URL = "mseUrl";
 
 }

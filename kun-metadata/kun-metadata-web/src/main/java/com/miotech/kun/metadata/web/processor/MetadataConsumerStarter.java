@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.web.kafka;
+package com.miotech.kun.metadata.web.processor;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -1,4 +1,5 @@
 dependencies {
+    implementation project(":kun-commons:kun-commons-pubsub")
     implementation project(":kun-commons:kun-commons-utils")
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"

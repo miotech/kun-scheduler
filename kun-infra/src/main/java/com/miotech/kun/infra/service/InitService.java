@@ -8,7 +8,7 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.infra.util.MetadataSysTaskBuilder;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
-import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
+import com.miotech.kun.metadata.web.processor.MetadataConsumerStarter;
 import com.miotech.kun.workflow.common.rpc.ExecutorServer;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.operator.Operator;

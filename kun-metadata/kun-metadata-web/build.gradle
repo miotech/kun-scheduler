@@ -13,6 +13,7 @@ dependencies {
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
     implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(':kun-commons:kun-commons-pubsub')
     implementation project(":kun-metadata:kun-metadata-core")
     implementation project(":kun-metadata:kun-metadata-common")
     implementation project(":kun-metadata:kun-metadata-databuilder")
@@ -37,6 +38,7 @@ dependencies {
     implementation "org.apache.kafka:kafka-clients"
     implementation 'com.squareup.okhttp3:okhttp'
     implementation 'com.googlecode.json-simple:json-simple'
+    implementation 'io.lettuce:lettuce-core'
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
