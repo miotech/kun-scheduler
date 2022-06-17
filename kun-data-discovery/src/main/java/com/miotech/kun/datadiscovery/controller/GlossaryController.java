@@ -102,4 +102,18 @@ public class GlossaryController {
         Preconditions.checkArgument(StringUtils.isNotBlank(userName), "Invalid argument `userName`: null or empty");
         return RequestResult.success(glossaryService.removeOwner(id, userName, true));
     }
+
+    @PostMapping("/metadata/glossary/add/dataset")
+    public RequestResult<Boolean> addGlossaryResource(@RequestBody GlossaryResourceRequest glossaryResourceRequest) {
+        Long id = glossaryResourceRequest.getId();
+        Preconditions.checkNotNull(id, "Invalid argument `id`: null");
+        return RequestResult.success(glossaryService.addGlossaryResource(id, glossaryResourceRequest.getAssetIds()));
+    }
+
+    @PostMapping("/metadata/glossary/remove/dataset")
+    public RequestResult<Boolean> removeGlossaryResource(@RequestBody GlossaryResourceRequest glossaryResourceRequest) {
+        Long id = glossaryResourceRequest.getId();
+        Preconditions.checkNotNull(id, "Invalid argument `id`: null");
+        return RequestResult.success(glossaryService.removeGlossaryResource(id, glossaryResourceRequest.getAssetIds()));
+    }
 }

@@ -22,7 +22,6 @@ import com.miotech.kun.security.common.UserOperation;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
 import com.miotech.kun.security.facade.rpc.ScopeRole;
-import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -69,6 +68,7 @@ public class GlossaryService extends BaseSecurityService {
         return glossaryRepository.getParentId(id);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
         return glossaryRepository.updateGraph(getCurrentUsername(), id, glossaryGraphRequest);
@@ -90,7 +90,7 @@ public class GlossaryService extends BaseSecurityService {
         return fetchGlossary(id);
     }
 
-    public Long add(GlossaryRequest glossaryRequest) {
+    private Long add(GlossaryRequest glossaryRequest) {
         Long parentId = glossaryRequest.getParentId();
         if (Objects.isNull(parentId)) {
             checkAuth(parentId, GlossaryUserOperation.ADD_GLOSSARY);
@@ -474,6 +474,7 @@ public class GlossaryService extends BaseSecurityService {
         return securityRpcClient.getGlossaryEditorList(moduleName, role, id);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Long addOwner(Long id, String owner, boolean checkAuth) {
         if (checkAuth) {
             checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
@@ -481,10 +482,47 @@ public class GlossaryService extends BaseSecurityService {
         return addScope(id, owner, GlossaryRole.GLOSSARY_EDITOR);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public Long removeOwner(Long id, String owner, boolean checkAuth) {
         if (checkAuth) {
             checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
         }
         return removeScope(id, owner, GlossaryRole.GLOSSARY_EDITOR);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public boolean addGlossaryResource(Long id, List<Long> assetIds) {
+        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_RESOURCE);
+        if (CollectionUtils.isEmpty(assetIds)) {
+            log.debug("assetIds is empty");
+            return true;
+        }
+        GlossaryBasicInfo glossaryBaseInfo = glossaryRepository.findGlossaryBaseInfo(id);
+        if (Objects.isNull(glossaryBaseInfo)) {
+            log.error("glossary:{} does not  exist", id);
+            throw new IllegalArgumentException(String.format("glossary:%s does not  exist", id));
+        }
+        List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(id);
+        List<Long> addList = assetIds.stream().filter(assetId -> !glossaryToDataSetIdList.contains(assetId)).collect(Collectors.toList());
+        glossaryRepository.insertGlossaryDatasetRef(id, addList, getCurrentUsername(), DateTimeUtils.now());
+        return true;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeGlossaryResource(Long id, List<Long> assetIds) {
+        checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_RESOURCE);
+        if (CollectionUtils.isEmpty(assetIds)) {
+            log.debug("assetIds is empty");
+            return true;
+        }
+        GlossaryBasicInfo glossaryBaseInfo = glossaryRepository.findGlossaryBaseInfo(id);
+        if (Objects.isNull(glossaryBaseInfo)) {
+            log.error("glossary:{} does not  exist", id);
+            throw new IllegalArgumentException(String.format("glossary:%s does not  exist", id));
+        }
+        List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(id);
+        List<Long> removeList = assetIds.stream().filter(glossaryToDataSetIdList::contains).collect(Collectors.toList());
+        glossaryRepository.removeGlossaryRef(id, removeList, getCurrentUsername(), DateTimeUtils.now());
+        return true;
     }
 }
