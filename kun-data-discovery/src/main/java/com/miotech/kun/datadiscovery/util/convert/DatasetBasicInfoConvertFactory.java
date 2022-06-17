@@ -25,6 +25,7 @@ public class DatasetBasicInfoConvertFactory implements ConverterFactory<DatasetD
             asset.setDatasource(source.getDatasource());
             asset.setDescription(source.getDescription());
             asset.setOwner(source.getOwners());
+            asset.setDeleted(source.getDeleted());
             return (T) asset;
         };
     }
