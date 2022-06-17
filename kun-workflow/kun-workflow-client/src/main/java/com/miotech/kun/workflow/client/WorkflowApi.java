@@ -300,6 +300,14 @@ public class WorkflowApi {
         return post(url, Maps.newHashMap(), Object.class);
     }
 
+    public Object skipTaskRun(Long taskRunId) {
+        HttpUrl url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("_skip")
+                .build();
+        return put(url, Maps.newHashMap(), Object.class);
+    }
+
     public TaskRunState getTaskRunStatus(Long taskRunId) {
         HttpUrl url = buildUrl(API_TASK_RUNS)
                 .addPathSegment(taskRunId.toString())

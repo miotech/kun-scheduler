@@ -197,6 +197,11 @@ public class TaskRunController {
         return taskRunService.abortTaskRun(taskRunId);
     }
 
+    @RouteMapping(url = "/taskruns/{taskRunId}/_skip", method = "PUT")
+    public Boolean skipTaskRun(@RouteVariable long taskRunId) {
+        return taskRunService.skipTaskRun(taskRunId);
+    }
+
     @RouteMapping(url = "/taskruns/{id}/neighbors", method = "GET")
     public Object getTaskRunNeighbors(@RouteVariable Long id,
                                       @QueryParameter(defaultValue = "1") int upstreamLevel,

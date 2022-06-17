@@ -143,6 +143,32 @@ public class TaskManager {
         }
     }
 
+    public boolean skip(TaskRun taskRun) {
+        //0.check state of taskrun
+        checkState(taskRun.getStatus().isFailure(), "This taskRun is not allowed to skip. Status not match");
+        //1. reuse latest task attempt
+        TaskAttemptProps taskAttempt = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+
+        //2. post skip taskrun transition event
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.SKIP, taskAttempt.getId());
+        eventBus.post(taskRunTransitionEvent);
+
+        //3. taskrun status changed to skipped, update condition table row which condition is this taskrun
+        updateTaskRunConditions(Collections.singletonList(taskRun.getId()), TaskRunStatus.SKIPPED);
+
+        //4. for taskrun is failure, update it's downstream which are upstream_failed
+        if (taskRun.getStatus().isFailure()) {
+            List<Long> taskRunShouldBeCreated = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
+            taskRunDao.resetTaskRunTimestampToNull(taskRunShouldBeCreated, "term_at");
+            updateTaskRunConditions(taskRunShouldBeCreated, TaskRunStatus.CREATED);
+            logger.info("taskrun should be created {}", taskRunShouldBeCreated);
+            updateRestrictedTaskRunsStatus(taskRunShouldBeCreated);
+        }
+
+        trigger();
+        return true;
+    }
+
     /* ----------- private methods ------------ */
 
     private void init() {
@@ -311,11 +337,21 @@ public class TaskManager {
         }
     }
 
+    /**
+     * update taskRunId's downstream taskrun to taskRunStatus which is in filterStatus
+     * @param taskRunId
+     * @param taskRunStatus
+     * @param filterStatus
+     * @return
+     */
     private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus, List<TaskRunStatus> filterStatus) {
-        //fetch all downstream of retry taskRun
+        //fetch all downstream task runs
         List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
         logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downstreamTaskRunIds, taskRunId);
+
+        //update downstream taskrun "failed_upstream_task_run_id" field with taskRunId by taskRunStatus
         taskRunDao.updateTaskRunWithFailedUpstream(taskRunId, downstreamTaskRunIds, taskRunStatus);
+
         if (taskRunStatus.isTermState()) {
             OffsetDateTime termAt = DateTimeUtils.now();
             taskRunDao.updateAttemptStatusByTaskRunIds(downstreamTaskRunIds, taskRunStatus, termAt, filterStatus);

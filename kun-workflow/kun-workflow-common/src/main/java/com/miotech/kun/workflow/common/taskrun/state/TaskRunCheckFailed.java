@@ -14,4 +14,9 @@ public class TaskRunCheckFailed extends BasicTaskRunState {
         return TaskRunStatus.CREATED;
     }
 
+    @Override
+    protected TaskRunStatus onSkip() {
+        return TaskRunStatus.SKIPPED;
+    }
+
 }

@@ -337,6 +337,14 @@ public class WorkflowApiTest extends MockServerTestBase {
     }
 
     @Test
+    public void skipTaskRun_shouldWork() {
+        TaskRun taskRun = mockTaskRun(1l);
+        mockPut("/taskruns/" + taskRun.getId() + "/_skip", "", JSONUtils.toJsonString(true));
+        Boolean result = (Boolean) wfApi.skipTaskRun(taskRun.getId());
+        Assertions.assertTrue(result);
+    }
+
+    @Test
     public void getTaskRunWithAllDownstream_shouldWork() {
         TaskRun taskRun = mockTaskRun();
         taskRun.setStatus(TaskRunStatus.SUCCESS);

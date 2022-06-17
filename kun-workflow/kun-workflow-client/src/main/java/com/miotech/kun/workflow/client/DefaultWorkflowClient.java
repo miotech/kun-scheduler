@@ -294,6 +294,12 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public TaskRun skipTaskRun(Long taskRunId) {
+        wfApi.skipTaskRun(taskRunId);
+        return wfApi.getTaskRun(taskRunId);
+    }
+
+    @Override
     public List<TaskRun> getLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit) {
         return wfApi.getLatestTaskRuns(taskId, filterStatus, limit);
     }

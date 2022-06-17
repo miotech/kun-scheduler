@@ -15,6 +15,7 @@ public enum OperationRecordType {
 
     , TASK_RERUN
     , TASK_ABORT
+    , TASK_SKIP
 
     , GLOSSARY_CREATE
     , GLOSSARY_UPDATE

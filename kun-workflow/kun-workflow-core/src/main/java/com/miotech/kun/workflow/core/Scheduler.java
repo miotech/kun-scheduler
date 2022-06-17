@@ -26,6 +26,11 @@ public interface Scheduler {
     public boolean rerun(TaskRun taskRun);
 
     /**
+     * skip a taskrun
+     */
+    public boolean skip(TaskRun taskRun);
+
+    /**
      * trigger runnable taskRun to start
      */
     public void trigger();
