@@ -483,6 +483,8 @@ export default {
   'taskRun.rerunDownstream.table.status': 'Status',
   'taskRun.rerun.alert': 'Are you sure to rerun this instance?',
   'taskRun.abort.alert': 'Are you sure to stop this instance?',
+  'taskRun.skip.alert': 'Are you sure to skip this instance?',
+  'taskRun.skip': 'Skip Task',
   'taskRun.property.attempt.jumpToLatest': 'Jump to latest attempt',
   'monitoringDashboard.title': 'Monitoring Dashboard',
   'monitoringDashboard.dataDiscovery.title': 'Data Discovery',
