@@ -1348,4 +1348,32 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(taskRunShouldBeCreated,hasSize(1));
         assertThat(taskRunShouldBeCreated.get(0),is(taskRun3.getId()));
     }
+
+    @Test
+    public void removeFailedUpstreamTaskRunIds_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(5, "0>>3;1>>3;2>>3;3>>4");
+        taskList.forEach(x -> taskDao.create(x));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>3;1>>3;2>>3;3>>4");
+        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun4 = taskRunList.get(3).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId(), taskRun2.getId(), taskRun3.getId())).build();
+        TaskRun taskRun5 = taskRunList.get(4).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId(), taskRun2.getId(), taskRun3.getId())).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+        taskRunDao.createTaskRun(taskRun5);
+
+        taskRunDao.removeFailedUpstreamTaskRunIds(Arrays.asList(taskRun4.getId(), taskRun5.getId()), Arrays.asList(taskRun1.getId(), taskRun2.getId()));
+
+        TaskRun savedTaskRun4 = taskRunDao.fetchTaskRunById(taskRun4.getId()).get();
+        TaskRun savedTaskRun5 = taskRunDao.fetchTaskRunById(taskRun5.getId()).get();
+        assertThat(savedTaskRun4.getFailedUpstreamTaskRunIds().size(), is(1));
+        assertThat(savedTaskRun5.getFailedUpstreamTaskRunIds().size(), is(1));
+        assertThat(savedTaskRun4.getFailedUpstreamTaskRunIds().get(0), is(taskRun3.getId()));
+        assertThat(savedTaskRun5.getFailedUpstreamTaskRunIds().get(0), is(taskRun3.getId()));
+    }
 }

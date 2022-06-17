@@ -94,4 +94,8 @@ public enum TaskRunStatus {
         return this == SUCCESS || this == FAILED || this == CHECK_FAILED;
     }
 
+    public boolean allowRemoveDependency() {
+        return this == CREATED || this == BLOCKED || this == UPSTREAM_FAILED;
+    }
+
 }

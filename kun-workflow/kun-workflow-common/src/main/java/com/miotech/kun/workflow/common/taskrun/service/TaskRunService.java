@@ -551,18 +551,7 @@ public class TaskRunService {
     }
 
     public Boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
-        //remove dependency in database
-        taskRunDao.removeTaskRunDependency(taskRunId, upstreamTaskRunIds);
-
-        //reschedule taskRun if necessary
-        TaskAttemptProps taskAttempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
-        if (taskAttempt.getStatus().isUpstreamFailed()) {
-            eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE, taskAttempt.getId()));
-        }
-
-        //trigger runnable taskRun
-        scheduler.trigger();
-        return true;
+        return scheduler.removeDependency(taskRunId, upstreamTaskRunIds);
     }
 
     private Map<Long, List<TaskAttemptProps>> groupByTaskRunId(List<TaskAttemptProps> taskAttemptProps) {

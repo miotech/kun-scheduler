@@ -169,6 +169,64 @@ public class TaskManager {
         return true;
     }
 
+    public boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIdsToRemoveDependency) {
+        TaskRun taskRun = taskRunDao.fetchTaskRunById(taskRunId).orElse(null);
+        if (taskRun == null) {
+            return false;
+        }
+        checkState(taskRun.getStatus().allowRemoveDependency(), "This taskrun is not allowed to remove dependency. Status not match");
+
+        List<TaskRun> upstreamTaskRunsToRemoveDependency = taskRunDao.fetchTaskRunsByIds(upstreamTaskRunIdsToRemoveDependency).stream()
+                .map(r -> r.orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        //remove dependency in database
+        taskRunDao.removeTaskRunDependency(taskRunId, upstreamTaskRunIdsToRemoveDependency);
+
+        //reschedule taskRun if necessary
+        TaskAttemptProps taskAttempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+
+        if (taskAttempt.getStatus().isUpstreamFailed()) {
+            //fetch remained failed upstream task run ids
+            List<TaskRun> remainedUpstreamTaskRuns = taskRunDao.fetchUpstreamTaskRunsById(taskRunId, 1, false);
+            List<Long> remainedFailedUpstreamTaskRunIds = fetchFailedUpstreamTaskRunIdCollectionFromTaskRuns(remainedUpstreamTaskRuns);
+
+            //fetch failed upstream taskrun ids to be removed
+            List<Long> failedUpstreamTaskRunIdsToBeRemoved = fetchFailedUpstreamTaskRunIdCollectionFromTaskRuns(upstreamTaskRunsToRemoveDependency);
+
+            //get intersects
+            failedUpstreamTaskRunIdsToBeRemoved.removeAll(remainedFailedUpstreamTaskRunIds);
+
+            // no need to update downstream, nothing changed
+            if (failedUpstreamTaskRunIdsToBeRemoved.isEmpty()) {
+                return true;
+            }
+
+            //update failed upstream task run ids
+            List<Long> taskRunShouldUpdateFailedUpstreamTaskRunIds = new ArrayList<>();
+            taskRunShouldUpdateFailedUpstreamTaskRunIds.addAll(taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId));
+            taskRunShouldUpdateFailedUpstreamTaskRunIds.add(taskRunId);
+            taskRunDao.removeFailedUpstreamTaskRunIds(taskRunShouldUpdateFailedUpstreamTaskRunIds, failedUpstreamTaskRunIdsToBeRemoved);
+
+            //fetch and update upstream_failed task run which should be created
+            List<Long> taskRunShouldBeCreated = new ArrayList<>(taskRunDao.taskRunShouldBeCreated(taskRunShouldUpdateFailedUpstreamTaskRunIds));
+            taskRunDao.updateAttemptStatusByTaskRunIds(taskRunShouldBeCreated, TaskRunStatus.CREATED, null, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
+            //update taskrun term_at to null
+            taskRunDao.resetTaskRunTimestampToNull(taskRunShouldBeCreated, "term_at");
+            //update conditions' result which use this task run as condition to be false;
+            updateTaskRunConditions(taskRunShouldBeCreated, TaskRunStatus.CREATED);
+            //update taskruns in created which need to be blocked as blocked
+            List<Long> restrictedTaskRunIds = fetchRestrictedTaskRunsToBeUpdatedIds(taskRunShouldBeCreated);
+            List<Long> taskRunIdsWithBlocked = taskRunDao.fetchTaskRunIdsWithBlockType(restrictedTaskRunIds);
+            taskRunDao.updateTaskRunStatusByTaskRunId(taskRunIdsWithBlocked, TaskRunStatus.BLOCKED, Collections.singletonList(TaskRunStatus.CREATED));
+        }
+
+        //trigger runnable taskRun
+        trigger();
+        return true;
+    }
+
     /* ----------- private methods ------------ */
 
     private void init() {
@@ -253,6 +311,19 @@ public class TaskManager {
             }
         }
     }
+
+    private List<Long> fetchFailedUpstreamTaskRunIdCollectionFromTaskRuns(List<TaskRun> upstreamTaskRuns) {
+        List<Long> failedUpstreamTaskRunIds = new ArrayList<>();
+        for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
+            if (upstreamTaskRun.getStatus().isFailure()) {
+                failedUpstreamTaskRunIds.add(upstreamTaskRun.getId());
+            } else if (upstreamTaskRun.getStatus().isUpstreamFailed()) {
+                failedUpstreamTaskRunIds.addAll(upstreamTaskRun.getFailedUpstreamTaskRunIds());
+            }
+        }
+        return failedUpstreamTaskRunIds;
+    }
+
 
     private class InnerEventLoop extends EventLoop<Long, Event> {
         public InnerEventLoop() {
