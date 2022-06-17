@@ -102,14 +102,35 @@
     }
 
     .glossaryItem {
-      flex: 0 0 50%;
-      min-width: 200px;
+      height: 32px;
       display: flex;
       align-items: center;
+      margin-right: 10px;
+      &:hover{
+        .delete {
+          visibility: visible;
+        }
+      }
+      .delete {
+        cursor: pointer;
+        margin-left: 5px;
+        visibility: hidden;
+      }
+    }
+    .addGlossaryButton {
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .addGlossarySelect {
+      width: 200px;
     }
 
     .glossaryName {
+      overflow: hidden;
+      max-width: 200px;
+      text-overflow: ellipsis;
       text-decoration: underline;
+      line-height:21px;
       .font(14px, 21px, @blue);
     }
 

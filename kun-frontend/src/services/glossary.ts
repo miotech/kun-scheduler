@@ -125,3 +125,17 @@ export async function removeGlossaryEditor(params: GlossaryEditorParams) {
     prefix: DEFAULT_API_PREFIX,
   });
 }
+
+export async function addGlossaryDateset(params: { id: string; assetIds: string[] }) {
+  return post('/metadata/glossary/add/dataset', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function removeGlossaryDateset(params: { id: string; assetIds: string[] }) {
+  return post('/metadata/glossary/remove/dataset', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
