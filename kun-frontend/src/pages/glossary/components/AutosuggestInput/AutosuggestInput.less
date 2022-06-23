@@ -19,6 +19,11 @@
   cursor: default !important;
   .label {
     cursor: pointer;
+    display: flex;
+    align-items:center;
+    .name {
+      max-width: 200px;
+    }
   }
   .childName {
     cursor: pointer;
@@ -26,5 +31,13 @@
       color:#1A73E8;
       text-decoration: underline;
     }
+  }
+}
+
+.pophover{
+  max-width: 500px;
+  word-break: break-all;
+  .des{
+    margin-left: 0px;
   }
 }

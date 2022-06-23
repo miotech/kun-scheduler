@@ -19,7 +19,7 @@ const TitleRender: any = (nodeData: GlossaryListNode) => {
   return (
     <div className={styles.titleRender}>
       <div className={styles.title}>{nodeData.name}</div>
-      <Popover content={PopoverContent(nodeData.description)} placement="bottom">
+      <Popover mouseEnterDelay={0.5} content={PopoverContent(nodeData.description)} placement="bottom">
         <div className={styles.des}>{nodeData.description}</div>
       </Popover>
     </div>

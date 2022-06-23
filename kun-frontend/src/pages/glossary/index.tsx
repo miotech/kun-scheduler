@@ -59,7 +59,7 @@ export default function Glossary() {
           <div className={styles.autosuggestInputContainer}>
             <DisplayTypeSwitch currentType={glossaryDisplayType} onChange={changeDisplayType} />
             <span style={{ marginLeft: '20px' }} />
-            <AutosuggestInput onSelect={setCurrentId} onPathClick={setCurrentId} />
+            <AutosuggestInput onSelect={setCurrentId} showPath onPathClick={setCurrentId} />
           </div>
           <Card className={styles.glossaryTreeContainer}>
             <GlossaryTree ref={childrenRef} rootNode={selector.glossaryData} />

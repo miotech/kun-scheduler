@@ -518,7 +518,11 @@ export default function DatasetDetail({ match }: Props) {
                     )}
                     {isAddGlossary && (
                       <div className={styles.addGlossarySelect}>
-                        <AutosuggestInput onBlur={() => setIsAddGlossary(false)} onSelect={handleAddGlossary} />
+                        <AutosuggestInput
+                          onBlur={() => setIsAddGlossary(false)}
+                          onSelect={handleAddGlossary}
+                          showPath
+                        />
                       </div>
                     )}
                   </div>
