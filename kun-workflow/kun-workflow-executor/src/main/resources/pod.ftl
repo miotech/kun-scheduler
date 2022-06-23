@@ -33,6 +33,11 @@ spec:
           mountPath: ${volume.mountPath}
           subPath: ${volume.subPath}
         </#list>
+      resources:
+        requests:
+          memory: "256Mi"
+        limits:
+          memory: "512Mi"
   restartPolicy: Never
   imagePullSecrets:
     - name: ${dockerSecret}
