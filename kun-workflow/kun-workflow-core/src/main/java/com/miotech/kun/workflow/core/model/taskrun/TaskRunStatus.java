@@ -91,7 +91,7 @@ public enum TaskRunStatus {
     }
 
     public boolean allowRetry() {
-        return this == SUCCESS || this == FAILED || this == CHECK_FAILED;
+        return isFailure() || isSuccess();
     }
 
     public boolean allowRemoveDependency() {
