@@ -86,7 +86,7 @@ const GlossaryListView = memo(
         <ReflexElement className={styles.conLeft} flex={0.192} minSize={350}>
           <DisplayTypeSwitch currentType={glossaryDisplayType} onChange={changeDisplayType} />
           <div className={styles.autosuggestInputContainer}>
-            <AutosuggestInput onSelect={setCurrentGlossaryId} onPathClick={setCurrentGlossaryId} />
+            <AutosuggestInput onSelect={setCurrentGlossaryId} showPath onPathClick={setCurrentGlossaryId} />
           </div>
           <div className={styles.treeListContainer}>
             <TreeList setCurrentGlossaryId={setCurrentGlossaryId} glossaryId={routeParams.glossaryId} />

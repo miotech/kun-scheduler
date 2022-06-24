@@ -125,13 +125,6 @@ export default function GlossaryDetail({
     }
   };
 
-  const createChild = (name: string, id: string) => {
-    setIsEditing(false);
-    setCurrentId('');
-    setPreId(id);
-    setPreName(name);
-    setGlossaryNode(null);
-  };
   const updateInputtingDetail = (key: keyof IGlossaryDetail, value: any) => {
     setInputtingDetail(detail => ({
       ...detail,
@@ -139,6 +132,14 @@ export default function GlossaryDetail({
     }));
   };
 
+  const createChild = (name: string, id: string) => {
+    updateInputtingDetail('parent', { name, id });
+    setIsEditing(false);
+    setCurrentId('');
+    setPreId(id);
+    setPreName(name);
+    setGlossaryNode(null);
+  };
   const handleChangeName = useCallback(e => {
     updateInputtingDetail('name', e.target.value);
   }, []);
@@ -385,7 +386,7 @@ export default function GlossaryDetail({
                   currentId={currentId}
                   setCurrentId={setCurrentId}
                   isEditting={isEditing}
-                  selectedParent={inputtingDetail?.parent}
+                  selectedParent={currentId ? inputtingDetail?.parent : inputtingDetail}
                   onChange={handleChangeParent}
                   disabledId={inputtingDetail?.id}
                 />
@@ -413,10 +414,12 @@ export default function GlossaryDetail({
             </div>
           </div>
 
-          <Editor
-            hasPermission={GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY_EDITOR)}
-            id={currentId}
-          />
+          {currentId && (
+            <Editor
+              hasPermission={GLossaryRole && GLossaryRole.includes(Operation.EDIT_GLOSSARY_EDITOR)}
+              id={currentId}
+            />
+          )}
         </div>
         <div className={styles.rightArea}>
           <div className={styles.inputBlock}>
