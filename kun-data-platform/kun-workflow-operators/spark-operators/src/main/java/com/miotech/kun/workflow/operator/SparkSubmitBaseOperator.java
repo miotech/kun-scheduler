@@ -43,7 +43,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
         Long taskRunId = context.getTaskRunId();
         sparkConf.put("spark.hadoop.taskRunId", taskRunId.toString());
-        String taskRunTick = context.getExecuteTime();
+        String taskRunTick = context.getScheduleTime();
         sparkConf.put("spark.hadoop.taskRun.scheduledTick", taskRunTick);
         String taskTarget = (String) context.getExecuteTarget().getProperty("schema");
         sparkConf.put("spark.hadoop.taskRun.target", taskTarget);

@@ -31,6 +31,8 @@ public class Backfill {
 
     private final String creator;
 
+    private final OffsetDateTime scheduleTime;
+
     public Long getId() {
         return id;
     }
@@ -63,6 +65,10 @@ public class Backfill {
         return creator;
     }
 
+    public OffsetDateTime getScheduleTime() {
+        return scheduleTime;
+    }
+
     private Backfill(BackFillBuilder builder) {
         this.id = builder.id;
         this.name = builder.name;
@@ -72,6 +78,7 @@ public class Backfill {
         this.createTime = builder.createTime;
         this.updateTime = builder.updateTime;
         this.creator = builder.creator;
+        this.scheduleTime = builder.scheduleTime;
     }
 
     public static BackFillBuilder newBuilder() {
@@ -88,6 +95,7 @@ public class Backfill {
         builder.createTime = this.createTime;
         builder.updateTime = this.updateTime;
         builder.creator = this.creator;
+        builder.scheduleTime = this.scheduleTime;
         return builder;
     }
 
@@ -114,6 +122,7 @@ public class Backfill {
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
         private String creator;
+        private OffsetDateTime scheduleTime;
 
         private BackFillBuilder() {
         }
@@ -157,6 +166,12 @@ public class Backfill {
             this.taskDefinitionIds = taskDefinitionIds;
             return this;
         }
+
+        public BackFillBuilder withScheduleTime(OffsetDateTime scheduleTime) {
+            this.scheduleTime = scheduleTime;
+            return this;
+        }
+
 
         public Backfill build() {
             return new Backfill(this);

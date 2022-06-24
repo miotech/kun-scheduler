@@ -21,9 +21,9 @@ public interface OperatorContext {
     public Long getTaskRunId();
 
     /**
-     * 获取任务调度执行时间
+     * 获取任务调度时间
      */
-    public String getExecuteTime();
+    public String getScheduleTime();
 
     /**
      * 获取任务执行环境信息

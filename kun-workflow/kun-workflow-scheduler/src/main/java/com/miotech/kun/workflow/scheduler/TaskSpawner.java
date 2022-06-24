@@ -115,12 +115,17 @@ public class TaskSpawner implements InitializingBean {
     }
 
     public List<TaskRun> run(TaskGraph graph, TaskRunEnv env) {
+        return run(graph, env, null);
+    }
+
+    public List<TaskRun> run(TaskGraph graph, TaskRunEnv env, OffsetDateTime scheduleTime) {
         checkNotNull(graph, "graph should not be null.");
         checkNotNull(env, "env should not be null.");
         checkState(graph instanceof DirectTaskGraph, "Only DirectTaskGraph is accepted.");
-        Tick current = SpecialTick.NULL;
+        Tick scheduledTick = SpecialTick.NULL;
+        Tick scheduleTimeTick = scheduleTime != null? new Tick(scheduleTime) : SpecialTick.NULL;
         logger.info("run task directly size = {}", ((DirectTaskGraph) graph).getTasks().size());
-        return spawn(Lists.newArrayList(graph), current, env);
+        return spawn(Lists.newArrayList(graph), scheduledTick, env, scheduleTimeTick);
     }
 
     public boolean rerun(TaskRun taskRun) {
@@ -134,14 +139,26 @@ public class TaskSpawner implements InitializingBean {
         spawn(graphs, tickEvent.getTick(), TaskRunEnv.EMPTY);
     }
 
-    private List<TaskRun> spawn(Collection<TaskGraph> graphs, Tick tick, TaskRunEnv env) {
+    private List<TaskRun> spawn(Collection<TaskGraph> graphs, Tick scheduledTick, TaskRunEnv env) {
+        return spawn(graphs, scheduledTick, env, SpecialTick.NULL);
+    }
+
+    /**
+     * spawn taskrun
+     * @param graphs
+     * @param scheduledTick task run's actual spawn time
+     * @param env
+     * @param scheduleTime task run's schedule time according to business requirement
+     * @return
+     */
+    private List<TaskRun> spawn(Collection<TaskGraph> graphs, Tick scheduledTick, TaskRunEnv env, Tick scheduleTime) {
         List<TaskRun> taskRuns = new ArrayList<>();
         Map<TaskGraph, List<TaskRun>> graphTaskRuns = new HashMap<>();
         for (TaskGraph graph : graphs) {
-            List<TaskRun> taskRunList = createTaskRuns(graph, tick, env);
+            List<TaskRun> taskRunList = createTaskRuns(graph, scheduledTick, env, scheduleTime);
             taskRuns.addAll(taskRunList);
             List<Task> taskList = taskRunList.stream().map(TaskRun::getTask).collect(Collectors.toList());
-            logger.debug("tasks to run: {}, at tick {}", taskList, tick);
+            logger.debug("tasks to run: {}, at tick {}", taskList, scheduledTick);
             graphTaskRuns.put(graph, taskRunList);
 
         }
@@ -149,9 +166,9 @@ public class TaskSpawner implements InitializingBean {
         taskRunDao.createTaskRuns(graphTaskRuns);
         List<TaskRun> createdTaskRun = graphTaskRuns.values().stream()
                 .flatMap(Collection::stream).collect(Collectors.toList());
-        if (tick != SpecialTick.NULL) {
-            logger.debug("to save checkpoint. checkpoint = {}", tick);
-            tickDao.saveCheckPoint(tick);
+        if (scheduledTick != SpecialTick.NULL) {
+            logger.debug("to save checkpoint. checkpoint = {}", scheduledTick);
+            tickDao.saveCheckPoint(scheduledTick);
         }
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
         if (taskRuns.size() > 0) {
@@ -163,24 +180,24 @@ public class TaskSpawner implements InitializingBean {
 
 
     //幂等，重放tick不会创建新的taskRun
-    private List<TaskRun> createTaskRuns(TaskGraph graph, Tick tick, TaskRunEnv env) {
+    private List<TaskRun> createTaskRuns(TaskGraph graph, Tick scheduledTick, TaskRunEnv env, Tick scheduleTime) {
         OffsetDateTime currentTickTime = DateTimeUtils.now();
-        List<Task> tasks = graph.tasksScheduledAt(tick).stream().
-                filter(task -> task.shouldSchedule(tick, currentTickTime)).collect(Collectors.toList());
+        List<Task> tasks = graph.tasksScheduledAt(scheduledTick).stream().
+                filter(task -> task.shouldSchedule(scheduledTick, currentTickTime)).collect(Collectors.toList());
         Long targetId = env.getTargetId();
         ExecuteTarget executeTarget = getExecuteTargetById(targetId);
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
-            List<TaskRun> upstreamTaskRun = resolveDependencies(task, tick, results);
+            List<TaskRun> upstreamTaskRun = resolveDependencies(task, scheduledTick, results);
             List<TaskRunCondition> taskRunConditions = taskRunConditionFunction.resolveTaskRunConditionForPredecessor(task);
             taskRunConditions.addAll(taskRunConditionFunction.resolveTaskRunConditionForDependency(upstreamTaskRun));
-            TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
+            TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), scheduledTick);
             try {
-                if (tick == SpecialTick.NULL) {
-                    taskRun = createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget);
+                if (scheduledTick == SpecialTick.NULL) {
+                    taskRun = createTaskRun(task, scheduledTick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget, scheduleTime);
                 } else {
                     if (taskRun == null) {
-                        taskRun = createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget);
+                        taskRun = createTaskRun(task, scheduledTick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget, scheduleTime);
                     }
                 }
                 results.add(taskRun);
@@ -193,14 +210,17 @@ public class TaskSpawner implements InitializingBean {
     }
 
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns,
-                                  List<TaskRunCondition> taskRunConditions, ExecuteTarget executeTarget) {
+    private TaskRun createTaskRun(Task task, Tick scheduledTick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns,
+                                  List<TaskRunCondition> taskRunConditions, ExecuteTarget executeTarget, Tick scheduleTime) {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         ScheduleType scheduleType = task.getScheduleConf().getType();
-        if (tick == SpecialTick.NULL) {
-            tick = SpecialTick.NULL.toTick();
+        if (scheduledTick == SpecialTick.NULL) {
+            scheduledTick = SpecialTick.NULL.toTick();
             scheduleType = ScheduleType.NONE;
+        }
+        if (scheduleTime == SpecialTick.NULL) {
+            scheduleTime = SpecialTick.NULL.toTick();
         }
 
         List<Long> upstreamTaskRunIds = upstreamTaskRuns.stream().map(TaskRun::getId).collect(Collectors.toList());
@@ -208,7 +228,7 @@ public class TaskSpawner implements InitializingBean {
                 .withId(taskRunId)
                 .withTask(task)
                 .withConfig(config)
-                .withScheduledTick(tick)
+                .withScheduledTick(scheduledTick)
                 .withScheduleType(scheduleType)
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
@@ -218,8 +238,9 @@ public class TaskSpawner implements InitializingBean {
                 .withTaskRunConditions(taskRunConditions)
                 .withExecuteTarget(executeTarget)
                 .withExecutorLabel(task.getExecutorLabel())
+                .withScheduleTime(scheduleTime)
                 .build();
-        logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
+        logger.debug("TaskRun is created successfully TaskRun={}, Task={}, ScheduledTick={}.", taskRun, task, scheduledTick);
         return taskRun;
     }
 

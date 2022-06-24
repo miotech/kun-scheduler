@@ -11,9 +11,7 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.google.common.base.Preconditions;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.Optional;
 
 public class CronUtils {
@@ -145,4 +143,43 @@ public class CronUtils {
         Optional<ZonedDateTime> zonedDateTimeOptional = executionTime.lastExecution(timebase.toZonedDateTime());
         return zonedDateTimeOptional.map(ZonedDateTime::toOffsetDateTime);
     }
+
+    public static OffsetDateTime getUTCExecutionTimeForSpecificTimeCron(String cronExpr, String zoneIdString) {
+        ZoneId zoneId;
+        try {
+            zoneId = ZoneId.of(zoneIdString);
+        } catch (DateTimeException ex) {
+            throw new IllegalArgumentException("Zond Id is invalid");
+        }
+        validateCron(CronUtils.convertStringToCron(cronExpr));
+        String[] cronFields = cronExpr.split(" ");
+        Preconditions.checkArgument(validateCronIsSpecificTime(cronFields), "Cron expression should be a specific time");
+        OffsetDateTime result = OffsetDateTime.of(Integer.parseInt(cronFields[6]),
+                Integer.parseInt(cronFields[4]),
+                Integer.parseInt(cronFields[3]),
+                Integer.parseInt(cronFields[2]),
+                Integer.parseInt(cronFields[1]),
+                Integer.parseInt(cronFields[0]),
+                0,
+                zoneId.getRules().getOffset(Instant.now()));
+        return OffsetDateTime.ofInstant(result.toInstant(), ZoneOffset.UTC);
+    }
+
+    private static boolean validateCronIsSpecificTime(String[] cronFields) {
+        for(int i = 0; i < cronFields.length; i++) {
+            if (i == 5) {
+                if (!cronFields[i].equals("?")) {
+                    return false;
+                }
+            } else {
+                try {
+                    Integer value = Integer.parseInt(cronFields[i]);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }

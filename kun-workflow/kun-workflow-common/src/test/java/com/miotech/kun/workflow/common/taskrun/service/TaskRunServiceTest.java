@@ -42,7 +42,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.*;
@@ -141,6 +140,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withInlets(Collections.emptyList())
                 .withOutlets(Collections.emptyList())
                 .withScheduledTick(new Tick(""))
+                .withScheduleTime(new Tick(""))
                 .build();
         taskRunDao.createTaskRun(taskRun);
         return taskRun;
@@ -423,6 +423,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withInlets(Collections.emptyList())
                 .withOutlets(Collections.emptyList())
                 .withScheduledTick(new Tick(DateTimeUtils.now()))
+                .withScheduleTime(new Tick(DateTimeUtils.now()))
                 .build();
         taskRunDao.createTaskRun(taskRun1);
         try {
@@ -442,6 +443,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withInlets(Collections.emptyList())
                 .withOutlets(Collections.emptyList())
                 .withScheduledTick(new Tick(DateTimeUtils.now().plusMinutes(-1)))
+                .withScheduleTime(new Tick(DateTimeUtils.now().plusMinutes(-1)))
                 .withStartAt(DateTimeUtils.now().plusMinutes(-1))
                 .build();
         taskRunDao.createTaskRun(taskRun2);
@@ -474,6 +476,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                     .withInlets(Collections.emptyList())
                     .withOutlets(Collections.emptyList())
                     .withScheduledTick(new Tick(""))
+                    .withScheduleTime(new Tick(""))
                     .build();
             taskRunDao.createTaskRun(taskRun);
         }
@@ -489,6 +492,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                     .withInlets(Collections.emptyList())
                     .withOutlets(Collections.emptyList())
                     .withScheduledTick(new Tick(""))
+                    .withScheduleTime(new Tick(""))
                     .build();
             taskRunDao.createTaskRun(taskRun);
         }
@@ -608,6 +612,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withInlets(Collections.emptyList())
                 .withOutlets(Collections.emptyList())
                 .withScheduledTick(new Tick(""))
+                .withScheduleTime(new Tick(""))
                 .build();
         taskRunDao.createTaskRun(taskRun);
         taskRunDao.createAttempt(TaskAttempt.newBuilder()

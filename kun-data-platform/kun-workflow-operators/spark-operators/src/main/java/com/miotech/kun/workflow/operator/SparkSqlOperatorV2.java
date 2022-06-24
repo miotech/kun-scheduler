@@ -24,7 +24,7 @@ public class SparkSqlOperatorV2 extends SparkSubmitBaseOperator {
         cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
 
         Map<String, Object> exprArgs = new HashMap<>();
-        exprArgs.put("execute_time", getContext().getExecuteTime());
+        exprArgs.put("execute_time", getContext().getScheduleTime());
         exprArgs.put("target", getContext().getExecuteTarget());
         String sql = ExprUtils.evalExpr(appArgs, exprArgs);
 

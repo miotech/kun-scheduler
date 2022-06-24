@@ -48,13 +48,21 @@ public class OperatorContextImpl implements OperatorContext {
     }
 
     @Override
-    public String getExecuteTime(){
+    public String getScheduleTime(){
         String DEFAULT_TICK = "000000000000";
-        String tick = taskRunDao.getTickByTaskRunId(taskRunId);
-        if(Strings.isNullOrEmpty(tick)){
-            return DEFAULT_TICK;
+        String scheduleTime = taskRunDao.getScheduleTimeByTaskRunId(taskRunId);
+        if (!Strings.isNullOrEmpty(scheduleTime)) {
+            return getTime(scheduleTime);
         }
+        String tick = taskRunDao.getTickByTaskRunId(taskRunId);
+        if(!Strings.isNullOrEmpty(tick)){
+            return getTime(tick);
+        }
+        return DEFAULT_TICK;
+    }
 
+
+    private String getTime(String tick) {
         String PATTERN = "yyyyMMddHHmm";
         Optional<TaskRun> taskRun = taskRunDao.fetchTaskRunById(taskRunId);
         if(!taskRun.isPresent()){
@@ -70,9 +78,9 @@ public class OperatorContextImpl implements OperatorContext {
             formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
             Date tickTimeUTC = formatter.parse(tick);
             formatter.setTimeZone(TimeZone.getTimeZone(userDefinedTimeZone));
-            String tickTimeWithUsedDefinedTimezone = formatter.format(tickTimeUTC);
-            logger.info(String.format("Tick %s being parsed to %s with timezone %s", tick, tickTimeWithUsedDefinedTimezone, userDefinedTimeZone));
-            return tickTimeWithUsedDefinedTimezone;
+            String tickTimeWithUserDefinedTimezone = formatter.format(tickTimeUTC);
+            logger.info(String.format("Tick %s being parsed to %s with timezone %s", tick, tickTimeWithUserDefinedTimezone, userDefinedTimeZone));
+            return tickTimeWithUserDefinedTimezone;
         } catch (ParseException e) {
             logger.error("parse timestamp failed", e);
             throw new IllegalArgumentException("timestamp format " + PATTERN + " can not be parsed");

@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -65,6 +66,32 @@ public class BackfillDaoTest extends DataPlatformTestBase {
         } catch (Exception e) {
             assertThat(e, instanceOf(DuplicateKeyException.class));
         }
+    }
+
+    @Test
+    public void updateBackfill_shouldSuccess() {
+        Backfill backfill1 = MockBackfillFactory.createBackfill();
+        Backfill persistBackfill1 = backfillDao.create(backfill1);
+
+        Backfill backfill2 = backfill1.cloneBuilder()
+                .withTaskRunIds(ImmutableList.of(1004L, 1005L, 1006L))
+                .withWorkflowTaskIds(ImmutableList.of(104L, 105L, 106L))
+                .withTaskDefinitionIds(ImmutableList.of(4L, 5L, 6L))
+                .build();
+
+        Backfill persistBackfill2 = backfillDao.update(backfill1.getId(), backfill2);
+
+        Optional<Backfill> persistedBackfill = backfillDao.fetchById(backfill2.getId());
+        assertTrue(persistedBackfill.isPresent());
+        assertThat(persistedBackfill.get().getTaskDefinitionIds(), is(ImmutableList.of(4L, 5L, 6L)));
+        assertThat(persistedBackfill.get().getWorkflowTaskIds(), is(ImmutableList.of(104L, 105L, 106L)));
+        assertThat(persistedBackfill.get().getTaskRunIds(), is(ImmutableList.of(1004L, 1005L, 1006L)));
+
+        Optional<Long> persitedBackfillId1 = backfillDao.fetchBackfillIdByTaskRunId(1001L);
+        Optional<Long> persitedBackfillId2 = backfillDao.fetchBackfillIdByTaskRunId(1004L);
+        assertFalse(persitedBackfillId1.isPresent());
+        assertTrue(persitedBackfillId2.isPresent());
+        assertThat(persitedBackfillId2.get(), is(backfill1.getId()));
     }
 
     @Test

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +46,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -488,8 +490,7 @@ public class TaskServiceTest extends CommonTestBase {
 
         // process
         taskService.runTasks(Lists.newArrayList(vo));
-        verify(scheduler, times(1))
-                .run(captor1.capture(), captor2.capture());
+        verify(scheduler, times(1)).run(captor1.capture(), captor2.capture(), any());
         DirectTaskGraph graph = (DirectTaskGraph) captor1.getValue();
         TaskRunEnv context = captor2.getValue();
 
