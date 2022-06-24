@@ -39,6 +39,7 @@ public class MockBackfillFactory {
                     .withTaskDefinitionIds(ImmutableList.of(1L, 2L, 3L))
                     .withCreateTime(now)
                     .withUpdateTime(now)
+                    .withScheduleTime(now)
                     .build();
             backfillList.add(exampleBackfillInstance);
         }
@@ -58,6 +59,7 @@ public class MockBackfillFactory {
                     .withTaskDefinitionIds(ImmutableList.of(1L))
                     .withCreateTime(now)
                     .withUpdateTime(now)
+                    .withScheduleTime(now)
                     .build();
             backfillList.add(exampleBackfillInstance);
         }

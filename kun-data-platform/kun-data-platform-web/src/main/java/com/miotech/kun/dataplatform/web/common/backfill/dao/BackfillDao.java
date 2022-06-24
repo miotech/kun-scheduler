@@ -35,15 +35,15 @@ public class BackfillDao {
 
     private static final String BACKFILL_TASK_RUN_RELATION_TABLE_NAME = "kun_dp_backfill_task_run_relation";
 
-    private static final List<String> BACKFILL_TABLE_COLS = ImmutableList.of("id", "name", "creator", "create_time", "update_time");
+    private static final List<String> BACKFILL_TABLE_COLS = ImmutableList.of("id", "name", "creator", "create_time", "update_time", "schedule_time");
 
     private static final List<String> BACKFILL_TASK_RUN_RELATION_TABLE_COLS =  ImmutableList.of("backfill_id", "task_run_id", "task_id", "task_definition_id");
 
-    private static final String INSERT_BACKFILL_TABLE_SQL_STMT = "INSERT INTO " + BACKFILL_TABLE_NAME + " (id, name, creator, create_time, update_time) VALUES (?, ?, ?, ?, ?)";
+    private static final String INSERT_BACKFILL_TABLE_SQL_STMT = "INSERT INTO " + BACKFILL_TABLE_NAME + " (id, name, creator, create_time, update_time, schedule_time) VALUES (?, ?, ?, ?, ?, ?)";
 
     private static final String INSERT_BACKFILL_RELATION_SQL_STMT = "INSERT INTO " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " (backfill_id, task_run_id, task_id, task_definition_id) VALUES (?, ?, ?, ?)";
 
-    private static final String UPDATE_BACKFILL_TABLE_SQL_STMT = "UPDATE " + BACKFILL_TABLE_NAME + " SET id = ?, name = ?, creator = ?, create_time = ?, update_time = ? WHERE id = ?";
+    private static final String UPDATE_BACKFILL_TABLE_SQL_STMT = "UPDATE " + BACKFILL_TABLE_NAME + " SET id = ?, name = ?, creator = ?, create_time = ?, update_time = ?, schedule_time = ? WHERE id = ?";
 
     private static final String DELETE_BACKFILL_RELATION_SQL_STMT = "DELETE FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE backfill_id = ?";
 
@@ -181,7 +181,7 @@ public class BackfillDao {
         checkBackfillArgumentBeforeModify(backfill);
 
         // insert record
-        jdbcTemplate.update(INSERT_BACKFILL_TABLE_SQL_STMT, backfill.getId(), backfill.getName(), backfill.getCreator(), backfill.getCreateTime(), backfill.getUpdateTime());
+        jdbcTemplate.update(INSERT_BACKFILL_TABLE_SQL_STMT, backfill.getId(), backfill.getName(), backfill.getCreator(), backfill.getCreateTime(), backfill.getUpdateTime(), backfill.getScheduleTime());
 
         // insert relations
         List<Object[]> relationInsertParams = new ArrayList<>();
@@ -218,6 +218,7 @@ public class BackfillDao {
                 backfill.getCreator(),
                 backfill.getCreateTime(),
                 backfill.getUpdateTime(),
+                backfill.getScheduleTime(),
                 updateId
         );
         List<Object[]> relationInsertParams = new ArrayList<>(backfill.getTaskRunIds().size());
@@ -275,7 +276,8 @@ public class BackfillDao {
                     .withName(rs.getString(BACKFILL_MODEL_NAME + "_name"))
                     .withCreator(rs.getString(BACKFILL_MODEL_NAME + "_creator"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(BACKFILL_MODEL_NAME + "_create_time")))
-                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(BACKFILL_MODEL_NAME + "_update_time")));
+                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(BACKFILL_MODEL_NAME + "_update_time")))
+                    .withScheduleTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(BACKFILL_MODEL_NAME + "_schedule_time")));
 
             // search related task run ids and construct array list
             List<Long> taskRunIds = new LinkedList<>();

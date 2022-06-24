@@ -16,6 +16,7 @@ import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.RunTaskRequest;
 import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,15 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
         OffsetDateTime now = DateTimeUtils.now();
         List<Long> workflowTaskIds = createInfo.getWorkflowTaskIds();
         // Submit run request to workflow module by invoking API
-        Map<Long, TaskRun> taskIdToTaskRunMap = runWorkflowTasks(createInfo.getWorkflowTaskIds());
+        Map<Long, TaskRun> taskIdToTaskRunMap;
+        OffsetDateTime scheduleTime = null;
+        if (createInfo.getCronExpr() != null && createInfo.getTimeZone() != null) {
+            scheduleTime = CronUtils.getUTCExecutionTimeForSpecificTimeCron(createInfo.getCronExpr(), createInfo.getTimeZone());
+            taskIdToTaskRunMap = runWorkflowTasks(createInfo.getWorkflowTaskIds(), scheduleTime);
+        } else {
+            taskIdToTaskRunMap = runWorkflowTasks(createInfo.getWorkflowTaskIds());
+
+        }
         // Get created task runs
         List<Long> taskRunIds = workflowTaskIds.stream()
                 .map(taskId -> {
@@ -93,6 +102,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
                 .withTaskDefinitionIds(createInfo.getTaskDefinitionIds())
                 .withCreateTime(now)
                 .withUpdateTime(now)
+                .withScheduleTime(scheduleTime)
                 .build();
         log.debug("Creating backfill with id = {}, name = {}, task definition ids = {}, task ids = {}",
                 backfillToCreate.getId(),
@@ -114,7 +124,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
             return false;
         }
         Backfill backfill = backfillOptional.get();
-        Map<Long, TaskRun> taskIdToUpdatedTaskRuns = runWorkflowTasks(backfill.getWorkflowTaskIds());
+        Map<Long, TaskRun> taskIdToUpdatedTaskRuns = runWorkflowTasks(backfill.getWorkflowTaskIds(), backfill.getScheduleTime());
 
         // update task run ids
         List<Long> updatedTaskRunIds = new ArrayList<>();
@@ -133,10 +143,14 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
     }
 
     private Map<Long, TaskRun> runWorkflowTasks(List<Long> workflowTaskIds) {
+        return runWorkflowTasks(workflowTaskIds, null);
+    }
+
+    private Map<Long, TaskRun> runWorkflowTasks(List<Long> workflowTaskIds, OffsetDateTime scheduleTime) {
         // construct request body
         RunTaskRequest runTaskRequest = new RunTaskRequest();
+        runTaskRequest.setScheduleTime(scheduleTime);
         for (Long taskId : workflowTaskIds) {
-            // TODO: is there any extra configuration needed?
             runTaskRequest.addTaskConfig(taskId, Maps.newHashMap());
         }
         log.debug("Executing workflow task ids: {}", workflowTaskIds);
