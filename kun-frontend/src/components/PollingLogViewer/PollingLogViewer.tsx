@@ -1,6 +1,6 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import c from 'clsx';
-import { LazyLog, ScrollFollow } from 'react-lazylog';
+import { LazyLog, ScrollFollow } from 'react-miotech-lazylog';
 import { Button, message, Pagination, Spin, Tooltip } from 'antd';
 import { CopyOutlined, DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
@@ -49,7 +49,6 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
   // React Lazylog requires at least 1 line of text
   const [text, setText] = React.useState<string>('\n');
   const [lines, setLines] = React.useState<number>(0);
-  const [log, setLog] = React.useState<boolean>(true);
   const [fullLogDownloading, setFullLogDownloading] = React.useState<boolean>(false);
   const [terminated, setTerminated] = React.useState<boolean>(false);
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -63,10 +62,6 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
       setTerminated(false);
       setLastRequestReturned(true);
       setLoading(true);
-      setLog(false);
-      setTimeout(() => {
-        setLog(true);
-      });
     }
   }, [startPolling, queryFn]);
 
@@ -204,20 +199,17 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
         <ScrollFollow
           startFollowing
           render={({ onScroll, follow }) => {
-            if (log) {
-              return (
-                <LazyLog
-                  extraLines={2}
-                  enableSearch
-                  selectableLines
-                  text={text}
-                  // @ts-ignore
-                  onScroll={onScroll}
-                  follow={follow}
-                />
-              );
-            }
-            return null;
+            return (
+              <LazyLog
+                extraLines={2}
+                enableSearch
+                selectableLines
+                text={text}
+                // @ts-ignore
+                onScroll={onScroll}
+                follow={follow}
+              />
+            );
           }}
         />
       </Spin>
