@@ -351,6 +351,9 @@ export default {
     'Please publish all selected tasks before executing backfill',
   'dataDevelopment.runBackfill': 'Run data backfill',
   'dataDevelopment.backfillName': 'Backfill name',
+  'dataDevelopment.setBackfillTime': 'Set backfill business time',
+  'dataDevelopment.businessTime': 'Business time',
+  'dataDevelopment.businessTime.select': 'Select business time',
   'dataDevelopment.editCurrentViewTasks': 'Edit tasks of current view',
   'dataDevelopment.addSelectedTasksToOtherViews.targetViewToAdd': 'Target view to add',
   'dataDevelopment.addSelectedTasksToOtherViews.comment':

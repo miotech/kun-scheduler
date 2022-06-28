@@ -40,6 +40,8 @@ export interface CreateAndRunBackfillReqParams {
   name: string;
   workflowTaskIds: string[];
   taskDefinitionIds: string[];
+  timeZone: string | null;
+  cronExpr: string | null;
 }
 
 export async function createAndRunBackfill(params: CreateAndRunBackfillReqParams): ServiceRespPromise<any> {
