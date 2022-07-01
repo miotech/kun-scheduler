@@ -3,7 +3,6 @@ package com.miotech.kun.dataquality.web.common.dao;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
-import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.expectation.AssertionResult;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Repository
@@ -65,20 +63,10 @@ public class ExpectationRunDao {
                 .select(COLUMNS.toArray(new String[0]))
                 .from(TABLE_NAME)
                 .where("expectation_id = ?")
-                .orderBy("id desc")
+                .orderBy("update_time desc")
                 .limit(1)
                 .getSQL();
         return jdbcTemplate.queryForObject(sql, ExpectationRunRowMapper.INSTANCE, expectationId);
-    }
-
-    public List<ValidationResult> fetchByUpdateTimeFromAndPassed(OffsetDateTime updateTimeFrom, boolean passed) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select(COLUMNS.toArray(new String[0]))
-                .from(TABLE_NAME)
-                .where("update_time >= ? and passed = ?")
-                .orderBy("id desc")
-                .getSQL();
-        return jdbcTemplate.query(sql, ExpectationRunRowMapper.INSTANCE, updateTimeFrom, passed);
     }
 
     private static class ExpectationRunRowMapper implements RowMapper<ValidationResult> {
@@ -104,7 +92,7 @@ public class ExpectationRunDao {
                 .select("continuous_failing_count")
                 .from(TABLE_NAME)
                 .where("expectation_id = ?")
-                .orderBy("id desc")
+                .orderBy("update_time desc")
                 .limit(1)
                 .getSQL();
 
