@@ -954,6 +954,19 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    public void getScheduleTimeByTaskRunId_withTick_shouldSuccess() {
+        String scheduleTime = "202206231000";
+        Task taskWithUTC = MockTaskFactory.createTask();
+        taskDao.create(taskWithUTC);
+        TaskRun taskRunWithUTC = MockTaskRunFactory.createTaskRun(1L, taskWithUTC)
+                .cloneBuilder()
+                .withScheduleTime(new Tick(scheduleTime))
+                .build();
+        taskRunDao.createTaskRun(taskRunWithUTC);
+        assertTrue(scheduleTime.equals(taskRunDao.getScheduleTimeByTaskRunId(1L)));
+    }
+
+    @Test
     public void fetchTaskRunConditionsById_shouldSuccess() {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");

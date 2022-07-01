@@ -52,7 +52,7 @@ public class MockOperatorContextImpl implements OperatorContext {
     }
 
     @Override
-    public String getExecuteTime(){
+    public String getScheduleTime(){
         return "000000000000";
     }
 

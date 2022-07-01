@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Singleton
@@ -33,6 +34,12 @@ public class LocalScheduler implements Scheduler {
     public List<TaskRun> run(TaskGraph graph, TaskRunEnv env) {
         logger.info("run graph {} with env {}", graph, env);
         return taskSpawner.run(graph, env);
+    }
+
+    @Override
+    public List<TaskRun> run(TaskGraph graph, TaskRunEnv env, OffsetDateTime scheduleTime) {
+        logger.info("run graph {} with env {}", graph, env);
+        return taskSpawner.run(graph, env, scheduleTime);
     }
 
     @Override

@@ -109,6 +109,27 @@ public class BackfillServiceTest extends DataPlatformTestBase {
     }
 
     @Test
+    public void createAndRunBackfill_withScheduleTime_shouldWorkAsExpected() {
+        // 1. Prepare mock behaviors
+        MockDefinedContext predefinedContext = mockWorkflowClientBehavior();
+
+        // 2. Process
+        BackfillCreateInfo createInfo = new BackfillCreateInfo(
+                "test-service-backfill",
+                Lists.newArrayList(101L),   // workflow task id
+                Lists.newArrayList(1L)     // definition id
+
+        );
+        createInfo.setCronExpr("0 6 0 24 6 ? 2022");
+        createInfo.setTimeZone("Asia/Kuching");
+        Backfill persistedBackfill = backfillService.createAndRun(createInfo);
+
+        // 3. Validate
+        assertThat(persistedBackfill.getTaskRunIds(), is(Lists.newArrayList(predefinedContext.getMockTaskRun().getId())));
+        assertThat(persistedBackfill.getScheduleTime().toString(), is("2022-06-23T16:06Z"));
+    }
+
+    @Test
     public void createAndRunBackfill_withTooManyTasks_shouldThrowIllegalArgumentException() {
         // 1. Prepare mock behaviors
         mockWorkflowClientBehavior();

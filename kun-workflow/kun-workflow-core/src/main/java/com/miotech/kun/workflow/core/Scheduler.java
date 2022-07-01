@@ -4,6 +4,7 @@ import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface Scheduler {
@@ -19,6 +20,15 @@ public interface Scheduler {
      * @param context
      */
     public List<TaskRun> run(TaskGraph graph, TaskRunEnv context);
+
+    /**
+     * Run a task graph instantly at the scheduleTime
+     * @param graph
+     * @param context
+     * @param scheduleTime
+     * @return
+     */
+    public List<TaskRun> run(TaskGraph graph, TaskRunEnv context, OffsetDateTime scheduleTime);
 
     /**
      * 重新运行一个taskRun

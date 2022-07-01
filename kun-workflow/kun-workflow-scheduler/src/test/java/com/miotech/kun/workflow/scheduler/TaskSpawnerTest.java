@@ -1294,6 +1294,62 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted, safeSameBeanAs(saved));
     }
 
+    @Test
+    public void runTaskWithoutScheduleTime() {
+        // prepare
+        Task task = MockTaskFactory.createTask(operatorId);
+        taskDao.create(task);
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        DirectTaskGraph graph = new DirectTaskGraph(task);
+        taskSpawner.run(graph);
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+
+        assertThat(submitted.getScheduleTime(), is(SpecialTick.NULL.toTick()));
+
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
+        assertThat(submitted, safeSameBeanAs(saved));
+        assertThat(saved.getScheduleTime(), is(SpecialTick.NULL.toTick()));
+    }
+
+    @Test
+    public void runTaskWithScheduleTime() {
+        // prepare
+        Task task = MockTaskFactory.createTask(operatorId);
+        taskDao.create(task);
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        OffsetDateTime scheduleTime = DateTimeUtils.freeze().minusHours(3);
+
+        // process
+        DirectTaskGraph graph = new DirectTaskGraph(task);
+        taskSpawner.run(graph, TaskRunEnv.EMPTY, scheduleTime);
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        Tick scheduleTimeTick = new Tick(scheduleTime);
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getScheduleTime(), is(scheduleTimeTick));
+
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
+        assertThat(submitted, safeSameBeanAs(saved));
+        assertThat(saved.getScheduleTime(), is(scheduleTimeTick));
+    }
+
     class TaskRunEventCreatedEventListener extends EventCollector {
 
         @Subscribe

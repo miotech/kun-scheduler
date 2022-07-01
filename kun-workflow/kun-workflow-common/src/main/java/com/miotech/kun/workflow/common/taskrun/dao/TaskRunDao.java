@@ -51,7 +51,7 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "term_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target", "executor_label");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "term_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target", "executor_label", "schedule_time");
     private static final List<String> taskRunPropsCols = ImmutableList.of("id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "created_at", "updated_at", "queue_name", "priority", "target");
 
     private static final String TASK_RUN_STAT_MODEL_NAME = "task_run_stat";
@@ -116,6 +116,11 @@ public class TaskRunDao {
     public String getTickByTaskRunId(Long taskRunId) {
         return dbOperator.fetchOne("SELECT scheduled_tick FROM " + TASK_RUN_TABLE_NAME + " WHERE id = ?",
                 rs -> rs.getString("scheduled_tick"), taskRunId);
+    }
+
+    public String getScheduleTimeByTaskRunId(Long taskRunId) {
+        return dbOperator.fetchOne("SELECT schedule_time FROM " + TASK_RUN_TABLE_NAME + " WHERE id = ?",
+                rs -> rs.getString("schedule_time"), taskRunId);
     }
 
     private SQLBuilder getTaskRunSQLBuilderWithDefaultConfig() {
@@ -413,7 +418,8 @@ public class TaskRunDao {
                     taskRun.getQueueName(),
                     taskRun.getPriority(),
                     JSONUtils.toJsonString(taskRun.getExecuteTarget()),
-                    taskRun.getExecutorLabel()
+                    taskRun.getExecutorLabel(),
+                    taskRun.getScheduleTime().toString()
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
@@ -500,7 +506,8 @@ public class TaskRunDao {
                     taskRun.getQueueName(),
                     taskRun.getPriority(),
                     JSONUtils.toJsonString(taskRun.getExecuteTarget()),
-                    taskRun.getExecutorLabel()
+                    taskRun.getExecutorLabel(),
+                    taskRun.getScheduleTime().toString()
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
@@ -556,6 +563,7 @@ public class TaskRunDao {
                     taskRun.getPriority(),
                     JSONUtils.toJsonString(taskRun.getExecuteTarget()),
                     taskRun.getExecutorLabel(),
+                    taskRun.getScheduleTime().toString(),
                     taskRun.getId()
             );
 
@@ -2032,6 +2040,7 @@ public class TaskRunDao {
                     .withExecuteTarget(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_target"),
                             ExecuteTarget.class, ExecuteTarget.newBuilder().build()))
                     .withExecutorLabel(rs.getString(TASK_RUN_MODEL_NAME + "_executor_label"))
+                    .withScheduleTime(new Tick(rs.getString(TASK_RUN_MODEL_NAME + "_schedule_time")))
                     .build();
         }
     }

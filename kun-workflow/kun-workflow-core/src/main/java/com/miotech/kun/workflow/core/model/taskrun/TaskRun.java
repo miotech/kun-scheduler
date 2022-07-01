@@ -63,6 +63,8 @@ public class TaskRun {
 
     private final String executorLabel;
 
+    private final Tick scheduleTime;
+
     public Long getId() {
         return id;
     }
@@ -147,11 +149,15 @@ public class TaskRun {
         return executorLabel;
     }
 
+    public Tick getScheduleTime() {
+        return scheduleTime;
+    }
+
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime queuedAt,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime termAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                    List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
                    ScheduleType scheduledType, String queueName, Integer priority, ExecuteTarget executeTarget,
-                   List<TaskRunCondition> taskRunConditions, String executorLabel) {
+                   List<TaskRunCondition> taskRunConditions, String executorLabel, Tick scheduleTime) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -174,6 +180,7 @@ public class TaskRun {
         this.executeTarget = executeTarget;
         this.taskRunConditions = taskRunConditions;
         this.executorLabel = executorLabel;
+        this.scheduleTime = scheduleTime;
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -202,7 +209,8 @@ public class TaskRun {
                 .withPriority(priority)
                 .withExecuteTarget(executeTarget)
                 .withTaskRunConditions(taskRunConditions)
-                .withExecutorLabel(executorLabel);
+                .withExecutorLabel(executorLabel)
+                .withScheduleTime(scheduleTime);
     }
 
     @Override
@@ -229,6 +237,7 @@ public class TaskRun {
                 ", executeTarget=" + executeTarget +
                 ", taskRunConditions=" + taskRunConditions +
                 ", executorLabel=" + executorLabel +
+                ", scheduleTime=" + scheduleTime +
                 '}';
     }
 
@@ -254,6 +263,7 @@ public class TaskRun {
         private ExecuteTarget executeTarget;
         private List<TaskRunCondition> taskRunConditions;
         private String executorLabel;
+        private Tick scheduleTime;
 
         private TaskRunBuilder() {
         }
@@ -362,10 +372,15 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withScheduleTime(Tick scheduleTime) {
+            this.scheduleTime = scheduleTime;
+            return this;
+        }
+
         public TaskRun build() {
             return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, termAt, createdAt, updatedAt, inlets,
                     outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget,
-                    taskRunConditions, executorLabel);
+                    taskRunConditions, executorLabel, scheduleTime);
         }
     }
 }

@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
@@ -352,6 +353,10 @@ public class TaskService {
     }
 
     public List<Long> runTasks(List<RunTaskVO> runTaskVOs, Long targetId) {
+        return runTasks(runTaskVOs, targetId, null);
+    }
+
+    public List<Long> runTasks(List<RunTaskVO> runTaskVOs, Long targetId, OffsetDateTime scheduleTime) {
         Map<Long, RunTaskVO> rtvMap = runTaskVOs.stream()
                 .collect(Collectors.toMap(RunTaskVO::getTaskId, Function.identity()));
 
@@ -384,7 +389,7 @@ public class TaskService {
         }
 
         // run graph
-        List<TaskRun> taskRuns = scheduler.run(graph, envBuilder.build());
+        List<TaskRun> taskRuns = scheduler.run(graph, envBuilder.build(), scheduleTime);
 
         return taskRuns.stream().map(TaskRun::getId).collect(Collectors.toList());
     }

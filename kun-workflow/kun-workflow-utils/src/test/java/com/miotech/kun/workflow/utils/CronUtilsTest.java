@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.utils;
 import com.cronutils.model.Cron;
 import org.junit.jupiter.api.Test;
 
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -33,6 +34,21 @@ public class CronUtilsTest {
         OffsetDateTime utcNow = DateTimeUtils.now();
         Optional<OffsetDateTime> next = CronUtils.getNextUTCExecutionTime(cron1, utcNow, "Asia/Shanghai");
         assertThat(next.get().getHour(), is(16));
+    }
+
+    @Test
+    public void getUTCExecutionTimeByCronAndZone() {
+        String cronExpr = "0 40 15 21 6 ? 2022";
+        String timeZone = "Asia/Kuching";
+        OffsetDateTime result = CronUtils.getUTCExecutionTimeForSpecificTimeCron(cronExpr, timeZone);
+    }
+
+    @Test
+    public void getUTCExecutionTimeByCronAndZone_withFault_shouldThrowException() {
+        String cronExpr = "0 40 15 21 6 ? 2022";
+        String timeZone = "aaaa";
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> CronUtils.getUTCExecutionTimeForSpecificTimeCron(cronExpr, timeZone));
+        assertThat(ex.getMessage(), is("Zond Id is invalid"));
     }
 
 }
