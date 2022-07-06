@@ -87,7 +87,7 @@ public class TimelineScheduler {
             return "not finished before deadline";
         }
 
-        return String.format("caused by upstream task: %s", rootDefinitionName);
+        return String.format("caused by downstream task: %s", rootDefinitionName);
     }
 
     private String fetchTaskDefinitionName(Long rootDefinitionId) {
