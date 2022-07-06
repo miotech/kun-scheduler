@@ -49,6 +49,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     private Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
     protected final String name;
     protected final ExecutorConfig executorConfig;
+    private boolean maintenanceMode;
 
     public WorkerLifeCycleManager(ExecutorConfig executorConfig, WorkerMonitor workerMonitor,
                                   AbstractQueueManager queueManager, String name) {
@@ -56,6 +57,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         this.queueManager = queueManager;
         this.name = name;
         this.executorConfig = executorConfig;
+        this.maintenanceMode = false;
         logger.info("{} worker life cycle manager initialize", name);
     }
 
@@ -148,6 +150,13 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         return getWorker(taskAttemptId);
     }
 
+    public boolean getMaintenanceMode() {
+        return maintenanceMode;
+    }
+
+    public void setMaintenanceMode(boolean mode) {
+        maintenanceMode = mode;
+    }
 
 
     /* ----------- abstract methods ------------ */
@@ -360,10 +369,13 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         @Override
         public void run() {
             logger.info("{} life cycle manager - task attempt consumer start to run... ", name);
-            while (true) {
-                if (Thread.currentThread().isInterrupted()) {
-                    break;
+            while (!Thread.currentThread().isInterrupted()) {
+
+                if (maintenanceMode) {
+                    Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+                    continue;
                 }
+
                 try {
                     List<TaskAttempt> readyToExecuteTaskAttemptList = queueManager.drain();
                     if (readyToExecuteTaskAttemptList.size() == 0) {

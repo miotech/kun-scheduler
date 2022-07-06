@@ -374,4 +374,14 @@ public class DefaultWorkflowClient implements WorkflowClient {
     public void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
         wfApi.removeTaskRunDependency(taskRunId,upstreamTaskRunIds);
     }
+
+    @Override
+    public Boolean getMaintenanceMode() {
+        return wfApi.getMaintenanceMode();
+    }
+
+    @Override
+    public void setMaintenanceMode(boolean mode) {
+        wfApi.setMaintenanceMode(mode);
+    }
 }
