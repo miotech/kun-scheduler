@@ -24,7 +24,7 @@ public class DatasetCreatedEvent extends PublicEvent {
         this.table = table;
     }
 
-    public DatasetCreatedEvent(Long datasetId,Long dataSourceId, String database, String table) {
+    public DatasetCreatedEvent(Long datasetId, Long dataSourceId, String database, String table) {
         this.datasetId = datasetId;
         this.dataSourceId = dataSourceId;
         this.database = database;
@@ -91,8 +91,18 @@ public class DatasetCreatedEvent extends PublicEvent {
         }
 
         public DatasetCreatedEvent build() {
-            DatasetCreatedEvent datasetCreatedEvent = new DatasetCreatedEvent(datasetId, timestamp,dataSourceId, database, table);
+            DatasetCreatedEvent datasetCreatedEvent = new DatasetCreatedEvent(datasetId, timestamp, dataSourceId, database, table);
             return datasetCreatedEvent;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "DatasetCreatedEvent{" +
+                "datasetId=" + datasetId +
+                ", dataSourceId=" + dataSourceId +
+                ", database='" + database + '\'' +
+                ", table='" + table + '\'' +
+                '}';
     }
 }

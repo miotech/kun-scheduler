@@ -61,6 +61,8 @@ public class GlossaryService extends BaseSecurityService {
     private MetadataService metadataService;
     @Autowired
     private SecurityRpcClient securityRpcClient;
+    @Autowired
+    private RdmService rdmService;
 
 
     public Long getParentId(Long id) {
@@ -175,6 +177,10 @@ public class GlossaryService extends BaseSecurityService {
         return listMap;
     }
 
+    public List<GlossaryBasicInfo> findGlossaryList(Collection<Long> ids) {
+        return glossaryRepository.findGlossaryList(ids);
+    }
+
 
     private void fillAncestryList(Map<Long, GlossaryBasicInfo> map, Long id, List<GlossaryBasicInfo> glossaryBasicInfoList) {
         if (Objects.isNull(id)) {
@@ -213,6 +219,7 @@ public class GlossaryService extends BaseSecurityService {
         glossaryRepository.update(id, glossaryRequest);
         Glossary glossary = fetchGlossary(id);
         searchAppService.saveOrUpdateGlossarySearchInfo(glossary);
+        rdmService.updateGlossary(id, glossaryRequest.getAssetIds());
         return glossary;
     }
 
@@ -509,6 +516,7 @@ public class GlossaryService extends BaseSecurityService {
         List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(id);
         List<Long> addList = assetIds.stream().filter(assetId -> !glossaryToDataSetIdList.contains(assetId)).collect(Collectors.toList());
         glossaryRepository.insertGlossaryDatasetRef(id, addList, getCurrentUsername(), DateTimeUtils.now());
+        rdmService.addGlossary(id, assetIds);
         return true;
     }
 
@@ -528,6 +536,7 @@ public class GlossaryService extends BaseSecurityService {
         List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(id);
         List<Long> removeList = assetIds.stream().filter(glossaryToDataSetIdList::contains).collect(Collectors.toList());
         glossaryRepository.removeGlossaryRef(id, removeList, getCurrentUsername(), DateTimeUtils.now());
+        rdmService.removeGlossary(id, assetIds);
         return true;
     }
 }

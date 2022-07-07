@@ -2,6 +2,8 @@ package com.miotech.kun.metadata.databuilder.builder;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
+import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
@@ -59,6 +61,7 @@ public class MSEBuilderTest extends DatabaseTestBase {
     protected void configuration() {
         super.configuration();
         bind(Loader.class, PostgresLoader.class);
+        bind(EventPublisher.class, NopEventPublisher.class);
     }
 
     @BeforeEach
@@ -72,10 +75,10 @@ public class MSEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL,postgreSQLContainer.getHost(),postgreSQLContainer.getFirstMappedPort()
-                ,postgreSQLContainer.getUsername(),postgreSQLContainer.getPassword());
+        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
+                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l,"pg",connectionConfig, DatasourceType.POSTGRESQL);
+        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
         dataSourceDao.create(dataSource);
 
         // Extract schema
@@ -103,10 +106,10 @@ public class MSEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL,postgreSQLContainer.getHost(),postgreSQLContainer.getFirstMappedPort()
-                ,postgreSQLContainer.getUsername(),postgreSQLContainer.getPassword());
+        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
+                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l,"pg",connectionConfig, DatasourceType.POSTGRESQL);
+        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
         dataSourceDao.create(dataSource);
 
         // Extract schema

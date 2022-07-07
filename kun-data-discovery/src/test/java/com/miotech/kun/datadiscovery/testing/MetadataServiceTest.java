@@ -49,6 +49,9 @@ public class MetadataServiceTest extends DataDiscoveryTestBase {
     @MockBean
     private SearchAppService searchAppService;
 
+    @MockBean
+    private RdmService rdmService;
+
     @SpyBean
     private GlossaryService glossaryService;
 

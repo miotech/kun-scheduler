@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.amazonaws.services.glue.model.EntityNotFoundException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -249,5 +250,25 @@ public class LineageAppService {
                 new HttpEntity<>(new UpstreamTaskRequest(datasetList)), new ParameterizedTypeReference<List<UpstreamTaskInformation>>() {
                 }).getBody();
     }
+
+    public List<DatasetNodeInfo> getDownstreamDataset(Long datasetId) {
+        if (Objects.isNull(datasetId)) {
+            log.debug("dataset id is null");
+            return null;
+        }
+        DatasetLineageInfo lineageNeighbors = null;
+        try {
+            lineageNeighbors = workflowClient.getLineageNeighbors(datasetId, LineageQueryDirection.DOWNSTREAM, 1);
+        } catch (WorkflowApiException e) {
+            log.debug("lineage info not found:{}", datasetId);
+            return Lists.newArrayList();
+        }
+        List<DatasetNodeInfo> downstreamNodes = lineageNeighbors.getDownstreamNodes();
+        if (CollectionUtils.isEmpty(downstreamNodes)) {
+            return Lists.newArrayList();
+        }
+        return downstreamNodes;
+    }
+
 
 }

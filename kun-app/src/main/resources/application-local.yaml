@@ -34,7 +34,10 @@ spring:
       initialize-schema: never
       table-name: kun_user_session
     timeout: 30d
-
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
 
@@ -45,12 +48,16 @@ redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
   stream-key: kun-notify
+  metadata-stream-key: kun-notify-metadata
   operation-record:
     group: operation-record-group
     consumer: operation-record-consumer
   data-quality:
     group: data-quality-group
     consumer: data-quality-consumer
+  data-discovery:
+    group: data-discovery-group
+    consumer: data-discovery-consumer
   alert:
     group: alert-group
     consumer: alert-consumer
@@ -163,4 +170,13 @@ grpc:
   server:
     security-host: ${SECURITY_HOST}
     port: ${WORKFLOW_RPC_SERVICE_PORT}
+discovery:
+  enabled: true
+rdm:
+  aws:
+    access-key: rdm_test_accessKey
+    secret-key: rdm_test_secretKey
+    region: test_region
+    bucket-name: test.ref.data
+  datasource: -1
 
