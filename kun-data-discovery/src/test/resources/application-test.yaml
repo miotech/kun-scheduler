@@ -11,8 +11,19 @@ spring:
     out-of-order: false
     schemas: public
     validate-on-migrate: true
-workflow:
-  enable: false
+
 
 testsuite:
   postgresImage: postgres:11.5
+
+
+
+discovery:
+  enabled: false
+rdm:
+  aws:
+    access-key: rdm_test_accessKey
+    secret-key: rdm_test_secretKey
+    region: test_region
+  bucket-name: test.ref.data
+  database-name: ref_test

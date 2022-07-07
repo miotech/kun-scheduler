@@ -48,18 +48,24 @@ dependencies {
 	implementation project(':kun-data-platform:kun-data-platform-facade')
 	implementation project(':kun-operation-record:kun-operation-record-common')
 
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-	implementation 'org.postgresql:postgresql'
-	implementation 'com.googlecode.json-simple:json-simple'
-	implementation 'org.apache.commons:commons-lang3'
-	implementation 'com.google.code.gson:gson'
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.springdoc:springdoc-openapi-ui'
-	runtimeOnly 'io.grpc:grpc-netty-shaded'
-	implementation 'io.grpc:grpc-protobuf'
-	implementation 'io.grpc:grpc-stub'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.postgresql:postgresql'
+    implementation 'com.googlecode.json-simple:json-simple'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'com.google.code.gson:gson'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.springdoc:springdoc-openapi-ui'
+    runtimeOnly 'io.grpc:grpc-netty-shaded'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'org.apache.commons:commons-csv'
+    implementation "com.amazonaws:aws-java-sdk-glue"
+    implementation "com.amazonaws:aws-java-sdk-s3"
+    implementation group: 'org.apache.poi', name: 'poi'
+    implementation group: 'org.apache.poi', name: 'poi-ooxml'
+    implementation 'com.googlecode.java-diff-utils:diffutils'
 
 	testImplementation project(':kun-commons:kun-commons-testing')
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {

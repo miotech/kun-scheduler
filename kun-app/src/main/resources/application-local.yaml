@@ -163,4 +163,13 @@ grpc:
   server:
     security-host: ${SECURITY_HOST}
     port: ${WORKFLOW_RPC_SERVICE_PORT}
+discovery:
+  enabled: true
+rdm:
+  aws:
+    access-key: rdm_test_accessKey
+    secret-key: rdm_test_secretKey
+    region: test_region
+  bucket-name: test.ref.data
+  database-name: ref_test
 

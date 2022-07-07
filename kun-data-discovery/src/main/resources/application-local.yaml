@@ -65,3 +65,15 @@ springdoc:
 redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
+
+discovery:
+  enabled: true
+rdm:
+  aws:
+    access-key: rdm_test_accessKey
+    secret-key: rdm_test_secretKey
+    region: test_region
+  bucket-name: test.ref.data
+  database-name: ref_test
+
+

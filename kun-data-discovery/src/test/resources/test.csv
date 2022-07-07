@@ -1,0 +1,11 @@
+fin_indicator_code,name_zh_cn,name_zh_hk,name_en_us
+B01,资产总计,資產總計,Total assets
+B0101,流动资产合计,流動資產合計,Total current assets
+B010101,货币资金,貨幣資金,Cash and cash equivalents
+B010102,现金及存放中央银行款项,現金及存放中央銀行款項,Cash and balances with Central Banks
+B010103,存放同业款项,存放同業款項,Interbank deposit
+B010104,定期存款,定期存款,Time deposits
+B010105,期货保证金,期貨保證金,Futures margin
+B010106,结算备付金,結算備付金,Settlement funds
+B01010601,信用备付金,信用備付金,Deposit on credit
+B01010602,客户备付金,客戶備付金,Customer provisions

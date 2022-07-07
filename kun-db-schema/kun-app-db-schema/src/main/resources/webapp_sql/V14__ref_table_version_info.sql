@@ -1,0 +1,23 @@
+create table if not exists ref_table_version_info (
+    version_id BIGINT not null ,
+    version_number INT not null,
+    version_description VARCHAR(1024) not null,
+    table_id BIGINT not null,
+    table_name VARCHAR(1024) not null,
+    table_dsi VARCHAR(1024) not null,
+    data_path VARCHAR(1024) not null,
+    glossary_list JSONB,
+    owner_list JSONB,
+    ref_table_columns JSONB,
+    ref_table_constraints JSONB,
+    published BOOLEAN default false,
+    start_time TIMESTAMP ,
+    end_time TIMESTAMP ,
+    create_user VARCHAR(255) not null,
+    create_time TIMESTAMP not null default CURRENT_TIMESTAMP,
+    update_user VARCHAR(255) not null,
+    update_time TIMESTAMP not null default CURRENT_TIMESTAMP,
+    deleted BOOLEAN default false,
+    dataset_id BIGINT,
+    primary key (version_id)
+);
