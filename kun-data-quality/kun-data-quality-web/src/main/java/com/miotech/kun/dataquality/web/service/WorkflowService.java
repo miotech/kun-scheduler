@@ -69,7 +69,6 @@ public class WorkflowService {
     @PostConstruct
     public void init() {
         if (workflowEnable) {
-            operatorUpload.autoUpload();
             workflowClient.saveOperator(this.operator.getName(), this.operator);
         }
     }
