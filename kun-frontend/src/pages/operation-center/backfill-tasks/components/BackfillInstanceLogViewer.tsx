@@ -36,7 +36,7 @@ export const BackfillInstanceLogViewer: React.FC<Props> = memo(function Backfill
     if (!taskRunId) {
       return Promise.resolve([]);
     }
-    const payload = await fetchScheduledTaskRunLogWithoutErrorNotification(taskRunId, 0);
+    const payload = await fetchScheduledTaskRunLogWithoutErrorNotification(taskRunId, 0, 0);
     return payload?.logs || [];
   }, [taskRunId]);
 
