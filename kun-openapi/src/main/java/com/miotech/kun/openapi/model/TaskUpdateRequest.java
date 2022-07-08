@@ -10,4 +10,6 @@ public class TaskUpdateRequest {
     private String taskName;
 
     private TaskPayload taskPayload;
+
+    private String owner;
 }

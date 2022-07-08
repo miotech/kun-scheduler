@@ -150,15 +150,20 @@ public class ApiService extends BaseSecurityService {
 
 
     public TaskVO updateTask(TaskUpdateRequest request, String token) {
-        String owner = setUserByToken(token);
-        Preconditions.checkArgument((request.getTaskName() != null || request.getTaskPayload() != null),
-                "At least update one of taskName or taskPayload");
+        setUserByToken(token);
+        Preconditions.checkArgument((request.getTaskName() != null || request.getTaskPayload() != null || request.getOwner() != null),
+                "At least update one of taskName or taskPayload or owner");
+        if (request.getOwner() != null) {
+            UserInfo userInfo = getUserByUsername(request.getOwner());
+            Preconditions.checkNotNull(userInfo, "User does not exist. Please check username");
+            Preconditions.checkNotNull(userInfo.getId(), "User does not exist. Please check username");
+        }
         TaskDefinition originalTaskDef = taskDefinitionService.find(request.getTaskId());
         TaskDefinition taskDefinition = taskDefinitionService.update(request.getTaskId(),
                 new UpdateTaskDefinitionRequest(request.getTaskId(),
                         request.getTaskName() == null? originalTaskDef.getName() : request.getTaskName(),
                         request.getTaskPayload() == null? originalTaskDef.getTaskPayload() : request.getTaskPayload(),
-                        owner
+                        request.getOwner() == null? originalTaskDef.getOwner() : request.getOwner()
                 ));
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
     }
