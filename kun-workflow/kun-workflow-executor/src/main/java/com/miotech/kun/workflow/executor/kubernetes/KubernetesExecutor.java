@@ -126,8 +126,19 @@ public class KubernetesExecutor implements Executor {
         return kubernetesResourceManager.createResourceQueue(resourceQueue);
     }
 
+    @Override
     public ResourceQueue updateResourceQueue(ResourceQueue resourceQueue) {
         return kubernetesResourceManager.updateResourceQueue(resourceQueue);
+    }
+
+    @Override
+    public boolean getMaintenanceMode() {
+        return podLifeCycleManager.getMaintenanceMode();
+    }
+
+    @Override
+    public void setMaintenanceMode(boolean mode) {
+        podLifeCycleManager.setMaintenanceMode(mode);
     }
 
     private List<String> coverLogsToList(String logs) {

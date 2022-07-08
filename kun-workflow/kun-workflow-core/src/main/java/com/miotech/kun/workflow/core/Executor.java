@@ -51,4 +51,15 @@ public interface Executor extends TaskAttemptExecutor, ResourceManager {
      */
     void uploadOperator(Long operatorId, String localFile);
 
+    /**
+     * set maintenance mode
+     */
+    void setMaintenanceMode(boolean mode);
+
+    /**
+     * get maintenance mode
+     * @return
+     */
+    boolean getMaintenanceMode();
+
 }

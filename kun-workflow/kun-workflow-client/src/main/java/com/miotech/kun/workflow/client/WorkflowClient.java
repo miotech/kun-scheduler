@@ -371,4 +371,16 @@ public interface WorkflowClient {
      */
     List<TaskRun> getTaskRunWithAllDownstream(Long taskRunId, List<TaskRunStatus> filterStatus);
 
+    /**
+     *  get workflow maintenance mode status
+     * @return
+     */
+    Boolean getMaintenanceMode();
+
+    /**
+     * set workflow maintenance mode status
+     * @param mode
+     */
+    void setMaintenanceMode(boolean mode);
+
 }

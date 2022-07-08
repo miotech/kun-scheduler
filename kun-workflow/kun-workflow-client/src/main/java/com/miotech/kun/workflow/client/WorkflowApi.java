@@ -591,4 +591,30 @@ public class WorkflowApi {
                 .build();
         return sendRequest(putRequest,Boolean.class);
     }
+
+    public Boolean getMaintenanceMode() {
+        HttpUrl url = buildUrl("/getMaintenanceMode").build();
+
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+
+        return sendRequest(getRequest, new TypeReference<Boolean>() {
+        });
+    }
+
+    public void setMaintenanceMode(Boolean mode) {
+        HttpUrl url = buildUrl("/setMaintenanceMode")
+                .addQueryParameter("mode", mode.toString())
+                .build();
+
+        Request postRequest = new Request.Builder()
+                .url(url)
+                .post(jsonBody(""))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+
+        sendRequest(postRequest);
+    }
 }

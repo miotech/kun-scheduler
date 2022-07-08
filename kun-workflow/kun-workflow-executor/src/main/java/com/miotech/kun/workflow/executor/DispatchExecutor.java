@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -164,6 +165,24 @@ public class DispatchExecutor implements Executor{
     @Override
     public ResourceQueue updateResourceQueue(ResourceQueue resourceQueue) {
         throw new UnsupportedOperationException("Executor not support create resource queue currently");
+    }
+
+    @Override
+    public boolean getMaintenanceMode() {
+        HashSet<Boolean> set = new HashSet<>();
+        for (Map.Entry<String, Executor> entry : executorManager.entrySet()) {
+            boolean maintenanceMode = entry.getValue().getMaintenanceMode();
+            set.add(maintenanceMode);
+        }
+        return set.contains(true);
+    }
+
+    @Override
+    public void setMaintenanceMode(boolean mode) {
+        for (Map.Entry<String, Executor> entry : executorManager.entrySet()) {
+            Executor executor = entry.getValue();
+            executor.setMaintenanceMode(mode);
+        }
     }
 
     private Executor findExecutor(Long taskAttemptId) {

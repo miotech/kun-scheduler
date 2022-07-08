@@ -94,6 +94,16 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
+    public boolean getMaintenanceMode() {
+        return processLifeCycleManager.getMaintenanceMode();
+    }
+
+    @Override
+    public void setMaintenanceMode(boolean mode) {
+        processLifeCycleManager.setMaintenanceMode(mode);
+    }
+
+    @Override
     public boolean submit(TaskAttempt taskAttempt) {
         logger.info("submit taskAttemptId = {} to executor", taskAttempt.getId());
         try {
