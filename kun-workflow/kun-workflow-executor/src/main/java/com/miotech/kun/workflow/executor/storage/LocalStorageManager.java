@@ -87,13 +87,13 @@ public class LocalStorageManager implements StorageManager {
         Resource resource = null;
         Integer lineCount = 0;
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
-        String logPath = covertLogPath(taskAttempt.getLogPath());
-        logger.debug("read log from logPath:{}", logPath);
         try {
+            String logPath = covertLogPath(taskAttempt.getLogPath());
+            logger.debug("read log from logPath:{}", logPath);
             resource = resourceLoader.getResource(logPath);
             lineCount = getLineCountOfFile(resource);
         } catch (RuntimeException e) {
-            logger.warn("Cannot find or open log path for existing task attempt: {}", logPath);
+            logger.warn("Cannot find or open log path for existing task attempt: {}", taskAttemptId);
             return new WorkerLogs(new ArrayList<>(), 0, 0, 0);
         }
 
