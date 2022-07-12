@@ -2,6 +2,7 @@ package com.miotech.kun.commons.db;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.StatementConfiguration;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -12,10 +13,12 @@ public class DBOperator {
     private final DataSource dataSource;
     private final QueryRunner queryRunner;
     private final ThreadLocal<Connection> connInTrans;
+    private final Integer FETCH_SIZE = 1000;
 
     public DBOperator(DataSource dataSource) {
+        StatementConfiguration configuration =  new StatementConfiguration.Builder().fetchSize(FETCH_SIZE).build();
         this.dataSource = dataSource;
-        this.queryRunner = new QueryRunner(dataSource);
+        this.queryRunner = new QueryRunner(dataSource,configuration);
         this.connInTrans = new ThreadLocal<>();
     }
 
