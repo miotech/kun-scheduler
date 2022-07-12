@@ -70,7 +70,7 @@ public class TaskAttemptStatusChangeEventDispatcher {
             return;
         }
 
-        notifyService.notify(workflowTaskId, statusChangeEvent, null, false, statusChangeEvent.getToStatus());
+        notifyService.notify(workflowTaskId, statusChangeEvent, null, null, false, statusChangeEvent.getToStatus());
     }
 
     private boolean filter(TaskAttemptStatusChangeEvent statusChangeEvent) {

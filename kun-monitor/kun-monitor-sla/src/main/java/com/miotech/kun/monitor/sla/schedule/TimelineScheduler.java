@@ -10,7 +10,9 @@ import com.miotech.kun.monitor.sla.utils.LocalDateTimeUtils;
 import com.miotech.kun.monitor.facade.alert.NotifyFacade;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunState;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -60,8 +62,8 @@ public class TimelineScheduler {
 
         log.debug("The number of tasks that need to be checked is {}", taskTimelines.size());
         for (TaskTimeline taskTimeline : taskTimelines) {
-            TaskRunState taskRunState = workflowClient.getTaskRunState(taskTimeline.getTaskRunId());
-            if (taskRunState.getStatus().isSuccess()) {
+            TaskRun taskRun = workflowClient.getTaskRun(taskTimeline.getTaskRunId());
+            if (taskRun.getStatus().isSuccess()) {
                 continue;
             }
 
@@ -77,8 +79,18 @@ public class TimelineScheduler {
             UserInfo userInfo = deployedTaskFacade.getUserByTaskId(deployedTask.getWorkflowTaskId());
             String result = buildResult(rootDefinitionName);
             String msg = String.format(MSG_TEMPLATE, "Overdue", deployedTask.getName(), result, userInfo.getUsername(), this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
+            StringBuilder extraInfoSb = new StringBuilder();
+            if (taskRun.getStatus().isUpstreamFailed()) {
+                extraInfoSb.append(String.format("%n[task status]: %s", TaskRunStatus.UPSTREAM_FAILED.name()));
+                extraInfoSb.append("\n[root cause]:");
+                for (TaskRun failedUpstreamTaskRun : taskRun.getFailedUpstreamTaskRuns()) {
+                    extraInfoSb.append(String.format("%n-[task]:%s, [link]:%s", failedUpstreamTaskRun.getTask().getName(),
+                            this.prefix+"/operation-center/task-run-id/"+failedUpstreamTaskRun.getId()));
+                }
+            }
+            msg = msg + extraInfoSb.toString();
             log.debug("Task: {} is not executed before the deadline, send an alarm, msg: {}", deployedTask.getName(), msg);
-            notifyFacade.notify(deployedTask.getWorkflowTaskId(), msg);
+            notifyFacade.notify(deployedTask.getWorkflowTaskId(), "SLA ALERT", msg);
         }
     }
 
@@ -87,7 +99,7 @@ public class TimelineScheduler {
             return "not finished before deadline";
         }
 
-        return String.format("caused by upstream task: %s", rootDefinitionName);
+        return String.format("caused by downstream task: %s upward forecast", rootDefinitionName);
     }
 
     private String fetchTaskDefinitionName(Long rootDefinitionId) {
