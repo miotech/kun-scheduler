@@ -50,7 +50,7 @@ public class NotifyServiceTest extends MonitorAlertTestBase {
                 .withNotifierConfigs(Lists.newArrayList())
                 .build());
 
-        notifyService.notify(taskId, StringUtils.EMPTY);
+        notifyService.notify(taskId, StringUtils.EMPTY, StringUtils.EMPTY);
 
         verify(weComService, times(1)).sendMessage(anyLong(), anyString());
 

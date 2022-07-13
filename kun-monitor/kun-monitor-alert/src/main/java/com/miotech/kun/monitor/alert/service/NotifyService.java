@@ -39,8 +39,8 @@ public class NotifyService extends BaseSecurityService implements NotifyFacade {
     @Autowired
     private SystemDefaultNotifierConfig systemDefaultNotifierConfig;
 
-    public void notify(Long workflowTaskId, String msg) {
-        notify(workflowTaskId, null, msg, true, null);
+    public void notify(Long workflowTaskId, String subject, String msg) {
+        notify(workflowTaskId, null, subject, msg, true, null);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class NotifyService extends BaseSecurityService implements NotifyFacade {
         weComService.sendMessage(weComUserIds, msg);
     }
 
-    public void notify(Long workflowTaskId, Event event, String msg, boolean matchIgnore, TaskRunStatus taskRunStatus) {
+    public void notify(Long workflowTaskId, Event event, String subject, String msg, boolean matchIgnore, TaskRunStatus taskRunStatus) {
         // 2. Is there any task notify config relates to this task id?
         Optional<TaskNotifyConfig> taskNotifyConfigOptional = taskNotifyConfigService.fetchTaskNotifyConfigByWorkflowTaskId(workflowTaskId);
 
@@ -81,7 +81,7 @@ public class NotifyService extends BaseSecurityService implements NotifyFacade {
         if (matchIgnore) {
             log.debug("`notifiers` of current event = {}.", notifiers);
             // 6. Notify by each notifier
-            notifiers.forEach(notifier -> notifier.notify(workflowTaskId, EMAIL_SUBJECT, msg));
+            notifiers.forEach(notifier -> notifier.notify(workflowTaskId, subject, msg));
             return;
         }
 
