@@ -1,5 +1,6 @@
 package com.miotech.kun.dataquality;
 
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.mock.MockAbnormalDatasetFactory;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import com.miotech.kun.dataquality.web.persistence.AbnormalDatasetRepository;
@@ -86,6 +87,13 @@ public class AbnormalDatasetRepositoryTest extends DataQualityTestBase {
 
         AbnormalDataset abnormalDatasetOfFetched = abnormalDatasetRepository.findByTaskRunId(abnormalDataset.getTaskRunId());
         assertThat(abnormalDatasetOfFetched, sameBeanAs(abnormalDataset).ignoring("id"));
+    }
+
+    @Test
+    public void testFindByTaskRunId_empty_shouldReturnNull() {
+        Long taskRunId = IdGenerator.getInstance().nextId();
+        AbnormalDataset abnormalDatasetOfFetched = abnormalDatasetRepository.findByTaskRunId(taskRunId);
+        assertThat(abnormalDatasetOfFetched, nullValue());
     }
 
 }

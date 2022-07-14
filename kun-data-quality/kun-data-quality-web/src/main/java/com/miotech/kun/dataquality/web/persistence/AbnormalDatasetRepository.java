@@ -5,6 +5,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -86,7 +87,12 @@ public class AbnormalDatasetRepository {
                 .from(TABLE_NAME)
                 .where("task_run_id = ?")
                 .getSQL();
-        return jdbcTemplate.queryForObject(sql, AbnormalDatasetRowMapper.INSTANCE, taskRunId);
+
+        try {
+            return jdbcTemplate.queryForObject(sql, AbnormalDatasetRowMapper.INSTANCE, taskRunId);
+        } catch (EmptyResultDataAccessException emptyResultDataAccessException) {
+            return null;
+        }
     }
 
     public static class AbnormalDatasetRowMapper implements RowMapper<AbnormalDataset> {

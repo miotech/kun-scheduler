@@ -22,8 +22,7 @@ import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 public class AbnormalDatasetTaskAttemptFinishedEventHandlerTest extends DataQualityTestBase {
 
@@ -93,6 +92,18 @@ public class AbnormalDatasetTaskAttemptFinishedEventHandlerTest extends DataQual
         assertThat(abnormalDatasets.size(), is(1));
         AbnormalDataset abnormalDatasetOfFetch = abnormalDatasets.get(0);
         assertThat(abnormalDatasetOfFetch.getStatus(), is("SUCCESS"));
+    }
+
+    @Test
+    public void testHandle_taskRunNonExistent() {
+        // create taskAttemptFinishedEvent, finalStatus = TaskRunStatus.SUCCESS
+        TaskAttemptFinishedEvent event = MockTaskAttemptFinishedEventFactory.create(TaskRunStatus.SUCCESS);
+
+        // handle event
+        abnormalDatasetTaskAttemptFinishedEventHandler.handle(event);
+
+        // verify
+        verify(workflowClient, never()).getTask(event.getTaskRunId());
     }
 
 }
