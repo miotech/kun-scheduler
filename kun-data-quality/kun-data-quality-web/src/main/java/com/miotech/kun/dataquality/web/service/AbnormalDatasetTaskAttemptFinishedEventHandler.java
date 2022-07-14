@@ -41,12 +41,15 @@ public class AbnormalDatasetTaskAttemptFinishedEventHandler implements TaskAttem
 
     @Override
     public void handle(TaskAttemptFinishedEvent event) {
-        abnormalDatasetService.updateStatusByTaskRunId(event.getTaskRunId(), event.getFinalStatus().isSuccess() ? "SUCCESS" : "FAILED");
+        AbnormalDataset abnormalDataset = abnormalDatasetService.findByTaskRunId(event.getTaskRunId());
+        if (abnormalDataset == null) {
+            return;
+        }
 
+        abnormalDatasetService.updateStatusByTaskRunId(event.getTaskRunId(), event.getFinalStatus().isSuccess() ? "SUCCESS" : "FAILED");
         boolean isAlert = !event.getFinalStatus().isSuccess();
         Task task = workflowClient.getTask(event.getTaskId());
         Optional<DeployedTask> deployedTaskOpt = deployedTaskFacade.findByWorkflowTaskId(event.getTaskId());
-        AbnormalDataset abnormalDataset = abnormalDatasetService.findByTaskRunId(event.getTaskRunId());
         DatasetDetail datasetDetail = metadataClient.findById(abnormalDataset.getDatasetGid());
         if (isAlert) {
             notifyFacade.notify(datasetDetail.getOwners(), String.format(MSG_TEMPLATE, "Failure", datasetDetail.getDatabase() + "." + datasetDetail.getName(),
