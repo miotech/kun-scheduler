@@ -9,6 +9,7 @@ import com.miotech.kun.metadata.core.model.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.pubsub.RedisStreamEventSubscriber;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -50,7 +51,11 @@ public class MetadataChangeEventsProcessor implements EventProcessor {
         subscriber.subscribe(event -> {
             if (event instanceof MetadataChangeEvent) {
                 MetadataChangeEvent mce = (MetadataChangeEvent) event;
-                workflowServiceFacade.executeTask(props.getLong(TaskParam.MCE_TASK.getName()), buildVariablesForTaskRun(mce));
+                long taskId = props.getLong(TaskParam.MCE_TASK.getName());
+                Map<String, Object> taskConfigs = buildVariablesForTaskRun(mce);
+                logger.debug("Prepare to execute task, taskId: {}, taskConfigs: {}", taskId, JSONUtils.toJsonString(taskConfigs));
+                TaskRun taskRun = workflowServiceFacade.executeTask(taskId, taskConfigs);
+                logger.debug("Execute task success, taskRun: {}", JSONUtils.toJsonString(taskRun));
             }
         });
     }
