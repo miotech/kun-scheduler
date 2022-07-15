@@ -427,6 +427,8 @@ export default {
   'dataDevelopment.definition.slaConfig': 'SLA Config',
   'dataDevelopment.definition.slaConfig.open': 'Turn on SLA',
   'dataDevelopment.definition.slaConfig.level': 'Level',
+  'dataDevelopment.definition.slaConfig.level.low': 'Level Low',
+  'dataDevelopment.definition.slaConfig.level.high': 'Level High',
   'dataDevelopment.definition.slaConfig.time': 'Complete Time Every Day',
   'dataDevelopment.definition.slaConfig.hours': 'Hours',
   'dataDevelopment.definition.slaConfig.minutes': 'Minutes',

@@ -419,6 +419,8 @@ export default {
   'dataDevelopment.definition.slaConfig': 'SLA配置',
   'dataDevelopment.definition.slaConfig.open': '开启SLA',
   'dataDevelopment.definition.slaConfig.level': '优先级',
+  'dataDevelopment.definition.slaConfig.level.low': '优先级低',
+  'dataDevelopment.definition.slaConfig.level.high': '优先级高',
   'dataDevelopment.definition.slaConfig.time': '每天完成时间',
   'dataDevelopment.definition.slaConfig.hours': '时',
   'dataDevelopment.definition.slaConfig.minutes': '分',

@@ -26,7 +26,7 @@ type Props = OwnProps;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const logger = LogUtils.getLoggers('NotificationConfig');
 const { Option } = Select;
-const levelList = [1, 2, 3, 4, 5];
+const levelList = [0, 1, 2, 3, 4, 5];
 const hourList = Array(24)
   .fill(0)
   .map((i, idx) => idx);
@@ -206,12 +206,13 @@ export const NotificationConfig: React.FC<Props> = memo(function NotificationCon
                 label={t('dataDevelopment.definition.slaConfig.level')}
                 name={['taskPayload', 'scheduleConfig', 'slaConfig', 'level']}
                 rules={[{ required: true }]}
-                initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.level}
+                initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.level || 0}
               >
-                <Select style={{ width: 100 }}>
+                <Select style={{ width: 150 }}>
                   {levelList.map(i => (
                     <Option key={i} value={i}>
-                      {i}
+                      {i} {i === 0 ? t('dataDevelopment.definition.slaConfig.level.low') : ''}{' '}
+                      {i === 5 ? t('dataDevelopment.definition.slaConfig.level.high') : ''}
                     </Option>
                   ))}
                 </Select>
