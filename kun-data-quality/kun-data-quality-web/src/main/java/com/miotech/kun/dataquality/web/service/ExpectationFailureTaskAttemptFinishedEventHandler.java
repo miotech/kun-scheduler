@@ -1,16 +1,17 @@
 package com.miotech.kun.dataquality.web.service;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ValidationResult;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
 import com.miotech.kun.dataquality.web.common.service.ExpectationService;
-import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.monitor.facade.alert.NotifyFacade;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,11 +55,16 @@ public class ExpectationFailureTaskAttemptFinishedEventHandler implements TaskAt
         }
 
         if (!validationResult.isPassed()) {
-            List<String> notifiedUsers = getNotifiedUsers(expectation);
+            String notifiedUser = getNotifiedUser(expectation);
+            if (notifiedUser == null) {
+                log.warn("Dataset: {} does not set owner", expectation.getDataset().getGid());
+                return;
+            }
+
             String datasetName = getDatasetName(expectation.getDataset().getGid());
             long latestFailingCount = expectationRunDao.getLatestFailingCount(expectation.getExpectationId());
-            log.info("expectation: {} failed, an alarm will be send to: {}", expectation.getExpectationId(), StringUtils.join(notifiedUsers, ","));
-            notifyFacade.notify(notifiedUsers, String.format(MSG_TEMPLATE, "Failure", datasetName, String.format("testcase '%s' failed", expectation.getName()), expectation.getCreateUser(), latestFailingCount,
+            log.info("expectation: {} failed, an alarm will be send to: {}", expectation.getExpectationId(), notifiedUser);
+            notifyFacade.notify(ImmutableList.of(notifiedUser), String.format(MSG_TEMPLATE, "Failure", datasetName, String.format("testcase '%s' failed", expectation.getName()), notifiedUser, latestFailingCount,
                     this.prefix + String.format("/data-discovery/dataset/%s?caseId=%s", expectation.getDataset().getGid(), expectation.getExpectationId())));
         }
     }
@@ -68,19 +74,10 @@ public class ExpectationFailureTaskAttemptFinishedEventHandler implements TaskAt
         return datasetDetail.getDatabase() + "." + datasetDetail.getName();
     }
 
-    private List<String> getNotifiedUsers(Expectation expectation) {
-        Set<String> notifiedUsers = Sets.newHashSet();
-
-        // add dataset owner
+    private String getNotifiedUser(Expectation expectation) {
+        // dataset owner
         DatasetDetail datasetDetail = metadataClient.findById(expectation.getDataset().getGid());
         List<String> owners = datasetDetail.getOwners();
-        notifiedUsers.addAll(owners);
-
-        // add expectation owner
-        notifiedUsers.add(expectation.getUpdateUser());
-
-        List<String> result = Lists.newArrayList();
-        result.addAll(notifiedUsers);
-        return result;
+        return CollectionUtils.isEmpty(owners) ? null : owners.get(0);
     }
 }
