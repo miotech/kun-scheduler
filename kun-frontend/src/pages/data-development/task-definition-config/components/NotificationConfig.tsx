@@ -208,11 +208,20 @@ export const NotificationConfig: React.FC<Props> = memo(function NotificationCon
                 rules={[{ required: true }]}
                 initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.level || 0}
               >
-                <Select style={{ width: 150 }}>
+                <Select style={{ width: 150 }} optionLabelProp="label">
                   {levelList.map(i => (
-                    <Option key={i} value={i}>
-                      {i} {i === 0 ? t('dataDevelopment.definition.slaConfig.level.low') : ''}{' '}
-                      {i === 5 ? t('dataDevelopment.definition.slaConfig.level.high') : ''}
+                    <Option key={i} value={i} label={i}>
+                      {i}{' '}
+                      {i === 0 ? (
+                        <span className={styles.label}>{t('dataDevelopment.definition.slaConfig.level.low')}</span>
+                      ) : (
+                        ''
+                      )}{' '}
+                      {i === 5 ? (
+                        <span className={styles.label}>{t('dataDevelopment.definition.slaConfig.level.high')}</span>
+                      ) : (
+                        ''
+                      )}
                     </Option>
                   ))}
                 </Select>
