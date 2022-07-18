@@ -433,7 +433,7 @@ public class RpcPreparedStatement implements PreparedStatement {
 
     @Override
     public void setFetchSize(int rows) throws SQLException {
-        throw new SQLException("operation not support for RpcPrepareStatement");
+        //do nothing
     }
 
     @Override
