@@ -1,20 +1,35 @@
 package com.miotech.kun.monitor.sla.timeline.service;
 
+import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataplatform.facade.TaskDefinitionFacade;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
 import com.miotech.kun.monitor.sla.MonitorSlaTestBase;
+import com.miotech.kun.monitor.sla.common.dao.TaskTimelineDao;
 import com.miotech.kun.monitor.sla.common.service.SlaService;
+import com.miotech.kun.monitor.sla.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.monitor.sla.mocking.MockTaskDefinitionNodeFactory;
+import com.miotech.kun.monitor.sla.mocking.MockTaskTimelineFactory;
+import com.miotech.kun.monitor.sla.model.BacktrackingTaskDefinition;
+import com.miotech.kun.monitor.sla.model.SlaBacktrackingInformation;
+import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.doReturn;
 
 public class SlaServiceTest extends MonitorSlaTestBase {
 
@@ -24,6 +39,12 @@ public class SlaServiceTest extends MonitorSlaTestBase {
     @Autowired
     @Qualifier("neo4jJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private TaskTimelineDao taskTimelineDao;
+
+    @Autowired
+    private TaskDefinitionDao taskDefinitionDao;
 
     @BeforeEach
     public void setUp() {
@@ -184,6 +205,53 @@ public class SlaServiceTest extends MonitorSlaTestBase {
         TaskDefinitionNode node = slaService.findById(taskDefinitionNode.getId());
         assertThat(node, notNullValue());
         assertThat(node, sameBeanAs(taskDefinitionNode));
+    }
+
+    @Test
+    public void testFindBacktrackingInformation_backtracking_exists() {
+        // prepare
+        Long definitionId = IdGenerator.getInstance().nextId();
+        Long rootDefinitionId1 = IdGenerator.getInstance().nextId();
+        Long rootDefinitionId2 = IdGenerator.getInstance().nextId();
+        TaskTimeline taskTimeline = MockTaskTimelineFactory.createTaskTimeline(definitionId);
+        taskTimelineDao.create(taskTimeline);
+        TaskTimeline taskTimeline1 = MockTaskTimelineFactory.createTaskTimeline(definitionId, rootDefinitionId1);
+        taskTimelineDao.create(taskTimeline1);
+        TaskTimeline taskTimeline2 = MockTaskTimelineFactory.createTaskTimeline(definitionId, rootDefinitionId2);
+        taskTimelineDao.create(taskTimeline2);
+
+        TaskDefinitionNode taskDefinitionNode = MockTaskDefinitionNodeFactory.create(definitionId);
+        slaService.save(taskDefinitionNode);
+
+        // mock
+        TaskDefinition taskDefinition1 = MockTaskDefinitionFactory.createTaskDefinition(rootDefinitionId1);
+        TaskDefinition taskDefinition2 = MockTaskDefinitionFactory.createTaskDefinition(rootDefinitionId2);
+        taskDefinitionDao.create(taskDefinition1);
+        taskDefinitionDao.create(taskDefinition2);
+
+        SlaBacktrackingInformation backtrackingInformation = slaService.findBacktrackingInformation(definitionId);
+        assertThat(backtrackingInformation.getAvgTaskRunTimeLastSevenTimes(), is(taskDefinitionNode.getAvgTaskRunTimeLastSevenTimes()));
+        Long taskDefId = backtrackingInformation.getBacktrackingTaskDefinition().getDefinitionId();
+        assertThat(taskDefId, is(rootDefinitionId2));
+    }
+
+    @Test
+    public void testFindBacktrackingInformation_backtracking_not_exists() {
+        // prepare
+        Long definitionId = IdGenerator.getInstance().nextId();
+        TaskTimeline taskTimeline = MockTaskTimelineFactory.createTaskTimeline(definitionId);
+        taskTimelineDao.create(taskTimeline);
+
+        TaskDefinitionNode taskDefinitionNode = MockTaskDefinitionNodeFactory.create(definitionId);
+        slaService.save(taskDefinitionNode);
+
+        // mock
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition(definitionId);
+        taskDefinitionDao.create(taskDefinition);
+
+        SlaBacktrackingInformation backtrackingInformation = slaService.findBacktrackingInformation(definitionId);
+        assertThat(backtrackingInformation.getAvgTaskRunTimeLastSevenTimes(), is(taskDefinitionNode.getAvgTaskRunTimeLastSevenTimes()));
+        assertThat(backtrackingInformation.getBacktrackingTaskDefinition(), nullValue());
     }
 
     private void validateBind(Long from, Long to, TaskDefinitionNode.Relationship relationship, Long expectedCount) {

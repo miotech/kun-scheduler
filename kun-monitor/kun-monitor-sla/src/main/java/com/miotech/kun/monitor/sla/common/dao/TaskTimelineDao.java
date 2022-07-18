@@ -1,16 +1,23 @@
 package com.miotech.kun.monitor.sla.common.dao;
 
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.monitor.sla.model.BacktrackingTaskDefinition;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Repository
@@ -61,6 +68,28 @@ public class TaskTimelineDao {
                 .where("deadline = ?")
                 .getSQL();
         return jdbcTemplate.query(sql, TaskTimelineMapper.INSTANCE, deadline);
+    }
+
+    public BacktrackingTaskDefinition fetchBacktrackingByDefinitionId(Long taskDefinitionId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("level", "root_definition_id", "deadline")
+                .from(TIMELINE_TABLE_NAME)
+                .where("definition_id = ? and root_definition_id is not null")
+                .orderBy("created_at desc")
+                .limit(1)
+                .getSQL();
+
+        try {
+            return jdbcTemplate.queryForObject(sql, (rs, rowNum) ->
+                            BacktrackingTaskDefinition.builder()
+                                    .definitionId(rs.getLong("root_definition_id"))
+                                    .priority(rs.getInt("level"))
+                                    .deadline(LocalDateTime.parse(rs.getString("deadline"), DateTimeFormatter.ofPattern("yyyyMMddHHmmss")).atOffset(ZoneOffset.UTC))
+                                    .build()
+                    , taskDefinitionId);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
     }
 
     public static class TaskTimelineMapper implements RowMapper<TaskTimeline> {

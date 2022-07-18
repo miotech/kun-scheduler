@@ -124,6 +124,11 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 });
     }
 
+    @Override
+    public List<TaskDefinition> findByDefIds(List<Long> taskDefId) {
+        return taskDefinitionDao.fetchByIds(taskDefId);
+    }
+
     /**
      * @return
      */

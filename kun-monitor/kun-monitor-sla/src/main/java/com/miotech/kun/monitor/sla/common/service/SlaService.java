@@ -1,8 +1,13 @@
 package com.miotech.kun.monitor.sla.common.service;
 
+import com.miotech.kun.dataplatform.facade.TaskDefinitionFacade;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
 import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.monitor.sla.common.dao.SlaDao;
+import com.miotech.kun.monitor.sla.common.dao.TaskTimelineDao;
+import com.miotech.kun.monitor.sla.model.BacktrackingTaskDefinition;
+import com.miotech.kun.monitor.sla.model.SlaBacktrackingInformation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +20,12 @@ public class SlaService implements SlaFacade {
 
     @Autowired
     private SlaDao slaDao;
+
+    @Autowired
+    private TaskTimelineDao taskTimelineDao;
+
+    @Autowired
+    private TaskDefinitionFacade taskDefinitionFacade;
 
     @Override
     public TaskDefinitionNode findById(Long taskDefId) {
@@ -78,4 +89,18 @@ public class SlaService implements SlaFacade {
         return slaDao.findDownstreamPathHasSlaConfig(definitionId);
     }
 
+    public SlaBacktrackingInformation findBacktrackingInformation(Long taskDefinitionId) {
+        TaskDefinitionNode taskDefinitionNode = findById(taskDefinitionId);
+        Integer avgTaskRunTimeLastSevenTimes = taskDefinitionNode == null ? null : taskDefinitionNode.getAvgTaskRunTimeLastSevenTimes();
+
+        BacktrackingTaskDefinition backtrackingTaskDefinition = taskTimelineDao.fetchBacktrackingByDefinitionId(taskDefinitionId);
+        if (backtrackingTaskDefinition != null) {
+            TaskDefinition taskDefinition = taskDefinitionFacade.find(backtrackingTaskDefinition.getDefinitionId());
+            backtrackingTaskDefinition.setDefinitionName(taskDefinition.getName());
+        }
+        return SlaBacktrackingInformation.builder()
+                .avgTaskRunTimeLastSevenTimes(avgTaskRunTimeLastSevenTimes)
+                .backtrackingTaskDefinition(backtrackingTaskDefinition)
+                .build();
+    }
 }

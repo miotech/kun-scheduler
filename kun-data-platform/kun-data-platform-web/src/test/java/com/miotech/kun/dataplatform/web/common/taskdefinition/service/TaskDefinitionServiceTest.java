@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -727,6 +728,38 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
 
 
 
+    }
+
+    @Test
+    public void testFindByDefIds_empty_params() {
+        ImmutableList<Long> taskDefIds = ImmutableList.of();
+        List<TaskDefinition> taskDefinitions = taskDefinitionService.findByDefIds(taskDefIds);
+        assertThat(taskDefinitions, empty());
+    }
+
+    @Test
+    public void testFindByDefIds_empty_data() {
+        ImmutableList<Long> taskDefIds = ImmutableList.of(1L);
+        List<TaskDefinition> taskDefinitions = taskDefinitionService.findByDefIds(taskDefIds);
+        assertThat(taskDefinitions, empty());
+    }
+
+    @Test
+    public void testFindByDefIds() {
+        String taskDefinitionName1 = "test1";
+        String taskDefinitionName2 = "test2";
+        CreateTaskDefinitionRequest taskDefinitionProps1 = new CreateTaskDefinitionRequest(taskDefinitionName1, TEST_TEMPLATE);
+        CreateTaskDefinitionRequest taskDefinitionProps2 = new CreateTaskDefinitionRequest(taskDefinitionName2, TEST_TEMPLATE);
+        TaskDefinition taskDefinition1 = taskDefinitionService.create(taskDefinitionProps1);
+        TaskDefinition taskDefinition2 = taskDefinitionService.create(taskDefinitionProps2);
+
+        ImmutableList<Long> taskDefIds = ImmutableList.of(taskDefinition1.getDefinitionId(), taskDefinition2.getDefinitionId());
+        List<TaskDefinition> taskDefinitions = taskDefinitionService.findByDefIds(taskDefIds);
+        assertThat(taskDefinitions.size(), is(2));
+        List<Long> taskDefinitionIds = taskDefinitions.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
+        assertThat(taskDefinitionIds, containsInAnyOrder(taskDefinition1.getDefinitionId(), taskDefinition2.getDefinitionId()));
+        List<String> taskDefinitionNames = taskDefinitions.stream().map(TaskDefinition::getName).collect(Collectors.toList());
+        assertThat(taskDefinitionNames, containsInAnyOrder(taskDefinitionName1, taskDefinitionName2));
     }
 
 }
