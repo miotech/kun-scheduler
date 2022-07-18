@@ -16,9 +16,9 @@ public class DBOperator {
     private final Integer FETCH_SIZE = 1000;
 
     public DBOperator(DataSource dataSource) {
-        StatementConfiguration configuration =  new StatementConfiguration.Builder().fetchSize(FETCH_SIZE).build();
+        StatementConfiguration configuration = new StatementConfiguration.Builder().fetchSize(FETCH_SIZE).build();
         this.dataSource = dataSource;
-        this.queryRunner = new QueryRunner(dataSource,configuration);
+        this.queryRunner = new QueryRunner(dataSource, configuration);
         this.connInTrans = new ThreadLocal<>();
     }
 

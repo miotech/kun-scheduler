@@ -3,6 +3,7 @@ package com.miotech.kun.commons.db;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.StatementConfiguration;
 import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +24,13 @@ public class DatabaseOperator {
     private final DataSource dataSource;
     private final QueryRunner queryRunner;
     private final ThreadLocal<Connection> connInTrans;
+    private final Integer FETCH_SIZE = 1000;
 
     @Inject
     public DatabaseOperator(DataSource dataSource) {
+        StatementConfiguration configuration = new StatementConfiguration.Builder().fetchSize(FETCH_SIZE).build();
         this.dataSource = dataSource;
-        this.queryRunner = new QueryRunner(dataSource);
+        this.queryRunner = new QueryRunner(dataSource, configuration);
         this.connInTrans = new ThreadLocal<>();
     }
 

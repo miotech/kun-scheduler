@@ -24,6 +24,7 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
     private Map<String, Connection> connectionPool = new HashMap<>();
     private Map<String, PreparedStatement> statementPool = new HashMap<>();
     private Map<String, ResultSet> resultSetMapPool = new HashMap<>();
+    private final Integer FETCH_SIZE = 1000;
 
     @Inject
     @Named("executorDatasource")
@@ -38,6 +39,7 @@ public class ExecutorFacadeImpl extends ExecutorFacadeGrpc.ExecutorFacadeImplBas
             connection.setAutoCommit(queryRequest.getAutoCommit());
 
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setFetchSize(FETCH_SIZE);
 
             ResultSet resultSet = preparedStatement.executeQuery();
             String rsId = String.valueOf(IdGenerator.getInstance().nextId());
