@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.StorageManager;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.storage.StorageManagerFactory;
@@ -12,6 +13,7 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,6 +141,16 @@ public class KubernetesExecutor implements Executor {
     @Override
     public void setMaintenanceMode(boolean mode) {
         podLifeCycleManager.setMaintenanceMode(mode);
+    }
+
+    @Override
+    public ExecutorInfo getExecutorInfo() {
+        return ExecutorInfo.newBuilder()
+                .withKind(kubeExecutorConfig.getKind())
+                .withName(kubeExecutorConfig.getName())
+                .withLabels(Arrays.asList(StringUtils.split(kubeExecutorConfig.getLabel(), ",")))
+                .withResourceQueues(kubeExecutorConfig.getResourceQueues())
+                .build();
     }
 
     private List<String> coverLogsToList(String logs) {

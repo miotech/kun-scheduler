@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -358,4 +359,21 @@ public class WorkflowApiTest extends MockServerTestBase {
 
     }
 
+    @Test
+    public void getK8sExecutorInfo() {
+        ExecutorInfo mockResult = mockExecutorInfo("aws");
+        mockGet("/getExecutorInfo", JSONUtils.toJsonString(mockResult));
+        com.miotech.kun.workflow.client.model.ExecutorInfo result = wfApi.getExecutorInfo();
+        MatcherAssert.assertThat(result, sameBeanAs(mockResult));
+    }
+
+    @Test
+    public void getDispatchExecutorInfo() {
+        ExecutorInfo executorInfo1 = mockExecutorInfo("aws");
+        ExecutorInfo executorInfo2 = mockExecutorInfo("aliyun");
+        ExecutorInfo mockResult = mockDispatchExecutorInfo(executorInfo1, executorInfo2);
+        mockGet("/getExecutorInfo", JSONUtils.toJsonString(mockResult));
+        com.miotech.kun.workflow.client.model.ExecutorInfo result = wfApi.getExecutorInfo();
+        MatcherAssert.assertThat(result, sameBeanAs(mockResult));
+    }
 }

@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.common.workflow.service;
 
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.Executor;
 
 import javax.inject.Inject;
@@ -17,5 +18,9 @@ public class WorkflowService {
 
     public void setMaintenanceMode(boolean mode) {
         executor.setMaintenanceMode(mode);
+    }
+
+    public ExecutorInfo getExecutorInfo() {
+        return executor.getExecutorInfo();
     }
 }

@@ -19,6 +19,7 @@ public class MockOperatorContextImpl implements OperatorContext {
     private final ExecuteTarget executeTarget;
     private List<DataStore> inlets = Collections.emptyList();
     private List<DataStore> outlets = Collections.emptyList();
+    private String queueName = "default";
 
     public MockOperatorContextImpl(Config config, Long taskRunId, ExecuteTarget executeTarget) {
         this.config = config;
@@ -59,6 +60,11 @@ public class MockOperatorContextImpl implements OperatorContext {
     @Override
     public ExecuteTarget getExecuteTarget() {
         return ExecuteTarget.newBuilder().withName("test").withProperties(ImmutableMap.of("schema", "test")).build();
+    }
+
+    @Override
+    public String getQueueName() {
+        return queueName;
     }
 
     public List<DataStore> getInlets() {

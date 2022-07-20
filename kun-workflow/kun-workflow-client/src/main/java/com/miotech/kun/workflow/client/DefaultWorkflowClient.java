@@ -384,4 +384,9 @@ public class DefaultWorkflowClient implements WorkflowClient {
     public void setMaintenanceMode(boolean mode) {
         wfApi.setMaintenanceMode(mode);
     }
+
+    @Override
+    public ExecutorInfo getExecutorInfo() {
+        return wfApi.getExecutorInfo();
+    }
 }

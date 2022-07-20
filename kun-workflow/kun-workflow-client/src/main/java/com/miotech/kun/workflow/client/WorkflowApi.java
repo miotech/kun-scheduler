@@ -617,4 +617,16 @@ public class WorkflowApi {
 
         sendRequest(postRequest);
     }
+
+    public ExecutorInfo getExecutorInfo() {
+        HttpUrl url = buildUrl("/getExecutorInfo").build();
+
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+
+        return sendRequest(getRequest, new TypeReference<ExecutorInfo>() {
+        });
+    }
 }
