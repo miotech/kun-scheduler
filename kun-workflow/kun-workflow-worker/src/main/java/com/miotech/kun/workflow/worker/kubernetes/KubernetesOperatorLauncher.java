@@ -4,6 +4,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -13,10 +14,7 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsProvider;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.core.execution.ExecCommand;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.OperatorReport;
+import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.worker.JsonCodec;
 import com.miotech.kun.workflow.worker.OperatorContextImpl;
@@ -72,7 +70,10 @@ public class KubernetesOperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId(),command.getExecuteTarget());
+        //compatible old task run when operator config has updated
+        Config defaultConfig = new Config(operator.config(), ImmutableMap.of());
+        Config newConfig = defaultConfig.overrideBy(command.getConfig());
+        OperatorContext context = new OperatorContextImpl(newConfig, command.getTaskRunId(),command.getExecuteTarget());
         injector.injectMembers(context);
         return context;
     }

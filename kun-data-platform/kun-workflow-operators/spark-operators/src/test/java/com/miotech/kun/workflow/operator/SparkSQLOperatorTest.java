@@ -3,10 +3,12 @@ package com.miotech.kun.workflow.operator;
 import com.google.common.base.Strings;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
+import com.miotech.kun.workflow.testing.executor.OperatorRunner;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
@@ -16,25 +18,28 @@ import static org.junit.Assert.assertTrue;
 public class SparkSQLOperatorTest {
     SparkSQLOperator operator = new SparkSQLOperator();
     private MockOperatorContextImpl context;
+    private OperatorRunner runner;
 
     @BeforeEach
     public void initSparkSQLOperator() {
 
-        context = new MockOperatorContextImpl(operator);
-        context.setParam(CONF_LIVY_HOST, "http://localhost:8089");
-        context.setParam(CONF_LIVY_PROXY_USER, "hadoop");
-        context.setParam(CONF_LIVY_BATCH_JARS, "s3:bucket/test1.jar");
-        context.setParam(CONF_LIVY_BATCH_FILES, "s3://bucket/main.py,s3://bucket/etl.jar");
-        context.setParam(CONF_LIVY_SHARED_SESSION_NAME, "test-sql");
-        context.setParam(CONF_SPARK_SQL, " select 1 ");
-        context.setParam(CONF_LIVY_BATCH_CONF, "{\"spark.jars\":\"s3:bucket/test2.jar\"}");
-        context.setParam(CONF_LINEAGE_OUTPUT_PATH, "");
-        context.setParam(CONF_LINEAGE_JAR_PATH, "");
-        context.setParam(CONF_S3_ACCESS_KEY, "");
-        context.setParam(CONF_S3_SECRET_KEY, "");
-        context.setParam(SPARK_YARN_HOST, "http://localhost:8088");
-        context.setParam(SPARK_APPLICATION, "s3://bucket/sql.jar");
-        operator.setContext(context);
+        Map<String,Object> params = new HashMap<>();
+        params.put(CONF_LIVY_HOST, "http://localhost:8089");
+        params.put(CONF_LIVY_PROXY_USER, "hadoop");
+        params.put(CONF_LIVY_BATCH_JARS, "s3:bucket/test1.jar");
+        params.put(CONF_LIVY_BATCH_FILES, "s3://bucket/main.py,s3://bucket/etl.jar");
+        params.put(CONF_LIVY_SHARED_SESSION_NAME, "test-sql");
+        params.put(CONF_SPARK_SQL, " select 1 ");
+        params.put(CONF_LIVY_BATCH_CONF, "{\"spark.jars\":\"s3:bucket/test2.jar\"}");
+        params.put(CONF_LINEAGE_OUTPUT_PATH, "");
+        params.put(CONF_LINEAGE_JAR_PATH, "");
+        params.put(CONF_S3_ACCESS_KEY, "");
+        params.put(CONF_S3_SECRET_KEY, "");
+        params.put(SPARK_YARN_HOST, "http://localhost:8088");
+        params.put(SPARK_APPLICATION, "s3://bucket/sql.jar");
+        runner = new OperatorRunner(operator);
+        runner.setConfig(params);
+        context = runner.getContext();
 
     }
 

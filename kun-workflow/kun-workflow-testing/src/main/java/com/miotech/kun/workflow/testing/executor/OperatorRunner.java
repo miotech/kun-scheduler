@@ -3,12 +3,16 @@ package com.miotech.kun.workflow.testing.executor;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.OutputStreamAppender;
+import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.resource.ResourceLoaderImpl;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,22 +39,23 @@ public class OperatorRunner {
     private final Resource resource;
 
     public OperatorRunner(KunOperator operator) {
-       this.resource = prepareResource();
-       this.operator = operator;
-       this.context = new MockOperatorContextImpl(operator);
-       operator.setContext(context);
+        this.resource = prepareResource();
+        this.operator = operator;
+        Config defaultConfig = new Config(operator.config(), ImmutableMap.of());
+        this.context = new MockOperatorContextImpl(defaultConfig, IdGenerator.getInstance().nextId(), ExecuteTarget.newBuilder().build());
+        operator.setContext(context);
     }
 
     public void setConfigKey(String key, String value) {
         this.context.setParam(key, value);
     }
 
-    public void setConfig(Map<String, String> params) {
-        this.context.setParams(params);
+    public void setConfig(Map<String, Object> params) {
+        this.context.overwriteConfig(new Config(params));
     }
 
-    public void setContext(MockOperatorContextImpl context) {
-        operator.setContext(context);
+    public MockOperatorContextImpl getContext() {
+        return context;
     }
 
     private Resource prepareResource() {
@@ -98,10 +103,10 @@ public class OperatorRunner {
     }
 
     public List<String> getLog() {
-        try(InputStream inputStream = resource.getInputStream()) {
+        try (InputStream inputStream = resource.getInputStream()) {
             return new BufferedReader(new InputStreamReader(inputStream,
-                            StandardCharsets.UTF_8)).lines()
-                            .collect(Collectors.toList());
+                    StandardCharsets.UTF_8)).lines()
+                    .collect(Collectors.toList());
         } catch (IOException e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }

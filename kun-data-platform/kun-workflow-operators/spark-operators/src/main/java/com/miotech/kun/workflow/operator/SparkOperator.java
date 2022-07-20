@@ -75,22 +75,14 @@ public class SparkOperator extends KunOperator {
 
         Map<String, String> sparkConf = generateRunTimeSparkConfs(config);
         Map<String, String> sparkSubmitParmas = generateRunTimeParams(config);
-
-        Config.Builder builder = Config.newBuilder()
+        List<String> configKeys = ImmutableList.of(SPARK_APPLICATION_ARGS, SPARK_YARN_HOST, CONF_LINEAGE_OUTPUT_PATH,
+                CONF_LINEAGE_JAR_PATH, CONF_S3_ACCESS_KEY, CONF_S3_SECRET_KEY, KUN_SPARK_CONF);
+        Config.Builder builder = Config.copyConfig(config, configKeys)
                 .addConfig(SPARK_SUBMIT_PARMAS, JSONUtils.toJsonString(sparkSubmitParmas))
                 .addConfig(SPARK_CONF, JSONUtils.toJsonString(sparkConf))
                 .addConfig(SPARK_PROXY_USER, config.getString(CONF_LIVY_PROXY_USER))
-                .addConfig(SPARK_APPLICATION, entryFile)
-                .addConfig(SPARK_APPLICATION_ARGS, config.getString(SPARK_APPLICATION_ARGS))
-                .addConfig(SPARK_YARN_HOST, config.getString(SPARK_YARN_HOST))
-                .addConfig(CONF_LINEAGE_OUTPUT_PATH, config.getString(CONF_LINEAGE_OUTPUT_PATH))
-                .addConfig(CONF_LINEAGE_JAR_PATH, config.getString(CONF_LINEAGE_JAR_PATH))
-                .addConfig(CONF_S3_ACCESS_KEY, config.getString(CONF_S3_ACCESS_KEY))
-                .addConfig(CONF_S3_SECRET_KEY, config.getString(CONF_S3_SECRET_KEY))
-                .addConfig(SPARK_DATA_LAKE_PACKAGES, config.getString(SPARK_DATA_LAKE_PACKAGES))
-                .addConfig(SPARK_SQL_EXTENSIONS, config.getString(SPARK_SQL_EXTENSIONS))
-                .addConfig(SPARK_SERIALIZER, config.getString(SPARK_SERIALIZER))
-                .addConfig(KUN_SPARK_CONF,config.getString(KUN_SPARK_CONF));
+                .addConfig(SPARK_APPLICATION, entryFile);
+
         return builder.build();
     }
 
@@ -176,7 +168,7 @@ public class SparkOperator extends KunOperator {
                 .define(CONF_LIVY_BATCH_JARS, ConfigDef.Type.STRING, "", true, "Java application jar files", CONF_LIVY_BATCH_JARS)
                 .define(CONF_LIVY_BATCH_FILES, ConfigDef.Type.STRING, "", true, "files to use, seperated with `,`, the first file would be used as main entry", CONF_LIVY_BATCH_FILES)
                 .define(CONF_LIVY_BATCH_APPLICATION, ConfigDef.Type.STRING, "", true, "application class name for java application", CONF_LIVY_BATCH_APPLICATION)
-                .define(CONF_LIVY_BATCH_ARGS, ConfigDef.Type.STRING, "", true, "application arguments", CONF_LIVY_BATCH_ARGS)
+                .define(SPARK_APPLICATION_ARGS, ConfigDef.Type.STRING, "", true, "application arguments", SPARK_APPLICATION_ARGS)
                 .define(CONF_LIVY_BATCH_NAME, ConfigDef.Type.STRING, "", true, "application session name", CONF_LIVY_BATCH_NAME)
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}", true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)

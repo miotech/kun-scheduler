@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
@@ -9,16 +8,13 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.joor.Reflect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,30 +23,34 @@ import java.util.stream.Stream;
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 public class SparkSqlOperatorV2Test {
     SparkSqlOperatorV2 operator = new SparkSqlOperatorV2();
     private MockOperatorContextImpl context;
     Map<String, String> sparkSubmitParams;
     Map<String, String> sparkConf;
+    private OperatorRunner runner;
 
     @BeforeEach
     public void initSparkSqlOperator() {
 
-        context = new MockOperatorContextImpl(operator);
-        context.setParam(SPARK_SUBMIT_PARMAS, "{\"class\":\"com.miotech.sql.Application\"}");
-        context.setParam(SPARK_CONF, "");
-        context.setParam(SPARK_PROXY_USER, "hadoop");
-        context.setParam(SPARK_APPLICATION, "s3://bucket/sql.jar");
-        context.setParam(SPARK_APPLICATION_ARGS, " select * from ${ref('db.table')}_${execute_time} ");
-        context.setParam(SPARK_YARN_HOST, "http://localhost:8088");
-        context.setParam(CONF_LINEAGE_OUTPUT_PATH, "");
-        context.setParam(CONF_LINEAGE_JAR_PATH, "");
-        context.setParam(CONF_S3_ACCESS_KEY, "");
-        context.setParam(CONF_S3_SECRET_KEY, "");
-        operator.setContext(context);
-
+        Map<String,Object> params = new HashMap<>();
+        params.put(SPARK_SUBMIT_PARMAS, "{\"class\":\"com.miotech.sql.Application\"}");
+        params.put(SPARK_CONF, "");
+        params.put(SPARK_PROXY_USER, "hadoop");
+        params.put(SPARK_APPLICATION, "s3://bucket/sql.jar");
+        params.put(SPARK_APPLICATION_ARGS, " select * from ${ref('db.table')}_${execute_time} ");
+        params.put(SPARK_YARN_HOST, "http://localhost:8088");
+        params.put(CONF_LINEAGE_OUTPUT_PATH, "");
+        params.put(CONF_LINEAGE_JAR_PATH, "");
+        params.put(CONF_S3_ACCESS_KEY, "");
+        params.put(CONF_S3_SECRET_KEY, "");
+        runner = new OperatorRunner(operator);
+        runner.setConfig(params);
+        context = runner.getContext();
         Config config = context.getConfig();
         String sparkParamsStr = config.getString(SPARK_SUBMIT_PARMAS);
         sparkSubmitParams = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkParamsStr) ? "{}" : sparkParamsStr);
@@ -72,7 +72,6 @@ public class SparkSqlOperatorV2Test {
     public void testSparkConf(){
         operator.addRunTimeSparkConfs(sparkConf, context);
 
-        assertTrue(sparkConf.get("spark.hadoop.taskRunId").equals("1"));
         assertTrue(sparkConf.get("spark.hadoop.taskRun.scheduledTick").equals("000000000000"));
         assertFalse(sparkConf.containsKey("spark.hadoop.spline.hdfs_dispatcher.address"));
         assertFalse(sparkConf.containsKey("spark.sql.queryExecutionListeners"));
@@ -80,10 +79,12 @@ public class SparkSqlOperatorV2Test {
 
     @Test
     public void testSparkConfWithLineage(){
-        context.setParam(CONF_LINEAGE_OUTPUT_PATH, "s3://bucket/lineage/output");
-        context.setParam(CONF_LINEAGE_JAR_PATH, "s3://bucket/lineage.jar");
-        context.setParam(CONF_S3_ACCESS_KEY, "s3_access_key");
-        context.setParam(CONF_S3_SECRET_KEY, "s3_secret_key");
+        Map<String,Object> params = new HashMap<>();
+        params.put(CONF_LINEAGE_OUTPUT_PATH, "s3://bucket/lineage/output");
+        params.put(CONF_LINEAGE_JAR_PATH, "s3://bucket/lineage.jar");
+        params.put(CONF_S3_ACCESS_KEY, "s3_access_key");
+        params.put(CONF_S3_SECRET_KEY, "s3_secret_key");
+        context.overwriteConfig(new Config(params));
 
         Config config = context.getConfig();
         String sparkConfStr = config.getString(SPARK_CONF);
@@ -130,12 +131,13 @@ public class SparkSqlOperatorV2Test {
         SparkSqlOperatorV2 mockOperator = new SparkSqlOperatorV2();
         Reflect.on(mockOperator).set("sparkOperatorUtils", sparkOperatorUtils);
         ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);
-        doReturn(true).when(sparkOperatorUtils).execSparkSubmitCmd(captor.capture());
-
+        doReturn(true).when(sparkOperatorUtils).execSparkSubmitCmd(anyList());
         // process
-        OperatorRunner runner = new OperatorRunner(mockOperator);
-        runner.setContext(context);
-        runner.run();
+        OperatorRunner operatorRunner = new OperatorRunner(mockOperator);
+        operatorRunner.setConfig(context.getConfig().getValues());
+        operatorRunner.run();
+        verify(sparkOperatorUtils).execSparkSubmitCmd(captor.capture());
+
 
         // verify
         List<String> cmd  = captor.getValue();

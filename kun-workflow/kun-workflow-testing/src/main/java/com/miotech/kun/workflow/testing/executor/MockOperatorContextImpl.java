@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.testing.executor;
 import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.resource.Resource;
@@ -15,24 +14,26 @@ import java.util.Map;
 
 public class MockOperatorContextImpl implements OperatorContext {
 
-    private Map<String, Object> configMap = new HashMap();
-
+    private Config config;
+    private final Long taskRunId;
+    private final ExecuteTarget executeTarget;
     private List<DataStore> inlets = Collections.emptyList();
     private List<DataStore> outlets = Collections.emptyList();
-    private Long taskRunId = 1l;
 
-    private KunOperator operator;
+    public MockOperatorContextImpl(Config config, Long taskRunId, ExecuteTarget executeTarget) {
+        this.config = config;
+        this.taskRunId = taskRunId;
+        this.executeTarget = executeTarget;
+    }
 
     public void setParam(String key, String value) {
-        this.configMap.put(key, value);
+        Map<String,Object> params = new HashMap<>(config.getValues());
+        params.put(key,value);
+        this.config = new Config(params);
     }
 
-    public void setParams(Map<String, String> params) {
-        this.configMap.putAll(params);
-    }
-
-    public MockOperatorContextImpl(KunOperator operator) {
-        this.operator = operator;
+    public void overwriteConfig(Config config) {
+        this.config = this.config.overrideBy(config);
     }
 
     @Override
@@ -42,8 +43,7 @@ public class MockOperatorContextImpl implements OperatorContext {
 
     @Override
     public Config getConfig() {
-        return new Config(operator.config(), ImmutableMap.of())
-                .overrideBy(new Config(configMap));
+        return config;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class MockOperatorContextImpl implements OperatorContext {
     }
 
     @Override
-    public String getScheduleTime(){
+    public String getScheduleTime() {
         return "000000000000";
     }
 

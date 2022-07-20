@@ -50,7 +50,7 @@ public class DataQualityOperatorTest extends DatabaseTestBase {
         operator = new DataQualityOperator();
         operatorRunner = new OperatorRunner(operator);
 
-        Map<String, String> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put(METADATA_DATASOURCE_URL, postgres.getJdbcUrl());
         params.put(METADATA_DATASOURCE_USERNAME, postgres.getUsername());
         params.put(METADATA_DATASOURCE_PASSWORD, postgres.getPassword());
