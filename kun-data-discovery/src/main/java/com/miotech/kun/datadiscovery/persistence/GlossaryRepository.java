@@ -286,7 +286,6 @@ public class GlossaryRepository extends BaseRepository {
                 .getSQL();
         String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).orderBy("depth asc").getSQL();
         String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
-        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
         List<GlossaryBasicInfo> query = jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, id);
         if (CollectionUtils.isEmpty(query)) {
             return Lists.newArrayList();
@@ -445,7 +444,6 @@ public class GlossaryRepository extends BaseRepository {
                 .on(" kmg2.prev_id =t0.id ").where("deleted=false").getSQL();
         String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).getSQL();
         String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionSql, withSql, outSql).toString();
-        log.debug("findChildrenCountList-sqlTempLate:{}", sql);
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             GlossaryBasicInfoWithCount glossaryBasicInfoWithCount = new GlossaryBasicInfoWithCount();
             glossaryBasicInfoWithCount.setId(BasicMapper.zeroToNull(rs, "id", Long.class));
@@ -473,7 +471,6 @@ public class GlossaryRepository extends BaseRepository {
                 .on("t.id=kmgtdr.glossary_id and kmgtdr.deleted is false").getSQL();
         String withRecursiveSql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
         String sql = String.format("(" + withRecursiveSql + ")" + "::int" + " as %s", linkTableAlias, columnAlias);
-        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
         return sql;
 
     }
@@ -491,7 +488,6 @@ public class GlossaryRepository extends BaseRepository {
                 .from(tmpTableName).getSQL();
         String withRecursiveSql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
         String sql = String.format("(" + withRecursiveSql + ")" + "::int" + " as %s", linkTableAlias, columnAlias);
-        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
         return sql;
     }
 
@@ -509,7 +505,6 @@ public class GlossaryRepository extends BaseRepository {
                 .getSQL();
         String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).where("depth>0").orderBy("depth desc").getSQL();
         String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
-        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
         return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, id);
     }
 
@@ -530,7 +525,6 @@ public class GlossaryRepository extends BaseRepository {
                 .getSQL();
         String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).getSQL();
         String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
-        log.debug("findAncestryGlossaryList-sqlTemplate:{}", sql);
         return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, collectionId.toArray());
     }
 
