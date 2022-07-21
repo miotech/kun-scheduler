@@ -22,6 +22,8 @@ import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.*;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
 import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskRequest;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -131,6 +133,7 @@ public class MetadataService {
         return convertFromDatasetDetail(datasetDetail);
     }
 
+    @OperationRecord(type = OperationRecordType.DATASET_UPDATE, args = {"#id", "#datasetRequest"})
     public Dataset updateDataSet(Long id, DatasetRequest datasetRequest) {
         String updateDatasetUrl = url + String.format("/dataset/%d/update", id);
         DatasetDetail datasetDetail = restTemplate.exchange(updateDatasetUrl, HttpMethod.POST, new HttpEntity<>(datasetRequest), DatasetDetail.class).getBody();
@@ -152,6 +155,7 @@ public class MetadataService {
         return fieldPage;
     }
 
+    @OperationRecord(type = OperationRecordType.DATASET_UPDATE_COLUMN, args = {"#id", "#datasetFieldRequest"})
     public DatasetField updateColumn(Long id, DatasetFieldRequest datasetFieldRequest) {
         String updateColumnUrl = url + String.format("/dataset/%s/column/update", id);
         DatasetFieldInfo datasetFieldInfo = restTemplate.exchange(updateColumnUrl, HttpMethod.POST, new HttpEntity<>(datasetFieldRequest), DatasetFieldInfo.class).getBody();
@@ -166,6 +170,7 @@ public class MetadataService {
         }, params).getBody();
     }
 
+    @OperationRecord(type = OperationRecordType.DATASET_PULL, args = {"#datasetId"})
     public PullProcessVO pullDataset(Long datasetId) {
         String fullUrl = url + "/datasets/{id}/_pull";
         log.info("Request url : " + fullUrl);
@@ -174,6 +179,7 @@ public class MetadataService {
                 .getBody();
     }
 
+    @OperationRecord(type = OperationRecordType.DATASOURCE_PULL, args = {"#datasourceId"})
     public PullProcessVO pullDataSource(Long datasourceId) {
         String fullUrl = url + "/datasources/{id}/_pull";
         log.info("Request url : " + fullUrl);

@@ -54,7 +54,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
     }
 
     /** 创建一个 backfill 并立即执行 */
-    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_CREATE, args = {"#createInfo"})
+    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_CREATE_RUN, args = {"#createInfo"})
     public Backfill createAndRun(BackfillCreateInfo createInfo) {
         // 单次 backfill 不允许每次执行超过 MAX_BACKFILL_TASKS (目前为 100) 个 task。原因：
         // (1) 查询 taskRuns 需要多次请求 workflow API，效率低
@@ -114,6 +114,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
     }
 
     /** 按 id 执行对应的 backfill。若成功返回 true，若 Backfill 不存在返回 false */
+    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_RUN, args = {"#backfillId"})
     public boolean runBackfillById(Long backfillId) {
         // preconditions check
         Preconditions.checkNotNull(backfillId, "Backfill id cannot be null");
@@ -176,6 +177,7 @@ public class BackfillService extends BaseSecurityService implements BackfillFaca
     }
 
     /** 停止 id 对应的 Backfill 中的所有 TaskRuns */
+    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_ABORT, args = {"#backfillId"})
     public void stopBackfillById(Long backfillId) {
         Preconditions.checkNotNull(backfillId, "Argument `backfillId` should not be null.");
         Optional<Backfill> backfillOptional = backfillDao.fetchById(backfillId);

@@ -10,6 +10,8 @@ import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.service.BaseSecurityService;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +70,7 @@ public class DataSourceService extends BaseSecurityService {
                 .collect(Collectors.toList());
     }
 
+    @OperationRecord(type = OperationRecordType.DATASOURCE_ADD, args = {"#dataSourceRequest"})
     public DataSourceVO add(DataSourceRequest dataSourceRequest) {
         fillCreateRequest(dataSourceRequest);
         DataSource ds = metadataService.createDataSource(dataSourceRequest.convert());
@@ -84,6 +87,7 @@ public class DataSourceService extends BaseSecurityService {
                 .build();
     }
 
+    @OperationRecord(type = OperationRecordType.DATASOURCE_UPDATE, args = {"#id", "#dataSourceRequest"})
     public DataSourceVO update(Long id, DataSourceRequest dataSourceRequest) {
         fillUpdateRequest(dataSourceRequest);
         DataSource ds = metadataService.updateDataSource(id, dataSourceRequest.convert());
@@ -100,6 +104,7 @@ public class DataSourceService extends BaseSecurityService {
                 .build();
     }
 
+    @OperationRecord(type = OperationRecordType.DATASOURCE_DELETE, args = {"#id"})
     public void delete(Long id) {
         metadataService.deleteDataSource(id);
     }

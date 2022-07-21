@@ -2,6 +2,8 @@ package com.miotech.kun.dataplatform.web.controller;
 
 import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.common.model.RequestResult;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ public class WorkflowController {
     }
 
     @PostMapping("/workflow/setMaintenanceMode")
+    @OperationRecord(type = OperationRecordType.WORKFLOW_SET_MAINTENANCE_MODE, args = {"#mode"})
     public RequestResult<Object> setMaintenanceMode(@RequestParam Boolean mode) {
         workflowClient.setMaintenanceMode(mode);
         return RequestResult.success(new AcknowledgementVO("Operation acknowledged."));

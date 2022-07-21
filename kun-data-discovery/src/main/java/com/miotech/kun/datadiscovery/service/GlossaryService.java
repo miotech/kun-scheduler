@@ -69,6 +69,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_UPDATE_GRAPH, args = {"#id", "#glossaryGraphRequest"})
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY);
         return glossaryRepository.updateGraph(getCurrentUsername(), id, glossaryGraphRequest);
@@ -475,6 +476,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_ADD_OWNER, args = {"#id", "#owner", "#checkAuth"})
     public Long addOwner(Long id, String owner, boolean checkAuth) {
         if (checkAuth) {
             checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
@@ -483,6 +485,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_REMOVE_OWNER, args = {"#id", "#owner", "#checkAuth"})
     public Long removeOwner(Long id, String owner, boolean checkAuth) {
         if (checkAuth) {
             checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_EDITOR);
@@ -491,6 +494,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_ADD_RESOURCE, args = {"#id", "#assetIds"})
     public boolean addGlossaryResource(Long id, List<Long> assetIds) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_RESOURCE);
         if (CollectionUtils.isEmpty(assetIds)) {
@@ -509,6 +513,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.GLOSSARY_REMOVE_RESOURCE, args = {"#id", "#assetIds"})
     public boolean removeGlossaryResource(Long id, List<Long> assetIds) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_RESOURCE);
         if (CollectionUtils.isEmpty(assetIds)) {
