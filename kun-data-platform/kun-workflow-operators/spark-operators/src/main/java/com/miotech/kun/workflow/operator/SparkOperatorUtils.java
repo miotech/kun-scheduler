@@ -1,5 +1,19 @@
 package com.miotech.kun.workflow.operator;
 
+import com.google.common.base.Strings;
+import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
+import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
+import com.miotech.kun.workflow.operator.spark.models.Application;
+import com.miotech.kun.workflow.operator.spark.models.YarnStateInfo;
+import org.slf4j.Logger;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import org.zeroturnaround.process.JavaProcess;
+import org.zeroturnaround.process.ProcessUtil;
+import org.zeroturnaround.process.Processes;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,21 +26,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.google.common.base.Strings;
-import com.miotech.kun.commons.utils.StringUtils;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
-import com.miotech.kun.workflow.operator.spark.models.Application;
-import com.miotech.kun.workflow.operator.spark.models.YarnStateInfo;
-import org.slf4j.Logger;
-import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.StartedProcess;
-import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import org.zeroturnaround.process.JavaProcess;
-import org.zeroturnaround.process.ProcessUtil;
-import org.zeroturnaround.process.Processes;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
@@ -74,8 +73,13 @@ public class SparkOperatorUtils {
     public static List<String> parseSparkSubmitParmas(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add("--" + entry.getKey().trim());
-            params.add(entry.getValue().trim());
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if(Strings.isNullOrEmpty(key) || Strings.isNullOrEmpty(value)){
+                continue;
+            }
+            params.add("--" + key.trim());
+            params.add(value.trim());
         }
         return params;
     }
@@ -83,8 +87,13 @@ public class SparkOperatorUtils {
     public static List<String> parseSparkConf(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if(Strings.isNullOrEmpty(key) || Strings.isNullOrEmpty(value)){
+                continue;
+            }
             params.add("--conf");
-            params.add(entry.getKey().trim() + "=" + entry.getValue().trim());
+            params.add(key.trim() + "=" + value.trim());
         }
         return params;
     }

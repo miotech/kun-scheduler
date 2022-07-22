@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class SparkOperatorUtilsTest {
@@ -44,7 +46,12 @@ public class SparkOperatorUtilsTest {
     public void testParseSparkSubmitParmas() {
         Map<String, String> params = new HashMap<>();
         params.put(" name ", " test spark app ");
+        params.put(null,"no key");
+        params.put("no value",null);
+        params.put("","empty key");
+        params.put("empty value","");
         List<String> paramList = sparkOperatorUtils.parseSparkSubmitParmas(params);
+        assertThat(paramList,hasSize(2));
         assertTrue(paramList.get(0).equals("--name"));
         assertTrue(paramList.get(1).equals("test spark app"));
     }
@@ -53,7 +60,12 @@ public class SparkOperatorUtilsTest {
     public void testParseSparkConf() {
         Map<String, String> sparkConf = new HashMap<>();
         sparkConf.put(" spark.files ", " test spark file ");
+        sparkConf.put(null,"no key");
+        sparkConf.put("no value",null);
+        sparkConf.put("","empty key");
+        sparkConf.put("empty value","");
         List<String> sparkConfList = sparkOperatorUtils.parseSparkConf(sparkConf);
+        assertThat(sparkConfList,hasSize(2));
         assertTrue(sparkConfList.get(0).equals("--conf"));
         assertTrue(sparkConfList.get(1).equals("spark.files=test spark file"));
     }
