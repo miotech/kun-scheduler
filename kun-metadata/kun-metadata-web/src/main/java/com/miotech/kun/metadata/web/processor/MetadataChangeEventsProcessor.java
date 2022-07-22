@@ -50,6 +50,7 @@ public class MetadataChangeEventsProcessor implements EventProcessor {
 
         subscriber.subscribe(event -> {
             if (event instanceof MetadataChangeEvent) {
+                logger.debug("MCE Processor prepare to handle event: {}", JSONUtils.toJsonString(event));
                 MetadataChangeEvent mce = (MetadataChangeEvent) event;
                 long taskId = props.getLong(TaskParam.MCE_TASK.getName());
                 Map<String, Object> taskConfigs = buildVariablesForTaskRun(mce);
