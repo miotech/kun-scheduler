@@ -122,6 +122,17 @@ public class Config {
         return new Builder();
     }
 
+    public static Config.Builder copyConfig(Config origin, List<String> keys) {
+        Config.Builder builder = Config.newBuilder();
+        for (String key : keys) {
+            if (origin.contains(key)) {
+                builder.addConfig(key, origin.getString(key));
+            }
+        }
+        return builder;
+    }
+
+
     public static class Builder {
         private final Map<String, Object> values;
 

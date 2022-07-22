@@ -19,7 +19,6 @@ public class SparkConfiguration {
     public static final String CONF_LIVY_BATCH_FILES = "files";
     public static final String CONF_LIVY_BATCH_JARS = "jars";
     public static final String CONF_LIVY_BATCH_APPLICATION = "application";
-    public static final String CONF_LIVY_BATCH_ARGS = "args";
     public static final String CONF_LIVY_BATCH_CONF = "sparkConf";
     public static final String CONF_LIVY_BATCH_NAME = "sparkJobName";
 

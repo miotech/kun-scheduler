@@ -27,10 +27,10 @@ public class SparkOperatorV1Test extends MockServerTestBase {
 
     @Disabled
     public void run() {
-        Map<String ,String> params = new HashMap<>();
+        Map<String ,Object> params = new HashMap<>();
         params.put(SparkConfiguration.CONF_LIVY_BATCH_FILES, "file:///test.jar");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_APPLICATION, "Application");
-        params.put(SparkConfiguration.CONF_LIVY_BATCH_ARGS,  "-param1 a -param2 {{b}}");
+        params.put(SparkConfiguration.SPARK_APPLICATION_ARGS,  "-param1 a -param2 {{b}}");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_NAME,  "testjob");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_CONF,  "{\"key1\":\"value2\"}");
         params.put(SparkConfiguration.CONF_LIVY_DISPATCH_ADDRESS, "hdfs://localhost:8020/tmp/");
@@ -60,10 +60,10 @@ public class SparkOperatorV1Test extends MockServerTestBase {
 
     @Disabled
     public void testRun_abort() {
-        Map<String ,String> params = new HashMap<>();
+        Map<String ,Object> params = new HashMap<>();
         params.put(SparkConfiguration.CONF_LIVY_BATCH_FILES, "file:///test.jar");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_APPLICATION, "Application");
-        params.put(SparkConfiguration.CONF_LIVY_BATCH_ARGS,  "-param1 a -param2 {{b}}");
+        params.put(SparkConfiguration.SPARK_APPLICATION_ARGS,  "-param1 a -param2 {{b}}");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_NAME,  "testjob");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_CONF,  "{\"key1\":\"value2\"}");
         params.put(SparkConfiguration.CONF_LIVY_DISPATCH_ADDRESS, "hdfs://localhost:8020/tmp/");

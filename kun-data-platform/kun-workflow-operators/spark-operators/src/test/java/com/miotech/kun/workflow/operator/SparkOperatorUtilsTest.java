@@ -1,40 +1,42 @@
 package com.miotech.kun.workflow.operator;
 
-import com.miotech.kun.commons.testing.MockServerTestBase;
+import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-
-import static org.junit.Assert.assertTrue;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
-import static com.miotech.kun.workflow.operator.SparkConfiguration.CONF_S3_SECRET_KEY;
+import static org.junit.Assert.assertTrue;
 
 public class SparkOperatorUtilsTest {
     private MockOperatorContextImpl context;
-    SparkSqlOperatorV2 operator = new SparkSqlOperatorV2();
     SparkOperatorUtils sparkOperatorUtils = new SparkOperatorUtils();
     private static final Logger logger = LoggerFactory.getLogger(SparkOperatorUtilsTest.class);
 
 
     @BeforeEach
     public void initSparkOperatorUtils() {
-        context = new MockOperatorContextImpl(operator);
-        context.setParam(SPARK_SUBMIT_PARMAS, "{\"class\":\"com.miotech.sql.Application\"}");
-        context.setParam(SPARK_CONF, "");
-        context.setParam(SPARK_PROXY_USER, "hadoop");
-        context.setParam(SPARK_APPLICATION, "s3://bucket/sql.jar");
-        context.setParam(SPARK_APPLICATION_ARGS, " select 1 ");
-        context.setParam(SPARK_YARN_HOST, "localhost:8088");
-        context.setParam(CONF_LINEAGE_OUTPUT_PATH, "");
-        context.setParam(CONF_LINEAGE_JAR_PATH, "");
-        context.setParam(CONF_S3_ACCESS_KEY, "");
-        context.setParam(CONF_S3_SECRET_KEY, "");
-
+        Map<String,Object> params = new HashMap<>();
+        params.put(SPARK_SUBMIT_PARMAS, "{\"class\":\"com.miotech.sql.Application\"}");
+        params.put(SPARK_CONF, "");
+        params.put(SPARK_PROXY_USER, "hadoop");
+        params.put(SPARK_APPLICATION, "s3://bucket/sql.jar");
+        params.put(SPARK_APPLICATION_ARGS, " select 1 ");
+        params.put(SPARK_YARN_HOST, "localhost:8088");
+        params.put(CONF_LINEAGE_OUTPUT_PATH, "");
+        params.put(CONF_LINEAGE_JAR_PATH, "");
+        params.put(CONF_S3_ACCESS_KEY, "");
+        params.put(CONF_S3_SECRET_KEY, "");
+        context = new MockOperatorContextImpl(new Config(params), IdGenerator.getInstance().nextId(), ExecuteTarget.newBuilder().build());
         sparkOperatorUtils.init(context, logger);
     }
 
