@@ -13,6 +13,8 @@ import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillDetailVO;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.web.constant.BackfillConstants;
 import com.miotech.kun.dataplatform.web.exception.BackfillTooManyTasksException;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -125,6 +127,7 @@ public class BackfillController {
 
     @PostMapping("/backfills/taskruns/{taskRunId}/_restart")
     @ApiOperation("Rerun a single taskrun instance immediately")
+    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_TASKRUN_RESTART, args = {"#taskRunId"})
     public RequestResult<TaskRun> restartTaskRunInstance(@PathVariable Long taskRunId) {
         Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
         TaskRun taskRun = workflowClient.restartTaskRun(taskRunId);
@@ -133,6 +136,7 @@ public class BackfillController {
 
     @PutMapping("/backfills/taskruns/{taskRunId}/_abort")
     @ApiOperation("Abort a single taskrun instance immediately")
+    @OperationRecord(type = OperationRecordType.TASK_BACKFILL_TASKRUN_ABORT, args = {"#taskRunId"})
     public RequestResult<TaskRun> abortTaskRunInstance(@PathVariable Long taskRunId) {
         Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
         TaskRun taskRun = workflowClient.stopTaskRun(taskRunId);

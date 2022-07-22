@@ -22,6 +22,8 @@ import com.miotech.kun.dataplatform.web.common.utils.TagUtils;
 import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
 import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
 import com.miotech.kun.monitor.facade.sla.SlaFacade;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -368,6 +370,7 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         return workflowClient.searchTaskRun(searchRequest);
     }
 
+    @OperationRecord(type = OperationRecordType.TASK_REMOVE_DEPENDENCY, args = {"#taskRunId", "#upstreamTaskRunIds"})
     public void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
         Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
         Preconditions.checkNotNull(upstreamTaskRunIds, "upstream task run id should not be null");
