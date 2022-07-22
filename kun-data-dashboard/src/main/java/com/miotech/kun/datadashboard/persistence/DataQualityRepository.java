@@ -43,32 +43,12 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     public Long getLongExistingCount() {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("count(1) as count")
-                .from("kun_dq_expectation_run kder")
-                .join("inner", "( " +
-                        "         select expectation_id, max(update_time) as last_update_time " +
-                        "         from kun_dq_expectation_run " +
-                        "         group by expectation_id " +
-                        "     )", "last_metrics").on("last_metrics.last_update_time = kder.update_time")
-                .where("continuous_failing_count >= " + longExistingThreshold)
-                .getSQL();
-
+        String sql = "select count(1) from (select kder.continuous_failing_count, rank() over(partition by kder.expectation_id order by kder.update_time desc) r from kun_dq_expectation_run kder inner join kun_dq_expectation kde on kder.expectation_id = kde.id) as t where t.r = 1 and t.continuous_failing_count >= " + longExistingThreshold;
         return jdbcTemplate.queryForObject(sql, Long.class);
     }
 
     public Long getSuccessCount() {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("count(1) as count")
-                .from("kun_dq_expectation_run kder")
-                .join("inner", "( " +
-                        "         select expectation_id, max(update_time) as last_update_time " +
-                        "         from kun_dq_expectation_run " +
-                        "         group by expectation_id " +
-                        "     )", "last_metrics").on("last_metrics.last_update_time = kder.update_time")
-                .where("continuous_failing_count = 0")
-                .getSQL();
-
+        String sql = "select count(1) from (select kder.continuous_failing_count, rank() over(partition by kder.expectation_id order by kder.update_time desc) r from kun_dq_expectation_run kder inner join kun_dq_expectation kde on kder.expectation_id = kde.id) as t where t.r = 1 and t.continuous_failing_count = 0";
         return jdbcTemplate.queryForObject(sql, Long.class);
     }
 
