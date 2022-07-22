@@ -56,7 +56,7 @@ public class MCEOperator extends KunOperator {
                     dataBuilder.extractSchemaOfDataset(gid);
                     break;
                 case PUSH:
-                    dataBuilder.extractSchemaOfPush(props.getString(MCE));
+                    dataBuilder.handlePushEvent(props.getString(MCE));
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid deployMode: " + deployModeStr);
