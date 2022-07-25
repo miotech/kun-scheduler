@@ -9,7 +9,7 @@ public class MockAbsoluteAssertionFactory {
     }
 
     public static AbsoluteAssertion create(String expectedValue, ComparisonPeriod comparisonPeriod) {
-        return new AbsoluteAssertion("NUMBER", expectedValue, comparisonPeriod);
+        return new AbsoluteAssertion(expectedValue, comparisonPeriod);
     }
 
 }

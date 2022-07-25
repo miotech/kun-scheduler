@@ -9,7 +9,7 @@ public class MockFallAssertionFactory {
     }
 
     public static FallAssertion create(String expectedValue, ComparisonPeriod comparisonPeriod) {
-        return new FallAssertion("NUMBER", expectedValue, comparisonPeriod);
+        return new FallAssertion(expectedValue, comparisonPeriod);
     }
 
 }

@@ -6,7 +6,10 @@ import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.testing.KunAppTestBase;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.dataquality.core.expectation.ExpectationTemplate;
+import com.miotech.kun.dataquality.mock.MockExpectationTemplateFactory;
 import com.miotech.kun.dataquality.mock.MockSubscriber;
+import com.miotech.kun.dataquality.web.common.dao.ExpectationTemplateDao;
 import com.miotech.kun.monitor.facade.alert.NotifyFacade;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.ConfigKey;
@@ -15,10 +18,11 @@ import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +36,16 @@ import static org.mockito.Mockito.doReturn;
 @SpringBootTest(classes = DataQualityTestBase.TestConfiguration.class)
 @Slf4j
 public abstract class DataQualityTestBase extends KunAppTestBase {
+
+    @Autowired
+    private ExpectationTemplateDao expectationTemplateDao;
+
+    @BeforeEach
+    public void prepareTemplate() {
+        super.tearDown();
+        ExpectationTemplate expectationTemplate = MockExpectationTemplateFactory.create();
+        expectationTemplateDao.create(expectationTemplate);
+    }
 
     @Configuration
     @EnableAutoConfiguration

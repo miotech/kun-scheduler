@@ -1,13 +1,13 @@
 package com.miotech.kun.dataquality.web.model.entity;
 
 import com.miotech.kun.dataquality.core.expectation.CaseType;
-import com.miotech.kun.dataquality.web.model.bo.AssertionRequest;
-import com.miotech.kun.dataquality.web.model.bo.MetricsRequest;
+import com.miotech.kun.dataquality.core.metrics.Metrics;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Jie Chen
@@ -17,9 +17,13 @@ import java.util.List;
 @Data
 public class ExpectationVO extends ExpectationBasic {
 
-    private MetricsRequest metrics;
+    private String granularity = Metrics.Granularity.CUSTOM.name();
 
-    private AssertionRequest assertion;
+    private String templateName;
+
+    private Map<String, Object> payload;
+
+    private Long datasetGid;
 
     private List<DatasetBasic> relatedTables;
 
@@ -28,8 +32,10 @@ public class ExpectationVO extends ExpectationBasic {
     }
 
     public static final class Builder {
-        private MetricsRequest metrics;
-        private AssertionRequest assertion;
+        private String granularity = Metrics.Granularity.CUSTOM.name();
+        private String templateName;
+        private Map<String, Object> payload;
+        private Long datasetGid;
         private List<DatasetBasic> relatedTables;
         private Long id;
         private String name;
@@ -45,13 +51,27 @@ public class ExpectationVO extends ExpectationBasic {
         private Builder() {
         }
 
-        public Builder withMetrics(MetricsRequest metrics) {
-            this.metrics = metrics;
+        public static Builder anExpectationVO() {
+            return new Builder();
+        }
+
+        public Builder withGranularity(String granularity) {
+            this.granularity = granularity;
             return this;
         }
 
-        public Builder withAssertion(AssertionRequest assertion) {
-            this.assertion = assertion;
+        public Builder withTemplateName(String templateName) {
+            this.templateName = templateName;
+            return this;
+        }
+
+        public Builder withPayload(Map<String, Object> payload) {
+            this.payload = payload;
+            return this;
+        }
+
+        public Builder withDatasetGid(Long datasetGid) {
+            this.datasetGid = datasetGid;
             return this;
         }
 
@@ -112,8 +132,10 @@ public class ExpectationVO extends ExpectationBasic {
 
         public ExpectationVO build() {
             ExpectationVO expectationVO = new ExpectationVO();
-            expectationVO.setMetrics(metrics);
-            expectationVO.setAssertion(assertion);
+            expectationVO.setGranularity(granularity);
+            expectationVO.setTemplateName(templateName);
+            expectationVO.setPayload(payload);
+            expectationVO.setDatasetGid(datasetGid);
             expectationVO.setRelatedTables(relatedTables);
             expectationVO.setId(id);
             expectationVO.setName(name);

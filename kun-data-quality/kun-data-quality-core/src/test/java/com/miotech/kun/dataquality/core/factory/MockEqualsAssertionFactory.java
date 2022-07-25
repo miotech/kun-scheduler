@@ -8,7 +8,7 @@ public class MockEqualsAssertionFactory {
     }
 
     public static EqualsAssertion create(String expectedValue) {
-        return new EqualsAssertion("NUMBER", expectedValue);
+        return new EqualsAssertion(expectedValue);
     }
 
 }

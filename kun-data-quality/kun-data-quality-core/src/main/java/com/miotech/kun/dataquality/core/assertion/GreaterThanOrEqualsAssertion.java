@@ -7,9 +7,8 @@ import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 public class GreaterThanOrEqualsAssertion extends FixedValueAssertion {
 
     @JsonCreator
-    public GreaterThanOrEqualsAssertion(@JsonProperty("expectedType") String expectedType,
-                                        @JsonProperty("expectedValue") String expectedValue) {
-        super(expectedType, expectedValue, ComparisonOperator.GREATER_THAN_OR_EQUALS);
+    public GreaterThanOrEqualsAssertion(@JsonProperty("expectedValue") String expectedValue) {
+        super(expectedValue, ComparisonOperator.GREATER_THAN_OR_EQUALS);
     }
 
     @Override

@@ -7,9 +7,8 @@ import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 public class NotEqualsAssertion extends FixedValueAssertion {
 
     @JsonCreator
-    public NotEqualsAssertion(@JsonProperty("expectedType") String expectedType,
-                              @JsonProperty("expectedValue") String expectedValue) {
-        super(expectedType, expectedValue, ComparisonOperator.NOT_EQUALS);
+    public NotEqualsAssertion(@JsonProperty("expectedValue") String expectedValue) {
+        super(expectedValue, ComparisonOperator.NOT_EQUALS);
     }
 
     @Override

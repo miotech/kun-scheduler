@@ -6,8 +6,8 @@ public abstract class VolatilityAssertion extends Assertion {
 
     private final ComparisonPeriod comparisonPeriod;
 
-    public VolatilityAssertion(String expectedType, String expectedValue, ComparisonOperator comparisonOperator, ComparisonPeriod comparisonPeriod) {
-        super(AssertionType.VOLATILITY, comparisonPeriod, comparisonOperator, expectedType, expectedValue);
+    public VolatilityAssertion(String expectedValue, ComparisonOperator comparisonOperator, ComparisonPeriod comparisonPeriod) {
+        super(AssertionType.VOLATILITY, comparisonPeriod, comparisonOperator, expectedValue);
         this.comparisonPeriod = comparisonPeriod;
     }
 

@@ -7,10 +7,9 @@ import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 public class FallAssertion extends VolatilityAssertion {
 
     @JsonCreator
-    public FallAssertion(@JsonProperty("expectedType") String expectedType,
-                         @JsonProperty("expectedValue") String expectedValue,
+    public FallAssertion(@JsonProperty("expectedValue") String expectedValue,
                          @JsonProperty("comparisonPeriod") ComparisonPeriod comparisonPeriod) {
-        super(expectedType, expectedValue, ComparisonOperator.FALL, comparisonPeriod);
+        super(expectedValue, ComparisonOperator.FALL, comparisonPeriod);
     }
 
 

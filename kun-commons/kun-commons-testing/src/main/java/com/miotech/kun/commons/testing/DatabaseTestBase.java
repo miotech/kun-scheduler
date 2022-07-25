@@ -47,7 +47,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     }
 
     protected List<String> ignoredTables() {
-        return ImmutableList.of("kun_mt_datasource_type", "kun_mt_dataset_field_mapping");
+        return ImmutableList.of("kun_mt_datasource_type", "kun_mt_dataset_field_mapping", "kun_dq_expectation_template");
     }
 
     @Override

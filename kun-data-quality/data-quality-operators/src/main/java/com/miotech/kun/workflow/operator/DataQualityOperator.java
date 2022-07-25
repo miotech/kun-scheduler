@@ -1,28 +1,23 @@
 package com.miotech.kun.workflow.operator;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.MapProps;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsProvider;
-import com.miotech.kun.dataquality.core.assertion.Assertion;
-import com.miotech.kun.dataquality.core.assertion.AssertionSample;
-import com.miotech.kun.dataquality.core.expectation.AssertionResult;
+import com.miotech.kun.dataquality.core.executor.ExpectationDatabaseOperator;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
-import com.miotech.kun.dataquality.core.expectation.ValidationResult;
+import com.miotech.kun.dataquality.core.executor.ExpectationExecutor;
 import com.miotech.kun.dataquality.core.hooks.DataQualityCheckOperationHook;
-import com.miotech.kun.dataquality.core.metrics.Metrics;
-import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.dataquality.core.model.DataQualityOperatorContext;
 import com.miotech.kun.dataquality.core.model.OperatorHookParams;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.operator.client.DBUtilsExpectationDatabaseOperator;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +35,8 @@ public class DataQualityOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(DataQualityOperator.class);
 
     private Long caseId;
-    private Long caseRunId;
     private DataQualityClient dataQualityClient;
+    private ExpectationDatabaseOperator dbOperator;
     private DataQualityOperatorContext dataQualityContext;
     private DataQualityCheckOperationHook operationHook;
 
@@ -51,19 +46,20 @@ public class DataQualityOperator extends KunOperator {
     @Override
     public void init() {
         OperatorContext context = getContext();
+        ExpectationContextHolder.setContext(context);
         Config config = context.getConfig();
 
         props = buildPropsFromVariable(config);
         injector = Guice.createInjector(new DataQualityModule(props));
 
         dataQualityClient = injector.getInstance(DataQualityClient.class);
+        dbOperator = injector.getInstance(DBUtilsExpectationDatabaseOperator.class);
         String caseIdStr = props.getString(DATAQUALITY_CASE_ID);
         if (StringUtils.isEmpty(caseIdStr)) {
             logger.error("Data quality case id is empty.");
             throw new IllegalArgumentException("Data quality case id is empty.");
         }
         caseId = Long.valueOf(caseIdStr);
-        caseRunId = context.getTaskRunId();
 
         String datasetJson = props.getString(VALIDATE_DATASET);
         logger.debug("trigger dataset is " + datasetJson);
@@ -79,43 +75,18 @@ public class DataQualityOperator extends KunOperator {
     }
 
 
-
     @Override
     public boolean run() {
-        ValidationResult.Builder vrb = ValidationResult.newBuilder()
-                .withExpectationId(caseId)
-                .withUpdateTime(DateTimeUtils.now());
-        try {
-            logger.info("prepare to execute the test case: {}", caseId);
-            Expectation expectation = dataQualityClient.findById(caseId);
-            Metrics metrics = expectation.getMetrics();
-            Assertion assertion = expectation.getAssertion();
-            logger.info("assertion: {}", JSONUtils.toJsonString(assertion));
+        logger.info("prepare to execute the test case: {}", caseId);
+        Expectation expectation = dataQualityClient.findById(caseId);
+        ExpectationExecutor executor = new ExpectationExecutor(expectation, dbOperator);
 
-            beforeExecute();
-            MetricsCollectedResult<String> currentMetricsCollectedResult = metrics.collect();
-            afterExecute();
+        // register hook
+        executor.registerBeforeExecuteHook(() -> beforeExecute());
+        executor.registerAfterExecuteHook(() -> afterExecute());
 
-            dataQualityClient.recordMetricsCollectedResult(expectation.getExpectationId(), currentMetricsCollectedResult);
-            logger.info("metrics: {} collection completed, result: {}", JSONUtils.toJsonString(metrics),
-                    JSONUtils.toJsonString(currentMetricsCollectedResult));
-
-            MetricsCollectedResult<String> theResultCollectedNDaysAgo = dataQualityClient.getTheResultCollectedNDaysAgo(expectation.getExpectationId(),
-                    assertion.getComparisonPeriod().getDaysAgo());
-            logger.info("benchmark metrics: {}", JSONUtils.toJsonString(theResultCollectedNDaysAgo));
-            boolean isPassed = assertion.doAssert(AssertionSample.of(currentMetricsCollectedResult, theResultCollectedNDaysAgo));
-            logger.info("assertion result: {}", isPassed);
-            vrb.withPassed(isPassed);
-            vrb.withAssertionResults(ImmutableList.of(AssertionResult.from(metrics, assertion, currentMetricsCollectedResult, theResultCollectedNDaysAgo)));
-            dataQualityClient.record(vrb.build() , caseRunId);
-            return true;
-        } catch (Exception e) {
-            logger.error(String.format("caseId=%d %s", caseId, "Failed to run test case."), e);
-            vrb.withPassed(false);
-            vrb.withExecutionResult(ExceptionUtils.getStackTrace(e));
-            dataQualityClient.record(vrb.build(), caseRunId);
-            return false;
-        }
+        // validate
+        return executor.execute();
     }
 
     @Override
@@ -144,7 +115,7 @@ public class DataQualityOperator extends KunOperator {
 
     private Props buildPropsFromVariable(Config config) {
         Props props = new Props();
-        Map<String,Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
 
         map.put(METADATA_DATASOURCE_URL, config.getString(METADATA_DATASOURCE_URL));
         map.put(METADATA_DATASOURCE_USERNAME, config.getString(METADATA_DATASOURCE_USERNAME));

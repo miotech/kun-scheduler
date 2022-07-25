@@ -4,29 +4,29 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.dataquality.core.expectation.Dataset;
 import com.miotech.kun.metadata.common.connector.Connector;
 import com.miotech.kun.metadata.common.connector.ConnectorFactory;
 import com.miotech.kun.metadata.common.connector.Query;
+import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 
 public class SQLMetrics extends Metrics<String> {
+
+    private static final Logger logger = LoggerFactory.getLogger(SQLMetrics.class);
 
     private final String sql;
 
     private final String field;
 
     @JsonCreator
-    public SQLMetrics(@JsonProperty("name") String name,
-                      @JsonProperty("description") String description,
-                      @JsonProperty("granularity") Granularity granularity,
-                      @JsonProperty("dataset") Dataset dataset,
-                      @JsonProperty("sql") String sql,
+    public SQLMetrics(@JsonProperty("sql") String sql,
                       @JsonProperty("field") String field) {
-        super(MetricsType.SQL, name, description, granularity, dataset);
+        super(MetricsType.SQL);
         this.sql = sql;
         this.field = field;
     }
@@ -40,12 +40,13 @@ public class SQLMetrics extends Metrics<String> {
     }
 
     @Override
-    public MetricsCollectedResult<String> collect() {
-        DataSource dataSource = super.getDataset().getDataSource();
+    public MetricsCollectedResult<String> collect(CollectContext context) {
+        DataSource dataSource = context.getDataSource();
         Connector connector = null;
         try {
             connector = ConnectorFactory.generateConnector(dataSource);
             Query query = new Query(null, null, removeEndSemicolon(this.sql));
+            logger.debug("collect query: {}", JSONUtils.toJsonString(query));
             ResultSet rs = connector.query(query);
 
             if (rs.next()) {
@@ -73,10 +74,6 @@ public class SQLMetrics extends Metrics<String> {
 
     public Builder cloneBuilder() {
         return newBuilder()
-                .withName(this.getName())
-                .withDescription(this.getDescription())
-                .withGranularity(this.getGranularity())
-                .withDataset(this.getDataset())
                 .withSql(this.sql)
                 .withField(this.field)
                 ;
@@ -85,10 +82,6 @@ public class SQLMetrics extends Metrics<String> {
     public static final class Builder {
         private String sql;
         private String field;
-        private String name;
-        private String description;
-        private Granularity granularity;
-        private Dataset dataset;
 
         private Builder() {
         }
@@ -103,28 +96,8 @@ public class SQLMetrics extends Metrics<String> {
             return this;
         }
 
-        public Builder withName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder withDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder withGranularity(Granularity granularity) {
-            this.granularity = granularity;
-            return this;
-        }
-
-        public Builder withDataset(Dataset dataset) {
-            this.dataset = dataset;
-            return this;
-        }
-
         public SQLMetrics build() {
-            return new SQLMetrics(name, description, granularity, dataset, sql, field);
+            return new SQLMetrics(sql, field);
         }
     }
 }

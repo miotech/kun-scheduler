@@ -11,4 +11,10 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "org.projectlombok:lombok"
+
+    testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation "junit:junit"
+    testImplementation "org.postgresql:postgresql"
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:postgresql"
 }

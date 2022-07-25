@@ -21,6 +21,7 @@ public class SQLValidator {
 
     public ValidateMetricsResult validate(SQLParseResult sqlParseResult, ValidateMetricsRequest validateMetricsRequest) {
         MetricsRequest metricsRequest = validateMetricsRequest.getMetrics();
+        String field = (String) metricsRequest.getPayload().get("field");
         // check table name
         boolean tableNameIsMatched = validateTableName(sqlParseResult, validateMetricsRequest);
         if (!tableNameIsMatched) {
@@ -28,7 +29,7 @@ public class SQLValidator {
         }
 
         // check column name
-        List<String> parsedColumnNames = ImmutableList.of(metricsRequest.getField());
+        List<String> parsedColumnNames = ImmutableList.of(field);
         boolean columnNamesIsMatched = validateColumnNames(parsedColumnNames, sqlParseResult.getColumnNames());
         if (!columnNamesIsMatched) {
             return ValidateMetricsResult.failed("The column names returned in the SQL statement are inconsistent with the validation rules.");

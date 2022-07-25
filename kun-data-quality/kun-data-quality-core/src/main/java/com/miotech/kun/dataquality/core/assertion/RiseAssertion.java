@@ -7,10 +7,9 @@ import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 public class RiseAssertion extends VolatilityAssertion {
 
     @JsonCreator
-    public RiseAssertion(@JsonProperty("expectedType") String expectedType,
-                         @JsonProperty("expectedValue") String expectedValue,
+    public RiseAssertion(@JsonProperty("expectedValue") String expectedValue,
                          @JsonProperty("comparisonPeriod") ComparisonPeriod comparisonPeriod) {
-        super(expectedType, expectedValue, ComparisonOperator.RISE, comparisonPeriod);
+        super(expectedValue, ComparisonOperator.RISE, comparisonPeriod);
     }
 
     @Override

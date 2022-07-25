@@ -8,12 +8,10 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.core.assertion.Assertion;
+import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Dataset;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
-import com.miotech.kun.dataquality.core.expectation.ExpectationMethod;
-import com.miotech.kun.dataquality.core.metrics.Metrics;
-import com.miotech.kun.dataquality.core.expectation.CaseType;
+import com.miotech.kun.dataquality.core.expectation.ExpectationTemplate;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.bo.ExpectationsRequest;
 import com.miotech.kun.dataquality.web.model.entity.*;
@@ -36,11 +34,15 @@ import java.util.stream.Collectors;
 @Repository
 public class ExpectationDao {
 
-    private static final String TABLE_NAME = "kun_dq_expectation";
+    private static final String EXPECTATION_TABLE_NAME = "kun_dq_expectation";
+    private static final String EXPECTATION_MODEL_NAME = "kde";
+    private static final String EXPECTATION_TEMPLATE_TABLE_NAME = "kun_dq_expectation_template";
+    private static final String EXPECTATION_TEMPLATE_MODEL_NAME = "kdet";
     public static final String CASE_RUN_TABLE = "kun_dq_case_run";
     public static final String CASE_RUN_MODEL = "caserun";
-    private static final List<String> COLUMNS = ImmutableList.of("id", "name", "types", "description", "method", "metrics_config", "assertion_config", "trigger",
-            "dataset_gid", "task_id", "case_type", "create_time", "update_time", "create_user", "update_user");
+    private static final List<String> EXPECTATION_COLUMNS = ImmutableList.of("id", "name", "types", "description", "granularity",
+            "template_name", "payload", "trigger", "dataset_gid", "task_id", "case_type", "create_time", "update_time", "create_user", "update_user");
+    private static final List<String> EXPECTATION_TEMPLATE_COLUMNS = ImmutableList.of("name", "granularity", "description", "converter", "display_parameters");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -48,35 +50,42 @@ public class ExpectationDao {
     @Autowired
     DatasetRepository datasetRepository;
 
-    public void create(Expectation spec) {
+    public void create(Expectation expectation) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .insert(COLUMNS.toArray(new String[0]))
-                .into(TABLE_NAME)
+                .insert(EXPECTATION_COLUMNS.toArray(new String[0]))
+                .into(EXPECTATION_TABLE_NAME)
                 .asPrepared()
                 .getSQL();
         jdbcTemplate.update(sql,
-                spec.getExpectationId(),
-                spec.getName(),
-                StringUtils.join(spec.getTypes(), ","),
-                spec.getDescription(),
-                JSONUtils.toJsonString(spec.getMethod()),
-                JSONUtils.toJsonString(spec.getMetrics()),
-                JSONUtils.toJsonString(spec.getAssertion()),
-                spec.getTrigger().name(),
-                spec.getDataset().getGid(),
-                spec.getTaskId(),
-                spec.getCaseType().name(),
-                spec.getCreateTime(),
-                spec.getUpdateTime(),
-                spec.getCreateUser(),
-                spec.getUpdateUser());
+                expectation.getExpectationId(),
+                expectation.getName(),
+                StringUtils.join(expectation.getTypes(), ","),
+                expectation.getDescription(),
+                expectation.getGranularity(),
+                expectation.getTemplate().getName(),
+                JSONUtils.toJsonString(expectation.getPayload()),
+                expectation.getTrigger().name(),
+                expectation.getDataset().getGid(),
+                expectation.getTaskId(),
+                expectation.getCaseType().name(),
+                expectation.getCreateTime(),
+                expectation.getUpdateTime(),
+                expectation.getCreateUser(),
+                expectation.getUpdateUser());
     }
 
     public Expectation fetchById(Long id) {
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(EXPECTATION_MODEL_NAME, EXPECTATION_COLUMNS);
+        columnsMap.put(EXPECTATION_TEMPLATE_MODEL_NAME, EXPECTATION_TEMPLATE_COLUMNS);
+
         String sql = DefaultSQLBuilder.newBuilder()
-                .select(COLUMNS.toArray(new String[0]))
-                .from(TABLE_NAME)
-                .where("id = ?")
+                .columns(columnsMap)
+                .from(EXPECTATION_TABLE_NAME, EXPECTATION_MODEL_NAME)
+                .join("inner", EXPECTATION_TEMPLATE_TABLE_NAME, EXPECTATION_TEMPLATE_MODEL_NAME)
+                .on(EXPECTATION_MODEL_NAME + ".template_name = " + EXPECTATION_TEMPLATE_MODEL_NAME + ".name")
+                .where(EXPECTATION_MODEL_NAME + ".id = ?")
+                .autoAliasColumns()
                 .getSQL();
 
         try {
@@ -89,7 +98,7 @@ public class ExpectationDao {
     public void deleteById(Long id) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .delete()
-                .from(TABLE_NAME)
+                .from(EXPECTATION_TABLE_NAME)
                 .where("id = ?")
                 .getSQL();
         jdbcTemplate.update(sql, id);
@@ -97,13 +106,13 @@ public class ExpectationDao {
 
     public void updateById(Long id, Expectation expectation) {
         String kdcSql = DefaultSQLBuilder.newBuilder()
-                .update(TABLE_NAME)
+                .update(EXPECTATION_TABLE_NAME)
                 .set("name",
                         "types",
                         "description",
-                        "method",
-                        "metrics_config",
-                        "assertion_config",
+                        "granularity",
+                        "template_name",
+                        "payload",
                         "trigger",
                         "case_type",
                         "update_time",
@@ -115,9 +124,9 @@ public class ExpectationDao {
                 expectation.getName(),
                 StringUtils.join(expectation.getTypes(), ","),
                 expectation.getDescription(),
-                JSONUtils.toJsonString(expectation.getMethod()),
-                JSONUtils.toJsonString(expectation.getMetrics()),
-                JSONUtils.toJsonString(expectation.getAssertion()),
+                expectation.getGranularity(),
+                expectation.getTemplate().getName(),
+                JSONUtils.toJsonString(expectation.getPayload()),
                 expectation.getTrigger().name(),
                 expectation.getCaseType().name(),
                 expectation.getUpdateTime(),
@@ -129,7 +138,7 @@ public class ExpectationDao {
 
     public void updateTaskId(Long expectationId, Long taskId) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .update(TABLE_NAME)
+                .update(EXPECTATION_TABLE_NAME)
                 .set("task_id")
                 .asPrepared()
                 .where("id = ?")
@@ -216,7 +225,7 @@ public class ExpectationDao {
 
         sql = DefaultSQLBuilder.newBuilder()
                 .select("dataset_gid")
-                .from(TABLE_NAME)
+                .from(EXPECTATION_TABLE_NAME)
                 .where("id = ?")
                 .getSQL();
         Long primaryDatasetId = jdbcTemplate.queryForObject(sql, Long.class, expectationId);
@@ -235,7 +244,7 @@ public class ExpectationDao {
     public ExpectationBasic fetchCaseBasicByTaskId(Long taskId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("id", "name", "task_id", "case_type")
-                .from(TABLE_NAME)
+                .from(EXPECTATION_TABLE_NAME)
                 .where("task_id = ?")
                 .getSQL();
 
@@ -329,10 +338,17 @@ public class ExpectationDao {
     }
 
     public Expectation fetchByTaskId(Long taskId) {
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(EXPECTATION_MODEL_NAME, EXPECTATION_COLUMNS);
+        columnsMap.put(EXPECTATION_TEMPLATE_MODEL_NAME, EXPECTATION_TEMPLATE_COLUMNS);
+
         String sql = DefaultSQLBuilder.newBuilder()
-                .select(COLUMNS.toArray(new String[0]))
-                .from(TABLE_NAME)
-                .where("task_id = ?")
+                .columns(columnsMap)
+                .from(EXPECTATION_TABLE_NAME, EXPECTATION_MODEL_NAME)
+                .join("inner", EXPECTATION_TEMPLATE_TABLE_NAME, EXPECTATION_TEMPLATE_MODEL_NAME)
+                .on(EXPECTATION_MODEL_NAME + ".template_name = " + EXPECTATION_TEMPLATE_MODEL_NAME + ".name")
+                .where(EXPECTATION_MODEL_NAME + ".task_id = ?")
+                .autoAliasColumns()
                 .getSQL();
 
         try {
@@ -347,22 +363,30 @@ public class ExpectationDao {
 
         @Override
         public Expectation mapRow(ResultSet rs, int rowNum) throws SQLException {
+            ExpectationTemplate expectationTemplate = ExpectationTemplate.newBuilder()
+                    .withName(rs.getString(EXPECTATION_TEMPLATE_MODEL_NAME + "_name"))
+                    .withGranularity(rs.getString(EXPECTATION_TEMPLATE_MODEL_NAME + "_granularity"))
+                    .withDescription(rs.getString(EXPECTATION_TEMPLATE_MODEL_NAME + "_description"))
+                    .withConverter(rs.getString(EXPECTATION_TEMPLATE_MODEL_NAME + "_converter"))
+                    .withDisplayParameters(rs.getString(EXPECTATION_TEMPLATE_MODEL_NAME + "_display_parameters"))
+                    .build();
+
             return Expectation.newBuilder()
-                    .withExpectationId(rs.getLong("id"))
-                    .withName(rs.getString("name"))
-                    .withTypes(resolveDqCaseTypes(rs.getString("types")))
-                    .withDescription(rs.getString("description"))
-                    .withMethod(JSONUtils.jsonToObject(rs.getString("method"), ExpectationMethod.class))
-                    .withMetrics(JSONUtils.jsonToObject(rs.getString("metrics_config"), Metrics.class))
-                    .withAssertion(JSONUtils.jsonToObject(rs.getString("assertion_config"), Assertion.class))
-                    .withTrigger(Expectation.ExpectationTrigger.valueOf(rs.getString("trigger")))
-                    .withDataset(Dataset.builder().gid(rs.getLong("dataset_gid")).build())
-                    .withTaskId(rs.getLong("task_id"))
-                    .withCaseType(CaseType.valueOf(rs.getString("case_type")))
-                    .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")))
-                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
-                    .withCreateUser(rs.getString("create_user"))
-                    .withUpdateUser(rs.getString("update_user"))
+                    .withExpectationId(rs.getLong(EXPECTATION_MODEL_NAME + "_id"))
+                    .withName(rs.getString(EXPECTATION_MODEL_NAME + "_name"))
+                    .withTypes(resolveDqCaseTypes(rs.getString(EXPECTATION_MODEL_NAME + "_types")))
+                    .withDescription(rs.getString(EXPECTATION_MODEL_NAME + "_description"))
+                    .withGranularity(rs.getString(EXPECTATION_MODEL_NAME + "_granularity"))
+                    .withTemplate(expectationTemplate)
+                    .withPayload(JSONUtils.jsonStringToMap(rs.getString(EXPECTATION_MODEL_NAME + "_payload")))
+                    .withTrigger(Expectation.ExpectationTrigger.valueOf(rs.getString(EXPECTATION_MODEL_NAME + "_trigger")))
+                    .withDataset(Dataset.builder().gid(rs.getLong(EXPECTATION_MODEL_NAME + "_dataset_gid")).build())
+                    .withTaskId(rs.getLong(EXPECTATION_MODEL_NAME + "_task_id"))
+                    .withCaseType(CaseType.valueOf(rs.getString(EXPECTATION_MODEL_NAME + "_case_type")))
+                    .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(EXPECTATION_MODEL_NAME + "_create_time")))
+                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(EXPECTATION_MODEL_NAME + "_update_time")))
+                    .withCreateUser(rs.getString(EXPECTATION_MODEL_NAME + "_create_user"))
+                    .withUpdateUser(rs.getString(EXPECTATION_MODEL_NAME + "_update_user"))
                     .build();
         }
     }

@@ -5,6 +5,7 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.common.utils.JSONUtils;
+import com.miotech.kun.dataquality.core.expectation.ExpectationTemplate;
 import com.miotech.kun.dataquality.web.model.bo.*;
 import com.miotech.kun.dataquality.web.model.entity.*;
 import com.miotech.kun.dataquality.web.service.DataQualityService;
@@ -113,11 +114,6 @@ public class DataQualityController {
         return RequestResult.success(dataQualityService.getHistory(request.getCaseIds(), request.getLimit()));
     }
 
-    @GetMapping("/data-quality/dimension/get-config")
-    public RequestResult<DimensionConfig> getDimensionConfig(@RequestParam("datasourceType") String dsType) {
-        return RequestResult.success(dataQualityService.getDimensionConfig(dsType));
-    }
-
     @PostMapping("/data-quality/add")
     public RequestResult<IdVO> createExpectation(@RequestBody ExpectationRequest expectationRequest) {
         Long id = dataQualityService.createExpectation(expectationRequest);
@@ -151,5 +147,10 @@ public class DataQualityController {
     public RequestResult<IdVO> deleteCase(@PathVariable("id") Long id) {
         dataQualityService.deleteExpectation(id);
         return RequestResult.success(new IdVO(id));
+    }
+
+    @GetMapping("/data-quality/display")
+    public RequestResult<List<ExpectationTemplate>> getDisplayConfig(@RequestParam("granularity") String granularity) {
+        return RequestResult.success(dataQualityService.getDisplayConfig(granularity));
     }
 }

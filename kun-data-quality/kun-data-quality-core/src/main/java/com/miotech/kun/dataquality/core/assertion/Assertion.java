@@ -23,19 +23,15 @@ public abstract class Assertion {
 
     private final ComparisonOperator comparisonOperator;
 
-    private final String expectedType;
-
     private final String expectedValue;
 
     public Assertion(AssertionType assertionType,
                      ComparisonPeriod comparisonPeriod,
                      ComparisonOperator comparisonOperator,
-                     String expectedType,
                      String expectedValue) {
         this.assertionType = assertionType;
         this.comparisonPeriod = comparisonPeriod;
         this.comparisonOperator = comparisonOperator;
-        this.expectedType = expectedType;
         this.expectedValue = expectedValue;
     }
 
@@ -49,10 +45,6 @@ public abstract class Assertion {
 
     public ComparisonOperator getComparisonOperator() {
         return comparisonOperator;
-    }
-
-    public String getExpectedType() {
-        return expectedType;
     }
 
     public String getExpectedValue() {
