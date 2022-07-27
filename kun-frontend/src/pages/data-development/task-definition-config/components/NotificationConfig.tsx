@@ -12,6 +12,7 @@ import {
 import { EmailExtraUserConfig } from '@/pages/data-development/task-definition-config/components/EmailExtraUserConfig';
 import { useUpdateEffect } from 'ahooks';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
+import { BacktrackingTaskDefinition } from './BacktrackingTaskDefinition';
 
 interface OwnProps {
   form: FormInstance;
@@ -199,16 +200,16 @@ export const NotificationConfig: React.FC<Props> = memo(function NotificationCon
       {slaRow}
 
       {openSla && (
-        <Row>
-          <Form.Item label={t('dataDevelopment.definition.slaConfig')}>
-            <Col span={6}>
+        <Form.Item label={t('dataDevelopment.definition.slaConfig')}>
+          <Row>
+            <Col span={7}>
               <Form.Item
                 label={t('dataDevelopment.definition.slaConfig.level')}
                 name={['taskPayload', 'scheduleConfig', 'slaConfig', 'level']}
                 rules={[{ required: true }]}
                 initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.level || 0}
               >
-                <Select style={{ width: 150 }} optionLabelProp="label">
+                <Select style={{ width: 160 }} optionLabelProp="label">
                   {levelList.map(i => (
                     <Option key={i} value={i} label={i}>
                       {i}{' '}
@@ -227,41 +228,49 @@ export const NotificationConfig: React.FC<Props> = memo(function NotificationCon
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={6}>
+            <Col span={17}>
               <Form.Item label={t('dataDevelopment.definition.slaConfig.time')}>
-                <Form.Item
-                  label={t('dataDevelopment.definition.slaConfig.hours')}
-                  name={['taskPayload', 'scheduleConfig', 'slaConfig', 'hours']}
-                  rules={[{ required: true }]}
-                  initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.hours}
-                >
-                  <Select showSearch style={{ width: 100 }}>
-                    {hourList.map(i => (
-                      <Option key={i} value={i}>
-                        {i}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
-                <Form.Item
-                  label={t('dataDevelopment.definition.slaConfig.minutes')}
-                  name={['taskPayload', 'scheduleConfig', 'slaConfig', 'minutes']}
-                  rules={[{ required: true }]}
-                  initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.minutes}
-                >
-                  <Select showSearch style={{ width: 100 }}>
-                    {minuteList.map(i => (
-                      <Option key={i} value={i}>
-                        {i}
-                      </Option>
-                    ))}
-                  </Select>
-                </Form.Item>
+                <Row>
+                  <Col span={12}>
+                    <Form.Item
+                      label={t('dataDevelopment.definition.slaConfig.hours')}
+                      name={['taskPayload', 'scheduleConfig', 'slaConfig', 'hours']}
+                      rules={[{ required: true }]}
+                      initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.hours}
+                    >
+                      <Select showSearch style={{ width: 120 }}>
+                        {hourList.map(i => (
+                          <Option key={i} value={i}>
+                            {i}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label={t('dataDevelopment.definition.slaConfig.minutes')}
+                      name={['taskPayload', 'scheduleConfig', 'slaConfig', 'minutes']}
+                      rules={[{ required: true }]}
+                      initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.slaConfig?.minutes}
+                    >
+                      <Select showSearch style={{ width: 120 }}>
+                        {minuteList.map(i => (
+                          <Option key={i} value={i}>
+                            {i}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
               </Form.Item>
             </Col>
-          </Form.Item>
-        </Row>
+          </Row>
+        </Form.Item>
       )}
+
+      {openSla && <BacktrackingTaskDefinition />}
     </div>
   );
 });

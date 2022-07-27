@@ -437,6 +437,14 @@ export default {
   'dataDevelopment.definition.notificationConfig.EMAIL': 'Email',
   'dataDevelopment.definition.notificationConfig.EMAIL.emailList': 'Email List',
   'dataDevelopment.definition.notificationConfig.EMAIL.emailList.validationError': 'Please input valid email address',
+  'dataDevelopment.definition.backtrackingTaskDefinition.avgTaskRunTimeLastSevenTimes':
+    'Average completion time last 7 days',
+  'dataDevelopment.definition.backtrackingTaskDefinition.backtrackingTaskDefinitionPriority':
+    'Downstream derived priority',
+  'dataDevelopment.definition.backtrackingTaskDefinition.backtrackingTaskDefinitionName':
+    'Downstream backtracking task name',
+  'dataDevelopment.definition.backtrackingTaskDefinition.backtrackingTaskDefinitionDeadline':
+    'Downstream derived deadline',
   'dataDevelopment.dryRunResult': 'Dry Run Result',
   'dataDevelopment.dryRunLog': 'Dry Run Log',
   'dataDevelopment.stopDryRun': 'Stop',
