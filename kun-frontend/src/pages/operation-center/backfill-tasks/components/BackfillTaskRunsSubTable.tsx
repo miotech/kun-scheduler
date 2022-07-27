@@ -23,7 +23,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 function renderStatus(status: RunStatusEnum) {
-  const color:string = taskColorConfig[status] ? taskColorConfig[status] : taskColorConfig.DEFAULT;
+  const color: string = taskColorConfig[status] ? taskColorConfig[status] : taskColorConfig.DEFAULT;
   return <Badge color={color} text={status} />;
 }
 
@@ -56,15 +56,13 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
         width: 180,
         render: (txt, record) => (
           <span>
-            <Button
-              size="small"
-              type="link"
+            <Link
               onClick={() => {
                 props.onClickViewLog(record.attempts?.[0].taskRunId ?? null);
               }}
             >
               {txt}
-            </Button>
+            </Link>
           </span>
         ),
       },
