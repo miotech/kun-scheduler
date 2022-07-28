@@ -1,7 +1,9 @@
 package com.miotech.kun.workflow.executor.local;
 
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskAttemptInQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskPriorityComparator;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +13,7 @@ import java.util.*;
  * this queue is not thread safe
  */
 public class LocalTaskAttemptQueue {
-    private Queue<TaskAttempt> queue;
+    private Queue<TaskAttemptInQueue> queue;
     private final Integer capacity;//队列资源容量
     private Integer remainCapacity;
     private String name;
@@ -46,7 +48,7 @@ public class LocalTaskAttemptQueue {
             throw new IllegalStateException("there are no resources left in queue : " + name);
         }
         remainCapacity--;
-        TaskAttempt taskAttempt = queue.poll();
+        TaskAttempt taskAttempt = queue.poll().getTaskAttempt();
         dispatchedTaskAttempt.add(taskAttempt.getId());
         logger.debug("taskAttemptId = {} acquire worker token from queue : {}, current size = {}, max size = {}", taskAttempt.getId(), name, remainCapacity, capacity);
         logger.debug("queue = {} has {} taskAttempt in queue", getName(), getSize());
@@ -55,7 +57,7 @@ public class LocalTaskAttemptQueue {
     }
 
     public synchronized void add(TaskAttempt taskAttempt) {
-        queue.add(taskAttempt);
+        queue.add(new TaskAttemptInQueue(taskAttempt, DateTimeUtils.now()));
         logger.debug("queue = {} has {} taskAttempt in queue", getName(), getSize());
     }
 
@@ -63,9 +65,9 @@ public class LocalTaskAttemptQueue {
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        Iterator<TaskAttempt> iterator = queue.iterator();
+        Iterator<TaskAttemptInQueue> iterator = queue.iterator();
         while (iterator.hasNext()) {
-            TaskAttempt queued = iterator.next();
+            TaskAttempt queued = iterator.next().getTaskAttempt();
             if (queued.getId().equals(taskAttempt.getId())) {
                 iterator.remove();
                 logger.info("remove taskAttempt from queue , attemptId = {},queueName = {}", taskAttempt.getId(), taskAttempt.getQueueName());
@@ -125,9 +127,9 @@ public class LocalTaskAttemptQueue {
     }
 
     public TaskAttempt getTaskAttemptById(Long attemptId) {
-        Iterator<TaskAttempt> iterator = queue.iterator();
+        Iterator<TaskAttemptInQueue> iterator = queue.iterator();
         while (iterator.hasNext()) {
-            TaskAttempt queued = iterator.next();
+            TaskAttempt queued = iterator.next().getTaskAttempt();
             if (queued.getId().equals(attemptId)) {
                 return queued;
             }
