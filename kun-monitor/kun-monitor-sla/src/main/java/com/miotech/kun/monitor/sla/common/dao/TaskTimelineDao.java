@@ -75,7 +75,7 @@ public class TaskTimelineDao {
                 .select("level", "root_definition_id", "deadline")
                 .from(TIMELINE_TABLE_NAME)
                 .where("definition_id = ? and root_definition_id is not null")
-                .orderBy("created_at desc")
+                .orderBy("id desc")
                 .limit(1)
                 .getSQL();
 
