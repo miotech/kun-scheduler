@@ -120,3 +120,13 @@ export interface NotifyConfig {
   notifyWhen: NotifyWhen;
   notifierConfig: UserNotifyConfigItem[];
 }
+
+export interface BacktrackingTaskDefinition {
+  avgTaskRunTimeLastSevenTimes: string;
+  backtrackingTaskDefinition: {
+    definitionId: string;
+    definitionName: string;
+    deadline: string;
+    priority: string;
+  };
+}

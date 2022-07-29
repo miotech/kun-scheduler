@@ -1,5 +1,11 @@
 import { BackendRespData, PaginationRespBody, ServiceRespPromise } from '@/definitions/common-types';
-import { DeployVO, TaskDefinition, TaskPayload, TaskTryVO } from '@/definitions/TaskDefinition.type';
+import {
+  DeployVO,
+  TaskDefinition,
+  TaskPayload,
+  TaskTryVO,
+  BacktrackingTaskDefinition,
+} from '@/definitions/TaskDefinition.type';
 import { TaskRunLog } from '@/definitions/TaskRun.type';
 
 import { delet, get, post, put } from '@/utils/requestUtils';
@@ -292,5 +298,15 @@ export async function fetchDefinitionIdFromTaskRunId(id: string | number): Servi
     },
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'task-definitions.get-defnition-id',
+  });
+}
+
+// get backtrackingTaskDefinition
+export async function fetchDefinitionBackTracking(id: string | number): ServiceRespPromise<BacktrackingTaskDefinition> {
+  return get('/sla/backtracking/:id', {
+    pathParams: {
+      id: `${id}`,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
