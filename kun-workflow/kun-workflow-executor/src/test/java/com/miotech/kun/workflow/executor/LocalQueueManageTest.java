@@ -20,12 +20,15 @@ import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.executor.local.PublicEventHandler;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory.createTaskAttempt;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -108,7 +111,7 @@ public class LocalQueueManageTest extends CommonTestBase {
     }
 
     @Test
-    public void testSamePriorityShouldFIFO() {
+    public void testSamePriorityShouldFIFO_EnqueueWithSameCreateOrder() throws InterruptedException {
         //prepare
         ExecutorConfig executorConfig = new ExecutorConfig();
         ResourceQueue defaultQueue = ResourceQueue.newBuilder()
@@ -137,7 +140,9 @@ public class LocalQueueManageTest extends CommonTestBase {
         saveTaskAttempt(taskAttempt3);
 
         localQueueManage.submit(taskAttempt1);
+        Thread.sleep(1000);
         localQueueManage.submit(taskAttempt2);
+        Thread.sleep(1000);
         localQueueManage.submit(taskAttempt3);
 
         //verify
@@ -145,6 +150,92 @@ public class LocalQueueManageTest extends CommonTestBase {
         assertThat(queuedAttempts.get(0).getId(), is(taskAttempt1.getId()));
         assertThat(queuedAttempts.get(1).getId(), is(taskAttempt2.getId()));
         assertThat(queuedAttempts.get(2).getId(), is(taskAttempt3.getId()));
+
+    }
+
+    @Test
+    public void testSamePriorityShouldFIFO_EnqueueWithDifferentCreateOrder() throws InterruptedException {
+        //prepare
+        ExecutorConfig executorConfig = new ExecutorConfig();
+        ResourceQueue defaultQueue = ResourceQueue.newBuilder()
+                .withQueueName("default")
+                .withWorkerNumbers(3)
+                .build();
+        ResourceQueue testQueue = ResourceQueue.newBuilder()
+                .withQueueName("test")
+                .withWorkerNumbers(0)
+                .build();
+        executorConfig.setResourceQueues(Lists.newArrayList(defaultQueue,testQueue));
+
+        LocalQueueManage localQueueManage = prepareQueueManage(executorConfig);
+        Task task1 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
+        Task task2 = MockTaskFactory.createTask();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
+        Task task3 = MockTaskFactory.createTask();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
+        TaskAttempt taskAttempt3 = createTaskAttempt(taskRun3);
+
+        saveTaskAttempt(taskAttempt1);
+        saveTaskAttempt(taskAttempt2);
+        saveTaskAttempt(taskAttempt3);
+
+        localQueueManage.submit(taskAttempt3);
+        Thread.sleep(1000);
+        localQueueManage.submit(taskAttempt2);
+        Thread.sleep(1000);
+        localQueueManage.submit(taskAttempt1);
+
+        //verify
+        List<TaskAttempt> queuedAttempts = localQueueManage.drain();
+        assertThat(queuedAttempts.get(0).getId(), is(taskAttempt3.getId()));
+        assertThat(queuedAttempts.get(1).getId(), is(taskAttempt2.getId()));
+        assertThat(queuedAttempts.get(2).getId(), is(taskAttempt1.getId()));
+    }
+
+    @Test
+    public void testSamePriorityShouldFIFO_SameEnqueueTimeWithDifferentCreateOrder() throws InterruptedException {
+        //prepare
+        ExecutorConfig executorConfig = new ExecutorConfig();
+        ResourceQueue defaultQueue = ResourceQueue.newBuilder()
+                .withQueueName("default")
+                .withWorkerNumbers(3)
+                .build();
+        ResourceQueue testQueue = ResourceQueue.newBuilder()
+                .withQueueName("test")
+                .withWorkerNumbers(0)
+                .build();
+        executorConfig.setResourceQueues(Lists.newArrayList(defaultQueue,testQueue));
+
+        LocalQueueManage localQueueManage = prepareQueueManage(executorConfig);
+        Task task1 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
+        Task task2 = MockTaskFactory.createTask();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
+        Task task3 = MockTaskFactory.createTask();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
+        TaskAttempt taskAttempt3 = createTaskAttempt(taskRun3);
+
+        saveTaskAttempt(taskAttempt1);
+        saveTaskAttempt(taskAttempt2);
+        saveTaskAttempt(taskAttempt3);
+
+        localQueueManage.submit(taskAttempt3);
+        Thread.sleep(1000);
+        DateTimeUtils.freeze();
+        localQueueManage.submit(taskAttempt2);
+        localQueueManage.submit(taskAttempt1);
+        DateTimeUtils.resetClock();
+
+        //verify
+        List<TaskAttempt> queuedAttempts = localQueueManage.drain();
+        assertThat(queuedAttempts.get(0).getId(), is(taskAttempt3.getId()));
+        assertThat(queuedAttempts.get(1).getId(), is(taskAttempt1.getId()));
+        assertThat(queuedAttempts.get(2).getId(), is(taskAttempt2.getId()));
 
     }
 
