@@ -23,15 +23,13 @@ import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.core.model.taskrun.TimeType;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
 import org.hamcrest.MatcherAssert;
@@ -950,6 +948,86 @@ public class TaskRunServiceTest extends CommonTestBase {
         //fetch the up&downstream for taskRun4, trace 72h, all included
         TaskRunGanttChartVO result4 = taskRunService.getTaskRunGantt(taskRuns.get(5).getId(), 72);
         assertThat(result4.getInfoList().size(), is(5));
+    }
+
+    /**
+     * scenario: target task run queue from t to t+60
+     * target:              q q q q q q q q q q q q      (queue 60 min)
+     * taskrun 1 :  r r r r r r r r                      (intersect 20 min, run 40 min)
+     * taskrun 2 :      r r r r r r r r r r r r r r r r  (intersect 60 min, run 80 min)
+     * taskrun 3 :                    r r                (intersect 10 min, run 10 min)
+     * taskrun 4 :                      r r r r r r r    (intersect 30 min, run 35 min)
+     * taskrun 5 :  r r r                                (no intersect)
+     * result with intersection order desc: 2, 4, 1, 3 (no 5 without intersection)
+     */
+    @Test
+    public void getTaskRunWaitingFor() {
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        Task task = MockTaskFactory.createTask();
+        TaskRun targetTaskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(baseTime).withStartAt(baseTime.plusMinutes(60)).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStartAt(baseTime.minusMinutes(20)).withTermAt(baseTime.plusMinutes(20)).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStartAt(baseTime.minusMinutes(10)).withTermAt(baseTime.plusMinutes(70)).build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStartAt(baseTime.plusMinutes(25)).withTermAt(baseTime.plusMinutes(35)).build();
+        TaskRun taskRun4 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStartAt(baseTime.plusMinutes(30)).withTermAt(baseTime.plusMinutes(65)).build();
+        TaskRun taskRun5 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStartAt(baseTime.minusMinutes(20)).withTermAt(baseTime.minusMinutes(5)).build();
+        taskDao.create(task);
+        taskRunDao.createTaskRun(targetTaskRun);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun1, taskRun2, taskRun3, taskRun4, taskRun5));
+
+        List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
+        assertThat(result.size(), is(4));
+        assertThat(result.get(0).getTaskRunId(), is(taskRun2.getId()));
+        assertThat(result.get(1).getTaskRunId(), is(taskRun4.getId()));
+        assertThat(result.get(2).getTaskRunId(), is(taskRun1.getId()));
+        assertThat(result.get(3).getTaskRunId(), is(taskRun3.getId()));
+    }
+
+    @Test
+    public void getTaskRunWaitingGantt_ignoreCreated3DaysBefore() {
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        Task task = MockTaskFactory.createTask();
+        TaskRun targetTaskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(baseTime).withStartAt(baseTime.plusMinutes(60)).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(targetTaskRun);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun1, taskRun2));
+        taskRun1 = taskRun1.cloneBuilder()
+                .withCreatedAt(baseTime)
+                .withStartAt(baseTime.minusMinutes(20)).withTermAt(baseTime.plusMinutes(20)).build();
+        taskRun2 = taskRun2.cloneBuilder()
+                .withCreatedAt(baseTime.minusDays(4))
+                .withStartAt(baseTime.minusMinutes(10)).withTermAt(baseTime.plusMinutes(30)).build();
+        taskRunDao.updateTaskRun(taskRun1);
+        taskRunDao.updateTaskRun(taskRun2);
+        List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
+        assertThat(result.size(), is(1));
+    }
+
+    @Test
+    public void getTaskRunWaitingGantt_displayWithinLimit() {
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        Task task = MockTaskFactory.createTask();
+        TaskRun targetTaskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(baseTime).withStartAt(baseTime.plusMinutes(60)).build();
+        taskDao.create(task);
+        taskRunDao.createTaskRun(targetTaskRun);
+        for (int i = 0; i < 30; i++) {
+            TaskRun taskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                    .withStartAt(baseTime.plusMinutes(10))
+                    .withTermAt(baseTime.plusMinutes(20+i)).build();
+            taskRunDao.createTaskRun(taskRun);
+        }
+
+        List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
+        assertThat(result.size(), is(10));
     }
 
     @Test

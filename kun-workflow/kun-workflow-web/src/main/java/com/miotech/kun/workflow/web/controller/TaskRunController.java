@@ -9,10 +9,12 @@ import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
+import com.miotech.kun.workflow.common.taskrun.state.TaskRunRunning;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
+import com.miotech.kun.workflow.core.model.taskrun.RunningTaskRunInfo;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.taskrun.TimeType;
@@ -227,6 +229,11 @@ public class TaskRunController {
     @RouteMapping(url = "/taskruns/{id}/gantt", method = "GET")
     public TaskRunGanttChartVO getTaskRunGantt(@RouteVariable Long id) {
         return taskRunService.getTaskRunGantt(id);
+    }
+
+    @RouteMapping(url = "/taskruns/{id}/waitingFor", method = "GET")
+    public List<RunningTaskRunInfo> getTaskRunWaitingFor(@RouteVariable Long id) {
+        return taskRunService.getTaskRunWaitingFor(id);
     }
 
     @RouteMapping(url = "/taskruns/latest", method = "GET")

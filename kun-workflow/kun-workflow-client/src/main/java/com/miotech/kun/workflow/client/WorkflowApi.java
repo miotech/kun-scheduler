@@ -345,6 +345,18 @@ public class WorkflowApi {
         return get(url.build(), TaskRunGanttChart.class);
     }
 
+    public List<RunningTaskRunInfo> getTaskRunWaitingFor(Long taskRunId) {
+        HttpUrl url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("waitingFor")
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<List<RunningTaskRunInfo>>(){});
+    }
+
     public TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest) {
         Preconditions.checkNotNull(logRequest.getTaskRunId());
         HttpUrl.Builder urlBuilder = buildUrl(API_TASK_RUNS)

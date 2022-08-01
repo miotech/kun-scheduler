@@ -137,7 +137,14 @@ public class DateTimeUtils {
         return latest;
     }
 
-    private static OffsetDateTime getLaterTime(OffsetDateTime t1, OffsetDateTime t2) {
+    /**
+     * Compare two OffsetDateTime and return later one
+     * accepts null value, return null for both null input, return non-null for single null input;
+     * @param t1
+     * @param t2
+     * @return
+     */
+    public static OffsetDateTime getLaterTime(OffsetDateTime t1, OffsetDateTime t2) {
         if (t1 == null && t2 == null) return null;
         if (t1 == null) return t2;
         if (t2 == null) return t1;

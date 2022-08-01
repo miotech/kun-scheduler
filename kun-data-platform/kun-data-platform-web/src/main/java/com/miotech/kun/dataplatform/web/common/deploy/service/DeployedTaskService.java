@@ -416,6 +416,10 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         }
     }
 
+    public List<RunningTaskRunInfo> getTaskRunWaitingFor(Long taskRunId) {
+        return workflowClient.getTaskRunWaitingFor(taskRunId);
+    }
+
     public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId) {
         return getWorkFlowTaskRunLog(taskRunId, -1);
     }
