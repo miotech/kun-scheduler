@@ -14,6 +14,7 @@ interface OwnProps {
   setSelectedAttemptMap: (nextState: Record<string, number>) => any;
   currentTab?: string;
   setCurrentTab?: (nextActiveTab: string) => any;
+  taskRunsData: TaskRun[];
 }
 
 type Props = OwnProps;
@@ -27,6 +28,7 @@ export const RightPanel: React.FC<Props> = memo(function RightPanel(props) {
     setSelectedAttemptMap,
     currentTab = 'logs',
     setCurrentTab,
+    taskRunsData,
   } = props;
 
   const handleTabChange = useCallback(
@@ -59,6 +61,7 @@ export const RightPanel: React.FC<Props> = memo(function RightPanel(props) {
           selectedTaskRun && selectedAttemptMap[selectedTaskRun.id] ? selectedAttemptMap[selectedTaskRun.id] : undefined
         }
         setSelectedAttemptMap={setSelectedAttemptMap}
+        taskRunsData={taskRunsData}
       />
     </div>
   );
