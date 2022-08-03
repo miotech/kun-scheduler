@@ -14,7 +14,6 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Singleton
@@ -54,10 +53,10 @@ public class DatabaseOperator {
 
     public <T> List<T> fetchAll(String query, ResultSetMapper<T> mapper, Object... params) {
         return query(query, rs -> {
-            if (!rs.next()) {
-                return Collections.emptyList();
-            }
             List<T> results = new ArrayList<>();
+            if (!rs.next()) {
+                return results;
+            }
             do {
                 results.add(mapper.map(rs));
             } while (rs.next());
