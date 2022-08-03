@@ -59,7 +59,7 @@ public class LineageServiceTest extends CommonTestBase {
     @Override
     protected void configuration() {
         super.configuration();
-        bind(Executor.class,mock(Executor.class));
+        bind(Executor.class, mock(Executor.class));
         bind(LineageServiceFacade.class, Mockito.mock(LineageServiceFacade.class));
         bind(MetadataServiceFacade.class, Mockito.mock(MetadataServiceFacade.class));
         bind(Scheduler.class, Mockito.mock(Scheduler.class));
@@ -109,13 +109,11 @@ public class LineageServiceTest extends CommonTestBase {
     }
 
     /**
-     *
      * dataset0----
-     *            ｜ task0
-     *            ｜--------->dataset2
-     *            ｜
+     * ｜ task0
+     * ｜--------->dataset2
+     * ｜
      * dataset1---
-     *
      */
     @Test
     public void test_searchLineageInfo_DOWN_1() {
@@ -127,10 +125,10 @@ public class LineageServiceTest extends CommonTestBase {
         Task mockTask0 = taskService.createTask(taskPropsVO1);
 
         Set<DatasetNode> downDatasetNodeSet = new LinkedHashSet<>();
-        DatasetNode   datasetNode0=new DatasetNode(0L,"dataset0");
-        DatasetNode   datasetNode1=new DatasetNode(1L,"dataset1");
-        DatasetNode   datasetNode2=new DatasetNode(2L,"dataset2");
-        TaskNode taskNode0=new TaskNode(mockTask0.getId(),mockTask0.getName());
+        DatasetNode datasetNode0 = new DatasetNode(0L, "dataset0");
+        DatasetNode datasetNode1 = new DatasetNode(1L, "dataset1");
+        DatasetNode datasetNode2 = new DatasetNode(2L, "dataset2");
+        TaskNode taskNode0 = new TaskNode(mockTask0.getId(), mockTask0.getName());
         taskNode0.addInlet(datasetNode0);
         taskNode0.addInlet(datasetNode1);
         taskNode0.addOutlet(datasetNode2);
@@ -140,32 +138,30 @@ public class LineageServiceTest extends CommonTestBase {
         downDatasetNodeSet.add(datasetNode2);
 
         doReturn(Optional.of(datasetNode0)).when(lineageServiceFacade).fetchDatasetNodeById(datasetNode0.getGid());
-        doReturn(downDatasetNodeSet).when(lineageServiceFacade).fetchDownstreamDatasetNodes(anyLong(),anyInt());
+        doReturn(downDatasetNodeSet).when(lineageServiceFacade).fetchDownstreamDatasetNodes(anyLong(), anyInt());
         DatasetLineageInfo datasetLineageInfoDown1 = lineageService.searchLineageInfo(datasetNode0.getGid(), 1, "DOWNSTREAM");
 //       null or empty testing
         DatasetNodeInfo sourceNode = datasetLineageInfoDown1.getSourceNode();
         List<DatasetNodeInfo> downstreamNodes = datasetLineageInfoDown1.getDownstreamNodes();
         List<DatasetNodeInfo> upstreamNodes = datasetLineageInfoDown1.getUpstreamNodes();
-        assertThat(sourceNode,is(notNullValue()));
-        assertThat(upstreamNodes,is(empty()));
-        assertThat(downstreamNodes,is(not(empty())));
+        assertThat(sourceNode, is(notNullValue()));
+        assertThat(upstreamNodes, is(empty()));
+        assertThat(downstreamNodes, is(not(empty())));
 //        node size testing
-        assertThat(downstreamNodes.size(),is(1));
-        assertThat(sourceNode.getGid(),is(datasetNode0.getGid()));
-        assertThat(sourceNode.getDownstreamTasks().size(),is(datasetNode0.getDownstreamTasks().size()));
-        assertThat(sourceNode.getUpstreamTasks().size(),is(datasetNode0.getUpstreamTasks().size()));
-        assertThat(sourceNode.getDownstreamDatasetCount(),is(downDatasetNodeSet.size()));
-        assertThat(sourceNode.getUpstreamDatasetCount(),is(0));
+        assertThat(downstreamNodes.size(), is(1));
+        assertThat(sourceNode.getGid(), is(datasetNode0.getGid()));
+        assertThat(sourceNode.getDownstreamTasks().size(), is(datasetNode0.getDownstreamTasks().size()));
+        assertThat(sourceNode.getUpstreamTasks().size(), is(datasetNode0.getUpstreamTasks().size()));
+        assertThat(sourceNode.getDownstreamDatasetCount(), is(downDatasetNodeSet.size()));
+        assertThat(sourceNode.getUpstreamDatasetCount(), is(0));
     }
 
     /**
-     *
      * dataset0----
-     *            ｜ task0              task1
-     *            ｜--------->dataset2-------------->dataset3--->task2
-     *            ｜                           ｜
+     * ｜ task0              task1
+     * ｜--------->dataset2-------------->dataset3--->task2
+     * ｜                           ｜
      * dataset1---                            ｜---->dataset4
-     *
      */
     @Test
     public void test_searchLineageInfo_depth() {
@@ -183,22 +179,22 @@ public class LineageServiceTest extends CommonTestBase {
         Task mockTask2 = taskService.createTask(taskPropsVO2);
 
 
-        DatasetNode   datasetNode0=new DatasetNode(0L,"dataset0");
-        DatasetNode   datasetNode1=new DatasetNode(1L,"dataset1");
-        DatasetNode   datasetNode2=new DatasetNode(2L,"dataset2");
-        DatasetNode   datasetNode3=new DatasetNode(3L,"dataset3");
-        DatasetNode   datasetNode4=new DatasetNode(4L,"dataset4");
-        TaskNode taskNode0=new TaskNode(mockTask0.getId(),mockTask0.getName());
+        DatasetNode datasetNode0 = new DatasetNode(0L, "dataset0");
+        DatasetNode datasetNode1 = new DatasetNode(1L, "dataset1");
+        DatasetNode datasetNode2 = new DatasetNode(2L, "dataset2");
+        DatasetNode datasetNode3 = new DatasetNode(3L, "dataset3");
+        DatasetNode datasetNode4 = new DatasetNode(4L, "dataset4");
+        TaskNode taskNode0 = new TaskNode(mockTask0.getId(), mockTask0.getName());
         taskNode0.addInlet(datasetNode0);
         taskNode0.addInlet(datasetNode1);
         taskNode0.addOutlet(datasetNode2);
 
-        TaskNode taskNode1=new TaskNode(mockTask1.getId(),mockTask1.getName());
+        TaskNode taskNode1 = new TaskNode(mockTask1.getId(), mockTask1.getName());
         taskNode1.addInlet(datasetNode2);
         taskNode1.addOutlet(datasetNode3);
         taskNode1.addOutlet(datasetNode4);
 
-        TaskNode taskNode2=new TaskNode(mockTask2.getId(),mockTask2.getName());
+        TaskNode taskNode2 = new TaskNode(mockTask2.getId(), mockTask2.getName());
         taskNode2.addInlet(datasetNode3);
 
         datasetNode0.setAsInputOfTask(taskNode0);
@@ -213,27 +209,31 @@ public class LineageServiceTest extends CommonTestBase {
 
         Set<DatasetNode> downDatasetNodeSet = new LinkedHashSet<>();
         downDatasetNodeSet.add(datasetNode2);
+        downDatasetNodeSet.add(datasetNode3);
+        downDatasetNodeSet.add(datasetNode4);
 
         doReturn(Optional.of(datasetNode0)).when(lineageServiceFacade).fetchDatasetNodeById(datasetNode0.getGid());
-        doReturn(downDatasetNodeSet).when(lineageServiceFacade).fetchDownstreamDatasetNodes(anyLong(),anyInt());
+        doReturn(downDatasetNodeSet).when(lineageServiceFacade).fetchDownstreamDatasetNodes(anyLong(), anyInt());
         DatasetLineageInfo datasetLineageInfoDown2 = lineageService.searchLineageInfo(datasetNode0.getGid(), 2, "DOWNSTREAM");
 //       null or empty testing
         DatasetNodeInfo sourceNode = datasetLineageInfoDown2.getSourceNode();
         List<DatasetNodeInfo> downstreamNodes = datasetLineageInfoDown2.getDownstreamNodes();
         List<DatasetNodeInfo> upstreamNodes = datasetLineageInfoDown2.getUpstreamNodes();
-        assertThat(sourceNode,is(notNullValue()));
-        assertThat(upstreamNodes,is(empty()));
-        assertThat(downstreamNodes,is(not(empty())));
+        assertThat(sourceNode, is(notNullValue()));
+        assertThat(upstreamNodes, is(empty()));
+        assertThat(downstreamNodes, is(not(empty())));
 //        node size testing
-        assertThat(downstreamNodes.size(),is(3));
+        assertThat(downstreamNodes.size(), is(3));
 
 
         Set<DatasetNode> upDatasetNodeSet = new LinkedHashSet<>();
         upDatasetNodeSet.add(datasetNode2);
+        upDatasetNodeSet.add(datasetNode0);
+        upDatasetNodeSet.add(datasetNode1);
         doReturn(Optional.of(datasetNode4)).when(lineageServiceFacade).fetchDatasetNodeById(datasetNode4.getGid());
-        doReturn(upDatasetNodeSet).when(lineageServiceFacade).fetchUpstreamDatasetNodes(anyLong(),anyInt());
+        doReturn(upDatasetNodeSet).when(lineageServiceFacade).fetchUpstreamDatasetNodes(anyLong(), anyInt());
         DatasetLineageInfo datasetLineageInfoUP2 = lineageService.searchLineageInfo(datasetNode4.getGid(), 2, "UPSTREAM");
-        assertThat(datasetLineageInfoUP2.getUpstreamNodes().size(),is(3));
+        assertThat(datasetLineageInfoUP2.getUpstreamNodes().size(), is(3));
 
         Set<DatasetNode> bothDownDatasetNodeSet = new LinkedHashSet<>();
         bothDownDatasetNodeSet.add(datasetNode3);
@@ -242,20 +242,19 @@ public class LineageServiceTest extends CommonTestBase {
         bothUpDatasetNodeSet.add(datasetNode0);
         bothUpDatasetNodeSet.add(datasetNode1);
         doReturn(Optional.of(datasetNode2)).when(lineageServiceFacade).fetchDatasetNodeById(datasetNode2.getGid());
-        doReturn(bothUpDatasetNodeSet).when(lineageServiceFacade).fetchUpstreamDatasetNodes(anyLong(),anyInt());
-        doReturn(bothDownDatasetNodeSet).when(lineageServiceFacade).fetchDownstreamDatasetNodes(anyLong(),anyInt());
+        doReturn(bothUpDatasetNodeSet).when(lineageServiceFacade).fetchUpstreamDatasetNodes(anyLong(), anyInt());
+        doReturn(bothDownDatasetNodeSet).when(lineageServiceFacade).fetchDownstreamDatasetNodes(anyLong(), anyInt());
         DatasetLineageInfo datasetLineageInfoBoth = lineageService.searchLineageInfo(datasetNode2.getGid(), 1, "BOTH");
-        assertThat(datasetLineageInfoBoth.getUpstreamNodes().size(),is(2));
-        assertThat(datasetLineageInfoBoth.getDownstreamNodes().size(),is(2));
+        assertThat(datasetLineageInfoBoth.getUpstreamNodes().size(), is(2));
+        assertThat(datasetLineageInfoBoth.getDownstreamNodes().size(), is(2));
     }
+
     /**
-     *
      * dataset0----
-     *            ｜ task0
-     *            ｜--------->dataset2
-     *            ｜
+     * ｜ task0
+     * ｜--------->dataset2
+     * ｜
      * dataset1---
-     *
      */
     @Test
     public void test_searchLineageInfo_UP_1() {
@@ -266,10 +265,10 @@ public class LineageServiceTest extends CommonTestBase {
         TaskPropsVO taskPropsVO1 = MockTaskFactory.createTaskPropsVOWithOperator(mockOperator.getId());
         Task mockTask0 = taskService.createTask(taskPropsVO1);
 
-        DatasetNode   datasetNode0=new DatasetNode(0L,"dataset0");
-        DatasetNode   datasetNode1=new DatasetNode(1L,"dataset1");
-        DatasetNode   datasetNode2=new DatasetNode(2L,"dataset2");
-        TaskNode taskNode0=new TaskNode(mockTask0.getId(),mockTask0.getName());
+        DatasetNode datasetNode0 = new DatasetNode(0L, "dataset0");
+        DatasetNode datasetNode1 = new DatasetNode(1L, "dataset1");
+        DatasetNode datasetNode2 = new DatasetNode(2L, "dataset2");
+        TaskNode taskNode0 = new TaskNode(mockTask0.getId(), mockTask0.getName());
         taskNode0.addInlet(datasetNode0);
         taskNode0.addInlet(datasetNode1);
         taskNode0.addOutlet(datasetNode2);
@@ -278,20 +277,20 @@ public class LineageServiceTest extends CommonTestBase {
         datasetNode2.setAsOutputOfTask(taskNode0);
         Set<DatasetNode> upDatasetNodeSet = new LinkedHashSet<>();
         doReturn(Optional.of(datasetNode0)).when(lineageServiceFacade).fetchDatasetNodeById(datasetNode0.getGid());
-        doReturn(upDatasetNodeSet).when(lineageServiceFacade).fetchUpstreamDatasetNodes(anyLong(),anyInt());
+        doReturn(upDatasetNodeSet).when(lineageServiceFacade).fetchUpstreamDatasetNodes(anyLong(), anyInt());
         DatasetLineageInfo datasetLineageInfoUP1 = lineageService.searchLineageInfo(datasetNode0.getGid(), 1, "UPSTREAM");
 //       null or empty testing
         DatasetNodeInfo sourceNode = datasetLineageInfoUP1.getSourceNode();
         List<DatasetNodeInfo> downstreamNodes = datasetLineageInfoUP1.getDownstreamNodes();
         List<DatasetNodeInfo> upstreamNodes = datasetLineageInfoUP1.getUpstreamNodes();
-        assertThat(sourceNode,is(notNullValue()));
-        assertThat(upstreamNodes,is(empty()));
-        assertThat(downstreamNodes,is(empty()));
+        assertThat(sourceNode, is(notNullValue()));
+        assertThat(upstreamNodes, is(empty()));
+        assertThat(downstreamNodes, is(empty()));
 //        node size testing
-        assertThat(sourceNode.getGid(),is(datasetNode0.getGid()));
-        assertThat(sourceNode.getDownstreamTasks().size(),is(datasetNode0.getDownstreamTasks().size()));
-        assertThat(sourceNode.getUpstreamTasks().size(),is(datasetNode0.getUpstreamTasks().size()));
-        assertThat(sourceNode.getUpstreamDatasetCount(),is(0));
+        assertThat(sourceNode.getGid(), is(datasetNode0.getGid()));
+        assertThat(sourceNode.getDownstreamTasks().size(), is(datasetNode0.getDownstreamTasks().size()));
+        assertThat(sourceNode.getUpstreamTasks().size(), is(datasetNode0.getUpstreamTasks().size()));
+        assertThat(sourceNode.getUpstreamDatasetCount(), is(0));
     }
 
 

@@ -63,7 +63,7 @@ public class LineageServiceTest extends DatabaseTestBase {
     protected void configuration() {
         bind(SessionFactory.class, neo4jSessionFactory);
         metadataDatasetService = mock(MetadataDatasetService.class);
-        bind(MetadataDatasetService.class,metadataDatasetService);
+        bind(MetadataDatasetService.class, metadataDatasetService);
         super.configuration();
     }
 
@@ -97,33 +97,32 @@ public class LineageServiceTest extends DatabaseTestBase {
     }
 
 
-
     /**
      * Generate following DAG graph.
      * Note that dataset 6 & task 3 has no incoming & outgoing edge.
-     *
+     * <p>
      * +----------+
      * | Dataset1 |
      * +-----+----+
-     *       |
-     *       v
+     * |
+     * v
      * +-----+----+
      * |   Task1  |
      * +-----+----+
-     *       |
-     *       v
+     * |
+     * v
      * +-----+----+    +----------+
      * | Dataset2 |    | Dataset3 |
      * +-----+----+    +-----+----+
-     *       |               |
-     *       +-------+-------+
-     *               v
-     *         +-----+----+
-     *         |   Task2  |
-     *         +-----+----+
-     *               |
-     *      +--------+--------+
-     *      v                 v
+     * |               |
+     * +-------+-------+
+     * v
+     * +-----+----+
+     * |   Task2  |
+     * +-----+----+
+     * |
+     * +--------+--------+
+     * v                 v
      * +----+-----+    +------+---+
      * | Dataset4 |    | Dataset5 |
      * +----------+    +----------+
@@ -163,9 +162,9 @@ public class LineageServiceTest extends DatabaseTestBase {
             this.neo4jSessionFactory.openSession().save(datasetNode);
         });
         /**
-           taskNodes.forEach(taskNode -> {
-               this.neo4jSessionFactory.openSession().save(taskNode);
-           });
+         taskNodes.forEach(taskNode -> {
+         this.neo4jSessionFactory.openSession().save(taskNode);
+         });
          */
 
         return Pair.of(datasets, taskNodes);
@@ -284,48 +283,47 @@ public class LineageServiceTest extends DatabaseTestBase {
 
         // Fetch upstream nodes of dataset 1
         DatasetNode datasetNode1 = datasetNodes.get(0);
-        Set<DatasetNode> upstreamOfDataset1 = lineageService.fetchUpstreamDatasetNodes(datasetNode1.getGid(),1);
+        Set<DatasetNode> upstreamOfDataset1 = lineageService.fetchUpstreamDatasetNodes(datasetNode1.getGid(), 1);
         assertEquals(0, upstreamOfDataset1.size());
 
         // Fetch upstream nodes of dataset 2
         DatasetNode datasetNode2 = datasetNodes.get(1);
-        Set<DatasetNode> upstreamOfDataset2 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(),1);
+        Set<DatasetNode> upstreamOfDataset2 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(), 1);
         assertEquals(1, upstreamOfDataset2.size());
         DatasetNode dataNode1 = upstreamOfDataset2.iterator().next();
-        assertThat(dataNode1.getGid(),is(datasetNode1.getGid()));
-        assertThat(dataNode1.getDatasetName(),is(datasetNode1.getDatasetName()));
+        assertThat(dataNode1.getGid(), is(datasetNode1.getGid()));
+        assertThat(dataNode1.getDatasetName(), is(datasetNode1.getDatasetName()));
 
 
         Set<TaskNode> downstreamTasks1 = dataNode1.getDownstreamTasks();
         TaskNode taskNode1 = downstreamTasks1.iterator().next();
         TaskNode beforeTaskNode = datasetNode1.getDownstreamTasks().iterator().next();
-        assertThat(taskNode1.getTaskId(),is(beforeTaskNode.getTaskId()));
-        assertThat(taskNode1.getTaskName(),is(beforeTaskNode.getTaskName()));
+        assertThat(taskNode1.getTaskId(), is(beforeTaskNode.getTaskId()));
+        assertThat(taskNode1.getTaskName(), is(beforeTaskNode.getTaskName()));
 
         Set<DatasetNode> taskNode1Inlets = taskNode1.getInlets();
-        assertThat(taskNode1Inlets.size(),is(1));
-        DatasetNode  taskNode1INlet = taskNode1Inlets.iterator().next();
-        assertThat(taskNode1INlet.getGid(),is(dataNode1.getGid()));
+        assertThat(taskNode1Inlets.size(), is(1));
+        DatasetNode taskNode1INlet = taskNode1Inlets.iterator().next();
+        assertThat(taskNode1INlet.getGid(), is(dataNode1.getGid()));
 
         Set<DatasetNode> taskNode1Outlets = taskNode1.getOutlets();
-        assertThat(taskNode1Outlets.size(),is(0));
+        assertThat(taskNode1Outlets.size(), is(1));
+        assertThat(taskNode1Outlets.iterator().next().getGid(), is(datasetNode2.getGid()));
 
 
         Set<TaskNode> upstreamTasks1 = dataNode1.getUpstreamTasks();
-        assertThat(upstreamTasks1.size(),is(0));
-
-
+        assertThat(upstreamTasks1.size(), is(0));
 
 
         // task 2 should be persisted with 2 inlets & 2 outlets
-        TaskNode task2 = this.neo4jSessionFactory.openSession().load(TaskNode.class, taskNodes.get(1).getTaskId(),1);
+        TaskNode task2 = this.neo4jSessionFactory.openSession().load(TaskNode.class, taskNodes.get(1).getTaskId(), 1);
         Set<DatasetNode> upstreamDatasetsOfTask2 = task2.getInlets();
         Set<DatasetNode> downstreamDatasetsOfTask2 = task2.getOutlets();
         assertEquals(2, upstreamDatasetsOfTask2.size());
         assertEquals(2, downstreamDatasetsOfTask2.size());
 
         // Fetch upstream nodes of dataset 4: dataset 2 & dataset 3
-        Set<DatasetNode> upstreamOfDataset4 = lineageService.fetchUpstreamDatasetNodes(datasetNodes.get(3).getGid(),1);
+        Set<DatasetNode> upstreamOfDataset4 = lineageService.fetchUpstreamDatasetNodes(datasetNodes.get(3).getGid(), 1);
         assertEquals(2, upstreamOfDataset4.size());
         Set<Long> IdsOfUpstreamOfDataset4 = upstreamDatasetsOfTask2.stream()
                 .map(DatasetNode::getGid)
@@ -343,6 +341,7 @@ public class LineageServiceTest extends DatabaseTestBase {
         assertTrue(IdsOfFullUpstreamOfDataset5.contains(datasetNode2.getGid()));
         assertTrue(IdsOfFullUpstreamOfDataset5.contains(datasetNodes.get(2).getGid()));
     }
+
     @Test
     public void fetchUpstreamDatasetNodes_checkUpStreamRelationship() {
         // Prepare
@@ -354,30 +353,32 @@ public class LineageServiceTest extends DatabaseTestBase {
         DatasetNode datasetNode1 = datasetNodes.get(0);
         // Fetch upstream nodes of dataset 2
         DatasetNode datasetNode2 = datasetNodes.get(1);
-        Set<DatasetNode> upstream1 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(),1);
+        Set<DatasetNode> upstream1 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(), 1);
         assertEquals(1, upstream1.size());
         DatasetNode dataNode1 = upstream1.iterator().next();
-        assertThat(dataNode1.getGid(),is(datasetNode1.getGid()));
-        assertThat(dataNode1.getDatasetName(),is(datasetNode1.getDatasetName()));
+        assertThat(dataNode1.getGid(), is(datasetNode1.getGid()));
+        assertThat(dataNode1.getDatasetName(), is(datasetNode1.getDatasetName()));
 
         Set<TaskNode> upstreamTasks1 = dataNode1.getUpstreamTasks();
-        assertThat(upstreamTasks1.size(),is(0));
+        assertThat(upstreamTasks1.size(), is(0));
 
         Set<TaskNode> downstreamTasks1 = dataNode1.getDownstreamTasks();
         TaskNode taskNode1 = downstreamTasks1.iterator().next();
         TaskNode beforeTaskNode = datasetNode1.getDownstreamTasks().iterator().next();
-        assertThat(taskNode1.getTaskId(),is(beforeTaskNode.getTaskId()));
-        assertThat(taskNode1.getTaskName(),is(beforeTaskNode.getTaskName()));
+        assertThat(taskNode1.getTaskId(), is(beforeTaskNode.getTaskId()));
+        assertThat(taskNode1.getTaskName(), is(beforeTaskNode.getTaskName()));
 
         Set<DatasetNode> taskNode1Inlets = taskNode1.getInlets();
-        assertThat(taskNode1Inlets.size(),is(1));
-        DatasetNode  taskNode1INlet = taskNode1Inlets.iterator().next();
-        assertThat(taskNode1INlet.getGid(),is(dataNode1.getGid()));
+        assertThat(taskNode1Inlets.size(), is(1));
+        DatasetNode taskNode1INlet = taskNode1Inlets.iterator().next();
+        assertThat(taskNode1INlet.getGid(), is(dataNode1.getGid()));
 
         Set<DatasetNode> taskNode1Outlets = taskNode1.getOutlets();
-        assertThat(taskNode1Outlets.size(),is(0));
+        assertThat(taskNode1Outlets.size(), is(1));
+        assertThat(taskNode1Outlets.iterator().next().getGid(), is(datasetNode2.getGid()));
 
     }
+
     @Test
     public void fetchDownStreamDatasetNodes_checkDepth() {
         // Prepare
@@ -387,17 +388,17 @@ public class LineageServiceTest extends DatabaseTestBase {
 
         // Fetch upstream nodes of dataset 1
         DatasetNode datasetNode1 = datasetNodes.get(0);
-        Set<DatasetNode> downstreamDepth1 = lineageService.fetchDownstreamDatasetNodes(datasetNode1.getGid(),1);
-        assertThat(downstreamDepth1.size(),is(1));
-        Set<DatasetNode> downstreamDepth3 = lineageService.fetchDownstreamDatasetNodes(datasetNode1.getGid(),2);
-        assertThat(downstreamDepth3.size(),is(3));
+        Set<DatasetNode> downstreamDepth1 = lineageService.fetchDownstreamDatasetNodes(datasetNode1.getGid(), 1);
+        assertThat(downstreamDepth1.size(), is(1));
+        Set<DatasetNode> downstreamDepth3 = lineageService.fetchDownstreamDatasetNodes(datasetNode1.getGid(), 2);
+        assertThat(downstreamDepth3.size(), is(3));
 
-        Set<DatasetNode> downstreamDepth5 = lineageService.fetchDownstreamDatasetNodes(datasetNode1.getGid(),5);
-        assertThat(downstreamDepth5.size(),is(3));
+        Set<DatasetNode> downstreamDepth5 = lineageService.fetchDownstreamDatasetNodes(datasetNode1.getGid(), 5);
+        assertThat(downstreamDepth5.size(), is(3));
         // Fetch upstream nodes of dataset 3
         DatasetNode datasetNode3 = datasetNodes.get(2);
-        Set<DatasetNode> downstreamDepthDataNode3 = lineageService.fetchDownstreamDatasetNodes(datasetNode3.getGid(),5);
-        assertThat(downstreamDepthDataNode3.size(),is(2));
+        Set<DatasetNode> downstreamDepthDataNode3 = lineageService.fetchDownstreamDatasetNodes(datasetNode3.getGid(), 5);
+        assertThat(downstreamDepthDataNode3.size(), is(2));
 
     }
 
@@ -411,23 +412,23 @@ public class LineageServiceTest extends DatabaseTestBase {
         // Fetch upstream nodes of dataset 1
         DatasetNode datasetNode1 = datasetNodes.get(0);
         Set<DatasetNode> up1Depth1 = lineageService.fetchUpstreamDatasetNodes(datasetNode1.getGid(), 1);
-        assertThat(up1Depth1.size(),is(0));
-        Set<DatasetNode> up1Depth2 = lineageService.fetchUpstreamDatasetNodes(datasetNode1.getGid(),2);
-        assertThat(up1Depth2.size(),is(0));
+        assertThat(up1Depth1.size(), is(0));
+        Set<DatasetNode> up1Depth2 = lineageService.fetchUpstreamDatasetNodes(datasetNode1.getGid(), 2);
+        assertThat(up1Depth2.size(), is(0));
         // Fetch upstream nodes of dataset 2
         DatasetNode datasetNode2 = datasetNodes.get(1);
-        Set<DatasetNode> up2Depth1 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(),1);
-        assertThat(up2Depth1.size(),is(1));
-        Set<DatasetNode> up2Depth3 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(),3);
-        assertThat(up2Depth3.size(),is(1));
+        Set<DatasetNode> up2Depth1 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(), 1);
+        assertThat(up2Depth1.size(), is(1));
+        Set<DatasetNode> up2Depth3 = lineageService.fetchUpstreamDatasetNodes(datasetNode2.getGid(), 3);
+        assertThat(up2Depth3.size(), is(1));
         // Fetch upstream nodes of dataset 4
         DatasetNode datasetNode4 = datasetNodes.get(3);
-        Set<DatasetNode> up4Depth1 = lineageService.fetchUpstreamDatasetNodes(datasetNode4.getGid(),1);
-        assertThat(up4Depth1.size(),is(2));
-        Set<DatasetNode> up4Depth2 = lineageService.fetchUpstreamDatasetNodes(datasetNode4.getGid(),2);
-        assertThat(up4Depth2.size(),is(3));
-        Set<DatasetNode> up4Depth5 = lineageService.fetchUpstreamDatasetNodes(datasetNode4.getGid(),5);
-        assertThat(up4Depth5.size(),is(3));
+        Set<DatasetNode> up4Depth1 = lineageService.fetchUpstreamDatasetNodes(datasetNode4.getGid(), 1);
+        assertThat(up4Depth1.size(), is(2));
+        Set<DatasetNode> up4Depth2 = lineageService.fetchUpstreamDatasetNodes(datasetNode4.getGid(), 2);
+        assertThat(up4Depth2.size(), is(3));
+        Set<DatasetNode> up4Depth5 = lineageService.fetchUpstreamDatasetNodes(datasetNode4.getGid(), 5);
+        assertThat(up4Depth5.size(), is(3));
 
 
     }
@@ -440,26 +441,25 @@ public class LineageServiceTest extends DatabaseTestBase {
         // List<TaskNode> taskNodes = graphNodes.getRight();
 
         // Fetch downstream nodes of dataset 1
-        Set<DatasetNode> downstreamOfDataset1 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(0).getGid(),1);
+        Set<DatasetNode> downstreamOfDataset1 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(0).getGid(), 1);
         assertEquals(1, downstreamOfDataset1.size());
 
         // Fetch downstream nodes of dataset 2
-        Set<DatasetNode> downstreamOfDataset2 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(1).getGid(),1);
+        Set<DatasetNode> downstreamOfDataset2 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(1).getGid(), 1);
         assertEquals(2, downstreamOfDataset2.size());
 
         // Fetch downstream nodes of dataset 3
-        Set<DatasetNode> downstreamOfDataset3 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(2).getGid(),1);
+        Set<DatasetNode> downstreamOfDataset3 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(2).getGid(), 1);
         assertEquals(2, downstreamOfDataset3.size());
 
         // Fetch downstream nodes of dataset 4
-        Set<DatasetNode> downstreamOfDataset4 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(3).getGid(),1);
+        Set<DatasetNode> downstreamOfDataset4 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(3).getGid(), 1);
         assertEquals(0, downstreamOfDataset4.size());
 
         // Fetch 2 layers of downstream nodes of dataset 1
         Set<DatasetNode> fullDownstreamOfDataset1 = lineageService.fetchDownstreamDatasetNodes(datasetNodes.get(0).getGid(), 2);
         assertEquals(3, fullDownstreamOfDataset1.size());
     }
-
 
 
     @Test
@@ -503,7 +503,7 @@ public class LineageServiceTest extends DatabaseTestBase {
         // Validate
         assertTrue(isSuccess);
         // upstream of dataset 2 should be empty
-        Set<DatasetNode> upstreamOfDataset2 = lineageService.fetchUpstreamDatasetNodes(datasetNodes.get(1).getGid(),1);
+        Set<DatasetNode> upstreamOfDataset2 = lineageService.fetchUpstreamDatasetNodes(datasetNodes.get(1).getGid(), 1);
         assertEquals(0, upstreamOfDataset2.size());
     }
 
@@ -521,7 +521,7 @@ public class LineageServiceTest extends DatabaseTestBase {
         assertTrue(isSuccess);
 
         // upstream of dataset 2 should be empty
-        Set<DatasetNode> upstreamOfDataset2 = lineageService.fetchUpstreamDatasetNodes(datasetNodes.get(1).getGid(),1);
+        Set<DatasetNode> upstreamOfDataset2 = lineageService.fetchUpstreamDatasetNodes(datasetNodes.get(1).getGid(), 1);
         assertEquals(0, upstreamOfDataset2.size());
     }
 
@@ -572,21 +572,21 @@ public class LineageServiceTest extends DatabaseTestBase {
     }
 
     @Test
-    public void testUpdateLineage(){
+    public void testUpdateLineage() {
         // Prepare
         Long upstreamDataSetId = IdGenerator.getInstance().nextId();
-        DataStore upstreamStore = MockDatasetFactory.createDataStore("Hive","upstreamStore","table");
-        Dataset upstreamSet = MockDatasetFactory.createDatasetWithDataStore(upstreamDataSetId,"upstreamSet",1l,null,upstreamStore);
+        DataStore upstreamStore = MockDatasetFactory.createDataStore("Hive", "upstreamStore", "table");
+        Dataset upstreamSet = MockDatasetFactory.createDatasetWithDataStore(upstreamDataSetId, "upstreamSet", 1l, null, upstreamStore);
         Long downstreamDataSetId = IdGenerator.getInstance().nextId();
-        DataStore downstreamStore = MockDatasetFactory.createDataStore("Hive","downstreamStore","table");
-        Dataset downstreamSet = MockDatasetFactory.createDatasetWithDataStore(downstreamDataSetId,"downstreamSet",1l,null,downstreamStore);
+        DataStore downstreamStore = MockDatasetFactory.createDataStore("Hive", "downstreamStore", "table");
+        Dataset downstreamSet = MockDatasetFactory.createDatasetWithDataStore(downstreamDataSetId, "downstreamSet", 1l, null, downstreamStore);
         //mock fetch dataset by datastore
         doAnswer(invocation -> {
-            DataStore dataStore = invocation.getArgument(0,DataStore.class);
-            if(dataStore.getDatabaseName().equals(upstreamStore.getDatabaseName())){
+            DataStore dataStore = invocation.getArgument(0, DataStore.class);
+            if (dataStore.getDatabaseName().equals(upstreamStore.getDatabaseName())) {
                 return upstreamSet;
             }
-            if(dataStore.getDatabaseName().equals(downstreamStore.getDatabaseName())){
+            if (dataStore.getDatabaseName().equals(downstreamStore.getDatabaseName())) {
                 return downstreamSet;
             }
             return null;
@@ -606,25 +606,25 @@ public class LineageServiceTest extends DatabaseTestBase {
                 .withPriority(16)
                 .withRetries(0)
                 .withRetryDelay(0)
-                .build();;
+                .build();
 
         // Process
-        lineageService.updateTaskLineage(task, Lists.newArrayList(upstreamStore),Lists.newArrayList(downstreamStore));
+        lineageService.updateTaskLineage(task, Lists.newArrayList(upstreamStore), Lists.newArrayList(downstreamStore));
 
         //verify
         TaskNode taskNode = lineageService.fetchTaskNodeById(taskId).get();
         assertThat(taskNode.getTaskId(), Is.is(taskId));
         Set<DatasetNode> upstreamDataSets = lineageService.fetchInletNodes(taskNode.getTaskId());
         Set<DatasetNode> downstreamDataSets = lineageService.fetchOutletNodes(taskNode.getTaskId());
-        assertThat(upstreamDataSets,hasSize(1));
+        assertThat(upstreamDataSets, hasSize(1));
         DatasetNode upstreamDataSet = upstreamDataSets.iterator().next();
-        assertThat(upstreamDataSet.getGid(),is(upstreamDataSetId));
-        assertThat(upstreamDataSet.getDatasetName(),is(upstreamSet.getName()));
+        assertThat(upstreamDataSet.getGid(), is(upstreamDataSetId));
+        assertThat(upstreamDataSet.getDatasetName(), is(upstreamSet.getName()));
 
-        assertThat(downstreamDataSets,hasSize(1));
+        assertThat(downstreamDataSets, hasSize(1));
         DatasetNode downstreamDataSet = downstreamDataSets.iterator().next();
-        assertThat(downstreamDataSet.getGid(),is(downstreamDataSetId));
-        assertThat(downstreamDataSet.getDatasetName(),is(downstreamSet.getName()));
+        assertThat(downstreamDataSet.getGid(), is(downstreamDataSetId));
+        assertThat(downstreamDataSet.getDatasetName(), is(downstreamSet.getName()));
     }
 
     @Test
@@ -637,7 +637,7 @@ public class LineageServiceTest extends DatabaseTestBase {
     public void testFetchDirectTask() {
         // Prepare
         Pair<List<DatasetNode>, List<TaskNode>> graphNodes = prepareGraph();
-        List<Long> datasetGids = graphNodes.getLeft().stream().map(datasetNode -> datasetNode.getGid()).collect(Collectors.toList());
+        List<Long> datasetGids = graphNodes.getLeft().stream().map(DatasetNode::getGid).collect(Collectors.toList());
 
         // Execute
         List<UpstreamTaskBasicInformation> upstreamTaskInformationList = lineageService.fetchDirectUpstreamTask(datasetGids);

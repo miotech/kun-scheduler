@@ -255,24 +255,26 @@ public class LineageService implements LineageServiceFacade {
      * @throws IllegalArgumentException when depth is not positive integer
      */
     public Set<DatasetNode> fetchUpstreamDatasetNodes(Long datasetGlobalId, int depth) {
-        return fetchDepthRelatedDatasetNodes(datasetGlobalId, depth,true);
+        Set<DatasetNode> datasetNodeSet = fetchDepthRelatedDatasetNodes(datasetGlobalId, depth, true);
+        return datasetNodeSet.stream().filter(datasetNode -> !datasetNode.getGid().equals(datasetGlobalId)).collect(Collectors.toSet());
     }
+
     /**
      * @param datasetGlobalId gid
-     * @param depth  search deep  Itself is 0
-     * @param  upstream
+     * @param depth           search deep  Itself is 0
+     * @param upstream
      * @return set of  dataset nodes
      */
-    public Set<DatasetNode> fetchDepthRelatedDatasetNodes(Long datasetGlobalId, int depth, boolean upstream){
+    public Set<DatasetNode> fetchDepthRelatedDatasetNodes(Long datasetGlobalId, int depth, boolean upstream) {
         Preconditions.checkArgument(depth > 0, "Depth field should be positive but got: %s", depth);
         Preconditions.checkArgument(datasetGlobalId > 0, "datasetGlobalId  should be positive but got: %s", datasetGlobalId);
         Map<String, Object> paramsMap = new HashMap<>();
         paramsMap.put("datasetGid", datasetGlobalId);
         String cypherUpFormat = String.format(
-                " MATCH (dataset:KUN_DATASET)<-[r*%s..%s]-(res) WHERE dataset.gid={datasetGid}  return r,res", 1, (1 + depth * 2));
+                " MATCH (dataset:KUN_DATASET)<-[r*%s..%s]-(res) WHERE dataset.gid={datasetGid}  return r,res", 0, (1 + depth * 2));
         String cypherDownFormat = String.format("" +
-                " MATCH (dataset:KUN_DATASET)-[r*%s..%s]->(res)  WHERE dataset.gid={datasetGid}  return r,res", 1, (1+ depth * 2 ));
-        String cypherFormat= upstream?cypherUpFormat:cypherDownFormat;
+                " MATCH (dataset:KUN_DATASET)-[r*%s..%s]->(res)  WHERE dataset.gid={datasetGid}  return r,res", 0, (1 + depth * 2));
+        String cypherFormat = upstream ? cypherUpFormat : cypherDownFormat;
         Iterable<DatasetNode> datasetNodes = getSession().query(
                 DatasetNode.class,
                 cypherFormat,
@@ -282,14 +284,14 @@ public class LineageService implements LineageServiceFacade {
     }
 
 
-
     /**
      * @param datasetGlobalId
      * @return set of downstream dataset nodes
      * @throws IllegalArgumentException when depth is not positive integer
      */
     public Set<DatasetNode> fetchDownstreamDatasetNodes(Long datasetGlobalId, int depth) {
-        return fetchDepthRelatedDatasetNodes(datasetGlobalId, depth,false);
+        Set<DatasetNode> datasetNodeSet = fetchDepthRelatedDatasetNodes(datasetGlobalId, depth, false);
+        return datasetNodeSet.stream().filter(datasetNode -> !datasetNode.getGid().equals(datasetGlobalId)).collect(Collectors.toSet());
 
     }
 
