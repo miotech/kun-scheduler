@@ -409,6 +409,7 @@ export default {
   'dataDevelopment.definition.scheduleConfig.cronExpression.alertSecondsBeZero': "目前 Cron 表达式只支持秒字段为 '0'",
   'dataDevelopment.definition.scheduleConfig.environment': '运行环境',
   'dataDevelopment.definition.scheduleConfig.executorLabel': '集群标签',
+  'dataDevelopment.definition.scheduleConfig.resourceQueues': '资源队列',
   'dataDevelopment.definition.notificationConfig': '通知规则',
   'dataDevelopment.definition.notificationConfig.notifyWhen': '通知触发规则',
   'dataDevelopment.definition.notificationConfig.notifyWhen.systemDefault': '系统默认',

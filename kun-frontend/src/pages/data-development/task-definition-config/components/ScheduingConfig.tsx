@@ -4,7 +4,7 @@ import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 
 import { FormInstance } from 'antd/es/form';
-import { TaskDefinition, BlockType, ExecutorLabel } from '@/definitions/TaskDefinition.type';
+import { TaskDefinition, BlockType, ResourceQueues } from '@/definitions/TaskDefinition.type';
 import { FormListFieldData } from 'antd/es/form/FormList';
 import { FormListOperation } from 'antd/lib/form/FormList';
 
@@ -19,6 +19,8 @@ import { OneshotDatePicker } from '@/pages/data-development/task-definition-conf
 import { parse } from '@joshoy/quartz-cron-parser';
 import RetryCheckBox from '@/components/RetryCheckBox/RetryCheckBox';
 
+import { fetchExecutorInfo } from '@/services/data-development/task-definitions';
+import { useRequest, useMount } from 'ahooks';
 import timeZoneMapList from './timezoneMap';
 
 import styles from './BodyForm.less';
@@ -59,6 +61,11 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
   const t = useI18n();
 
   const { form, initTaskDefinition } = props;
+  const [resourceQueuesOptions, setResourceQueuesOptions] = useState<ResourceQueues[] | undefined>([]);
+
+  const { data: executorInfo, loading, run: doSearch } = useRequest(fetchExecutorInfo, {
+    manual: true,
+  });
 
   useEffect(() => {
     /* Automatically set output dataset field */
@@ -107,27 +114,40 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
     [t],
   );
 
-  const executorLabelOptions = useMemo(
-    () => [
-      {
-        label: ExecutorLabel.aws,
-        value: ExecutorLabel.aws,
-      },
-      {
-        label: ExecutorLabel.kun,
-        value: ExecutorLabel.kun,
-      },
-      {
-        label: ExecutorLabel.aliyun,
-        value: ExecutorLabel.aliyun,
-      },
-      {
-        label: ExecutorLabel.carbon,
-        value: ExecutorLabel.carbon,
-      },
-    ],
-    [],
+  useMount(() => {
+    doSearch();
+  });
+
+  const executorLabelOptions = useMemo(() => {
+    let executorLabel: string[] = [];
+    executorInfo?.forEach(item => {
+      executorLabel = executorLabel.concat(item.labels);
+    });
+    return executorLabel;
+  }, [executorInfo]);
+
+  const changeExecutorLabel = useCallback(
+    value => {
+      const findItem = executorInfo?.find(item => item.labels.includes(value));
+      setResourceQueuesOptions(findItem?.resourceQueues);
+      form.setFieldsValue({
+        taskPayload: {
+          scheduleConfig: {
+            queueName: null,
+          },
+        },
+      });
+    },
+    [executorInfo, form],
   );
+
+  useEffect(() => {
+    const findItem = executorInfo?.find(item =>
+      item.labels.includes(form.getFieldValue(['taskPayload', 'scheduleConfig', 'executorLabel'])),
+    );
+    setResourceQueuesOptions(findItem?.resourceQueues);
+  }, [form, executorInfo]);
+
   const renderOutputDatasetFields = (fields: FormListFieldData[], { add, remove }: FormListOperation) => {
     logger.debug('fields = %o', fields);
     return (
@@ -518,7 +538,34 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
               valuePropName="value"
               initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.executorLabel}
             >
-              <Select style={{ width: 200 }} options={executorLabelOptions} />
+              <Select style={{ width: 200 }} loading={loading} onChange={changeExecutorLabel} allowClear>
+                {executorLabelOptions.map(item => (
+                  <Option value={item}>{item}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row>
+          <Col flex="0 0 120px">
+            <span className={styles.sectionLabel} />
+          </Col>
+          <Col flex="1 1">
+            <Form.Item
+              shouldUpdate
+              label={t('dataDevelopment.definition.scheduleConfig.resourceQueues')}
+              name={['taskPayload', 'scheduleConfig', 'queueName']}
+              valuePropName="value"
+              initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.queueName}
+            >
+              <Select style={{ width: 200 }} optionLabelProp="label" allowClear>
+                {resourceQueuesOptions?.map(item => (
+                  <Option label={item.queueName} value={item.queueName}>
+                    {item.queueName}
+                    <span style={{ marginLeft: 4, color: '#e0e0e0' }}>({item.workerNumbers})</span>
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
           </Col>
         </Row>
