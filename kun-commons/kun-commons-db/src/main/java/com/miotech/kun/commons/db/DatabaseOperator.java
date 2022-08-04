@@ -49,7 +49,23 @@ public class DatabaseOperator {
     }
 
     public <T> T fetchOne(String query, ResultSetMapper<T> mapper, Object... params) {
-        return query(query, rs -> rs.next() ? mapper.map(rs) : null, params);
+        Connection connection = connInTrans.get();
+        T result ;
+        try {
+            //if has in a transaction
+            if (connection != null) {
+                result = query(query, rs -> rs.next() ? mapper.map(rs) : null, params);
+            } else {
+                connection = dataSource.getConnection();
+                connection.setAutoCommit(false);
+                result = query(query, rs -> rs.next() ? mapper.map(rs) : null, params);
+                commit();
+            }
+        } catch (SQLException ex) {
+            logger.error("query failed. query={}, params={}", query, params, ex);
+            throw ExceptionUtils.wrapIfChecked(ex);
+        }
+        return result;
     }
 
     public <T> List<T> fetchAll(String query, ResultSetMapper<T> mapper, Object... params) {
