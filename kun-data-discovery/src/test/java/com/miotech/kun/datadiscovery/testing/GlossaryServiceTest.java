@@ -12,6 +12,7 @@ import com.miotech.kun.datadiscovery.model.enums.GlossaryRole;
 import com.miotech.kun.datadiscovery.model.enums.GlossaryUserOperation;
 import com.miotech.kun.datadiscovery.model.enums.SecurityModule;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
+import com.miotech.kun.datadiscovery.service.RdmService;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockSecurityRpcClientFactory;
 import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
@@ -21,10 +22,12 @@ import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
 import com.miotech.kun.security.facade.rpc.ScopeRole;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.util.Lists;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.http.HttpStatus;
@@ -37,8 +40,7 @@ import java.util.stream.Collectors;
 import static com.miotech.kun.datadiscovery.testing.mockdata.MockSearchInfoFactory.mockSearchGlossary;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -50,6 +52,8 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
 
     @Autowired
     GlossaryService glossaryService;
+    @MockBean
+    private RdmService rdmService;
 
 
     @BeforeEach
@@ -1110,6 +1114,32 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
         mockDatasetBasicInfoList(Lists.newArrayList(all));
         Glossary afterGlossary = glossaryService.fetchGlossary(glossary.getId());
         assertTrue(afterGlossary.getAssets().stream().allMatch(asset -> all.contains(asset.getId())));
+    }
+
+    @Test
+    public void test_find_glossary_list() {
+        List<Long> list1 = Lists.newArrayList();
+        List<GlossaryBasicInfo> glossaryList1 = glossaryService.findGlossaryList(list1);
+        assertThat(glossaryList1.size(), is(0));
+
+        Map<String, Glossary> glossaryTree = mockTreeMap("glossary1_1", "glossary2_1", "glossary3_1", "glossary3_2");
+        Glossary glossary3_2 = glossaryTree.get("glossary3_2");
+        Glossary glossary3_1 = glossaryTree.get("glossary3_1");
+        Long glossary3_1Id = glossary3_1.getId();
+        Long glossary3_2Id = glossary3_2.getId();
+        ImmutableList<Long> list2 = ImmutableList.of(glossary3_1Id, glossary3_2Id);
+        List<GlossaryBasicInfo> glossaryList2 = glossaryService.findGlossaryList(list2);
+        assertThat(glossaryList2.size(), is(list2.size()));
+        assertThat(glossaryList2.stream().map(GlossaryBasicInfo::getId).allMatch(list2::contains), is(true));
+
+        ImmutableList<Long> list3 = ImmutableList.of(glossary3_1Id, 1L);
+        List<GlossaryBasicInfo> glossaryList3 = glossaryService.findGlossaryList(list3);
+        assertThat(glossaryList3.size(), is(1));
+        assertThat(glossaryList3.stream().map(GlossaryBasicInfo::getId).allMatch(list3::contains), is(true));
+        GlossaryBasicInfo glossaryBasicInfo = glossaryList3.get(0);
+        assertThat(glossaryBasicInfo.getId(), is(glossary3_1Id));
+
+
     }
 
     public void mockRole(GlossaryRole role) {

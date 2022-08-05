@@ -5,10 +5,9 @@ import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
-import com.miotech.kun.datadiscovery.service.SecurityRpcClient;
-import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.datadiscovery.service.RdmService;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
-import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeTaskInfo;
@@ -30,6 +29,7 @@ import static com.miotech.kun.datadiscovery.service.LineageAppService.LATEST_TAS
 import static com.miotech.kun.datadiscovery.testing.mockdata.MockWorkFlowClientDataFactory.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -46,6 +46,8 @@ public class LineageAppServiceTest extends DataDiscoveryTestBase {
     LineageAppService lineageAppService;
     @MockBean
     MetadataService metadataService;
+    @MockBean
+    private RdmService rdmService;
 
     private LineageTasksRequest getLineageTasksRequest() {
         LineageQueryDirection lineageQueryDirection = LineageQueryDirection.UPSTREAM;
@@ -208,5 +210,26 @@ public class LineageAppServiceTest extends DataDiscoveryTestBase {
         assertThat(lineageEdgeDown.getSourceVertexId(), is(nodeInfo.getGid()));
         assertThat(lineageEdgeDown.getDestVertexId(), is(downNodeInfo.getGid()));
 
+    }
+
+    @Test
+    void test_get_downstream_dataset() {
+        List<DatasetNodeInfo> downstreamDataset1 = lineageAppService.getDownstreamDataset(null);
+        assertThat(downstreamDataset1, is(nullValue()));
+        when(workflowClient.getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt())).thenThrow(WorkflowApiException.class);
+        List<DatasetNodeInfo> downstreamDataset2 = lineageAppService.getDownstreamDataset(2L);
+        assertThat(downstreamDataset2.size(), is(0));
+        Long datasetId = 1L;
+        DatasetNodeInfo nodeInfo = getDatasetNodeInfo(datasetId, "testDataSetNameOne");
+        DatasetNodeInfo upNodeInfo = getDatasetNodeInfo(2L, "testUpDataSetNameOne");
+        DatasetNodeInfo downNodeInfo = getDatasetNodeInfo(3L, "testDownDataSetNameOne");
+        ArrayList<DatasetNodeInfo> upList = Lists.newArrayList(upNodeInfo);
+        ArrayList<DatasetNodeInfo> downList = Lists.newArrayList(downNodeInfo);
+        doReturn(createLineageNeighborsGraph(nodeInfo, upList, downList))
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
+        List<DatasetNodeInfo> downstreamDataset = lineageAppService.getDownstreamDataset(datasetId);
+        assertThat(downstreamDataset.size(), is(downList.size()));
+        DatasetNodeInfo datasetNodeInfo = downstreamDataset.get(0);
+        assertThat(datasetNodeInfo, is(downNodeInfo));
     }
 }

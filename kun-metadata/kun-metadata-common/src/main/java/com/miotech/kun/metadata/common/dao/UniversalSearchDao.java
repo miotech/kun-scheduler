@@ -239,7 +239,6 @@ public class UniversalSearchDao {
             return SearchedInfo.Builder.newBuilder()
                     .withGid(rs.getLong(COLUMN_GID))
                     .withResourceType(ResourceType.valueOf(rs.getString(COLUMN_RESOURCE_TYPE)))
-                    .withDescription(COLUMN_RESOURCE_TYPE)
                     .withName(rs.getString(COLUMN_NAME))
                     .withDescription(rs.getString(COLUMN_DESCRIPTION))
                     .withResourceAttribute(parseResourceAttribute(

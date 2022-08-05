@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.databuilder.builder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
@@ -16,6 +17,7 @@ import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
+import com.miotech.kun.metadata.core.model.event.DatasetCreatedEvent;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.load.Loader;
@@ -40,11 +42,12 @@ public class MCEBuilder {
     private final Loader loader;
     private final HttpClientUtil httpClientUtil;
     private final CatalogerFactory catalogerFactory;
+    private final EventPublisher publisher;
 
     @Inject
     public MCEBuilder(Props props, DatabaseOperator operator, MetadataDatasetDao datasetDao,
                       DataSourceService dataSourceService, Loader loader, HttpClientUtil httpClientUtil,
-                      CatalogerFactory catalogerFactory) {
+                      CatalogerFactory catalogerFactory, EventPublisher publisher) {
         this.props = props;
         this.operator = operator;
         this.datasetDao = datasetDao;
@@ -52,6 +55,7 @@ public class MCEBuilder {
         this.loader = loader;
         this.httpClientUtil = httpClientUtil;
         this.catalogerFactory = catalogerFactory;
+        this.publisher = publisher;
     }
 
     public void extractSchemaOfDataSource(Long datasourceId) {
@@ -81,11 +85,18 @@ public class MCEBuilder {
         Iterator<Dataset> datasetIterator = cataloger.extract(dataSource);
         while (datasetIterator.hasNext()) {
             try {
-                LoadSchemaResult loadSchemaResult = loader.loadSchema(datasetIterator.next());
-                if (loadSchemaResult.getGid() < 0) {
+                Dataset dataset = datasetIterator.next();
+                Dataset savedDataset = datasetDao.fetchDataSet(dataset.getDatasourceId(), dataset.getDatabaseName(), dataset.getName());
+                LoadSchemaResult loadSchemaResult = loader.loadSchema(dataset);
+                if (savedDataset != null || loadSchemaResult.getGid() < 0) {
                     continue;
                 }
-                // 发送消息
+                //send dataset created event
+                DatasetCreatedEvent datasetCreatedEvent = new DatasetCreatedEvent(loadSchemaResult.getGid(), dataset.getDatasourceId(),
+                        dataset.getDatabaseName(), dataset.getName());
+                logger.info("going to push dataset created event: {}", datasetCreatedEvent);
+                publisher.publish(datasetCreatedEvent);
+
             } catch (Exception e) {
                 logger.error("Load schema error: ", e);
             }
@@ -142,6 +153,12 @@ public class MCEBuilder {
         }
         Dataset newDataset = cataloger.extract(mce);
         LoadSchemaResult loadSchemaResult = loader.loadSchema(newDataset);
+
+        //send dataset created event
+        DatasetCreatedEvent datasetCreatedEvent = new DatasetCreatedEvent(loadSchemaResult.getGid(), newDataset.getDatasourceId(),
+                newDataset.getDatabaseName(), newDataset.getName());
+        logger.info("going to push dataset created event: {}", datasetCreatedEvent);
+        publisher.publish(datasetCreatedEvent);
 
         // 发送消息
         sendMseEvent(loadSchemaResult);

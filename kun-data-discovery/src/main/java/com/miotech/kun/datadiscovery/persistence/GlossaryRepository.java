@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscovery.persistence;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
@@ -19,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.sql.ResultSet;
@@ -526,6 +526,16 @@ public class GlossaryRepository extends BaseRepository {
         String outSql = DefaultSQLBuilder.newBuilder().select(tmpColumnList).from(tmpTableName).getSQL();
         String sql = withRecursiveSql(tmpTableName, tmpColumnList, optionsSql, withSql, outSql).toString();
         return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, collectionId.toArray());
+    }
+
+    public List<GlossaryBasicInfo> findGlossaryList(Collection<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return Lists.newArrayList();
+        }
+        String sql = DefaultSQLBuilder.newBuilder().select(COLUMN_KUN_MT_GLOSSARY)
+                .from(TABLE_NAME_KUN_MT_GLOSSARY, ALIAS_KUN_MT_GLOSSARY).where("id in " + collectionToConditionSql(ids) + " and deleted=false").getSQL();
+        log.debug("findList-sqlTemplate:{}", sql);
+        return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, ids.toArray());
     }
 
 

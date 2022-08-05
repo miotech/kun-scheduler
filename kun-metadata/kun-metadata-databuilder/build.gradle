@@ -40,6 +40,8 @@ dependencies {
     implementation ('org.apache.hadoop:hadoop-mapreduce-client-core:2.8.5') {
         exclude group: 'org.apache.hadoop', module: 'hadoop-yarn-common'
     }
+    implementation 'redis.clients:jedis'
+    implementation 'io.lettuce:lettuce-core'
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation "junit:junit"
