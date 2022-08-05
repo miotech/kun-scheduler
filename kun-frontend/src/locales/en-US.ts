@@ -473,6 +473,7 @@ export default {
     "Currently cron expression only support seconds field to be '0'",
   'dataDevelopment.definition.scheduleConfig.environment': 'Environment',
   'dataDevelopment.definition.scheduleConfig.executorLabel': 'ExecutorLabel',
+  'dataDevelopment.definition.scheduleConfig.resourceQueues': 'ResourceQueues',
   'dataDevelopment.definition.notificationConfig': 'Notification Config',
   'dataDevelopment.definition.notificationConfig.notifyWhen': 'Notify When',
   'dataDevelopment.definition.notificationConfig.notifyWhen.systemDefault': 'System Default',

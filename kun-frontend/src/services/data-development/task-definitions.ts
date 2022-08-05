@@ -5,6 +5,7 @@ import {
   TaskPayload,
   TaskTryVO,
   BacktrackingTaskDefinition,
+  ExecutorInfo,
 } from '@/definitions/TaskDefinition.type';
 import { TaskRunLog } from '@/definitions/TaskRun.type';
 
@@ -307,6 +308,13 @@ export async function fetchDefinitionBackTracking(id: string | number): ServiceR
     pathParams: {
       id: `${id}`,
     },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
+
+// get executorInfo
+export async function fetchExecutorInfo(): ServiceRespPromise<ExecutorInfo[]> {
+  return get('/workflow/executorInfo', {
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }

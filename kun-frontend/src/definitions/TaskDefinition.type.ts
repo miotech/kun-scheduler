@@ -76,12 +76,6 @@ export enum BlockType {
   WAIT_PREDECESSOR_DOWNSTREAM = 'WAIT_PREDECESSOR_DOWNSTREAM',
 }
 
-export enum ExecutorLabel {
-  aws = 'aws',
-  kun = 'kun',
-  aliyun = 'aliyun',
-  carbon = 'carbon',
-}
 export interface ScheduleConfig {
   cronExpr: string;
   timeZone: String;
@@ -93,7 +87,8 @@ export interface ScheduleConfig {
   retryDelay: number;
   slaConfig: SlaConfig;
   blockType: BlockType;
-  executorLabel: ExecutorLabel;
+  executorLabel: string;
+  queueName: string;
 }
 
 export interface TaskTryVO {
@@ -129,4 +124,17 @@ export interface BacktrackingTaskDefinition {
     deadline: string;
     priority: string;
   };
+}
+
+export interface ResourceQueues {
+  queueName: string;
+  cores: string;
+  memory: string;
+  workerNumbers: number;
+}
+export interface ExecutorInfo {
+  kind: string;
+  name: string;
+  labels: string[];
+  resourceQueues: ResourceQueues[];
 }
