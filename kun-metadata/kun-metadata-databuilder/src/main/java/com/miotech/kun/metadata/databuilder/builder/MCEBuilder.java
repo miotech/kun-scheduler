@@ -136,7 +136,7 @@ public class MCEBuilder {
 
     }
 
-    public void extractSchemaOfPush(String message) {
+    public void handlePushEvent(String message) {
         MetadataChangeEvent mce = JSONUtils.jsonToObject(message, MetadataChangeEvent.class);
         Optional<DataSource> fetchedDataSource = dataSourceService.getDatasourceById(mce.getDataSourceId());
         if (!fetchedDataSource.isPresent()) {
@@ -155,10 +155,12 @@ public class MCEBuilder {
         LoadSchemaResult loadSchemaResult = loader.loadSchema(newDataset);
 
         //send dataset created event
-        DatasetCreatedEvent datasetCreatedEvent = new DatasetCreatedEvent(loadSchemaResult.getGid(), newDataset.getDatasourceId(),
-                newDataset.getDatabaseName(), newDataset.getName());
-        logger.info("going to push dataset created event: {}", datasetCreatedEvent);
-        publisher.publish(datasetCreatedEvent);
+        if(newDataset != null){
+            DatasetCreatedEvent datasetCreatedEvent = new DatasetCreatedEvent(loadSchemaResult.getGid(), newDataset.getDatasourceId(),
+                    newDataset.getDatabaseName(), newDataset.getName());
+            logger.info("going to push dataset created event: {}", datasetCreatedEvent);
+            publisher.publish(datasetCreatedEvent);
+        }
 
         // 发送消息
         sendMseEvent(loadSchemaResult);
