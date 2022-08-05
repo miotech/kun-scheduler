@@ -88,6 +88,7 @@ public class TaskManager {
      * trigger runnable taskRun to start
      */
     public void trigger() {
+        fixTaskRunCondition();
         TaskRunReadyCheckEvent event = new TaskRunReadyCheckEvent(System.currentTimeMillis());
         taskRunReadyCheckEventQueue.offer(event);
 
@@ -116,7 +117,7 @@ public class TaskManager {
             eventBus.post(taskRunTransitionEvent);
 
             //2. fetch task run should be crated
-            List<Long> taskRunShouldBeCreated = taskRun.getStatus().isFailure()?
+            List<Long> taskRunShouldBeCreated = taskRun.getStatus().isFailure() ?
                     updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED))
                     : new ArrayList<>();
             taskRunShouldBeCreated.add(taskRun.getId());
@@ -410,6 +411,7 @@ public class TaskManager {
 
     /**
      * update taskRunId's downstream taskrun to taskRunStatus which is in filterStatus
+     *
      * @param taskRunId
      * @param taskRunStatus
      * @param filterStatus
@@ -460,10 +462,16 @@ public class TaskManager {
                     taskRunReadyCheckEventQueue.drainTo(eventList);
                     submitSatisfyTaskAttemptToExecutor();
                 } catch (Throwable e) {
-                    logger.warn("take taskRun ready check event from queue failed");
+                    logger.warn("take taskRun ready check event from queue failed", e);
                 }
             }
         }
     }
 
+    private void fixTaskRunCondition() {
+        List<Long> lossUpdateTaskRuns = taskRunDao.lossUpdateConditionTaskRuns();
+        for (Long taskRunId : lossUpdateTaskRuns) {
+            taskRunDao.fixConditionWithTaskRunId(taskRunId);
+        }
+    }
 }

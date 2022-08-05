@@ -1389,4 +1389,45 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(savedTaskRun4.getFailedUpstreamTaskRunIds().get(0), is(taskRun3.getId()));
         assertThat(savedTaskRun5.getFailedUpstreamTaskRunIds().get(0), is(taskRun3.getId()));
     }
+
+    @Test
+    public void lossUpdateConditionTaskRunsTest(){
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
+        taskList.forEach(x -> taskDao.create(x));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2;");
+        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
+        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        //update
+
+        List<Long> lossUpdateTaskRuns = taskRunDao.lossUpdateConditionTaskRuns();
+
+        assertThat(lossUpdateTaskRuns,hasSize(1));
+        assertThat(lossUpdateTaskRuns,containsInAnyOrder(taskRun1.getId()));
+    }
+
+    @Test
+    public void fixConditionWithTaskRunIdTest(){
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
+        taskList.forEach(x -> taskDao.create(x));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2;");
+        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        taskRunDao.fixConditionWithTaskRunId(taskRun1.getId());
+
+        List<Long> lossUpdateTaskRuns = taskRunDao.lossUpdateConditionTaskRuns();
+
+        assertThat(lossUpdateTaskRuns,hasSize(1));
+        assertThat(lossUpdateTaskRuns,containsInAnyOrder(taskRun2.getId()));
+    }
 }

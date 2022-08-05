@@ -751,7 +751,7 @@ public class TaskRunDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(TASK_RUN_TABLE_NAME)
                 .set("failed_upstream_task_run_ids = failed_upstream_task_run_ids::jsonb - array[" + filterFailedUpstreamTaskRunId + "]")
-                .where("id in (" + filterTaskRunId + ")" )
+                .where("id in (" + filterTaskRunId + ")")
                 .getSQL();
         List<Object> params = new ArrayList<>();
         params.addAll(taskRunIds);
@@ -1132,26 +1132,6 @@ public class TaskRunDao {
         );
         return taskAttempt;
     }
-
-    //just for test
-    public Integer testRpc(Long id,Long taskId){
-        String sql = DefaultSQLBuilder.newBuilder()
-                .insert("id","task_id")
-                .into("kun_wf_test_hudi_task")
-                .asPrepared()
-                .getSQL();
-        return dbOperator.update(sql,id,taskId);
-    }
-
-    public OffsetDateTime testGetObject(Long taskRunId){
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("created_at")
-                .from(TASK_RUN_TABLE_NAME)
-                .where("id = ?")
-                .getSQL();
-        return dbOperator.fetchOne(sql,rs -> rs.getObject("created_at",OffsetDateTime.class),taskRunId);
-    }
-
 
     public Optional<TaskRunStatus> fetchTaskAttemptStatus(Long taskAttemptId) {
         checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
@@ -1955,6 +1935,30 @@ public class TaskRunDao {
                 .withAverageRunningTime(rs.getLong("average_running_time"))
                 .withAverageQueuingTime(rs.getLong("average_queuing_time"))
                 .build(), taskRunIds.toArray());
+    }
+
+    public List<Long> lossUpdateConditionTaskRuns() {
+        OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-RECOVER_LIMIT_DAYS);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(TASK_RUN_MODEL_NAME + ".id")
+                .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .join("inner", CONDITION_TABLE_NAME, CONDITION_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id::varchar(255) = " + CONDITION_MODEL_NAME + ".condition -> 'content' ->> 'taskRunId'")
+                .where(TASK_RUN_MODEL_NAME + ".status = ? and " + CONDITION_MODEL_NAME + ".result = ? and "
+                        + TASK_RUN_MODEL_NAME + ".created_at > ?")
+                .asPrepared()
+                .getSQL();
+        return dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.SUCCESS.name(), false, recoverLimit);
+    }
+
+    public void fixConditionWithTaskRunId(Long lossUpdateTaskRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(CONDITION_TABLE_NAME)
+                .set("result")
+                .where("condition -> 'content' ->> 'taskRunId' = ?")
+                .asPrepared()
+                .getSQL();
+        dbOperator.update(sql, true, String.valueOf(lossUpdateTaskRunId));
     }
 
     public static class TaskRunDependencyMapper implements ResultSetMapper<TaskRunDependency> {
