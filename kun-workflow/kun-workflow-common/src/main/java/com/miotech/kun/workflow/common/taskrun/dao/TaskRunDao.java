@@ -433,8 +433,11 @@ public class TaskRunDao {
     }
 
     public TaskRun fetchTaskRunByTaskAndTick(Long taskId, Tick tick) {
-        TaskRun taskRun = dbOperator.fetchOne(getSelectSQL(TASK_RUN_MODEL_NAME + ".task_id = ? and " +
-                "scheduled_tick = ?"), taskRunMapperInstance, taskId, tick.toString());
+        String sql = getTaskRunSQLBuilderWithDefaultConfig()
+                .where(TASK_RUN_MODEL_NAME + ".task_id = ? and " + "scheduled_tick = ?")
+                .limit(1)
+                .getSQL();
+        TaskRun taskRun = dbOperator.fetchOne(sql, taskRunMapperInstance, taskId, tick.toString());
         return taskRun;
     }
 
