@@ -9,13 +9,13 @@ import useI18n from '@/hooks/useI18n';
 interface OwnProps {
   value?: string | string[];
   onChange?: (nextUserValue: string | string[]) => any;
+  mode?: string;
 }
 
 type Props = SelectProps<string | string[]> & OwnProps;
 
 export const UserSelect: FunctionComponent<Props> = props => {
-  const { value, onChange, placeholder, ...restProps } = props;
-
+  const { value, onChange, placeholder, mode, ...restProps } = props;
   const t = useI18n();
 
   const { data: respData, loading } = useRequest(fetchUsersList, {
@@ -47,6 +47,7 @@ export const UserSelect: FunctionComponent<Props> = props => {
       placeholder={loading ? `${t('common.loading')}` : placeholder}
       value={!users.length ? undefined : value}
       onChange={onChange}
+      mode={mode}
     >
       {options}
     </Select>

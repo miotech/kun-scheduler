@@ -11,6 +11,7 @@ import { deployedTaskDetail } from './operationCenter/deployedTaskDetail';
 import { monitoringDashboard } from './monitoringDashboard';
 import { lineage } from './lineage';
 import { backfillTasks } from './operationCenter/backfillTasks';
+import { referenceData } from './dataDiscovery/referenceData';
 
 export interface RootModel {
   user: typeof user;
@@ -26,6 +27,7 @@ export interface RootModel {
   deployedTaskDetail: typeof deployedTaskDetail;
   monitoringDashboard: typeof monitoringDashboard;
   lineage: typeof lineage;
+  referenceData: typeof referenceData;
 }
 
 export const models: RootModel = {
@@ -42,4 +44,5 @@ export const models: RootModel = {
   deployedTaskDetail,
   monitoringDashboard,
   lineage,
+  referenceData
 };

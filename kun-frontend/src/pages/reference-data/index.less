@@ -1,0 +1,79 @@
+.content {
+  padding: 16px;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+
+    .search {
+      width: 600px;
+    }
+
+    .addButton {
+      font-weight: 600;
+      color: #fff;
+      background-color: @darkBlue;
+      font-size: 20px;
+      padding: 3px;
+      margin-right: 5px;
+      border-radius: 2px;
+    }
+  }
+
+
+  .table {
+    background-color: #fff;
+    border: 1px solid #EBEBEB;
+    border-radius: 5px;
+
+    :global {
+      .ant-table-thead>tr>th {
+        background-color: #fff;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 16px;
+        color: @grayFontColor;
+      }
+
+      .ant-table-cell {
+        padding: 12px 18px !important;
+      }
+
+      .ant-pagination.mini .ant-pagination-options {
+        margin-right: 10px;
+      }
+    }
+
+
+  }
+}
+
+.pophover {
+  width: 163px;
+  .item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 16px;
+    &:nth-last-child(1){
+      margin-bottom: 0px;
+    }
+    .icon {
+      width:16px;
+      height: 16px;
+      color: #FFBE3D;
+    }
+    .title {
+      font-weight: 400;
+      color: @darkGray;
+      margin-left: 16px;
+    }
+  }
+}
+
+
+.link {
+  cursor: pointer;
+}

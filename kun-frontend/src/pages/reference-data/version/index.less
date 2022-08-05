@@ -1,0 +1,39 @@
+.content {
+  padding: 16px;
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 32px;
+    .title {
+      font-weight: 600;
+      font-family: 'Titillium Web';
+      color: @darkGray;
+      margin-left: 8px;
+    }
+  }
+
+  .table {
+    background-color: #fff;
+    border: 1px solid #EBEBEB;
+    border-radius: 5px;
+    margin-top:16px;
+    :global {
+      .ant-table-thead>tr>th {
+        background-color: #fff;
+        font-weight: 400;
+        font-size: 14px;
+        line-height: 16px;
+        color: @grayFontColor;
+      }
+  
+      .ant-table-cell {
+        padding: 12px 18px !important;
+      }
+  
+      .ant-pagination.mini .ant-pagination-options {
+        margin-right: 10px;
+      }
+    }
+  }
+}

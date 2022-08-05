@@ -117,6 +117,43 @@ export const appRoutes = [
             ],
           },
           {
+            title: 'common.pageTitle.referenceData',
+            path: '/data-discovery/reference-data',
+            menuDisplay: true,
+            icon: 'SnippetsOutlined',
+            showChildren: false,
+            breadcrumbLink: true,
+            routes: [
+              {
+                title: 'common.pageTitle.referenceData',
+                path: '.',
+                component: 'reference-data/index',
+                breadcrumbLink: true,
+                exact: true,
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+              {
+                title: 'common.pageTitle.tableConfigration',
+                path: 'table-configration',
+                component: 'reference-data/databaseTable-configration',
+                breadcrumbLink: false,
+                exact: true,
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+              {
+                title: 'common.pageTitle.version',
+                path: 'version',
+                component: 'reference-data/version',
+                breadcrumbLink: false,
+                exact: true,
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+              {
+                component: 'error-page/Error404/index',
+              },
+            ],
+          },
+          {
             component: 'error-page/Error404/index',
           },
         ],

@@ -1,0 +1,82 @@
+{
+  "refTableMetaData": {
+    "columns": [
+      {
+        "name": "fin_indicator_code",
+        "index": 0,
+        "columnType": "STRING"
+      },
+      {
+        "name": "name_zh_cn",
+        "index": 1,
+        "columnType": "STRING"
+      },
+      {
+        "name": "name_zh_hk",
+        "index": 2,
+        "columnType": "STRING"
+      },
+      {
+        "name": "name_en_us",
+        "index": 3,
+        "columnType": "STRING"
+      }
+    ],
+    "refTableConstraints": {
+      "PRIMARY_KEY": ["fin_indicator_code", "name_zh_hk"]
+    }
+  },
+  "refData": {
+    "data": [
+      {
+        "recordNumber": 1,
+        "values": ["B01", "资产总计", "資產總計", "Total assets"]
+      },
+      {
+        "recordNumber": 2,
+        "values": ["B0101", "流动资产合计", "流動資產合計", "Total current assets"]
+      },
+      {
+        "recordNumber": 3,
+        "values": ["B010101", "货币资金", "貨幣資金", "Cash and cash equivalents"]
+      },
+      {
+        "recordNumber": 4,
+        "values": [
+          "B010102",
+          "现金及存放中央银行款项",
+          "現金及存放中央銀行款項",
+          "Cash and balances with Central Banks"
+        ]
+      },
+      {
+        "recordNumber": 5,
+        "values": ["B010103", "存放同业款项", "存放同業款項", "Interbank deposit"]
+      },
+      {
+        "recordNumber": 6,
+        "values": ["B010104", "定期存款", "定期存款", "Time deposits"]
+      },
+      {
+        "recordNumber": 7,
+        "values": ["B010105", "期货保证金", "期貨保證金", "Futures margin"]
+      },
+      {
+        "recordNumber": 8,
+        "values": ["B010106", "结算备付金", "結算備付金", "Settlement funds"]
+      },
+      {
+        "recordNumber": 9,
+        "values": ["B01010601", "信用备付金", "信用備付金", "Deposit on credit"]
+      },
+      {
+        "recordNumber": 10,
+        "values": ["B01010602", "客户备付金", "客戶備付金", "Customer provisions"]
+      },
+      {
+        "recordNumber": 11,
+        "values": ["B01010603", "客户资金存款", "客戶資金存款", "Customer fund deposit"]
+      }
+    ]
+  }
+}
