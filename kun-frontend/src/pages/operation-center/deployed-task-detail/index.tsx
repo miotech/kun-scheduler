@@ -205,6 +205,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
             setSelectedAttemptMap={setSelectedAttemptMap}
             dagContainerSize={dagContainerSize || { width: undefined, height: undefined }}
             currentTab={currentTab}
+            taskRunsData={taskRunsData || []}
             setCurrentTab={setCurrentTab}
           />
         </ReflexElement>

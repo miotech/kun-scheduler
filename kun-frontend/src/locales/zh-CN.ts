@@ -460,6 +460,7 @@ export default {
   'scheduledTasks.jumpToTaskDef': '跳转至任务定义',
   'scheduledTasks.logs': '日志',
   'scheduledTasks.DAG': 'DAG',
+  'scheduledTasks.jumpToTaskGantt': '查看任务甘特图',
   'taskRun.property.id': '运行实例 ID',
   'taskRun.property.status': '状态',
   'taskRun.property.attempt': '运行次数',

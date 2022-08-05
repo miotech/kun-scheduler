@@ -474,6 +474,7 @@ export default {
   'scheduledTasks.jumpToTaskDef': 'Jump to task definition',
   'scheduledTasks.logs': 'Logs',
   'scheduledTasks.DAG': 'DAG',
+  'scheduledTasks.jumpToTaskGantt': 'View the Task Gantt Chart',
   'taskRun.property.id': 'Run Instance ID',
   'taskRun.property.status': 'Status',
   'taskRun.property.attempt': 'Attempt No.',

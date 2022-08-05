@@ -5,7 +5,7 @@ import { TaskRunLogViewer } from '@/pages/operation-center/deployed-task-detail/
 import { TaskRunDAG } from '@/pages/operation-center/deployed-task-detail/components/TaskRunDAG';
 import useI18n from '@/hooks/useI18n';
 import { TaskRun } from '@/definitions/TaskRun.type';
-
+import { Link } from 'umi';
 import styles from '@/pages/operation-center/deployed-task-detail/index.less';
 
 interface OwnProps {
@@ -16,14 +16,41 @@ interface OwnProps {
   height?: number;
   attempt?: number;
   setSelectedAttemptMap?: any;
+  taskRunsData: TaskRun[];
 }
 
 type Props = OwnProps;
 
-export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetail(props) {
-  const { currentTab = 'logs', onTabChange, taskRun, width, height, attempt = -1, setSelectedAttemptMap } = props;
+const TabBarExtraContent = (props: { taskRunsData: TaskRun[]; taskRun?: TaskRun | null }) => {
   const t = useI18n();
+  const { taskRunsData, taskRun } = props;
+  const taskRunId = taskRun ? taskRun.id : taskRunsData[0]?.id;
+  const taskName = taskRun ? taskRun?.task?.name : taskRunsData[0]?.task?.name;
+  if (taskRunsData.length > 0) {
+    return (
+      <Link
+        style={{ marginRight: '15px' }}
+        to={`/operation-center/running-statistics?taskRunId=${taskRunId}&taskName=${taskName}`}
+      >
+        {t('scheduledTasks.jumpToTaskGantt')}
+      </Link>
+    );
+  }
+  return null;
+};
 
+export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetail(props) {
+  const {
+    currentTab = 'logs',
+    onTabChange,
+    taskRun,
+    width,
+    height,
+    attempt = -1,
+    setSelectedAttemptMap,
+    taskRunsData,
+  } = props;
+  const t = useI18n();
   const handleChangeAttempt = (nextAttempt: number) => {
     if (setSelectedAttemptMap && taskRun) {
       setSelectedAttemptMap((currentState: Record<string, number>) => {
@@ -36,7 +63,13 @@ export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetai
   };
 
   return (
-    <Tabs type="card" activeKey={currentTab} onChange={onTabChange} className={styles.RightPanelTabsContainer}>
+    <Tabs
+      type="card"
+      tabBarExtraContent={<TabBarExtraContent taskRunsData={taskRunsData} taskRun={taskRun} />}
+      activeKey={currentTab}
+      onChange={onTabChange}
+      className={styles.RightPanelTabsContainer}
+    >
       <Tabs.TabPane
         tab={
           <span>
