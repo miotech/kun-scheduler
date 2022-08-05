@@ -27,6 +27,7 @@ import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.*;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.CheckType;
@@ -74,6 +75,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doAnswer;
 
 public class LocalExecutorTest extends CommonTestBase {
@@ -191,7 +193,7 @@ public class LocalExecutorTest extends CommonTestBase {
         executorConfig.setStorage(storageMap);
         executorConfig.setKind("local");
         executorConfig.setName("local");
-        executorConfig.setLabel("local");
+        executorConfig.setLabel("local,test");
         ExecutorRpcConfig rpcConfig = new ExecutorRpcConfig();
         rpcConfig.setExecutorRpcHost("127.0.0.1");
         rpcConfig.setExecutorRpcPort("10201");
@@ -1260,6 +1262,20 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(queuedTaskRun.getQueuedAt(), notNullValue());
         assertThat(queuedTaskRun.getStatus(), is(TaskRunStatus.QUEUED));
 
+    }
+
+    @Test
+    public void fetchExecutorInfo_shouldSuccess() {
+        ExecutorInfo result = executor.getExecutorInfo();
+        assertNull(result.getExtraInfo());
+        assertThat(result.getName(), is("local"));
+        assertThat(result.getLabels().size(), is(2));
+        assertThat(new HashSet<>(result.getLabels()), is(new HashSet<>(Arrays.asList("local", "test"))));
+        assertThat(result.getResourceQueues().size(), is(2));
+        assertThat(result.getResourceQueues().get(0).getQueueName(), is("default"));
+        assertThat(result.getResourceQueues().get(0).getWorkerNumbers(), is(2));
+        assertThat(result.getResourceQueues().get(1).getQueueName(), is("test"));
+        assertThat(result.getResourceQueues().get(1).getWorkerNumbers(), is(2));
     }
 
 

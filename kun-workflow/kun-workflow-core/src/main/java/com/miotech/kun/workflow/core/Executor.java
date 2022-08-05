@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.core;
 import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 
 public interface Executor extends TaskAttemptExecutor, ResourceManager {
 
@@ -61,5 +62,11 @@ public interface Executor extends TaskAttemptExecutor, ResourceManager {
      * @return
      */
     boolean getMaintenanceMode();
+
+    /**
+     * get info list of executor including name, label, queue info
+     * @return
+     */
+    ExecutorInfo getExecutorInfo();
 
 }

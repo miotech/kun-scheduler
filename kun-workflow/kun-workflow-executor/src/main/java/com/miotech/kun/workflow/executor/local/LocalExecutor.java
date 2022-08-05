@@ -3,15 +3,18 @@ package com.miotech.kun.workflow.executor.local;
 import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.storage.LocalStorageManager;
 import com.miotech.kun.workflow.executor.storage.StorageManagerFactory;
 import com.miotech.kun.workflow.executor.storage.StorageType;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class LocalExecutor implements Executor {
@@ -101,6 +104,16 @@ public class LocalExecutor implements Executor {
     @Override
     public void setMaintenanceMode(boolean mode) {
         processLifeCycleManager.setMaintenanceMode(mode);
+    }
+
+    @Override
+    public ExecutorInfo getExecutorInfo() {
+        return ExecutorInfo.newBuilder()
+                .withKind(executorConfig.getKind())
+                .withName(executorConfig.getName())
+                .withLabels(Arrays.asList(StringUtils.split(executorConfig.getLabel(), ",")))
+                .withResourceQueues(executorConfig.getResourceQueues())
+                .build();
     }
 
     @Override

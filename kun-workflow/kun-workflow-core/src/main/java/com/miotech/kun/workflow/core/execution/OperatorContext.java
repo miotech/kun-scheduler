@@ -29,4 +29,9 @@ public interface OperatorContext {
      * 获取任务执行环境信息
      */
     public ExecuteTarget getExecuteTarget();
+
+    /**
+     * 获取任务队列信息
+     */
+    public String getQueueName();
 }

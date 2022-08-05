@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OperatorContextImplTest extends DatabaseTestBase {
@@ -33,7 +32,7 @@ public class OperatorContextImplTest extends DatabaseTestBase {
     public void init(){
         config = new HashMap<>();
         config.put("args", "hello");
-        context = new OperatorContextImpl(new Config(config), 1L,null);
+        context = new OperatorContextImpl(new Config(config), 1L, null, "default");
         injector.injectMembers(context);
         taskRunDao = injector.getInstance(TaskRunDao.class);
         taskDao = injector.getInstance(TaskDao.class);
@@ -73,7 +72,6 @@ public class OperatorContextImplTest extends DatabaseTestBase {
                 .withScheduleTime(SpecialTick.NULL)
                 .build();
         taskRunDao.createTaskRun(taskRunWithCST);
-        System.out.println(context.getScheduleTime());
         assertTrue("202110131911".equals(context.getScheduleTime()));
     }
 
@@ -123,5 +121,11 @@ public class OperatorContextImplTest extends DatabaseTestBase {
                 .build();
         taskRunDao.createTaskRun(taskRunWithUTC);
         assertTrue(scheduledTick.equals(context.getScheduleTime()));
+    }
+
+    @Test
+    public void getQueueName() {
+        String queueName = context.getQueueName();
+        assertTrue(queueName.equals("default"));
     }
 }

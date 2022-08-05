@@ -383,4 +383,9 @@ public interface WorkflowClient {
      */
     void setMaintenanceMode(boolean mode);
 
+    /**
+     * get workflow executor's configs
+     * @return
+     */
+    ExecutorInfo getExecutorInfo();
 }

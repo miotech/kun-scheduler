@@ -2,10 +2,10 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.miotech.kun.workflow.common.rpc.ExecutorServer;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
+import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.config.DispatchExecutorConfig;
@@ -13,15 +13,12 @@ import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.kubernetes.KubeExecutorConfig;
 import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
-import io.grpc.ServerBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DispatchExecutor implements Executor{
 
@@ -183,6 +180,21 @@ public class DispatchExecutor implements Executor{
             Executor executor = entry.getValue();
             executor.setMaintenanceMode(mode);
         }
+    }
+
+    @Override
+    public ExecutorInfo getExecutorInfo() {
+        Map<String, Object> extraInfo = dispatchExecutorConfig.getExecutorConfigList().stream()
+                .collect(Collectors.toMap(ExecutorConfig::getName, executorConfig -> ExecutorInfo.newBuilder()
+                        .withKind(executorConfig.getKind())
+                        .withName(executorConfig.getName())
+                        .withLabels(Arrays.asList(StringUtils.split(executorConfig.getLabel(), ",")))
+                        .withResourceQueues(executorConfig.getResourceQueues())
+                        .build()));
+        return ExecutorInfo.newBuilder()
+                .withKind(dispatchExecutorConfig.getKind())
+                .withExtraInfo(extraInfo)
+                .build();
     }
 
     private Executor findExecutor(Long taskAttemptId) {

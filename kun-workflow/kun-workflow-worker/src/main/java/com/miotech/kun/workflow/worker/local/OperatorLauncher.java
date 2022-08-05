@@ -216,7 +216,7 @@ public class OperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId(),command.getExecuteTarget());
+        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId(), command.getExecuteTarget(), command.getQueueName());
         injector.injectMembers(context);
         return context;
     }

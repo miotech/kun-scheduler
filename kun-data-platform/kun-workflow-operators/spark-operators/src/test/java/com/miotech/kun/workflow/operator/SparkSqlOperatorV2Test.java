@@ -73,6 +73,7 @@ public class SparkSqlOperatorV2Test {
         operator.addRunTimeSparkConfs(sparkConf, context);
 
         assertTrue(sparkConf.get("spark.hadoop.taskRun.scheduledTick").equals("000000000000"));
+        assertTrue(sparkConf.get("spark.yarn.queue").equals("default"));
         assertFalse(sparkConf.containsKey("spark.hadoop.spline.hdfs_dispatcher.address"));
         assertFalse(sparkConf.containsKey("spark.sql.queryExecutionListeners"));
     }

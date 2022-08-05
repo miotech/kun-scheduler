@@ -33,6 +33,8 @@ public class ScheduleConfig {
 
     private final String executorLabel;
 
+    private final String queueName;
+
     private ScheduleConfig(String type,
                            String cronExpr,
                            String timeZone,
@@ -43,7 +45,8 @@ public class ScheduleConfig {
                            Integer retryDelay,
                            SlaConfig slaConfig,
                            String blockType,
-                           String executorLabel) {
+                           String executorLabel,
+                           String queueName) {
         this.type = type;
         this.cronExpr = cronExpr;
         this.timeZone = timeZone;
@@ -55,6 +58,7 @@ public class ScheduleConfig {
         this.slaConfig = slaConfig;
         this.blockType = blockType;
         this.executorLabel = executorLabel;
+        this.queueName = queueName;
     }
 
     public String getType() {
@@ -101,6 +105,10 @@ public class ScheduleConfig {
         return executorLabel;
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -117,7 +125,8 @@ public class ScheduleConfig {
                 .withRetryDelay(retryDelay)
                 .withTimeZone(timeZone)
                 .withSlaConfig(slaConfig)
-                .withExecutorLabel(executorLabel);
+                .withExecutorLabel(executorLabel)
+                .withQueueName(queueName);
     }
 
     public static final class Builder {
@@ -132,6 +141,7 @@ public class ScheduleConfig {
         private SlaConfig slaConfig;
         private String blockType;
         private String executorLabel;
+        private String queueName;
 
         private Builder() {
         }
@@ -191,9 +201,14 @@ public class ScheduleConfig {
             return this;
         }
 
+        public Builder withQueueName(String queueName) {
+            this.queueName = queueName;
+            return this;
+        }
+
         public ScheduleConfig build() {
             return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets, retries,
-                    retryDelay, slaConfig, blockType, executorLabel);
+                    retryDelay, slaConfig, blockType, executorLabel, queueName);
         }
     }
 

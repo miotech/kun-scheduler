@@ -73,7 +73,7 @@ public class KubernetesOperatorLauncher {
         //compatible old task run when operator config has updated
         Config defaultConfig = new Config(operator.config(), ImmutableMap.of());
         Config newConfig = defaultConfig.overrideBy(command.getConfig());
-        OperatorContext context = new OperatorContextImpl(newConfig, command.getTaskRunId(),command.getExecuteTarget());
+        OperatorContext context = new OperatorContextImpl(newConfig, command.getTaskRunId(),command.getExecuteTarget(), command.getQueueName());
         injector.injectMembers(context);
         return context;
     }

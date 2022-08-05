@@ -21,15 +21,18 @@ public class OperatorContextImpl implements OperatorContext {
     private final Config config;
     private final Long taskRunId;
     private final ExecuteTarget executeTarget;
+    private final String queueName;
+
     @Inject
     private TaskRunDao taskRunDao;
 
     static final Logger logger = LoggerFactory.getLogger(OperatorContextImpl.class);
 
-    public OperatorContextImpl(Config config,Long taskRunId,ExecuteTarget executeTarget) {
+    public OperatorContextImpl(Config config, Long taskRunId, ExecuteTarget executeTarget, String queueName) {
         this.config = config;
         this.taskRunId = taskRunId;
         this.executeTarget = executeTarget;
+        this.queueName = queueName;
     }
 
     @Override
@@ -90,6 +93,11 @@ public class OperatorContextImpl implements OperatorContext {
     @Override
     public ExecuteTarget getExecuteTarget() {
         return executeTarget;
+    }
+
+    @Override
+    public String getQueueName() {
+        return queueName;
     }
 }
 
