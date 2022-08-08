@@ -5,8 +5,6 @@ package com.miotech.kun.datadiscovery.model.entity.rdm;
 import java.io.Serializable;
 import java.util.*;
 
-import static org.apache.commons.lang3.StringEscapeUtils.escapeJson;
-
 /**
  * A CSV record parsed from a CSV file.
  */
@@ -34,7 +32,6 @@ public final class DataRecord implements Serializable, Iterable<Object> {
             Object value = values[i];
             if (Objects.nonNull(value)) {
                 values[i] = String.valueOf(value).replaceAll("[\\t\\n\\r]", " ");
-                ;
             }
         }
         return values;

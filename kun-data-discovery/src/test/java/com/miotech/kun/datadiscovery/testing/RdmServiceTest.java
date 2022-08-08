@@ -103,7 +103,6 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
         assertThat(refTableMetaData.getColumns().size(), is(4));
     }
 
-
     @Test
     public void init_version_ref_data_info() {
         List<Long> glossaryList = ImmutableList.of(1L, 2L, 3L);
