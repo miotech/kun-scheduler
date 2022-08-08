@@ -320,8 +320,7 @@ public class RdmService extends BaseSecurityService {
         return refDataVersionFillInfo;
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    @OperationRecord(type = OperationRecordType.RDM_LINKAGE, args = {"#event"})
+
     public void linkage(DatasetCreatedEvent event) {
         if (Objects.isNull(event.getDataSourceId()) || (!event.getDataSourceId().equals(datasourceId))) {
             return;
@@ -332,23 +331,29 @@ public class RdmService extends BaseSecurityService {
             log.debug("table does not exist,database:{},table:{}", database, table);
             return;
         }
-        refTableVersionRepository.updateDataSetId(database, table, event.getDatasetId());
-        RefTableVersionInfo refTableVersionInfo = refTableVersionRepository.findPublishedByDatasetId(event.getDatasetId());
+        linkage(event.getDatasetId(), database, table);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @OperationRecord(type = OperationRecordType.RDM_LINKAGE, args = {"#datasetId", "#database"})
+    public void linkage(Long datasetId, String database, String table) {
+        refTableVersionRepository.updateDataSetId(database, table, datasetId);
+        RefTableVersionInfo refTableVersionInfo = refTableVersionRepository.findPublishedByDatasetId(datasetId);
         if (Objects.isNull(refTableVersionInfo)) {
             log.debug("published table does not exist,database:{},table:{}", database, table);
             return;
         }
         List<Long> glossaryList = refTableVersionInfo.getGlossaryList();
         if (CollectionUtils.isEmpty(glossaryList)) {
-            log.debug("glossaryList is empty:{}", event);
+            log.debug("glossaryList is empty:{}", datasetId);
             return;
         }
         try {
             String user = refTableVersionInfo.getCreateUser();
             setCurrentUser(getUserByUsername(user));
-            disposeGlossary(glossaryList, event.getDatasetId());
+            disposeGlossary(glossaryList, datasetId);
         } catch (Exception e) {
-            log.error("glossary update error:{},glossary:{}", event, glossaryList, e);
+            log.error("glossary update error:{},glossary:{}", datasetId, glossaryList, e);
         }
     }
 
