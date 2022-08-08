@@ -1,0 +1,1 @@
+INSERT INTO kun_dq_expectation_template values('FIELD_NOT_NULL', 'FIELD', '字段非空', 'com.miotech.kun.dataquality.core.converter.FieldNotNullExpectationConverter', null);
