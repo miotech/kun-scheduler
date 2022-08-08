@@ -9,7 +9,7 @@ public class MockRiseAssertionFactory {
     }
 
     public static RiseAssertion create(String expectedValue, ComparisonPeriod comparisonPeriod) {
-        return new RiseAssertion("NUMBER", expectedValue, comparisonPeriod);
+        return new RiseAssertion(expectedValue, comparisonPeriod);
     }
 
 }

@@ -8,9 +8,8 @@ import org.apache.commons.lang3.math.NumberUtils;
 public class EqualsAssertion extends FixedValueAssertion {
 
     @JsonCreator
-    public EqualsAssertion(@JsonProperty("expectedType") String expectedType,
-                           @JsonProperty("expectedValue") String expectedValue) {
-        super(expectedType, expectedValue, ComparisonOperator.EQUALS);
+    public EqualsAssertion(@JsonProperty("expectedValue") String expectedValue) {
+        super(expectedValue, ComparisonOperator.EQUALS);
     }
 
     @Override

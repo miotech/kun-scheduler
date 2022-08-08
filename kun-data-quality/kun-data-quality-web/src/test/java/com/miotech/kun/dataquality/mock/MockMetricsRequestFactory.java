@@ -1,8 +1,10 @@
 package com.miotech.kun.dataquality.mock;
 
+import com.google.common.collect.Maps;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.web.model.bo.MetricsRequest;
+
+import java.util.Map;
 
 public class MockMetricsRequestFactory {
 
@@ -16,6 +18,11 @@ public class MockMetricsRequestFactory {
         return create(sql, field, datasetGid);
     }
 
+    public static MetricsRequest create(Map<String, Object> collectRule) {
+        long datasetGid = IdGenerator.getInstance().nextId();
+        return create(datasetGid, collectRule);
+    }
+
     public static MetricsRequest create(String sql, String field) {
         long datasetGid = IdGenerator.getInstance().nextId();
         return create(sql, field, datasetGid);
@@ -23,10 +30,22 @@ public class MockMetricsRequestFactory {
 
     public static MetricsRequest create(String sql, String field, Long datasetGid) {
         MetricsRequest metricsRequest = new MetricsRequest();
-        metricsRequest.setSql(sql);
-        metricsRequest.setField(field);
+
+        Map<String, Object> payload = Maps.newHashMap();
+        payload.put("sql", sql);
+        payload.put("field", field);
+        payload.put("collectMethod", "CUSTOM_SQL");
         metricsRequest.setDatasetGid(datasetGid);
-        metricsRequest.setGranularity(Metrics.Granularity.CUSTOM.name());
+        metricsRequest.setPayload(payload);
+
+        return metricsRequest;
+    }
+
+    public static MetricsRequest create(Long datasetGid, Map<String, Object> payload) {
+        MetricsRequest metricsRequest = new MetricsRequest();
+
+        metricsRequest.setDatasetGid(datasetGid);
+        metricsRequest.setPayload(payload);
 
         return metricsRequest;
     }

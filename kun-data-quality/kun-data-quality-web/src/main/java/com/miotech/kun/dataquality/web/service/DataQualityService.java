@@ -4,10 +4,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.miotech.kun.dataquality.core.expectation.CaseType;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
+import com.miotech.kun.dataquality.core.expectation.ExpectationTemplate;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
-import com.miotech.kun.dataquality.web.model.TemplateType;
-import com.miotech.kun.dataquality.web.model.bo.*;
+import com.miotech.kun.dataquality.web.common.service.ExpectationTemplateService;
+import com.miotech.kun.dataquality.web.model.bo.ExpectationRequest;
+import com.miotech.kun.dataquality.web.model.bo.ExpectationsRequest;
+import com.miotech.kun.dataquality.web.model.bo.MetricsRequest;
+import com.miotech.kun.dataquality.web.model.bo.ValidateMetricsRequest;
 import com.miotech.kun.dataquality.web.model.entity.*;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
@@ -21,8 +25,6 @@ import com.miotech.kun.workflow.core.model.task.CheckType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +60,9 @@ public class DataQualityService extends BaseSecurityService {
     @Autowired
     private SQLValidator sqlValidator;
 
+    @Autowired
+    private ExpectationTemplateService expectationTemplateService;
+
     public List<DataQualityHistoryRecords> getHistory(List<Long> expectationIds, int limit) {
         if (CollectionUtils.isEmpty(expectationIds)) {
             return Lists.newArrayList();
@@ -69,13 +74,14 @@ public class DataQualityService extends BaseSecurityService {
     public ValidateMetricsResult validateSql(ValidateMetricsRequest validateMetricsRequest) {
         try {
             MetricsRequest metricsRequest = validateMetricsRequest.getMetrics();
+            String sql = (String) metricsRequest.getPayload().get("sql");
             DatasetBasic selectedDataset = datasetRepository.findBasic(metricsRequest.getDatasetGid());
             String druidType = Constants.DATASOURCE_TO_DRUID_TYPE.get(selectedDataset.getDatasourceType());
             if (StringUtils.isEmpty(druidType)) {
                 return ValidateMetricsResult.failed("Not supported data source.");
             }
 
-            SQLParseResult sqlParseResult = sqlParser.parseQuerySQL(metricsRequest.getSql().trim().toLowerCase(), druidType);
+            SQLParseResult sqlParseResult = sqlParser.parseQuerySQL(sql.trim().toLowerCase(), druidType);
             ValidateMetricsResult validateMetricsResult = sqlValidator.validate(sqlParseResult, validateMetricsRequest);
             if (!validateMetricsResult.isSuccess()) {
                 return validateMetricsResult;
@@ -88,12 +94,6 @@ public class DataQualityService extends BaseSecurityService {
         }
     }
 
-    public DimensionConfig getDimensionConfig(String dsType) {
-        DimensionConfig dimensionConfig = new DimensionConfig();
-        dimensionConfig.getDimensionConfigs().add(getCustomDimensionConfig());
-        return dimensionConfig;
-    }
-
     public ExpectationVO getExpectation(Long id) {
         Expectation expectation = expectationDao.fetchById(id);
         List<DatasetBasic> relatedDatasets = expectationDao.getRelatedDatasets(id);
@@ -102,8 +102,10 @@ public class DataQualityService extends BaseSecurityService {
                 .withName(expectation.getName())
                 .withDescription(expectation.getDescription())
                 .withTypes(expectation.getTypes())
-                .withMetrics(MetricsRequest.convertFrom(expectation.getMetrics()))
-                .withAssertion(AssertionRequest.convertFrom(expectation.getAssertion()))
+                .withGranularity(expectation.getGranularity())
+                .withTemplateName(expectation.getTemplate().getName())
+                .withPayload(expectation.getPayload())
+                .withDatasetGid(expectation.getDataset().getGid())
                 .withRelatedTables(relatedDatasets)
                 .withCaseType(expectation.getCaseType())
                 .build();
@@ -129,7 +131,7 @@ public class DataQualityService extends BaseSecurityService {
     @OperationRecord(type = OperationRecordType.EXPECTATION_CREATE, args = {"#expectationRequest"})
     public Long createExpectation(ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
-        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
+        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getDatasetGid());
 
         if(expectationRequest.getCaseType() == null){
             expectationRequest.setCaseType(CaseType.SKIP);
@@ -142,7 +144,7 @@ public class DataQualityService extends BaseSecurityService {
         expectationDao.updateTaskId(expectation.getExpectationId(), taskId);
 
         CheckType checkType = expectationRequest.getCheckType();
-        workflowService.updateUpstreamTaskCheckType(expectationRequest.getMetrics().getDatasetGid(), checkType);
+        workflowService.updateUpstreamTaskCheckType(expectationRequest.getDatasetGid(), checkType);
         return expectation.getExpectationId();
     }
 
@@ -158,7 +160,7 @@ public class DataQualityService extends BaseSecurityService {
     @OperationRecord(type = OperationRecordType.EXPECTATION_UPDATE, args = {"#id", "#expectationRequest"})
     public void updateExpectation(Long id, ExpectationRequest expectationRequest) {
         String currentUsername = getCurrentUsername();
-        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getMetrics().getDatasetGid());
+        Long dataSourceId = datasetRepository.findDataSourceIdByGid(expectationRequest.getDatasetGid());
 
         if(expectationRequest.getCaseType() == null){
             expectationRequest.setCaseType(CaseType.SKIP);
@@ -168,9 +170,13 @@ public class DataQualityService extends BaseSecurityService {
         updateRelatedDataset(id, expectationRequest.getRelatedDatasetGids());
 
         CheckType checkType = expectationRequest.getCheckType();
-        workflowService.updateUpstreamTaskCheckType(expectationRequest.getMetrics().getDatasetGid(), checkType);
+        workflowService.updateUpstreamTaskCheckType(expectationRequest.getDatasetGid(), checkType);
 
         runExpectation(id);
+    }
+
+    public List<ExpectationTemplate> getDisplayConfig(String granularity) {
+        return expectationTemplateService.fetchByGranularity(granularity);
     }
 
     public void runExpectation(Long id) {
@@ -197,28 +203,6 @@ public class DataQualityService extends BaseSecurityService {
     private void updateRelatedDataset(Long id, List<Long> datasetIds) {
         expectationDao.deleteAllRelatedDataset(id);
         expectationDao.createRelatedDataset(id, datasetIds);
-    }
-
-    private JSONObject getCustomDimensionConfig() {
-        JSONObject customDimension = new JSONObject();
-        customDimension.put("dimension", TemplateType.CUSTOMIZE);
-        JSONArray customFields = new JSONArray();
-        JSONObject sqlField = createCustomField("sql", 1, "SQL", true);
-        customFields.add(sqlField);
-        customDimension.put("fields", customFields);
-        return customDimension;
-    }
-
-    private JSONObject createCustomField(String key,
-                                         Integer order,
-                                         String format,
-                                         Boolean require) {
-        JSONObject field = new JSONObject();
-        field.put("key", key);
-        field.put("order", order);
-        field.put("format", format);
-        field.put("require", require);
-        return field;
     }
 
     private List<DatasetBasic> parseRelatedDatasets(List<String> relatedDatasetNames, DatasetBasic selectedDataset) {

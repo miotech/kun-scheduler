@@ -12,43 +12,15 @@ public abstract class Metrics<R> {
 
     private final MetricsType metricsType;
 
-    private final String name;
-
-    private final String description;
-
-    private final Granularity granularity;
-
-    private final Dataset dataset;
-
-    public Metrics(MetricsType metricsType, String name, String description, Granularity granularity, Dataset dataset) {
+    public Metrics(MetricsType metricsType) {
         this.metricsType = metricsType;
-        this.name = name;
-        this.description = description;
-        this.granularity = granularity;
-        this.dataset = dataset;
     }
 
     public MetricsType getMetricsType() {
         return metricsType;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Granularity getGranularity() {
-        return granularity;
-    }
-
-    public Dataset getDataset() {
-        return dataset;
-    }
-
-    public abstract MetricsCollectedResult<R> collect();
+    public abstract MetricsCollectedResult<R> collect(CollectContext context);
 
     public enum Granularity {
         TABLE, FIELD, CUSTOM;

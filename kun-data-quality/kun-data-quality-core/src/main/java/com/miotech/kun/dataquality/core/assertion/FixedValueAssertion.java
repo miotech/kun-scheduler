@@ -4,10 +4,9 @@ import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 
 public abstract class FixedValueAssertion extends Assertion {
 
-    public FixedValueAssertion(String expectedType,
-                               String expectedValue,
+    public FixedValueAssertion(String expectedValue,
                                ComparisonOperator comparisonOperator) {
-        super(AssertionType.FIXED_VALUE, ComparisonPeriod.from(ComparisonPeriod.FixedPeriod.THIS_TIME), comparisonOperator, expectedType, expectedValue);
+        super(AssertionType.FIXED_VALUE, ComparisonPeriod.from(ComparisonPeriod.FixedPeriod.THIS_TIME), comparisonOperator, expectedValue);
     }
 
     public abstract boolean doFixValueAssert(MetricsCollectedResult<String> metricsCollectedResult);

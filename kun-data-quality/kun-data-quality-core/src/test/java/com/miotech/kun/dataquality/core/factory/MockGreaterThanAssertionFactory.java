@@ -8,7 +8,7 @@ public class MockGreaterThanAssertionFactory {
     }
 
     public static GreaterThanAssertion create(String expectedValue) {
-        return new GreaterThanAssertion("NUMBER", expectedValue);
+        return new GreaterThanAssertion(expectedValue);
     }
 
 }

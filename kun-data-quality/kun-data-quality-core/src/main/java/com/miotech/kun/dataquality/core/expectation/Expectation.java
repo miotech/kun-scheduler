@@ -1,121 +1,162 @@
 package com.miotech.kun.dataquality.core.expectation;
 
-import com.miotech.kun.dataquality.core.assertion.Assertion;
-import com.miotech.kun.dataquality.core.metrics.Metrics;
-
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 public class Expectation {
 
-    private final Long expectationId;
+    private Long expectationId;
 
-    private final String name;
+    private String name;
 
-    private final List<String> types;
+    private List<String> types;
 
-    private final String description;
+    private String description;
 
-    private final ExpectationMethod method;
+    private String granularity;
 
-    private final ExpectationTrigger trigger;
+    private ExpectationTemplate template;
 
-    private final Metrics metrics;
+    private Map<String, Object> payload;
 
-    private final Assertion assertion;
+    private ExpectationTrigger trigger;
 
-    private final Long taskId;
+    private Long taskId;
 
-    private final Dataset dataset;
+    private Dataset dataset;
 
-    private final CaseType caseType;
+    private CaseType caseType;
 
-    private final OffsetDateTime createTime;
+    private OffsetDateTime createTime;
 
-    private final OffsetDateTime updateTime;
+    private OffsetDateTime updateTime;
 
-    private final String createUser;
+    private String createUser;
 
-    private final String updateUser;
+    private String updateUser;
 
-    public Expectation(Long expectationId, String name, List<String> types, String description, ExpectationMethod method,
-                       ExpectationTrigger trigger, Metrics metrics, Assertion assertion, Long taskId, Dataset dataset,
-                       CaseType caseType, OffsetDateTime createTime, OffsetDateTime updateTime, String createUser, String updateUser) {
-        this.expectationId = expectationId;
-        this.name = name;
-        this.types = types;
-        this.description = description;
-        this.method = method;
-        this.trigger = trigger;
-        this.metrics = metrics;
-        this.assertion = assertion;
-        this.taskId = taskId;
-        this.dataset = dataset;
-        this.caseType = caseType;
-        this.createTime = createTime;
-        this.updateTime = updateTime;
-        this.createUser = createUser;
-        this.updateUser = updateUser;
+    public Expectation() {
     }
 
     public Long getExpectationId() {
         return expectationId;
     }
 
+    public void setExpectationId(Long expectationId) {
+        this.expectationId = expectationId;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<String> getTypes() {
         return types;
     }
 
+    public void setTypes(List<String> types) {
+        this.types = types;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    public ExpectationMethod getMethod() {
-        return method;
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getGranularity() {
+        return granularity;
+    }
+
+    public void setGranularity(String granularity) {
+        this.granularity = granularity;
+    }
+
+    public ExpectationTemplate getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(ExpectationTemplate template) {
+        this.template = template;
+    }
+
+    public Map<String, Object> getPayload() {
+        return payload;
+    }
+
+    public void setPayload(Map<String, Object> payload) {
+        this.payload = payload;
     }
 
     public ExpectationTrigger getTrigger() {
         return trigger;
     }
 
-    public Metrics getMetrics() {
-        return metrics;
-    }
-
-    public Assertion getAssertion() {
-        return assertion;
+    public void setTrigger(ExpectationTrigger trigger) {
+        this.trigger = trigger;
     }
 
     public Long getTaskId() {
         return taskId;
     }
 
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
+
     public Dataset getDataset() {
         return dataset;
+    }
+
+    public void setDataset(Dataset dataset) {
+        this.dataset = dataset;
     }
 
     public CaseType getCaseType() {
         return caseType;
     }
 
+    public void setCaseType(CaseType caseType) {
+        this.caseType = caseType;
+    }
+
     public OffsetDateTime getCreateTime() {
         return createTime;
+    }
+
+    public void setCreateTime(OffsetDateTime createTime) {
+        this.createTime = createTime;
     }
 
     public OffsetDateTime getUpdateTime() {
         return updateTime;
     }
 
+    public void setUpdateTime(OffsetDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
+
     public String getCreateUser() {
         return createUser;
     }
 
+    public void setCreateUser(String createUser) {
+        this.createUser = createUser;
+    }
+
     public String getUpdateUser() {
         return updateUser;
+    }
+
+    public void setUpdateUser(String updateUser) {
+        this.updateUser = updateUser;
     }
 
     public enum ExpectationTrigger {
@@ -134,7 +175,9 @@ public class Expectation {
                 .withName(this.name)
                 .withTypes(this.types)
                 .withDescription(this.description)
-                .withMethod(this.method)
+                .withGranularity(this.granularity)
+                .withTemplate(this.template)
+                .withPayload(this.payload)
                 .withTrigger(this.trigger)
                 .withTaskId(this.taskId)
                 .withDataset(this.dataset)
@@ -145,15 +188,16 @@ public class Expectation {
                 .withUpdateUser(this.updateUser);
     }
 
+
     public static final class Builder {
         private Long expectationId;
         private String name;
         private List<String> types;
         private String description;
-        private ExpectationMethod method;
+        private String granularity;
+        private ExpectationTemplate template;
+        private Map<String, Object> payload;
         private ExpectationTrigger trigger;
-        private Metrics metrics;
-        private Assertion assertion;
         private Long taskId;
         private Dataset dataset;
         private CaseType caseType;
@@ -185,23 +229,23 @@ public class Expectation {
             return this;
         }
 
-        public Builder withMethod(ExpectationMethod method) {
-            this.method = method;
+        public Builder withGranularity(String granularity) {
+            this.granularity = granularity;
+            return this;
+        }
+
+        public Builder withTemplate(ExpectationTemplate template) {
+            this.template = template;
+            return this;
+        }
+
+        public Builder withPayload(Map<String, Object> payload) {
+            this.payload = payload;
             return this;
         }
 
         public Builder withTrigger(ExpectationTrigger trigger) {
             this.trigger = trigger;
-            return this;
-        }
-
-        public Builder withMetrics(Metrics metrics) {
-            this.metrics = metrics;
-            return this;
-        }
-
-        public Builder withAssertion(Assertion assertion) {
-            this.assertion = assertion;
             return this;
         }
 
@@ -241,8 +285,23 @@ public class Expectation {
         }
 
         public Expectation build() {
-            return new Expectation(expectationId, name, types, description, method, trigger, metrics, assertion,
-                    taskId, dataset, caseType, createTime, updateTime, createUser, updateUser);
+            Expectation expectation = new Expectation();
+            expectation.setExpectationId(expectationId);
+            expectation.setName(name);
+            expectation.setTypes(types);
+            expectation.setDescription(description);
+            expectation.setGranularity(granularity);
+            expectation.setTemplate(template);
+            expectation.setPayload(payload);
+            expectation.setTrigger(trigger);
+            expectation.setTaskId(taskId);
+            expectation.setDataset(dataset);
+            expectation.setCaseType(caseType);
+            expectation.setCreateTime(createTime);
+            expectation.setUpdateTime(updateTime);
+            expectation.setCreateUser(createUser);
+            expectation.setUpdateUser(updateUser);
+            return expectation;
         }
     }
 }

@@ -7,10 +7,9 @@ import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 public class AbsoluteAssertion extends VolatilityAssertion {
 
     @JsonCreator
-    public AbsoluteAssertion(@JsonProperty("expectedType") String expectedType,
-                             @JsonProperty("expectedValue") String expectedValue,
+    public AbsoluteAssertion(@JsonProperty("expectedValue") String expectedValue,
                              @JsonProperty("comparisonPeriod") ComparisonPeriod comparisonPeriod) {
-        super(expectedType, expectedValue, ComparisonOperator.ABSOLUTE, comparisonPeriod);
+        super(expectedValue, ComparisonOperator.ABSOLUTE, comparisonPeriod);
     }
 
 

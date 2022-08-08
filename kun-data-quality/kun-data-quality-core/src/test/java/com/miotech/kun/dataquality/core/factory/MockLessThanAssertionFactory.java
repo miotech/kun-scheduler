@@ -8,7 +8,7 @@ public class MockLessThanAssertionFactory {
     }
 
     public static LessThanAssertion create(String expectedValue) {
-        return new LessThanAssertion("NUMBER", expectedValue);
+        return new LessThanAssertion(expectedValue);
     }
 
 }
