@@ -430,6 +430,8 @@ export default {
   'dataDevelopment.definition.committer': '发布人',
   'dataDevelopment.definition.committedAt': '发布时间',
   'dataDevelopment.definition.version': '版本',
+  'dataDevelopment.definition.version.viewConfig': '查看完整配置',
+  'dataDevelopment.definition.version.viewChange': '查看变更',
   'dataDevelopment.definition.version.viewVersion': '查看该版本',
   'dataDevelopment.definition.version.current': '当前',
   'dataDevelopment.definition.version.compareVersion': '比较选择的版本',
@@ -437,7 +439,7 @@ export default {
   'dataDevelopment.definition.version.rollbackVersion': '回滚到该版本',
   'dataDevelopment.definition.version.versionNotice': '正在查看旧版本。查看 ',
   'dataDevelopment.definition.version.currentVersion': '当前版本',
-  'dataDevelopment.definition.version.compareCurrentVersion': '与当前比较',
+  'dataDevelopment.definition.version.compareCurrentVersion': '与当前版本比较',
 
   'dataDevelopment.definition.scheduleConfig.timing': '时间设置',
   'dataDevelopment.definition.scheduleConfig.upstream': '上游配置',

@@ -11,7 +11,7 @@ import { keysMap, valuesMap, findKeys } from './consts/HistoryVersion';
 interface Props {
   setView: (taskCommit: TaskCommit) => void;
   diffRows: TaskCommit[];
-  goBack: (arg: string) => void;
+  goBack: () => void;
 }
 
 export const DiffVersion: React.FC<Props> = memo(props => {
@@ -56,7 +56,7 @@ export const DiffVersion: React.FC<Props> = memo(props => {
   }, [rightDiff?.snapshot?.taskPayload]);
   return (
     <div className={Styles.content}>
-      <div className={Styles.back} onClick={() => goBack('history')}>
+      <div className={Styles.back} onClick={goBack}>
         <LeftOutlined />
         &nbsp;{t('dataDevelopment.definition.version.backVersionList')}
       </div>
