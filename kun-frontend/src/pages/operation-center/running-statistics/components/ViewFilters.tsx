@@ -65,7 +65,7 @@ export const ViewFilters: React.FC<Props> = memo(function ViewFilters(props) {
       <div className={css.filterOption}>
         {/* type  of time */}
         <div className={css.timeTypeWrapper}>
-          <Select defaultValue="createdAt" style={{ width: 200 }} onChange={handleChange}>
+          <Select defaultValue="createdAt" style={{ width: '100%' }} onChange={handleChange}>
             <Option value="createdAt">{t('operationCenter.runningStatistics.task.created')}</Option>
             <Option value="queuedAt">{t('operationCenter.runningStatistics.task.queued')}</Option>
             <Option value="startAt">{t('operationCenter.runningStatistics.task.start')}</Option>

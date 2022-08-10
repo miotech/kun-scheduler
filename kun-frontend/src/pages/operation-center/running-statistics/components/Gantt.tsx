@@ -1,14 +1,14 @@
 // @ts-noCheck
 
-import React, { memo, useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback, useState } from 'react';
 import moment from 'moment';
-import ReactTooltip from 'react-tooltip';
-import ReactDOMServer from 'react-dom/server';
 import { Tasks } from '@/definitions/Gantt.type';
 import useI18n from '@/hooks/useI18n';
 import { Link } from 'umi';
+import { Popover } from 'antd';
 import style from './Gantt.less';
 import { TooltipHtml } from './TooltipHtml';
+import { WaitTask } from './WaitTask';
 
 interface OwnProps {
   data: Tasks;
@@ -32,6 +32,9 @@ function getIntervalMinutes(startDate: string, endDate: string) {
 export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
   const t = useI18n();
   const { data, taskRunId } = props;
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [waitForTaskRunId, setWaitForTaskRunId] = useState();
+
   const { earliestTime, latestTime, infoList } = data;
   const toolBarStartTime = useMemo(() => moment(earliestTime).format('YYYY-MM-DD, HH:00:00'), [earliestTime]); // 坐标轴开始时间
   // 时间轴有多少格
@@ -51,14 +54,8 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
     return arr || [];
   }, [count]);
 
-  const setTooltipValue = useCallback(item => {
-    document.getElementById('gantt-tooltip-waitTime').innerHTML = `${item.waitWidth} min`;
-    document.getElementById('gantt-tooltip-runTime').innerHTML = `${item.runWidth} min`;
-    document.getElementById('gantt-tooltip-averageRunTime').innerHTML = `${item.averageWidth} min`;
-  }, []);
-
   const onMouseMove = useCallback(
-    (e, item) => {
+    e => {
       const left = e.clientX - 86;
       const dataId = e.target.getAttribute('data-id');
       if (['barRunFailed', 'barRun', 'barWait'].includes(dataId)) {
@@ -73,9 +70,8 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
           .add(timeSize, 'm')
           .format('MM-DD, HH:mm');
       }
-      setTooltipValue(item);
     },
-    [toolBarStartTime, setTooltipValue],
+    [toolBarStartTime],
   );
 
   const res = useMemo(
@@ -118,6 +114,12 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
       document.getElementById('toolbar').style.paddingRight = `${barScrollWidth - toolbarScrollWidth}px`;
     }
   };
+
+  const openDrawer = useCallback((id: string) => {
+    setDrawerVisible(true);
+    setWaitForTaskRunId(id);
+  }, []);
+
   return (
     <div className={style.content} onMouseLeave={() => closeCurrentTime()}>
       <div className={style.line} id="line" style={{ display: 'none' }} />
@@ -127,45 +129,64 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
       <div className={style.bar} id="bar" onScroll={onBarScroll}>
         {res.map(item => {
           return (
-            <div className={style.barItem} key={item.taskRunId} data-id="barItem">
-              <div
-                key={item.taskRunId}
-                onMouseMove={e => onMouseMove(e, item)}
-                className={style.barCon}
-                style={{ transform: `translateX(${item.waitLeft}px)` }}
-                data-tip={ReactDOMServer.renderToString(<TooltipHtml t={t} />)}
-                data-html
-              >
-                <div className={style.barWait} style={{ width: `${item.waitWidth}px` }} data-id="barWait" />
-                {item.status === 'SUCCESS' && (
-                  <div className={style.barRun} style={{ width: `${item.runWidth}px` }} data-id="barRun" />
-                )}
-                {item.status === 'FAILED' && (
-                  <div
-                    className={style.barRunFailed}
-                    style={{
-                      width: `${item.runWidth}px`,
-                    }}
-                    data-id="barRunFailed"
+            <div className={style.barItem} key={item.taskRunId}>
+              <Popover
+                content={
+                  <TooltipHtml
+                    waitTime={item.waitWidth}
+                    runTime={item.runWidth}
+                    averageRunTime={item.averageWidth}
+                    taskRunId={item.taskRunId}
+                    openDrawer={openDrawer}
                   />
-                )}
-
+                }
+                mouseEnterDelay={0.3}
+                placement="topLeft"
+                destroyTooltipOnHide
+                trigger="hover"
+              >
                 <div
-                  className={style.average}
-                  style={{ width: `${item.averageWidth}px`, transform: `translateX(${item.waitWidth}px)` }}
-                />
-                <Link
-                  to={`/operation-center/running-statistics?taskRunId=${item.taskRunId}&taskName=${item.name}`}
-                  className={style.name}
-                  style={{ color: item.taskRunId === taskRunId && 'red' }}
-                  data-id="name"
+                  key={item.taskRunId}
+                  onMouseMove={e => onMouseMove(e)}
+                  className={style.barCon}
+                  style={{ transform: `translateX(${item.waitLeft}px)` }}
                 >
-                  {item.name}
-                </Link>
-                <Link to={`/operation-center/task-run-id/${item.taskRunId}`} style={{ zIndex: 999 }} target="_blank">
-                  &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
-                </Link>
-              </div>
+                  <div
+                    className={style.barWait}
+                    onClick={() => openDrawer(item.taskRunId)}
+                    style={{ width: `${item.waitWidth}px` }}
+                    data-id="barWait"
+                  />
+                  {item.status === 'SUCCESS' && (
+                    <div className={style.barRun} style={{ width: `${item.runWidth}px` }} data-id="barRun" />
+                  )}
+                  {item.status === 'FAILED' && (
+                    <div
+                      className={style.barRunFailed}
+                      style={{
+                        width: `${item.runWidth}px`,
+                      }}
+                      data-id="barRunFailed"
+                    />
+                  )}
+
+                  <div
+                    className={style.average}
+                    style={{ width: `${item.averageWidth}px`, transform: `translateX(${item.waitWidth}px)` }}
+                  />
+                  <Link
+                    to={`/operation-center/running-statistics?taskRunId=${item.taskRunId}&taskName=${item.name}`}
+                    className={style.name}
+                    style={{ color: item.taskRunId === taskRunId && 'red' }}
+                    data-id="name"
+                  >
+                    {item.name}
+                  </Link>
+                  <Link to={`/operation-center/task-run-id/${item.taskRunId}`} style={{ zIndex: 999 }} target="_blank">
+                    &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
+                  </Link>
+                </div>
+              </Popover>
             </div>
           );
         })}
@@ -182,7 +203,7 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
           <div className={style.title}>{t('operationCenter.runningStatistics.timeLine')}</div>
         </div>
       </div>
-      <ReactTooltip offset={{ bottom: 10, right: 10 }} backgroundColor="#fff" />
+      <WaitTask drawerVisible={drawerVisible} waitForTaskRunId={waitForTaskRunId} setDrawerVisible={setDrawerVisible} />
     </div>
   );
 });

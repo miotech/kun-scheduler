@@ -31,3 +31,9 @@ export interface Filters {
   taskRunId?: string | null;
   name?: string | null;
 }
+
+export interface WaitTask {
+  taskRunId: string;
+  name: string;
+  runningTime_seconds: string;
+}
