@@ -2,7 +2,6 @@ package com.miotech.kun.metadata.common.client;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.connector.Connector;
 import com.miotech.kun.metadata.common.connector.ConnectorFactory;
 import com.miotech.kun.metadata.common.connector.Query;
@@ -35,9 +34,7 @@ public class PostgresBackend extends BaseMetadataBackend implements StorageBacke
     private final FieldMappingService fieldMappingService;
     private final Connector connector;
 
-    public PostgresBackend(PostgresConnectionInfo connectionInfo, FieldMappingService fieldMappingService,
-                           CatalogerConfig config) {
-        super(config);
+    public PostgresBackend(PostgresConnectionInfo connectionInfo, FieldMappingService fieldMappingService) {
         this.connectionInfo = connectionInfo;
         this.connector = ConnectorFactory.generateConnector(connectionInfo);
         this.fieldMappingService = fieldMappingService;
@@ -136,10 +133,9 @@ public class PostgresBackend extends BaseMetadataBackend implements StorageBacke
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
-        List<String> filteredDatabases = databases.stream().filter(database -> filter.filterDatabase(database))
-                .collect(Collectors.toList());
-        logger.debug("filtered databases:" + filteredDatabases.stream().collect(Collectors.joining(",")));
-        return filteredDatabases.stream().map(database -> {
+
+        logger.debug("filtered databases:" + databases.stream().collect(Collectors.joining(",")));
+        return databases.stream().map(database -> {
                     //append database and schema
                     List<String> schemas = searchSchema(database);
                     return schemas.stream().map(schema -> database + "." + schema).collect(Collectors.toList());

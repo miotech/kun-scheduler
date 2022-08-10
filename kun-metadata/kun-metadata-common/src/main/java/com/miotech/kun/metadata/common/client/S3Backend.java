@@ -15,7 +15,7 @@ public class S3Backend implements StorageBackend {
 
     private final S3ConnectionInfo connectionInfo;
     private final AmazonS3 s3Client;
-    private static final String S3_URI_PATTERN = "^s3://(?<bucketName>[\\w\\.]+)/(?<key>[\\w_/]+)$";
+    private static final String S3_URI_PATTERN = "^(s3|s3a|s3n)://(?<bucketName>[\\w\\.]+)/(?<key>[\\w_/]+)$";
     private final ClientFactory clientFactory;
 
     public S3Backend(S3ConnectionInfo connectionInfo,ClientFactory clientFactory) {

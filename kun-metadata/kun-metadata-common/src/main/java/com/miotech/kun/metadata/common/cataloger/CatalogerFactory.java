@@ -25,39 +25,39 @@ public class CatalogerFactory {
         this.clientFactory = clientFactory;
     }
 
-    public Cataloger generateCataloger(DataSource dataSource, CatalogerConfig config) {
+    public Cataloger generateCataloger(DataSource dataSource) {
         ConnectionInfo metaConnectionInfo = dataSource.getConnectionConfig().getMetadataConnection();
         ConnectionInfo storageConnectionInfo = dataSource.getConnectionConfig().getStorageConnection();
-        MetadataBackend metadataBackend = createMetaBackend(metaConnectionInfo, config);
-        StorageBackend storageBackend = createStorage(storageConnectionInfo, config);
+        MetadataBackend metadataBackend = createMetaBackend(metaConnectionInfo);
+        StorageBackend storageBackend = createStorage(storageConnectionInfo);
         logger.debug("metaConnectionInfo is {}\n storageConnectionInfo is {}", metaConnectionInfo, storageConnectionInfo);
         return new Cataloger(metadataBackend, storageBackend);
     }
 
-    private MetadataBackend createMetaBackend(ConnectionInfo metaConnection, CatalogerConfig config) {
+    private MetadataBackend createMetaBackend(ConnectionInfo metaConnection) {
         ConnectionType metaType = metaConnection.getConnectionType();
         switch (metaType) {
             case GLUE:
-                return new GlueBackend((GlueConnectionInfo) metaConnection, fieldMappingService, clientFactory, config);
+                return new GlueBackend((GlueConnectionInfo) metaConnection, fieldMappingService, clientFactory);
             case HIVE_THRIFT:
-                return new HiveThriftBackend((HiveMetaStoreConnectionInfo) metaConnection, fieldMappingService, clientFactory, config);
+                return new HiveThriftBackend((HiveMetaStoreConnectionInfo) metaConnection, fieldMappingService, clientFactory);
             case POSTGRESQL:
-                return new PostgresBackend((PostgresConnectionInfo) metaConnection, fieldMappingService, config);
+                return new PostgresBackend((PostgresConnectionInfo) metaConnection, fieldMappingService);
             default:
                 throw new IllegalStateException("metadata type : " + metaType + " not support yet");
         }
 
     }
 
-    private StorageBackend createStorage(ConnectionInfo storageConnection, CatalogerConfig config) {
+    private StorageBackend createStorage(ConnectionInfo storageConnection) {
         ConnectionType storageType = storageConnection.getConnectionType();
         switch (storageType) {
             case S3:
                 return new S3Backend((S3ConnectionInfo) storageConnection, clientFactory);
             case HIVE_THRIFT:
-                return new HiveThriftBackend((HiveMetaStoreConnectionInfo) storageConnection, fieldMappingService, clientFactory, config);
+                return new HiveThriftBackend((HiveMetaStoreConnectionInfo) storageConnection, fieldMappingService, clientFactory);
             case POSTGRESQL:
-                return new PostgresBackend((PostgresConnectionInfo) storageConnection, fieldMappingService, config);
+                return new PostgresBackend((PostgresConnectionInfo) storageConnection, fieldMappingService);
             default:
                 throw new IllegalStateException("storage type : " + storageType + " not support yet");
         }

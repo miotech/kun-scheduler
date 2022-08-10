@@ -9,6 +9,9 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
 import com.miotech.kun.metadata.common.dao.DatasetSnapshotDao;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.common.service.DataSourceService;
+import com.miotech.kun.metadata.common.service.FilterRuleService;
+import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
@@ -18,6 +21,9 @@ import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetSnapshot;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
+import com.miotech.kun.metadata.core.model.filter.FilterRule;
+import com.miotech.kun.metadata.core.model.filter.FilterRuleType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.databuilder.container.PostgreSQLTestContainer;
 import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.metadata.databuilder.factory.DataSourceFactory;
@@ -41,12 +47,14 @@ public class MSEBuilderTest extends DatabaseTestBase {
 
     @Inject
     private DatabaseOperator databaseOperator;
+    @Inject
+    public DataSourceService dataSourceService;
 
     @Inject
-    public DataSourceDao dataSourceDao;
+    public MetadataDatasetService metadataDatasetService;
 
     @Inject
-    public MetadataDatasetDao datasetDao;
+    public FilterRuleService filterRuleService;
 
     @Inject
     private DatasetSnapshotDao datasetSnapshotDao;
@@ -56,6 +64,10 @@ public class MSEBuilderTest extends DatabaseTestBase {
 
     @Inject
     private MSEBuilder mseBuilder;
+
+    public static final String tableName = "bar";
+
+    public static final String databaseName = "test.public";
 
     @Override
     protected void configuration() {
@@ -78,21 +90,25 @@ public class MSEBuilderTest extends DatabaseTestBase {
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
-        dataSourceDao.create(dataSource);
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+
+        DataSource dataSource = dataSourceService.create(sourceRequest);
 
         // Extract schema
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
-        assertTrue(datasetOpt.isPresent());
+        Optional<Dataset> datasetOptional1 = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
+        assertTrue(datasetOptional1.isPresent());
 
         // Extract statistics
-        List<DatasetSnapshot> datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOpt.get().getGid());
+        List<DatasetSnapshot> datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOptional1.get().getGid());
         assertThat(datasetSnapshots.size(), is(1));
-        mseBuilder.extractStatistics(datasetOpt.get().getGid(), datasetSnapshots.get(0).getId(), StatisticsMode.FIELD);
+        mseBuilder.extractStatistics(datasetOptional1.get().getGid(), datasetSnapshots.get(0).getId(), StatisticsMode.FIELD);
 
         // Assert
-        datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOpt.get().getGid());
+        datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOptional1.get().getGid());
         assertThat(datasetSnapshots.size(), is(1));
         DatasetSnapshot datasetSnapshot = datasetSnapshots.get(0);
         assertThat(datasetSnapshot.getStatisticsSnapshot().getTableStatistics().getRowCount(), is(3L));
@@ -109,22 +125,26 @@ public class MSEBuilderTest extends DatabaseTestBase {
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
-        dataSourceDao.create(dataSource);
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+
+        DataSource dataSource = dataSourceService.create(sourceRequest);
 
         // Extract schema
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
-        assertTrue(datasetOpt.isPresent());
+        Optional<Dataset> datasetOptional1 = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
+        assertTrue(datasetOptional1.isPresent());
 
         // Extract statistics
-        List<DatasetSnapshot> datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOpt.get().getGid());
+        List<DatasetSnapshot> datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOptional1.get().getGid());
         assertThat(datasetSnapshots.size(), is(1));
         Long notExistSnapshotId = -1L;
-        mseBuilder.extractStatistics(datasetOpt.get().getGid(), notExistSnapshotId, StatisticsMode.FIELD);
+        mseBuilder.extractStatistics(datasetOptional1.get().getGid(), notExistSnapshotId, StatisticsMode.FIELD);
 
         // Assert
-        datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOpt.get().getGid());
+        datasetSnapshots = datasetSnapshotDao.findByDatasetGid(datasetOptional1.get().getGid());
         assertThat(datasetSnapshots.size(), is(1));
         DatasetSnapshot datasetSnapshot = datasetSnapshots.get(0);
         assertThat(datasetSnapshot.getStatisticsSnapshot(), nullValue());

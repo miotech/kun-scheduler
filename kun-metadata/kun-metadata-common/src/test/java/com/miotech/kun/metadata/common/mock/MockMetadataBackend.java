@@ -1,6 +1,5 @@
 package com.miotech.kun.metadata.common.mock;
 
-import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.client.BaseMetadataBackend;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -20,8 +19,7 @@ public class MockMetadataBackend extends BaseMetadataBackend {
 
     private Map<String, List<Dataset>> datasetOfDatabase = new HashMap<>();
 
-    public MockMetadataBackend(CatalogerConfig config) {
-        super(config);
+    public MockMetadataBackend() {
     }
 
     @Override
@@ -32,7 +30,7 @@ public class MockMetadataBackend extends BaseMetadataBackend {
     @Override
     protected List<Dataset> searchDataset(Long datasourceId, String databaseName) {
         List<String> databases = databaseOfDatasource.get(datasourceId);
-        if(databases == null || !databases.contains(databaseName)){
+        if (databases == null || !databases.contains(databaseName)) {
             return new ArrayList<>();
         }
         return datasetOfDatabase.get(databaseName);

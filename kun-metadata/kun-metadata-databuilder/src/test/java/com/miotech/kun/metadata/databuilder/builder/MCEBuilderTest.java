@@ -6,8 +6,9 @@ import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.common.dao.DataSourceDao;
-import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.common.service.DataSourceService;
+import com.miotech.kun.metadata.common.service.FilterRuleService;
+import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
@@ -17,11 +18,15 @@ import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
+import com.miotech.kun.metadata.core.model.filter.FilterRule;
+import com.miotech.kun.metadata.core.model.filter.FilterRuleType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.databuilder.container.PostgreSQLTestContainer;
 import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.metadata.databuilder.factory.DataSourceFactory;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -36,6 +41,7 @@ import java.util.Optional;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertTrue;
 
 public class MCEBuilderTest extends DatabaseTestBase {
@@ -43,13 +49,18 @@ public class MCEBuilderTest extends DatabaseTestBase {
     private static final String TABLE_NAME = "bar";
 
     @Inject
-    public DataSourceDao dataSourceDao;
+    public DataSourceService dataSourceService;
 
     @Inject
-    public MetadataDatasetDao datasetDao;
+    public MetadataDatasetService metadataDatasetService;
+    @Inject
+    public FilterRuleService filterRuleService;
 
     @Inject
     public MCEBuilder mceBuilder;
+    public static final String tableName = "bar";
+
+    public static final String databaseName = "test.public";
 
     @Override
     protected void configuration() {
@@ -65,6 +76,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
 
     @Test
     public void testExtractSchemaOfDataSource_success() {
+
         // Start PostgreSQL Container
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
@@ -72,22 +84,26 @@ public class MCEBuilderTest extends DatabaseTestBase {
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
 
-        dataSourceDao.create(dataSource);
-
+        DataSource dataSource = dataSourceService.create(sourceRequest);
         // Execute
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-
         // Assert
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
-        assertTrue(datasetOpt.isPresent());
-
-        Dataset dataset = datasetOpt.get();
-        assertThat(dataset.getName(), is(TABLE_NAME));
-        assertThat(dataset.isDeleted(), is(false));
-        assertThat(dataset.getFields().size(), is(2));
-        List<DatasetField> fields = dataset.getFields();
+        Optional<Dataset> datasetOptional = metadataDatasetService.fetchDataSet(dataSource.getId(), postgreSQLContainer.getDatabaseName(), tableName);
+        Assertions.assertFalse(datasetOptional.isPresent());
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
+        mceBuilder.extractSchemaOfDataSource(dataSource.getId());
+        Optional<Dataset> datasetOptional1 = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
+        Assertions.assertTrue(datasetOptional1.isPresent());
+        Dataset dataset1 = datasetOptional1.get();
+        assertThat(dataset1, is(notNullValue()));
+        assertThat(dataset1.getName(), is(TABLE_NAME));
+        assertThat(dataset1.isDeleted(), is(false));
+        assertThat(dataset1.getFields().size(), is(2));
+        List<DatasetField> fields = dataset1.getFields();
 
         DatasetField datasetField1 = fields.get(0);
         assertThat(datasetField1, sameBeanAs(DatasetField.newBuilder()
@@ -112,27 +128,26 @@ public class MCEBuilderTest extends DatabaseTestBase {
     public void testExtractSchemaOfDataset_dropTableThenPull() {
         // Start PostgreSQL Container
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
-
         // Mock DataSource
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
-        dataSourceDao.create(dataSource);
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
 
-        // Extract schema by datasource
+        DataSource dataSource = dataSourceService.create(sourceRequest);
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
-        assertTrue(datasetOpt.isPresent());
-
+        Optional<Dataset> datasetOptional = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
+        Assertions.assertTrue(datasetOptional.isPresent());
+        Dataset dataset1 = datasetOptional.get();
         // Drop table in postgresql
         dropTable(postgreSQLContainer, TABLE_NAME);
-
         // Execute
-        mceBuilder.extractSchemaOfDataset(datasetOpt.get().getGid());
-
+        mceBuilder.extractSchemaOfDataset(dataset1.getGid());
         // Validate
-        datasetOpt = datasetDao.fetchDatasetByGid(datasetOpt.get().getGid());
+        Optional<Dataset> datasetOpt = metadataDatasetService.fetchDatasetByGid(dataset1.getGid());
         assertTrue(datasetOpt.isPresent());
         assertThat(datasetOpt.get().isDeleted(), is(true));
     }
@@ -146,12 +161,15 @@ public class MCEBuilderTest extends DatabaseTestBase {
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
-        dataSourceDao.create(dataSource);
+        DataSourceRequest dataSourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
 
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
         // Extract schema by datasource
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
+        Optional<Dataset> datasetOpt = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
         assertTrue(datasetOpt.isPresent());
 
         // Drop table in postgresql
@@ -160,7 +178,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         // Execute
         mceBuilder.extractSchemaOfDataset(datasetOpt.get().getGid());
         // Validate
-        datasetOpt = datasetDao.fetchDatasetByGid(datasetOpt.get().getGid());
+        datasetOpt = metadataDatasetService.fetchDatasetByGid(datasetOpt.get().getGid());
         assertTrue(datasetOpt.isPresent());
         assertThat(datasetOpt.get().isDeleted(), is(true));
 
@@ -171,7 +189,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         mceBuilder.extractSchemaOfDataset(datasetOpt.get().getGid());
 
         // Validate
-        datasetOpt = datasetDao.fetchDatasetByGid(datasetOpt.get().getGid());
+        datasetOpt = metadataDatasetService.fetchDatasetByGid(datasetOpt.get().getGid());
         assertTrue(datasetOpt.isPresent());
         assertThat(datasetOpt.get().isDeleted(), is(false));
         assertThat(datasetOpt.get().getFields().size(), is(1));
@@ -186,13 +204,16 @@ public class MCEBuilderTest extends DatabaseTestBase {
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
-        dataSourceDao.create(dataSource);
-
+        DataSourceRequest dataSourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
         // Extract schema by datasource
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
-        assertTrue(datasetOpt.isPresent());
+        Optional<Dataset> datasetOpt = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
+        Assertions.assertTrue(datasetOpt.isPresent());
+
 
         // Add column
         addColumn(postgreSQLContainer, TABLE_NAME, "test_column", "int4");
@@ -201,8 +222,8 @@ public class MCEBuilderTest extends DatabaseTestBase {
         mceBuilder.extractSchemaOfDataset(datasetOpt.get().getGid());
 
         // Validate
-        datasetOpt = datasetDao.fetchDatasetByGid(datasetOpt.get().getGid());
-        assertTrue(datasetOpt.isPresent());
+        datasetOpt = metadataDatasetService.fetchDatasetByGid(datasetOpt.get().getGid());
+        Assertions.assertTrue(datasetOpt.isPresent());
         assertThat(datasetOpt.get().getFields().size(), is(3));
     }
 
@@ -215,12 +236,14 @@ public class MCEBuilderTest extends DatabaseTestBase {
         ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
         ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSource dataSource = DataSourceFactory.createDataSource(1l, "pg", connectionConfig, DatasourceType.POSTGRESQL);
-        dataSourceDao.create(dataSource);
-
+        DataSourceRequest dataSourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
+        FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
+        filterRuleService.addFilterRule(filterRule);
         // Extract schema by datasource
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
-        Optional<Dataset> datasetOpt = datasetDao.findByName(TABLE_NAME);
+        Optional<Dataset> datasetOpt = metadataDatasetService.fetchDataSet(dataSource.getId(), databaseName, tableName);
         assertTrue(datasetOpt.isPresent());
 
         // Drop column
@@ -230,7 +253,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         mceBuilder.extractSchemaOfDataset(datasetOpt.get().getGid());
 
         // Validate
-        datasetOpt = datasetDao.fetchDatasetByGid(datasetOpt.get().getGid());
+        datasetOpt = metadataDatasetService.fetchDatasetByGid(datasetOpt.get().getGid());
         assertTrue(datasetOpt.isPresent());
         assertThat(datasetOpt.get().getFields().size(), is(1));
     }

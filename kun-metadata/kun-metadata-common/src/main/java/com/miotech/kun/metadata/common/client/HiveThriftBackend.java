@@ -2,7 +2,6 @@ package com.miotech.kun.metadata.common.client;
 
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.connection.HiveMetaStoreConnectionInfo;
@@ -43,8 +42,7 @@ public class HiveThriftBackend extends BaseMetadataBackend implements StorageBac
     private final ClientFactory clientFactory;
 
     public HiveThriftBackend(HiveMetaStoreConnectionInfo connectionInfo, FieldMappingService fieldMappingService,
-                             ClientFactory clientFactory, CatalogerConfig config) {
-        super(config);
+                             ClientFactory clientFactory) {
         this.connectionInfo = connectionInfo;
         this.fieldMappingService = fieldMappingService;
         this.clientFactory = clientFactory;

@@ -1,7 +1,6 @@
 package com.miotech.kun.datadiscovery.testing;
 
 import com.amazonaws.services.glue.AWSGlue;
-import com.amazonaws.services.s3.AmazonS3;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;

@@ -28,9 +28,9 @@ public class CatalogerTest extends DatabaseTestBase {
 
 
     public static Stream<ConnectionConfig> connectionConfigs() {
-        ConnectionInfo athenaConnectionInfo = new AthenaConnectionInfo(ConnectionType.ATHENA,"jdbc:awsathena","user","password");
-        ConnectionInfo glueConnectionInfo = new GlueConnectionInfo(ConnectionType.GLUE,"glue","glue","glue");
-        ConnectionInfo s3ConnectionInfo = new S3ConnectionInfo(ConnectionType.S3,"glue","glue","glue");
+        ConnectionInfo athenaConnectionInfo = new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena", "user", "password");
+        ConnectionInfo glueConnectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "glue", "glue", "glue");
+        ConnectionInfo s3ConnectionInfo = new S3ConnectionInfo(ConnectionType.S3, "glue", "glue", "glue");
 
         ConnectionConfig awsConfig = ConnectionConfig.newBuilder()
                 .withUserConnection(athenaConnectionInfo)
@@ -38,32 +38,32 @@ public class CatalogerTest extends DatabaseTestBase {
                 .withStorageConnection(s3ConnectionInfo)
                 .build();
 
-        ConnectionInfo hiveConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"host",10000,"user","password");
-        ConnectionInfo metastoreConnectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT,"url");
+        ConnectionInfo hiveConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER, "host", 10000, "user", "password");
+        ConnectionInfo metastoreConnectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "url");
 
         ConnectionConfig hiveConfig = ConnectionConfig.newBuilder()
                 .withUserConnection(hiveConnectionInfo)
                 .withMetadataConnection(metastoreConnectionInfo)
                 .build();
 
-        ConnectionInfo pgConnectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL,"127.0.0.1",5432);
+        ConnectionInfo pgConnectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, "127.0.0.1", 5432);
 
         ConnectionConfig pgConfig = ConnectionConfig.newBuilder()
                 .withUserConnection(pgConnectionInfo)
                 .build();
-        Stream<ConnectionConfig> connectionConfigs = Stream.of(awsConfig,hiveConfig,pgConfig);
+        Stream<ConnectionConfig> connectionConfigs = Stream.of(awsConfig, hiveConfig, pgConfig);
         return connectionConfigs;
     }
 
     @ParameterizedTest
     @MethodSource("connectionConfigs")
-    public void testGenerateCataloger(ConnectionConfig connectionConfig){
+    public void testGenerateCataloger(ConnectionConfig connectionConfig) {
         ClientFactory clientFactory = mock(ClientFactory.class);
-        CatalogerFactory catalogerFactory = new CatalogerFactory(fieldMappingService,clientFactory);
+        CatalogerFactory catalogerFactory = new CatalogerFactory(fieldMappingService, clientFactory);
 
-        DataSource aws = MockDataSourceFactory.createDataSource(1,"aws",connectionConfig,DatasourceType.HIVE,new ArrayList<>());
+        DataSource aws = MockDataSourceFactory.createDataSource(1, "aws", connectionConfig, DatasourceType.HIVE, new ArrayList<>());
         dataSourceDao.create(aws);
-        Cataloger cataloger = catalogerFactory.generateCataloger(aws,new CatalogerConfig(null,null));
-        assertThat(cataloger,notNullValue());
+        Cataloger cataloger = catalogerFactory.generateCataloger(aws);
+        assertThat(cataloger, notNullValue());
     }
 }

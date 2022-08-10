@@ -189,8 +189,8 @@ public class UniversalSearchDao {
     }
 
     public SearchedInfo find(ResourceType resourceType, Long gid) {
-        ImmutableList<String> options = ImmutableList.of(COLUMN_GID, COLUMN_RESOURCE_TYPE, COLUMN_DELETED);
-        ImmutableList<? extends Serializable> params = ImmutableList.of(gid, resourceType.name(), false);
+        ImmutableList<String> options = ImmutableList.of(COLUMN_GID, COLUMN_RESOURCE_TYPE);
+        ImmutableList<? extends Serializable> params = ImmutableList.of(gid, resourceType.name());
         String sql = DefaultSQLBuilder.newBuilder().select(COLUMNS)
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
                 .where(and(options)).getSQL();
@@ -226,6 +226,10 @@ public class UniversalSearchDao {
             return Lists.newArrayList();
         }
         return list.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
+
+    }
+
+    public void updateStatus(ResourceType resourceType, long gid, boolean deleted) {
 
     }
 
