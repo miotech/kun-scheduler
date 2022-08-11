@@ -15,7 +15,7 @@ interface Props {
   setDiff: (taskCommits: TaskCommit[]) => void;
   viewTaskCommit: TaskCommit | null;
   taskCommits: TaskCommit[];
-  goBack: (arg: string) => void;
+  goBack: () => void;
 }
 export const ViewVersion: React.FC<Props> = memo(props => {
   const params = useParams<{ taskDefId: string }>();
@@ -60,7 +60,7 @@ export const ViewVersion: React.FC<Props> = memo(props => {
     <div className={Styles.content}>
       <div style={{ backgroundColor: '#fff', padding: '20px 30px' }}>
         <div className={Styles.header}>
-          <div className={Styles.back} onClick={() => goBack('history')}>
+          <div className={Styles.back} onClick={goBack}>
             <LeftOutlined />
             &nbsp;{t('dataDevelopment.definition.version.backVersionList')}
           </div>

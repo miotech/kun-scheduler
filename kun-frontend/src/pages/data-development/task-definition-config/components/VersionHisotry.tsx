@@ -1,9 +1,11 @@
-import React, { useState, memo, useMemo } from 'react';
+import React, { useState, memo, useMemo, useCallback } from 'react';
 import useI18n from '@/hooks/useI18n';
 import { Table, Button } from 'antd';
 import { UsernameText } from '@/components/UsernameText';
 import { TaskCommit } from '@/definitions/TaskDefinition.type';
 import moment from 'moment';
+import useUrlState from '@ahooksjs/use-url-state';
+import { useMount } from 'ahooks';
 import { DiffVersion } from './DiffVersion';
 import { ViewVersion } from './ViewVersion';
 import Styles from './VersionHistory.less';
@@ -17,18 +19,31 @@ export const VersionHistory: React.FC<Props> = memo(props => {
   const { taskCommits } = props;
   const [selectedRowKeys, setSelectRowkeys] = useState<React.Key[]>([]);
   const [selectedRows, setSelectRows] = useState<TaskCommit[]>([]);
-  const [viewType, setViewType] = useState<string>('history');
   const [viewTaskCommit, setViewTaskCommit] = useState<TaskCommit | null>(null);
+  const [query, setQuery] = useUrlState({ tab: '' });
 
   const setView = (commit: TaskCommit) => {
-    setViewType('viewVersion');
+    setQuery({ tab: 'viewVersion' });
     setViewTaskCommit(commit);
   };
   const setDiff = (selecteds: TaskCommit[]) => {
-    setViewType('diffVersion');
+    setQuery({ tab: 'diffVersion' });
     setSelectRows(selecteds);
   };
 
+  const viewVersionChange = useCallback(
+    (commit: TaskCommit) => {
+      const findIndex = taskCommits.findIndex(item => item.id === commit.id);
+      const diffVersion = taskCommits[findIndex + 1];
+      setQuery({ tab: 'diffVersion' });
+      setSelectRows([commit, diffVersion]);
+    },
+    [setQuery, taskCommits],
+  );
+
+  useMount(() => {
+    setQuery({ tab: undefined });
+  });
   const columns = useMemo(
     () => [
       {
@@ -57,20 +72,32 @@ export const VersionHistory: React.FC<Props> = memo(props => {
         title: t('common.column.action'),
         render: (txt: any, record: TaskCommit) => {
           return (
-            <span
-              style={{ color: '#1A73E8', cursor: 'pointer' }}
-              onClick={() => {
-                setViewTaskCommit(record);
-                setViewType('viewVersion');
-              }}
-            >
-              {t('common.button.view')}
-            </span>
+            <>
+              {record.version !== 'V1' && (
+                <span
+                  style={{ color: '#1A73E8', cursor: 'pointer', marginRight: '10px' }}
+                  onClick={() => {
+                    viewVersionChange(record);
+                  }}
+                >
+                  {t('dataDevelopment.definition.version.viewChange')}
+                </span>
+              )}
+              <span
+                style={{ color: '#1A73E8', cursor: 'pointer' }}
+                onClick={() => {
+                  setViewTaskCommit(record);
+                  setQuery({ tab: 'viewVersion' });
+                }}
+              >
+                {t('dataDevelopment.definition.version.viewConfig')}
+              </span>
+            </>
           );
         },
       },
     ],
-    [t],
+    [t, setQuery, viewVersionChange],
   );
   const rowSelection = {
     selectedRowKeys,
@@ -88,28 +115,28 @@ export const VersionHistory: React.FC<Props> = memo(props => {
 
   return (
     <div className={Styles.content}>
-      {viewType === 'viewVersion' && (
+      {query.tab === 'viewVersion' && viewTaskCommit && (
         <ViewVersion
           setView={(taskCommit: TaskCommit) => setView(taskCommit)}
           setDiff={(selecteds: TaskCommit[]) => setDiff(selecteds)}
           taskCommits={taskCommits}
           viewTaskCommit={viewTaskCommit}
-          goBack={(type: string) => setViewType(type)}
+          goBack={() => setQuery({ tab: undefined })}
         />
       )}
-      {viewType === 'diffVersion' && (
+      {query.tab === 'diffVersion' && !!selectedRows.length && (
         <DiffVersion
           setView={(taskCommit: TaskCommit) => setView(taskCommit)}
           diffRows={selectedRows}
-          goBack={(type: string) => setViewType(type)}
+          goBack={() => setQuery({ tab: undefined })}
         />
       )}
-      {viewType === 'history' && (
+      {!query.tab && (
         <div style={{ backgroundColor: '#fff', padding: '20px 30px' }}>
           <Button
             disabled={selectedRowKeys.length !== 2}
             type="primary"
-            onClick={() => setViewType('diffVersion')}
+            onClick={() => setQuery({ tab: 'diffVersion' })}
             className={Styles.button}
           >
             {t('dataDevelopment.definition.version.compareVersion')}{' '}

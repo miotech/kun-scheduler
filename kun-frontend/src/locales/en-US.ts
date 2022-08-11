@@ -437,6 +437,8 @@ export default {
   'dataDevelopment.definition.committer': 'Committer',
   'dataDevelopment.definition.committedAt': 'Commit Time',
   'dataDevelopment.definition.version': 'Version',
+  'dataDevelopment.definition.version.viewConfig': 'View full configuration',
+  'dataDevelopment.definition.version.viewChange': 'View changes',
   'dataDevelopment.definition.version.viewVersion': 'View This Version',
   'dataDevelopment.definition.version.current': 'Current',
   'dataDevelopment.definition.version.compareVersion': 'Compare Version',
