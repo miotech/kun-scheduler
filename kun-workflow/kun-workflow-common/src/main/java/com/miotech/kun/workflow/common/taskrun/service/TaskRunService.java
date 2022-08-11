@@ -27,12 +27,10 @@ import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
 import com.miotech.kun.workflow.core.model.common.GanttChartTaskRunInfo;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStat;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.core.model.taskrun.TimeType;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
@@ -47,6 +45,7 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -67,6 +66,10 @@ public class TaskRunService {
     private final Integer MAX_TRACE_DAYS = 7;
 
     private final Integer UPSTREAM_TRACE_HOURS = 24;
+
+    private final Integer TRACE_LIMIT_DAYS = 3;
+
+    private final Integer DISPLAY_LIMIT = 10;
 
     @Inject
     private Props props;
@@ -306,6 +309,50 @@ public class TaskRunService {
             result.addAll(downstreamTaskRunList);
         }
         return buildTaskRunGanttChart(result, true);
+    }
+
+    public List<RunningTaskRunInfo> getTaskRunWaitingFor(Long taskRunId) {
+        //we only fetch upstream task run created within upstreamTraceTime_hours
+        return getTaskRunWaitingFor(taskRunId, DISPLAY_LIMIT);
+    }
+
+    public List<RunningTaskRunInfo> getTaskRunWaitingFor(Long taskRunId, Integer displayLimit) {
+        TaskRun taskRun = findTaskRun(taskRunId);
+        OffsetDateTime queueStart = taskRun.getQueuedAt();
+        OffsetDateTime queueEnd = ObjectUtils.defaultIfNull(taskRun.getStartAt(), DateTimeUtils.now());
+        List<TaskRun> fetchedTaskRuns = new ArrayList<>();
+
+        // fetch taskruns meet following requirements:
+        // 1. with same schedule type
+        // 2. created within 3 days before taskrun
+        // 3. running period have intersection with taskrun's queuing period;
+
+        TaskRunSearchFilter filterBuilder1 = TaskRunSearchFilter.newBuilder()
+                .withScheduleType(ImmutableList.of(taskRun.getScheduledType().name()))
+                .withDateFrom(taskRun.getCreatedAt().minusDays(TRACE_LIMIT_DAYS))
+                .withStartTo(queueStart)
+                .withEndAfter(queueStart).build();
+        fetchedTaskRuns.addAll(taskRunDao.fetchTaskRunsByFilterWithoutPagination(filterBuilder1));
+
+        TaskRunSearchFilter filterBuilder2 = TaskRunSearchFilter.newBuilder()
+                .withScheduleType(ImmutableList.of(taskRun.getScheduledType().name()))
+                .withDateFrom(taskRun.getCreatedAt().minusDays(TRACE_LIMIT_DAYS))
+                .withStartFrom(queueStart)
+                .withStartTo(queueEnd).build();
+        fetchedTaskRuns.addAll(taskRunDao.fetchTaskRunsByFilterWithoutPagination(filterBuilder2));
+
+        //rank by length of task run's running time intersection with target's queuing period
+        List<RunningTaskRunInfo> results = fetchedTaskRuns.stream()
+                .map(tr -> RunningTaskRunInfo.newBuilder()
+                        .withName(tr.getTask().getName())
+                        .withTaskRunId(tr.getId())
+                        .withRunningTime_seconds(ChronoUnit.SECONDS.between(DateTimeUtils.getLaterTime(tr.getStartAt(), queueStart),
+                                DateTimeUtils.getEarlierTime(tr.getTermAt(), queueEnd)))
+                        .build())
+                .sorted((r1, r2) -> Long.compare(r2.getRunningTime_seconds(), r1.getRunningTime_seconds()))
+                .limit(DISPLAY_LIMIT)
+                .collect(Collectors.toList());
+        return results;
     }
 
     private TaskRunGanttChartVO buildTaskRunGanttChart(List<TaskRun> taskRunList, boolean withDependencies) {

@@ -376,4 +376,16 @@ public class WorkflowApiTest extends MockServerTestBase {
         com.miotech.kun.workflow.client.model.ExecutorInfo result = wfApi.getExecutorInfo();
         MatcherAssert.assertThat(result, sameBeanAs(mockResult));
     }
+
+    @Test
+    public void getTaskRunWaitingGantt() {
+        TaskRun taskRun = mockTaskRun();
+        mockGet("/taskruns/" + taskRun.getId() + "/waitingFor", "[{\"taskRunId\":\"346942563317448704\",\"name\":\"task_346942563216785408\",\"runningTime_seconds\":\"1200\"}]\n");
+        List<RunningTaskRunInfo> result = wfApi.getTaskRunWaitingFor(taskRun.getId());
+        MatcherAssert.assertThat(result.size(), is(1));
+        MatcherAssert.assertThat(result.get(0).getTaskRunId(), is(346942563317448704L));
+        MatcherAssert.assertThat(result.get(0).getName(), is("task_346942563216785408"));
+        MatcherAssert.assertThat(result.get(0).getRunningTime_seconds(), is(1200L));
+    }
+
 }

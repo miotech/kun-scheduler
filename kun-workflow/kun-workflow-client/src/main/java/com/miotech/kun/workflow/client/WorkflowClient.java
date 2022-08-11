@@ -221,6 +221,13 @@ public interface WorkflowClient {
     TaskRunGanttChart getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, TimeType timeType);
 
     /**
+     * get running task run info of task run waiting for
+     * @param taskRunId specified task run
+     * @return
+     */
+    List<RunningTaskRunInfo> getTaskRunWaitingFor(Long taskRunId);
+
+    /**
      * get task run log
      * @param logRequest
      * @return

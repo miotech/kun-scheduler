@@ -1,8 +1,8 @@
 package com.miotech.kun.workflow.common.taskrun.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import com.miotech.kun.workflow.core.model.common.GanttChartTaskRunInfo;
 
 import java.time.OffsetDateTime;
@@ -12,10 +12,10 @@ public class TaskRunGanttChartVO {
 
     private final List<GanttChartTaskRunInfo> infoList;
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using= CustomDateTimeSerializer.class)
     private final OffsetDateTime earliestTime;
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using= CustomDateTimeSerializer.class)
     private final OffsetDateTime latestTime;
 
     public TaskRunGanttChartVO(List<GanttChartTaskRunInfo> infoList, OffsetDateTime earliestTime, OffsetDateTime latestTime) {

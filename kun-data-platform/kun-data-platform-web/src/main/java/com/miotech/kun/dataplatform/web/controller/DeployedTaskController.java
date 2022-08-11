@@ -207,6 +207,13 @@ public class DeployedTaskController {
         return RequestResult.success(deployedTaskService.getTaskRunGantt(startTime, endTime, TimeType.resolve(timeType), taskRunId));
     }
 
+    @GetMapping("/deployed-taskruns/gantt/{taskRunId}/wait-for")
+    @ApiOperation("Get running task run of task run waiting for")
+    public RequestResult<List<RunningTaskRunInfo>> getTaskRunWaitingFor(@PathVariable Long taskRunId) {
+        return RequestResult.success(deployedTaskService.getTaskRunWaitingFor(taskRunId));
+    }
+
+
     @GetMapping("/deployed-taskruns/{taskRunId}/definitionId")
     @ApiOperation("return task definition id of task run")
     public RequestResult<Long> getTaskDefinitionIdOfTaskRun(@PathVariable Long taskRunId) {

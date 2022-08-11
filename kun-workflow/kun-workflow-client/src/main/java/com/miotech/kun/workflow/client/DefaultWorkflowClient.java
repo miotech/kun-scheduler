@@ -265,6 +265,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public List<RunningTaskRunInfo> getTaskRunWaitingFor(Long taskRunId) {
+        return wfApi.getTaskRunWaitingFor(taskRunId);
+    }
+
+    @Override
     public TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest) {
         return wfApi.getTaskRunLog(logRequest);
     }
