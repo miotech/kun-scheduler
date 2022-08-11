@@ -162,7 +162,7 @@ public class RdmService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     @OperationRecord(type = OperationRecordType.RDM_EDIT_ADD_GLOSSARY, args = {"#glossaryId", "#datasetIds"})
-    public void addGlossary(Long glossaryId, List<Long> datasetIds) {
+    public void addGlossary(Long glossaryId, Collection<Long> datasetIds) {
         if (CollectionUtils.isEmpty(datasetIds)) {
             return;
         }
@@ -187,7 +187,7 @@ public class RdmService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     @OperationRecord(type = OperationRecordType.RDM_EDIT_REMOVE_GLOSSARY, args = {"#glossaryId", "#datasetIds"})
-    public void removeGlossary(Long glossaryId, List<Long> datasetIds) {
+    public void removeGlossary(Long glossaryId, Collection<Long> datasetIds) {
         if (CollectionUtils.isEmpty(datasetIds)) {
             return;
         }
@@ -196,26 +196,6 @@ public class RdmService extends BaseSecurityService {
         editGlossaryTableList.stream()
                 .filter(refTableVersionInfo -> datasetIds.contains(refTableVersionInfo.getDatasetId()))
                 .filter(refTableVersionInfo -> (CollectionUtils.isNotEmpty(refTableVersionInfo.getGlossaryList())) && (refTableVersionInfo.getGlossaryList().contains(glossaryId)))
-                .forEach(refTableVersionInfo -> {
-                    refTableVersionInfo.getGlossaryList().remove(glossaryId);
-                    refTableVersionInfo.setUpdateUser(getCurrentUsername());
-                    refTableVersionInfo.setUpdateTime(now);
-                    refTableVersionRepository.update(refTableVersionInfo);
-                });
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @OperationRecord(type = OperationRecordType.RDM_EDIT_UPDATE_GLOSSARY, args = {"#glossaryId", "#datasetIds"})
-    public void updateGlossary(Long glossaryId, List<Long> datasetIds) {
-        if (Objects.isNull(datasetIds)) {
-            return;
-        }
-        OffsetDateTime now = DateTimeUtils.now();
-        List<RefTableVersionInfo> editGlossaryTableList = refTableVersionRepository.findEditGlossaryTableList();
-        addGlossary(glossaryId, datasetIds);
-        editGlossaryTableList.stream()
-                .filter(refTableVersionInfo -> (CollectionUtils.isNotEmpty(refTableVersionInfo.getGlossaryList())) && (refTableVersionInfo.getGlossaryList().contains(glossaryId)))
-                .filter(refTableVersionInfo -> !datasetIds.contains(refTableVersionInfo.getDatasetId()))
                 .forEach(refTableVersionInfo -> {
                     refTableVersionInfo.getGlossaryList().remove(glossaryId);
                     refTableVersionInfo.setUpdateUser(getCurrentUsername());
