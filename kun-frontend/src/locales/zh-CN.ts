@@ -629,6 +629,7 @@ export default {
   'operationCenter.runningStatistics.task.queued': '任务等待时间',
   'operationCenter.runningStatistics.task.start': '任务开始时间',
   'operationCenter.runningStatistics.task.end': '任务结束时间',
+  'operationCenter.runningStatistics.task.taskWaitingFor': '等待的任务列表',
   'settings.variableSettings.title': '全局变量设置',
   'settings.variableSettings.key': '键',
   'settings.variableSettings.value': '值',

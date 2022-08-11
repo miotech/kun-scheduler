@@ -1,5 +1,7 @@
 .content{
   background-color: #fff;
+  position: relative;
+  z-index: 9999;
   .item{
     display:flex;
     align-items:center;
@@ -12,6 +14,11 @@
       color: #262a2f;
       font-size:14px;
       margin-left: 15px;
+    }
+    .link{
+      color: @darkBlue;
+      margin-left: 15px;
+      cursor: pointer;
     }
     &::before{
       border-radius: 50%;
