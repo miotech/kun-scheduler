@@ -1784,6 +1784,31 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     }
 
+    @Test
+    public void submitTaskRunWithLossConditionUpdate_should_be_trigger(){
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
+        taskList.forEach(x -> taskDao.create(x));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2;");
+        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun3));
+
+        awaitUntilAttemptDone(taskRun3.getId() + 1);
+
+    }
+
 
     private TaskRunCondition createCondition(TaskRun taskRun, ConditionType conditionType, boolean result) {
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
