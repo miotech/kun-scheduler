@@ -109,6 +109,7 @@ public class GlossaryService extends BaseSecurityService {
             throw new IllegalStateException("A glossary with the same name is not allowed at the same level  name:" + glossaryRequest.getName());
         }
         Long gid = glossaryRepository.insert(glossaryRequest);
+        addGlossaryResource(gid, glossaryRequest.getAssetIds());
         searchAppService.saveOrUpdateGlossarySearchInfo(getGlossaryBasicInfo(gid));
         return gid;
     }
@@ -217,10 +218,19 @@ public class GlossaryService extends BaseSecurityService {
             throw new RuntimeException("A glossary with the same name is not allowed at the same level  name:" + glossaryRequest.getName());
         }
         glossaryRepository.update(id, glossaryRequest);
+        updateWholeAssets(id, glossaryRequest.getAssetIds());
         Glossary glossary = fetchGlossary(id);
         searchAppService.saveOrUpdateGlossarySearchInfo(glossary);
-        rdmService.updateGlossary(id, glossaryRequest.getAssetIds());
         return glossary;
+    }
+
+    private void updateWholeAssets(Long id, List<Long> assetIds) {
+        List<Long> oldList = glossaryRepository.findGlossaryToDataSetIdList(id);
+        Collection<Long> intersection = CollectionUtils.intersection(assetIds, oldList);
+        Collection<Long> subtractRemove = CollectionUtils.subtract(oldList, intersection);
+        removeGlossaryResource(id, subtractRemove);
+        Collection<Long> subtractAdd = CollectionUtils.subtract(assetIds, intersection);
+        addGlossaryResource(id, subtractAdd);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -502,7 +512,7 @@ public class GlossaryService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     @OperationRecord(type = OperationRecordType.GLOSSARY_ADD_RESOURCE, args = {"#id", "#assetIds"})
-    public boolean addGlossaryResource(Long id, List<Long> assetIds) {
+    public boolean addGlossaryResource(Long id, Collection<Long> assetIds) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_RESOURCE);
         if (CollectionUtils.isEmpty(assetIds)) {
             log.debug("assetIds is empty");
@@ -522,7 +532,7 @@ public class GlossaryService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     @OperationRecord(type = OperationRecordType.GLOSSARY_REMOVE_RESOURCE, args = {"#id", "#assetIds"})
-    public boolean removeGlossaryResource(Long id, List<Long> assetIds) {
+    public boolean removeGlossaryResource(Long id, Collection<Long> assetIds) {
         checkAuth(id, GlossaryUserOperation.EDIT_GLOSSARY_RESOURCE);
         if (CollectionUtils.isEmpty(assetIds)) {
             log.debug("assetIds is empty");

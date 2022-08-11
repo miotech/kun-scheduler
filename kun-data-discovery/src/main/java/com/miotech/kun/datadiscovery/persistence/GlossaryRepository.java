@@ -172,10 +172,6 @@ public class GlossaryRepository extends BaseRepository {
                 null,
                 false
         );
-
-        if (!CollectionUtils.isEmpty(glossaryRequest.getAssetIds())) {
-            insertGlossaryDatasetRef(glossaryId, glossaryRequest.getAssetIds(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
-        }
         return glossaryId;
     }
 
@@ -220,7 +216,6 @@ public class GlossaryRepository extends BaseRepository {
                 .set("name=?", "description=?", "update_user=?", "update_time=?")
                 .where("id = ? and deleted=false").getSQL();
         jdbcTemplate.update(basicUpdateSql, sqlParams.toArray());
-        updateWholeAssets(id, glossaryRequest.getAssetIds(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
         move(glossaryBaseInfo, glossaryRequest.getParentId(), glossaryRequest.getUpdateUser(), glossaryRequest.getUpdateTime());
     }
 
@@ -291,17 +286,6 @@ public class GlossaryRepository extends BaseRepository {
             return Lists.newArrayList();
         }
         return query;
-    }
-
-    private void updateWholeAssets(Long id, List<Long> assetIds, String updateUser, OffsetDateTime updateTime) {
-        List<Long> oldList = findGlossaryToDataSetIdList(id);
-        Collection<Long> intersection = CollectionUtils.intersection(assetIds, oldList);
-        Collection<Long> subtractRemove = CollectionUtils.subtract(oldList, intersection);
-        removeGlossaryRef(id, Lists.newArrayList(subtractRemove), updateUser, updateTime);
-        Collection<Long> subtractAdd = CollectionUtils.subtract(assetIds, intersection);
-        if (CollectionUtils.isNotEmpty(subtractAdd)) {
-            insertGlossaryDatasetRef(id, subtractAdd, updateUser, updateTime);
-        }
     }
 
 
