@@ -21,12 +21,17 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.saml2.provider.service.authentication.OpenSamlAuthenticationProvider;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -86,10 +91,14 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
 
     private final OAuth2ClientProperties oAuth2ClientProperties;
 
-    public SecurityServerConfig(Saml2AuthorityAttributeLookup lookup,
-                                OAuth2ClientProperties oAuth2ClientProperties) {
+    public SecurityServerConfig(Saml2AuthorityAttributeLookup lookup, OAuth2ClientProperties oAuth2ClientProperties) {
         this.saml2AuthorityAttributeLookup = lookup;
         this.oAuth2ClientProperties = oAuth2ClientProperties;
+    }
+
+    @Override
+    public void configure(WebSecurity web) {
+        web.ignoring().antMatchers("/kun/api/v1/security/oauth/callback-url");
     }
 
     @Override
@@ -181,7 +190,7 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     }
 
     private AbstractAuthenticationProcessingFilter oauth2AuthorizationCodeFilter() throws Exception {
-        OAuth2AuthorizationCodeFilter oauth2AuthorizationCodeFilter = new OAuth2AuthorizationCodeFilter(apiPrefix + "/v1/security/oauth2/token");
+        OAuth2AuthorizationCodeFilter oauth2AuthorizationCodeFilter = new OAuth2AuthorizationCodeFilter(apiPrefix + "/v1/security/oauth2/authorize", "kun");
         oauth2AuthorizationCodeFilter.setAuthenticationSuccessHandler(defaultSecurityService.loginSuccessHandler());
         oauth2AuthorizationCodeFilter.setAuthenticationFailureHandler(defaultSecurityService.loginFailureHandler());
         oauth2AuthorizationCodeFilter.setAuthenticationManager(authenticationManagerBean());
@@ -200,6 +209,19 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
         syncUserInfoFilter.setDefaultSecurityService(defaultSecurityService);
         return syncUserInfoFilter;
     }
+
+    @Bean
+    public ClientRegistrationRepository createClientRegistrationRepository() {
+        ClientRegistration kun = CommonOAuth2Provider.OKTA.getBuilder("kun")
+                .clientId(oAuth2ClientProperties.getRegistration().get("kun").getClientId())
+                .clientSecret(oAuth2ClientProperties.getRegistration().get("kun").getClientSecret())
+                .authorizationUri(oAuth2ClientProperties.getProvider().get("kun").getAuthorizationUri())
+                .tokenUri(oAuth2ClientProperties.getProvider().get("kun").getTokenUri())
+                .userInfoUri(oAuth2ClientProperties.getProvider().get("kun").getUserInfoUri())
+                .build();
+        return new InMemoryClientRegistrationRepository(kun);
+    }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {

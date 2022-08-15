@@ -3,6 +3,7 @@ package com.miotech.kun.security;
 import com.miotech.kun.security.saml2.Saml2RelyingPartyMappings;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -14,7 +15,7 @@ import org.springframework.context.annotation.FilterType;
 @SpringBootApplication
 @ComponentScan(excludeFilters  = {@ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE, classes = {SecurityConfig.class})})
-@EnableConfigurationProperties({Saml2RelyingPartyMappings.class})
+@EnableConfigurationProperties({Saml2RelyingPartyMappings.class, OAuth2ClientProperties.class})
 public class SecurityServer {
 
     public static void main(String[] args) {

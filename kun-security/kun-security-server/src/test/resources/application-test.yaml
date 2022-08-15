@@ -22,9 +22,26 @@ spring:
     baselineVersion: 0
     validate-on-migrate: true
 
+  security:
+    oauth2:
+      client:
+        enable: true
+        registration:
+          kun:
+            client-id: 123
+            client-secret: 456
+            redirect-uri: https://kun-dev.miotech.com/kun/api/v1/security/callback
+        provider:
+          kun:
+            authorization-uri: https://abc.com/api/oauth2/authorize
+            token-uri: https://abc.com/api/oauth2/token
+            user-info-uri: https://abc.com/api/oauth2/userinfo
+
 security:
   auth:
     type: ${SECURITY_AUTH_TYPE:DAO}
+    authorize-url: https://test.com/api/oauth2/authorize
+    response-type: code
 
 frontend:
   url: ${KUN_ROOT_URL:http://localhost:8079}

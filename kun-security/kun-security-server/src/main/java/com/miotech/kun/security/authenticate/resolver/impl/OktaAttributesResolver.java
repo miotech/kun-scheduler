@@ -12,11 +12,12 @@ public class OktaAttributesResolver implements AttributesResolver {
 
     @Override
     public String getUsernameKey() {
-        return "preferred_username";
+        return "username";
     }
 
     @Override
     public String resolveUsername(Map userInfoMap) {
-        return String.valueOf(userInfoMap.get(getUsernameKey()));
+        String usernameKey = getUsernameKey();
+        return String.valueOf(userInfoMap.get(usernameKey));
     }
 }
