@@ -1,31 +1,33 @@
 package com.miotech.kun.datadiscovery.model.enums;
 
 
-import com.miotech.kun.common.utils.JSONUtils;
+import com.miotech.kun.datadiscovery.util.DateFormatFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.DecimalType;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 
 public enum ColumnType {
-    INT("int", ColumnType::testInt),
-    BIGINT("bigint", ColumnType::testBigint),
-    FLOAT("float", ColumnType::testFloat),
-    DOUBLE("double", ColumnType::testDouble),
-    DECIMAL("decimal", ColumnType::testDecimal),
-    BOOLEAN("boolean", ColumnType::testBoolean),
-    STRING("string", ColumnType::testString),
-    TIMESTAMP("timestamp", ColumnType::testTimestamp),
-    DATE("date", ColumnType::testDate);
-
+    INT(DataTypes.IntegerType, "int", ColumnType::testInt),
+    BIGINT(DataTypes.LongType, "bigint", ColumnType::testBigint),
+    FLOAT(DataTypes.FloatType, "float", ColumnType::testFloat),
+    DOUBLE(DataTypes.DoubleType, "double", ColumnType::testDouble),
+    DECIMAL(DecimalType.SYSTEM_DEFAULT(), "decimal", ColumnType::testDecimal),
+    BOOLEAN(DataTypes.BooleanType, "boolean", ColumnType::testBoolean),
+    STRING(DataTypes.StringType, "string", ColumnType::testString),
+    TIMESTAMP(DataTypes.TimestampType, "timestamp", ColumnType::testTimestamp),
+    DATE(DataTypes.DateType, "date", ColumnType::testDate);
+    private DataType sparkDataType;
     private String simpleName;
     private Predicate<String> testFunction;
 
-    ColumnType(String simpleName, Predicate<String> testFunction) {
+    ColumnType(DataType sparkDataType, String simpleName, Predicate<String> testFunction) {
+        this.sparkDataType = sparkDataType;
         this.simpleName = simpleName;
         this.testFunction = testFunction;
     }
@@ -47,6 +49,14 @@ public enum ColumnType {
 
     public static ColumnType columnType(String name) {
         return ColumnType.valueOf(name.toUpperCase(Locale.ROOT));
+    }
+
+    public static DataType dataType(String name) {
+        return columnType(name).sparkDataType;
+    }
+
+    public DataType getSparkDataType() {
+        return sparkDataType;
     }
 
     private static boolean testInt(String value) {
@@ -138,7 +148,7 @@ public enum ColumnType {
             return true;
         }
         try {
-            Date.valueOf(value);
+            DateFormatFactory.getFormat().parse(value);
         } catch (Exception e) {
             return false;
         }

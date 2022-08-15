@@ -23,7 +23,7 @@ import com.miotech.kun.datadiscovery.service.rdm.RefDataOperator;
 import com.miotech.kun.datadiscovery.service.rdm.RefDataValidator;
 import com.miotech.kun.datadiscovery.service.rdm.file.RefStorageFileBuilder;
 import com.miotech.kun.datadiscovery.service.rdm.file.RefUploadFileBuilder;
-import com.miotech.kun.datadiscovery.service.rdm.file.S3StorageFileManger;
+import com.miotech.kun.datadiscovery.service.rdm.file.S3StoragePathGenerator;
 import com.miotech.kun.metadata.core.model.event.DatasetCreatedEvent;
 import com.miotech.kun.operationrecord.common.anno.OperationRecord;
 import com.miotech.kun.operationrecord.common.model.OperationRecordType;
@@ -125,7 +125,7 @@ public class RdmService extends BaseSecurityService {
             version = initRefDataVersion(editRefVersionInfo);
         }
         try {
-            refStorageFileBuilder.override(new StorageFileData(version.getDataPath(), refBaseTable.getRefData()));
+            refStorageFileBuilder.overwrite(new StorageFileData(version.getDataPath(), version.getSchemaName(), refBaseTable));
         } catch (IOException e) {
             log.error("Data writing failed ,edit base info:{}", editRefVersionInfo);
             throw new IllegalStateException("Data writing failed", e);
@@ -285,17 +285,12 @@ public class RdmService extends BaseSecurityService {
         refDataVersionFillInfo.setEdit(Objects.isNull(refTableVersionInfo.getEndTime()));
         StorageFileData storageFileData;
         try {
-            storageFileData = refStorageFileBuilder.read(refTableVersionInfo.getRefTableColumns(), refTableVersionInfo.getDataPath());
+            storageFileData = refStorageFileBuilder.read(refTableVersionInfo);
         } catch (IOException e) {
             log.error(" storage data read error,table name:{},version number:V{}", refTableVersionInfo.getTableName(), refTableVersionInfo.getVersionNumber(), e);
             throw new DataAccessResourceFailureException(String.format(" storage data read error,table name:%s,version number:V%s", refTableVersionInfo.getTableName(), refTableVersionInfo.getVersionNumber()), e);
         }
-        RefTableMetaData refTableMetaData = new RefTableMetaData();
-        refTableMetaData.setColumns(refTableVersionInfo.getRefTableColumns());
-        refTableMetaData.setRefTableConstraints(refTableVersionInfo.getRefTableConstraints());
-        RefData refData = storageFileData.getRefData();
-        RefBaseTable refBaseTable = new RefBaseTable(refTableMetaData, refData);
-        refDataVersionFillInfo.setRefBaseTable(refBaseTable);
+        refDataVersionFillInfo.setRefBaseTable(storageFileData.getRefBaseTable());
         fillRefTableVersionFillInfo(refTableVersionInfo, refDataVersionFillInfo);
         return refDataVersionFillInfo;
     }
@@ -411,7 +406,7 @@ public class RdmService extends BaseSecurityService {
         refTableVersionInfo.setCreateTime(now);
         refTableVersionInfo.setUpdateUser(getCurrentUsername());
         refTableVersionInfo.setUpdateTime(now);
-        refTableVersionInfo.setDataPath(S3StorageFileManger.getVersionDataPath(refTableVersionInfo));
+        refTableVersionInfo.setDataPath(S3StoragePathGenerator.getVersionDataPath(refTableVersionInfo));
         return refTableVersionRepository.create(refTableVersionInfo);
     }
 
@@ -441,7 +436,7 @@ public class RdmService extends BaseSecurityService {
         refTableVersionInfo.setCreateTime(now);
         refTableVersionInfo.setUpdateUser(getCurrentUsername());
         refTableVersionInfo.setUpdateTime(now);
-        refTableVersionInfo.setDataPath(S3StorageFileManger.getVersionDataPath(refTableVersionInfo));
+        refTableVersionInfo.setDataPath(S3StoragePathGenerator.getVersionDataPath(refTableVersionInfo));
         return refTableVersionRepository.create(refTableVersionInfo);
     }
 

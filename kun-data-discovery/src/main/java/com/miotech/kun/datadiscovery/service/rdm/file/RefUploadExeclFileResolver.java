@@ -94,7 +94,7 @@ public class RefUploadExeclFileResolver extends RefUploadFileResolver {
     }
 
     public static String getCellValue(Cell cell) {
-        String cellValue = "";
+        String cellValue = null;
         if (cell == null) {
             return cellValue;
         }
@@ -105,7 +105,12 @@ public class RefUploadExeclFileResolver extends RefUploadFileResolver {
                 break;
             case STRING:
                 //字符串
-                cellValue = String.valueOf(cell.getStringCellValue());
+                String stringCellValue = cell.getStringCellValue();
+                if (StringUtils.isBlank(stringCellValue)) {
+                    cellValue = null;
+                } else {
+                    cellValue = stringCellValue;
+                }
                 break;
             case BOOLEAN:
                 //Boolean
@@ -117,7 +122,7 @@ public class RefUploadExeclFileResolver extends RefUploadFileResolver {
                 break;
             case BLANK:
                 //空值
-                cellValue = "";
+                cellValue = null;
                 break;
             case ERROR:
                 //故障

@@ -1,20 +1,14 @@
 package com.miotech.kun.datadiscovery.testing;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.miotech.kun.common.model.PageRequest;
 import com.miotech.kun.common.model.PageResult;
-import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadiscovery.model.bo.EditRefDataTableRequest;
 import com.miotech.kun.datadiscovery.model.bo.EditRefTableVersionInfo;
 import com.miotech.kun.datadiscovery.model.entity.RefTableVersionInfo;
-import com.miotech.kun.datadiscovery.model.entity.rdm.RefBaseTable;
-import com.miotech.kun.datadiscovery.model.entity.rdm.RefData;
-import com.miotech.kun.datadiscovery.model.entity.rdm.RefTableMetaData;
-import com.miotech.kun.datadiscovery.model.entity.rdm.RefUpdateResult;
+import com.miotech.kun.datadiscovery.model.entity.rdm.*;
 import com.miotech.kun.datadiscovery.model.enums.ConstraintType;
 import com.miotech.kun.datadiscovery.model.enums.RefTableVersionStatus;
 import com.miotech.kun.datadiscovery.model.vo.BaseRefTableVersionInfo;
@@ -23,24 +17,16 @@ import com.miotech.kun.datadiscovery.model.vo.RefTableVersionFillInfo;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
 import com.miotech.kun.datadiscovery.service.RdmService;
-import com.miotech.kun.datadiscovery.service.rdm.file.S3StorageFileManger;
+import com.miotech.kun.datadiscovery.service.rdm.file.RefStorageFileBuilder;
 import com.miotech.kun.metadata.core.model.event.DatasetCreatedEvent;
-import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
-import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.model.UserInfo;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,12 +34,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-import static com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFactory.getMultipartCSVFile;
+import static com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFactory.getMultipartFile;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 public class RdmServiceTest extends DataDiscoveryTestBase {
 
@@ -67,13 +54,13 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
     private String bucketName;
     @Value("${rdm.datasource:0}")
     private Long datasourceId;
-    @Autowired
-    private AmazonS3 amazonS3;
+    @MockBean
+    private RefStorageFileBuilder refStorageFileBuilder;
 
 
     @Test
     public void parse_csv_file() {
-        MultipartFile mulFile = getMultipartCSVFile("test.csv", "/test.csv");
+        MultipartFile mulFile = getMultipartFile("test.csv", "/test.csv");
         RefBaseTable refBaseTable = rdmService.parseFile(mulFile);
         assertThat(refBaseTable, is(notNullValue()));
         RefData refData = refBaseTable.getRefData();
@@ -139,7 +126,7 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
     public void ref_data_read_write() {
         String fileName = "test.csv";
         String filePath = "/test.csv";
-        MultipartFile multipartCSVFile = getMultipartCSVFile(fileName, filePath);
+        MultipartFile multipartCSVFile = getMultipartFile(fileName, filePath);
         RefBaseTable refBaseTable = rdmService.parseFile(multipartCSVFile);
         String desc = "test_desc";
         List<Long> glossaryList = ImmutableList.of(1L, 2L, 3L);
@@ -163,7 +150,7 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
         assertThat(versionId, is(notNullValue()));
         assertThat(tableId, is(notNullValue()));
         RefTableVersionInfo refVersionInfo = rdmService.getRefVersionInfo(versionId);
-        mockS3Object("test_s3.csv", "/test_s3.csv", refVersionInfo);
+        mockStorageFileData("test_s3.csv", "/test_s3.csv", refVersionInfo);
         RefDataVersionFillInfo refDataVersionFillInfo = rdmService.fetchRefDataVersionInfo(refVersionInfo.getVersionId());
 
         RefBaseTable refBaseTable1 = refDataVersionFillInfo.getRefBaseTable();
@@ -175,11 +162,13 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
     }
 
     @SneakyThrows
-    private void mockS3Object(String fileName, String filePath, RefTableVersionInfo refVersionInfo) {
-        S3Object s3Object = new S3Object();
-        MultipartFile multipartCSVFile = getMultipartCSVFile(fileName, filePath);
-        s3Object.setObjectContent(multipartCSVFile.getInputStream());
-        when(amazonS3.getObject(bucketName, S3StorageFileManger.relativePath(refVersionInfo.getDataPath()))).thenReturn(s3Object);
+    private void mockStorageFileData(String fileName, String filePath, RefTableVersionInfo refVersionInfo) {
+        MultipartFile multipartFile = getMultipartFile(fileName, filePath);
+        RefBaseTable refBaseTable = rdmService.parseFile(multipartFile);
+        LinkedHashMap<ConstraintType, Set<String>> map = Maps.newLinkedHashMap();
+        refBaseTable.getRefTableMetaData().setRefTableConstraints(map);
+        StorageFileData storageFileData = new StorageFileData(refVersionInfo.getDataPath(), refVersionInfo.getSchemaName(), refBaseTable);
+        when(refStorageFileBuilder.read(ArgumentMatchers.any())).thenReturn(storageFileData);
     }
 
 
@@ -405,8 +394,7 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
         Long tableId = versionInfo.getTableId();
         Long versionId = versionInfo.getVersionId();
         RefTableVersionInfo refVersionInfo = rdmService.getRefVersionInfo(versionId);
-        mockS3Object("test_s3.csv", "/test_s3.csv", refVersionInfo);
-
+        mockStorageFileData("test_s3.csv", "/test_s3.csv", refVersionInfo);
         RefDataVersionFillInfo refDataVersionFillInfo = rdmService.fetchEditableRefDataVersionInfo(tableId);
         assertThat(refDataVersionFillInfo.getVersionId(), is(versionId));
         assertThat(refDataVersionFillInfo.getTableId(), is(tableId));
@@ -416,6 +404,7 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
         assertThat(refDataVersionFillInfo.getStartTime(), is(nullValue()));
         assertThat(refDataVersionFillInfo.getEndTime(), is(nullValue()));
         rdmService.publishRefDataTableVersion(versionId);
+        mockStorageFileData("test_s3.csv", "/test_s3.csv", refVersionInfo);
         RefDataVersionFillInfo publishRefDataTableVersion = rdmService.fetchEditableRefDataVersionInfo(tableId);
         assertThat(publishRefDataTableVersion.getVersionId(), is(versionId));
         assertThat(publishRefDataTableVersion.getTableId(), is(tableId));
@@ -435,7 +424,7 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
         RefUpdateResult updateResult = rdmService.editRefDataInfo(request_update);
         BaseRefTableVersionInfo editRefTableVersionInfo = updateResult.getBaseRefTableVersionInfo();
         RefTableVersionInfo refVersionInfo1 = rdmService.getRefVersionInfo(editRefTableVersionInfo.getVersionId());
-        mockS3Object("test_update_s3.csv", "/test_update_s3.csv", refVersionInfo1);
+        mockStorageFileData("test_update_s3.csv", "/test_update_s3.csv", refVersionInfo1);
         RefDataVersionFillInfo refDataVersionInfo = rdmService.fetchEditableRefDataVersionInfo(tableId);
         assertThat(refDataVersionInfo.getVersionId(), is(editRefTableVersionInfo.getVersionId()));
         assertThat(refDataVersionInfo.getTableId(), is(editRefTableVersionInfo.getTableId()));
@@ -689,7 +678,7 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
 
     private EditRefDataTableRequest mockEditRefVersionInfo(Long tableId, Long versionId, String fileName, String filePath, String tableName, String database, String desc,
                                                            List<Long> glossaryList, List<String> ownerList, LinkedHashMap<ConstraintType, Set<String>> map) {
-        RefBaseTable refBaseTable = rdmService.parseFile(getMultipartCSVFile(fileName, filePath));
+        RefBaseTable refBaseTable = rdmService.parseFile(getMultipartFile(fileName, filePath));
         RefTableMetaData refTableMetaData = refBaseTable.getRefTableMetaData();
         refTableMetaData.setRefTableConstraints(map);
         refBaseTable.setRefTableMetaData(refTableMetaData);

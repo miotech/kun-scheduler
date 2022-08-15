@@ -43,4 +43,8 @@ public class RefTableVersionInfo {
     private OffsetDateTime updateTime; //更新时间
     private boolean deleted;
     private Long datasetId;
+
+    public String getSchemaName() {
+        return String.format("%s.%s", databaseName, tableName);
+    }
 }
