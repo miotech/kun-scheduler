@@ -1,11 +1,12 @@
 // @ts-noCheck
 
-import React, { memo, useMemo, useCallback, useState } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import moment from 'moment';
 import { Tasks } from '@/definitions/Gantt.type';
 import useI18n from '@/hooks/useI18n';
 import { Link } from 'umi';
 import { Popover } from 'antd';
+import useUrlState from '@ahooksjs/use-url-state';
 import style from './Gantt.less';
 import { TooltipHtml } from './TooltipHtml';
 import { WaitTask } from './WaitTask';
@@ -32,9 +33,7 @@ function getIntervalMinutes(startDate: string, endDate: string) {
 export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
   const t = useI18n();
   const { data, taskRunId } = props;
-  const [drawerVisible, setDrawerVisible] = useState(false);
-  const [waitForTaskRunId, setWaitForTaskRunId] = useState();
-
+  const [routeState, setRouteState] = useUrlState({});
   const { earliestTime, latestTime, infoList } = data;
   const toolBarStartTime = useMemo(() => moment(earliestTime).format('YYYY-MM-DD, HH:00:00'), [earliestTime]); // 坐标轴开始时间
   // 时间轴有多少格
@@ -115,10 +114,14 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
     }
   };
 
-  const openDrawer = useCallback((id: string) => {
-    setDrawerVisible(true);
-    setWaitForTaskRunId(id);
-  }, []);
+  const openDrawer = useCallback(
+    (id: string) => {
+      setRouteState({
+        waitForTaskRunId: id,
+      });
+    },
+    [setRouteState],
+  );
 
   return (
     <div className={style.content} onMouseLeave={() => closeCurrentTime()}>
@@ -203,7 +206,7 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
           <div className={style.title}>{t('operationCenter.runningStatistics.timeLine')}</div>
         </div>
       </div>
-      <WaitTask drawerVisible={drawerVisible} waitForTaskRunId={waitForTaskRunId} setDrawerVisible={setDrawerVisible} />
+      <WaitTask drawerVisible={routeState?.waitForTaskRunId} waitForTaskRunId={routeState?.waitForTaskRunId} />
     </div>
   );
 });
