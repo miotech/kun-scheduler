@@ -109,6 +109,7 @@ export default {
   'login.userName': '用户名',
   'login.password': '密码',
   'login.confirmButton': '登录',
+  'login.OAuth': 'OAuth登录',
   'login.pleaseInput.username': '请输入用户名',
   'login.pleaseInput.password': '请输入密码',
   'login.error.usernamePasswordError': '用户名或密码错误',

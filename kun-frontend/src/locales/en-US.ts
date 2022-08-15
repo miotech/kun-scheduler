@@ -110,6 +110,7 @@ export default {
   'login.userName': 'Username',
   'login.password': 'Password',
   'login.confirmButton': 'Login',
+  'login.OAuth': 'OAuth Login',
   'login.pleaseInput.username': 'Please input username.',
   'login.pleaseInput.password': 'Please input password.',
   'login.error.usernamePasswordError': 'Incorrect username or password.',

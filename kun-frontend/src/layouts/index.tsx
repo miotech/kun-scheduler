@@ -40,7 +40,7 @@ export default function Layout({ children, location, route }: IRouteComponentPro
     document.documentElement.setAttribute('lang', t('common.lang'));
   }, [t]);
 
-  if (location.pathname === '/login') {
+  if (location.pathname === '/login' || location.pathname === '/oauth2/login') {
     return <Provider store={store}>{children}</Provider>;
   }
 

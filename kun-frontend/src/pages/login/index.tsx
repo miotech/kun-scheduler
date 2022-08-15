@@ -2,13 +2,12 @@ import React, { useCallback, useMemo } from 'react';
 import { Input, Button, message, Form, notification } from 'antd';
 import { useDispatch } from 'react-redux';
 import useI18n from '@/hooks/useI18n';
-
 import { LoginLayout } from '@/layouts/LoginLayout';
 import { LoginFooter } from '@/pages/login/LoginFooter';
 
 import { RootDispatch } from '@/rematch/store';
 import { Store } from 'antd/lib/form/interface';
-
+import { getOAuthUrl } from '@/services/user';
 import kunLogo from '@/assets/images/kun-logo.png';
 
 import css from './index.less';
@@ -50,6 +49,14 @@ export default function Login() {
     [handleClickLogin],
   );
 
+  const oauth2Login = useCallback(async () => {
+    const res = await getOAuthUrl();
+    const oauth2Url = `${res.url}?client_id=${res.clientId}&redirect_uri=${encodeURI(res.redirectUri)}&response_type=${
+      res.responseType
+    }`;
+    window.location.href = oauth2Url;
+  }, []);
+
   const formContent = useMemo(
     () => (
       <div className={css.inputArea}>
@@ -59,38 +66,29 @@ export default function Login() {
             {t('common.app.name')}
           </h4>
         </div>
-        <Form
-          {...layout}
-          name="basic"
-          onFinish={onFinish as (values: Store) => void}
-        >
-          <Form.Item
-            name="username"
-            rules={[
-              { required: true, message: t('login.pleaseInput.username') },
-            ]}
-          >
+        <Form {...layout} name="basic" onFinish={onFinish as (values: Store) => void}>
+          <Form.Item name="username" rules={[{ required: true, message: t('login.pleaseInput.username') }]}>
             <Input size="large" placeholder={t('login.userName')} />
           </Form.Item>
 
-          <Form.Item
-            name="password"
-            rules={[
-              { required: true, message: t('login.pleaseInput.password') },
-            ]}
-          >
+          <Form.Item name="password" rules={[{ required: true, message: t('login.pleaseInput.password') }]}>
             <Input.Password size="large" placeholder={t('login.password')} />
           </Form.Item>
 
-          <Form.Item>
+          <Form.Item style={{ marginBottom: '10px' }}>
             <Button size="large" block type="primary" htmlType="submit">
               {t('login.confirmButton')}
             </Button>
           </Form.Item>
         </Form>
+        <div className={css.authList}>
+          <a className={css.worthMentioning} onClick={oauth2Login}>
+            {t('login.OAuth')}
+          </a>
+        </div>
       </div>
     ),
-    [onFinish, t],
+    [onFinish, oauth2Login, t],
   );
 
   return (
