@@ -17,6 +17,7 @@ import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +138,12 @@ public class GlueBackend extends BaseMetadataBackend {
     }
 
     private List<DatasetField> getSchema(Table table) {
-        return table.getStorageDescriptor().getColumns().stream().map(column -> DatasetField.newBuilder()
+        List<Column> partitionKeys = table.getPartitionKeys();
+        List<Column> columns = table.getStorageDescriptor().getColumns();
+        if (CollectionUtils.isNotEmpty(partitionKeys)) {
+            columns.addAll(partitionKeys);
+        }
+        return columns.stream().map(column -> DatasetField.newBuilder()
                 .withName(column.getName())
                 .withComment(column.getComment())
                 .withFieldType(new DatasetFieldType(fieldMappingService.parse(DatasourceType.HIVE.name(), column.getType()), column.getType()))
