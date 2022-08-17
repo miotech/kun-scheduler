@@ -69,7 +69,7 @@ public class TaskRunService {
 
     private final Integer TRACE_LIMIT_DAYS = 3;
 
-    private final Integer DISPLAY_LIMIT = 10;
+    private final Integer DISPLAY_LIMIT = 100;
 
     @Inject
     private Props props;
@@ -345,6 +345,7 @@ public class TaskRunService {
         List<RunningTaskRunInfo> results = fetchedTaskRuns.stream()
                 .map(tr -> RunningTaskRunInfo.newBuilder()
                         .withName(tr.getTask().getName())
+                        .withStatus(tr.getStatus())
                         .withTaskRunId(tr.getId())
                         .withRunningTime_seconds(ChronoUnit.SECONDS.between(DateTimeUtils.getLaterTime(tr.getStartAt(), queueStart),
                                 DateTimeUtils.getEarlierTime(tr.getTermAt(), queueEnd)))

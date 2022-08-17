@@ -1008,6 +1008,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.updateTaskRun(taskRun1);
         taskRunDao.updateTaskRun(taskRun2);
         List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
+        System.out.println(JSONUtils.toJsonString(result));
         assertThat(result.size(), is(1));
     }
 
@@ -1027,7 +1028,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         }
 
         List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
-        assertThat(result.size(), is(10));
+        assertThat(result.size(), is(30));
     }
 
     @Test
