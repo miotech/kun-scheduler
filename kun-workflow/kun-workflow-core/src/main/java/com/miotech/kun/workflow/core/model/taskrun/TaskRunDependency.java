@@ -10,7 +10,7 @@ public class TaskRunDependency {
 
     private final Long upstreamTaskRunId;
 
-    private final Long downStreamTaskRunId;
+    private final Long downstreamTaskRunId;
 
     private final DependencyLevel dependencyLevel;
 
@@ -18,10 +18,10 @@ public class TaskRunDependency {
 
 
     @JsonCreator
-    public TaskRunDependency(Long upstreamTaskRunId, Long downStreamTaskRunId,
+    public TaskRunDependency(Long upstreamTaskRunId, Long downstreamTaskRunId,
                              DependencyLevel dependencyLevel, DependencyStatus dependencyStatus) {
         this.upstreamTaskRunId = upstreamTaskRunId;
-        this.downStreamTaskRunId = downStreamTaskRunId;
+        this.downstreamTaskRunId = downstreamTaskRunId;
         this.dependencyLevel = dependencyLevel;
         this.dependencyStatus = dependencyStatus;
     }
@@ -38,7 +38,7 @@ public class TaskRunDependency {
         return upstreamTaskRunId;
     }
 
-    public Long getDownStreamTaskRunId() {
-        return downStreamTaskRunId;
+    public Long getDownstreamTaskRunId() {
+        return downstreamTaskRunId;
     }
 }

@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class DeployedTaskDependencyVO {
-    private final Long downStreamTaskId;
+    private final Long downstreamTaskDefinitionId;
 
-    private final Long upstreamTaskId;
+    private final Long upstreamTaskDefinitionId;
 
 }

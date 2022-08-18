@@ -1819,9 +1819,9 @@ public class TaskRunDao {
                 .getSQL();
         List<TaskRunDependency> allDeps = dbOperator.fetchAll(sql, TaskRunDependencyMapper.getInstance(), taskRunIds.toArray());
         allDeps.forEach(dep -> {
-            List<Long> dependencyList = taskRunIdToDependenciesMap.get(dep.getDownStreamTaskRunId());
+            List<Long> dependencyList = taskRunIdToDependenciesMap.get(dep.getDownstreamTaskRunId());
             dependencyList.add(dep.getUpstreamTaskRunId());
-            taskRunIdToDependenciesMap.put(dep.getDownStreamTaskRunId(), dependencyList);
+            taskRunIdToDependenciesMap.put(dep.getDownstreamTaskRunId(), dependencyList);
         });
         return taskRunIdToDependenciesMap;
     }
@@ -1864,7 +1864,7 @@ public class TaskRunDao {
                 .into(RELATION_TABLE_NAME)
                 .asPrepared()
                 .getSQL();
-        dbOperator.create(sql, dependency.getUpstreamTaskRunId(), dependency.getDownStreamTaskRunId(),
+        dbOperator.create(sql, dependency.getUpstreamTaskRunId(), dependency.getDownstreamTaskRunId(),
                 dependency.getDependencyLevel().name(), dependency.getDependencyStatus().name());
     }
 
