@@ -312,6 +312,13 @@ export const appRoutes = [
         wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
       },
       {
+        title: 'login.OAuth',
+        path: 'oauth2/login',
+        component: 'login/OAuth',
+        exact: true,
+        wrappers: ['@/wrappers/path'],
+      },
+      {
         component: 'error-page/Error404/index',
       },
     ],

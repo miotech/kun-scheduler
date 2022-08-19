@@ -5,6 +5,12 @@ import { SECURITY_API_PRIFIX } from '@/constants/api-prefixes';
 import { get, post } from '@/utils/requestUtils';
 import LogUtils from '@/utils/logUtils';
 
+export interface Oauth2CallbackResponse {
+  url: string;
+  clientId: string;
+  responseType: string;
+  redirectUri: string;
+}
 export interface LoginServiceReqBody {
   username: string;
   password: string;
@@ -54,5 +60,18 @@ export async function fetchUsersList(): ServiceRespPromise<User[]> {
   return get('/user/list', {
     prefix: SECURITY_API_PRIFIX,
     mockCode: 'users.list',
+  });
+}
+
+export async function OAuthLogin(params) {
+  return get('/oauth2/authorize', {
+    query: params,
+    prefix: SECURITY_API_PRIFIX,
+  });
+}
+
+export async function getOAuthUrl() {
+  return get<Oauth2CallbackResponse>('/oauth/callback-url', {
+    prefix: SECURITY_API_PRIFIX,
   });
 }
