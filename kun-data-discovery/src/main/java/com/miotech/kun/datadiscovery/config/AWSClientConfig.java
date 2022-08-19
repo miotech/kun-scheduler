@@ -31,17 +31,14 @@ public class AWSClientConfig {
     private String bucketName;
 
 
-    @Bean
-    public AmazonS3 amazonS3() {
-        BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
-        AmazonS3 amazonS3 = AmazonS3ClientBuilder.standard()
-                .withRegion(Regions.fromName(region))
-                .withCredentials(new AWSStaticCredentialsProvider(awsCreds)).withRegion(Regions.AP_NORTHEAST_1)
-                .build();
-        if (!amazonS3.doesBucketExistV2(bucketName)) {
-            amazonS3.createBucket(bucketName);
-        }
-        return amazonS3;
+    @Bean(name = "filSystemConfiguration")
+    public org.apache.hadoop.conf.Configuration filSystemConfiguration() {
+        org.apache.hadoop.conf.Configuration configuration = new org.apache.hadoop.conf.Configuration();
+        configuration.set("fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider");
+        configuration.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem");
+        configuration.set("fs.s3a.access.key", accessKey);
+        configuration.set("fs.s3a.secret.key", secretKey);
+        return configuration;
     }
 
 

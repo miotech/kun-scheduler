@@ -24,7 +24,7 @@ public class MockRefDataVersionBasicFactory {
     }
 
     @SneakyThrows
-    public static MultipartFile getMultipartCSVFile(String fileName, String filePath) {
+    public static MultipartFile getMultipartFile(String fileName, String filePath) {
         MultipartFile mulFile = new MockMultipartFile(fileName, fileName, "application/octet-stream", MockRefDataVersionBasicFactory.class.getResourceAsStream(filePath));
         return mulFile;
     }

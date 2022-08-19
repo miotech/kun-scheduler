@@ -13,7 +13,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class StorageFileData {
     private String dataPath;
-    private final RefData refData;
+    private String schema;
+    private final RefBaseTable refBaseTable;
 
 
 }

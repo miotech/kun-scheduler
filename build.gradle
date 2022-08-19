@@ -116,6 +116,10 @@ subprojects {
                 implementation 'org.apache.commons:commons-csv:1.6'
                 implementation group: 'org.apache.poi', name: 'poi', version: '4.1.2'
                 implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
+                implementation 'io.projectreactor:reactor-core:3.4.21'
+                implementation 'org.apache.parquet:parquet-column: 1.12.3'
+                implementation 'org.jodd:jodd-core:5.3.0'
+                implementation 'joda-time:joda-time:2.10.14'
 
                 testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
                 testImplementation 'org.testcontainers:junit-jupiter:1.16.2'

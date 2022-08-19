@@ -6,6 +6,7 @@ import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.pubsub.subscribe.NopEventSubscriber;
+import org.apache.hadoop.conf.Configuration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
@@ -20,9 +21,9 @@ public class DiscoveryConfig {
         return mock(AWSGlue.class);
     }
 
-    @Bean
-    public AmazonS3 amazonS3() {
-        return mock(AmazonS3.class);
+    @Bean(name = "filSystemConfiguration")
+    public Configuration filSystemConfiguration() {
+        return mock(Configuration.class);
     }
 
     @Bean("data-discovery-subscriber")

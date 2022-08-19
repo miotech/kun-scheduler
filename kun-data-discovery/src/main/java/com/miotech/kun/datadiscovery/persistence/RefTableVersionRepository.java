@@ -218,8 +218,8 @@ public class RefTableVersionRepository extends BaseRepository {
 
     public Integer countRefTableInfo() {
         String sql = DefaultSQLBuilder.newBuilder().select(String.format("count( distinct %s) as count", RTVI_TABLE_ID)).from(TABLE_RTVI_NAME, TABLE_RTVI_ALIAS)
-                .where(String.format("%s = false limit 1", RTVI_DELETED)).getSQL();
-        return jdbcTemplate.query(sql, rs -> rs.next() ? rs.getInt("count") : 0);
+                .where(String.format("%s =?  and %s<>? limit 1", RTVI_DELETED, RTVI_STATUS)).getSQL();
+        return jdbcTemplate.query(sql, rs -> rs.next() ? rs.getInt("count") : 0, false, RefTableVersionStatus.HISTORY.name());
     }
 
     public RefTableVersionInfo findUnPublishedByTable(Long tableId) {

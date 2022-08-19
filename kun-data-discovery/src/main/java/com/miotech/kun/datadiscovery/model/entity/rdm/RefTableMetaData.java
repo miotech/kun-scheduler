@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscovery.model.entity.rdm;
 
 import com.miotech.kun.datadiscovery.model.enums.ConstraintType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -17,6 +18,7 @@ import java.util.Set;
  **/
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class RefTableMetaData {
     private LinkedHashSet<RefColumn> columns;
     private LinkedHashMap<ConstraintType, Set<String>> refTableConstraints;

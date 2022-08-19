@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
-import static com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFactory.getMultipartCSVFile;
+import static com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFactory.getMultipartFile;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,7 +30,7 @@ public class RefUploadFileTest extends DataDiscoveryTestBase {
     @Test
     public void parseCsv() {
         String fileName = "test.csv";
-        MultipartFile mulFile = getMultipartCSVFile(fileName, "/test.csv");
+        MultipartFile mulFile = getMultipartFile(fileName, "/test.csv");
         RefInputSource refInputSource = new RefInputSource(mulFile);
         RefUploadFileDescription refUploadFileDescription = refInputSource.getRefUploadFileDescription();
         assertThat(refUploadFileDescription.getUploadFileType(), is(UploadFileType.CSV));
@@ -50,7 +50,7 @@ public class RefUploadFileTest extends DataDiscoveryTestBase {
     @Test
     public void parseExecl() {
         String fileName = "test.xlsx";
-        MultipartFile mulFile = getMultipartCSVFile(fileName, "/test.xlsx");
+        MultipartFile mulFile = getMultipartFile(fileName, "/test.xlsx");
         RefInputSource refInputSource = new RefInputSource(mulFile);
         RefUploadFileDescription refUploadFileDescription = refInputSource.getRefUploadFileDescription();
         assertThat(refUploadFileDescription.getUploadFileType(), is(UploadFileType.EXECL));

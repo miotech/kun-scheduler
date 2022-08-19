@@ -25,20 +25,10 @@ public final class DataRecord implements Serializable, Iterable<Object> {
 
     public DataRecord(final Object[] values, final Map<String, Integer> mapping, final long recordNumber) {
         this.recordNumber = recordNumber;
-        this.values = values != null ? escape(values) : EMPTY_STRING_ARRAY;
+        this.values = values != null ? values : EMPTY_STRING_ARRAY;
         this.mapping = mapping;
     }
 
-    private Object[] escape(Object[] values) {
-        for (int i = 0; i < values.length; i++) {
-            Object value = values[i];
-            if (Objects.nonNull(value)) {
-                values[i] = String.valueOf(value).replaceAll("[\\t\\n\\r]", " ");
-                ;
-            }
-        }
-        return values;
-    }
 
     public void setMapping(Map<String, Integer> mapping) {
         this.mapping = mapping;

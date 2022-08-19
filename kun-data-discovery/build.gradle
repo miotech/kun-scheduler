@@ -66,14 +66,27 @@ dependencies {
     implementation "com.amazonaws:aws-java-sdk-s3"
     implementation group: 'org.apache.poi', name: 'poi'
     implementation group: 'org.apache.poi', name: 'poi-ooxml'
-    implementation 'io.projectreactor:reactor-core:3.4.18'
+    implementation 'io.projectreactor:reactor-core'
     implementation 'io.lettuce:lettuce-core'
+    implementation 'org.apache.parquet:parquet-hadoop:1.12.3'
+    implementation 'org.apache.parquet:parquet-column'
+    implementation 'org.jodd:jodd-core'
+    implementation 'joda-time:joda-time'
+    implementation 'org.apache.spark:spark-sql_2.11:2.4.8'
+    implementation("org.apache.hive:hive-common:2.2.0") {
+        exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
+        exclude group: 'org.eclipse.jetty.orbit', module: 'javax.servlet'
+        exclude group: 'javax.servlet', module: 'servlet-api'
+    }
+    implementation("org.apache.hadoop:hadoop-common:2.7.3") {
+        exclude group: 'javax.servlet', module: 'servlet-api'
+    }
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation 'io.projectreactor:reactor-test:3.4.18'
+    testImplementation 'io.projectreactor:reactor-test:3.4.21'
 }
 
 jacocoTestReport {
