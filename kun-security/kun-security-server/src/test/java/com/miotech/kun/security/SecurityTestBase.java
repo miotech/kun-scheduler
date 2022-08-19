@@ -2,11 +2,8 @@ package com.miotech.kun.security;
 
 import com.miotech.kun.commons.testing.KunAppTestBase;
 import lombok.extern.slf4j.Slf4j;
-import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -26,13 +23,8 @@ public abstract class SecurityTestBase extends KunAppTestBase {
             "com.miotech.kun.common",
             "com.miotech.kun.security",
     })
-
     public static class TestConfig {
 
-        @Bean
-        public OAuth2ClientProperties getOAuth2ClientProperties() {
-            return Mockito.mock(OAuth2ClientProperties.class);
-        }
     }
 
     @DynamicPropertySource

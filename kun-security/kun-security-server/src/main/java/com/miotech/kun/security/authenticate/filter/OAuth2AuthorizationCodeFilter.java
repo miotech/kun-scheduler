@@ -1,10 +1,13 @@
 package com.miotech.kun.security.authenticate.filter;
 
 import com.google.common.collect.Lists;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.security.authenticate.resolver.AttributesResolver;
 import com.miotech.kun.security.authenticate.resolver.impl.OktaAttributesResolver;
 import com.miotech.kun.security.model.UserInfo;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
@@ -31,19 +34,23 @@ import java.util.Map;
  */
 public class OAuth2AuthorizationCodeFilter extends AbstractAuthenticationProcessingFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(OAuth2AuthorizationCodeFilter.class);
+
+    String registrationId;
+
     OAuth2ClientProperties clientProperties;
 
     Map<String, AttributesResolver> attributesResolverMap;
 
-    public OAuth2AuthorizationCodeFilter(String defaultFilterProcessesUrl) {
+    public OAuth2AuthorizationCodeFilter(String defaultFilterProcessesUrl, String registrationId) {
         super(defaultFilterProcessesUrl);
+        this.registrationId = registrationId;
         attributesResolverMap = new HashMap<>();
-        attributesResolverMap.put("okta", new OktaAttributesResolver());
+        attributesResolverMap.put(registrationId, new OktaAttributesResolver());
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
-        String registrationId = request.getParameter("registrationId");
         String clientId = clientProperties.getRegistration().get(registrationId).getClientId();
         String clientSecret = clientProperties.getRegistration().get(registrationId).getClientSecret();
         String redirectUri = clientProperties.getRegistration().get(registrationId).getRedirectUri();
@@ -55,16 +62,19 @@ public class OAuth2AuthorizationCodeFilter extends AbstractAuthenticationProcess
         JSONObject tokenInfos = getAccessTokenInfo(authorizationCode, clientId, clientSecret, redirectUri, tokenUri);
         String accessToken = (String) tokenInfos.get("access_token");
 
-        JSONObject userInfos = getUserInfo(userInfoUri, accessToken);
-
+        JSONObject userInfos = new JSONObject((Map) getUserInfo(userInfoUri, accessToken).get("data"));
+        logger.info("userInfos: {}", JSONUtils.toJsonString(userInfos));
         String username = attributesResolverMap.get(registrationId).resolveUsername(userInfos);
+
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(username);
 
         OAuth2User oAuth2User = new DefaultOAuth2User(Lists.newArrayList(new SimpleGrantedAuthority("OAUTH2")), userInfos, attributesResolverMap.get(registrationId).getUsernameKey());
         OAuth2AuthenticationToken authenticationToken = new OAuth2AuthenticationToken(oAuth2User, null, registrationId);
         authenticationToken.setDetails(userInfo);
+        authenticationToken.setAuthenticated(true);
         return authenticationToken;
+
     }
 
     public JSONObject getAccessTokenInfo(String authorizationCode,
@@ -83,7 +93,7 @@ public class OAuth2AuthorizationCodeFilter extends AbstractAuthenticationProcess
         param.add("grant_type", "authorization_code");
         param.add("redirect_uri", redirectUri);
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(param, headers);
-        ResponseEntity<JSONObject> response = restTemplate.postForEntity(accessTokenUri, request , JSONObject.class);
+        ResponseEntity<JSONObject> response = restTemplate.postForEntity(accessTokenUri, request, JSONObject.class);
         return response.getBody();
     }
 
