@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 @JsonDeserialize(builder = RunningTaskRunInfo.Builder.class)
 public class RunningTaskRunInfo {
@@ -10,6 +11,8 @@ public class RunningTaskRunInfo {
     private Long taskRunId;
 
     private String name;
+
+    private TaskRunStatus status;
 
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private Long runningTime_seconds;
@@ -26,13 +29,34 @@ public class RunningTaskRunInfo {
         return name;
     }
 
+    public TaskRunStatus getStatus() {
+        return status;
+    }
+
     public Long getRunningTime_seconds() {
         return runningTime_seconds;
+    }
+
+    public void setTaskRunId(Long taskRunId) {
+        this.taskRunId = taskRunId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setStatus(TaskRunStatus status) {
+        this.status = status;
+    }
+
+    public void setRunningTime_seconds(Long runningTime_seconds) {
+        this.runningTime_seconds = runningTime_seconds;
     }
 
     public static final class Builder {
         private Long taskRunId;
         private String name;
+        private TaskRunStatus status;
         private Long runningTime_seconds;
 
         private Builder() {
@@ -48,6 +72,11 @@ public class RunningTaskRunInfo {
             return this;
         }
 
+        public Builder withStatus(TaskRunStatus status) {
+            this.status = status;
+            return this;
+        }
+
         public Builder withRunningTime_seconds(Long runningTime_seconds) {
             this.runningTime_seconds = runningTime_seconds;
             return this;
@@ -55,9 +84,10 @@ public class RunningTaskRunInfo {
 
         public RunningTaskRunInfo build() {
             RunningTaskRunInfo runningTaskRunInfo = new RunningTaskRunInfo();
-            runningTaskRunInfo.runningTime_seconds = this.runningTime_seconds;
-            runningTaskRunInfo.name = this.name;
-            runningTaskRunInfo.taskRunId = this.taskRunId;
+            runningTaskRunInfo.setTaskRunId(taskRunId);
+            runningTaskRunInfo.setName(name);
+            runningTaskRunInfo.setStatus(status);
+            runningTaskRunInfo.setRunningTime_seconds(runningTime_seconds);
             return runningTaskRunInfo;
         }
     }
