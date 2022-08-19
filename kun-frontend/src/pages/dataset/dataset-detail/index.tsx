@@ -105,7 +105,7 @@ export default function DatasetDetail({ match }: Props) {
           keyword: debounceColumnKeyword,
           pagination: {
             pageNumber: selector.columnsPagination.pageNumber,
-            pageSize: selector.columnsPagination.pageSize,
+            pageSize: 65536,
           },
         };
         await dispatch.datasetDetail.fetchDatasetColumns(params);
@@ -120,7 +120,6 @@ export default function DatasetDetail({ match }: Props) {
     debounceColumnKeyword,
     dispatch.datasetDetail,
     selector.columnsPagination.pageNumber,
-    selector.columnsPagination.pageSize,
     forceReFetchInfoFlag,
   ]);
 
@@ -233,15 +232,6 @@ export default function DatasetDetail({ match }: Props) {
     });
   }, [currentId, debounceColumnKeyword, dispatch.datasetDetail, selector.columnsPagination]);
 
-  const handleChangePagination = useCallback(
-    (pageNumber: number, pageSize?: number) => {
-      dispatch.datasetDetail.updatePagination({
-        pageNumber,
-        pageSize: pageSize || 25,
-      });
-    },
-    [dispatch.datasetDetail],
-  );
   const handleChangePageSize = useCallback(
     (_pageNumber: number, pageSize: number) => {
       dispatch.datasetDetail.updatePagination({
@@ -376,18 +366,11 @@ export default function DatasetDetail({ match }: Props) {
       showTotal: (total: number) => t('dataDetail.column.total', { total }),
       showSizeChanger: true,
       showQuickJumper: true,
-      onChange: handleChangePagination,
       onShowSizeChange: handleChangePageSize,
       pageSize: selector.columnsPagination.pageSize,
       pageSizeOptions: ['25', '50', '100', '200'],
     }),
-    [
-      handleChangePageSize,
-      handleChangePagination,
-      selector.columnsPagination.pageSize,
-      selector.columnsPagination.totalCount,
-      t,
-    ],
+    [handleChangePageSize, selector.columnsPagination.pageSize, selector.columnsPagination.totalCount, t],
   );
 
   const handleAddGlossary = useCallback(

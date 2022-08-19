@@ -4,15 +4,13 @@ import {
   pullDatasetService,
   UpdateDatasetReqBody,
   updateDatasetService,
-  updateColumnService, DatasetPullProcessVO, fetchLatestDatasetPullProcess,
+  updateColumnService,
+  DatasetPullProcessVO,
+  fetchLatestDatasetPullProcess,
 } from '@/services/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
 import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
-import {
-  FetchLineageTasksReq,
-  fetchLineageTasksService,
-  LineageDirection,
-} from '@/services/lineage';
+import { FetchLineageTasksReq, fetchLineageTasksService, LineageDirection } from '@/services/lineage';
 import {
   deleteQualityService,
   fetchDataAllQualitiesService,
@@ -161,64 +159,43 @@ export const datasetDetail = {
   } as DatasetDetailState,
 
   reducers: {
-    updateState: (
-      state: DatasetDetailState,
-      payload: { key: keyof DatasetDetailState; value: any },
-    ) => ({
+    updateState: (state: DatasetDetailState, payload: { key: keyof DatasetDetailState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
     }),
-    batchUpdateState: (
-      state: DatasetDetailState,
-      payload: Partial<DatasetDetailState>,
-    ) => ({
+    batchUpdateState: (state: DatasetDetailState, payload: Partial<DatasetDetailState>) => ({
       ...state,
       ...payload,
     }),
-    updatePagination: (
-      state: DatasetDetailState,
-      payload: Partial<Pagination>,
-    ) => ({
+    updatePagination: (state: DatasetDetailState, payload: Partial<Pagination>) => ({
       ...state,
       columnsPagination: {
         ...state.columnsPagination,
         ...payload,
       },
     }),
-    updateDataQualityPagination: (
-      state: DatasetDetailState,
-      payload: Partial<Pagination>,
-    ) => ({
+    updateDataQualityPagination: (state: DatasetDetailState, payload: Partial<Pagination>) => ({
       ...state,
       dataQualityTablePagination: {
         ...state.dataQualityTablePagination,
         ...payload,
       },
     }),
-    updateUpstreamPagination: (
-      state: DatasetDetailState,
-      payload: Partial<Pagination>,
-    ) => ({
+    updateUpstreamPagination: (state: DatasetDetailState, payload: Partial<Pagination>) => ({
       ...state,
       upstreamLineageTaskListPagination: {
         ...state.upstreamLineageTaskListPagination,
         ...payload,
       },
     }),
-    updateDownstreamPagination: (
-      state: DatasetDetailState,
-      payload: Partial<Pagination>,
-    ) => ({
+    updateDownstreamPagination: (state: DatasetDetailState, payload: Partial<Pagination>) => ({
       ...state,
       downstreamLineageTaskListPagination: {
         ...state.downstreamLineageTaskListPagination,
         ...payload,
       },
     }),
-    mergeDataQualityHistories: (
-      state: DatasetDetailState,
-      payload: FetchDataQualityHistoriesResp,
-    ) => ({
+    mergeDataQualityHistories: (state: DatasetDetailState, payload: FetchDataQualityHistoriesResp) => ({
       ...state,
       dataQualities: state.dataQualities?.map(item => {
         const histories = payload.find(i => i.caseId === item.id)?.historyList;
@@ -267,10 +244,7 @@ export const datasetDetail = {
           const resp = await fetchLineageTasksService(payload);
           if (resp) {
             const { tasks } = resp;
-            if (
-              payload.direction === LineageDirection.UPSTREAM &&
-              flag === fetchUpstreamLineageTaskListFlag
-            ) {
+            if (payload.direction === LineageDirection.UPSTREAM && flag === fetchUpstreamLineageTaskListFlag) {
               dispatch.datasetDetail.batchUpdateState({
                 upstreamLineageTaskList: tasks,
               });
@@ -296,26 +270,15 @@ export const datasetDetail = {
           }
         }
       },
-      async fetchDatasetColumns(payload: {
-        id: string;
-        keyword: string;
-        pagination: Pagination;
-      }) {
+      async fetchDatasetColumns(payload: { id: string; keyword: string; pagination: Pagination }) {
         const { id, keyword, pagination } = payload;
         fetchDatasetColumnsServiceCountFlag += 1;
         try {
           const currentFetchDatasetColumnsServiceCountFlag = fetchDatasetColumnsServiceCountFlag;
-          const resp = await fetchDatasetColumnsService(
-            id,
-            keyword,
-            pagination,
-          );
-          if (
-            currentFetchDatasetColumnsServiceCountFlag ===
-            fetchDatasetColumnsServiceCountFlag
-          ) {
+          const resp = await fetchDatasetColumnsService(id, keyword, pagination);
+          if (currentFetchDatasetColumnsServiceCountFlag === fetchDatasetColumnsServiceCountFlag) {
             if (resp) {
-              const { columns, pageNumber, pageSize, totalCount } = resp;
+              const { columns, pageNumber, totalCount } = resp;
 
               dispatch.datasetDetail.updateState({
                 key: 'columns',
@@ -323,7 +286,6 @@ export const datasetDetail = {
               });
               dispatch.datasetDetail.updatePagination({
                 pageNumber,
-                pageSize,
                 totalCount,
               });
             }
@@ -332,10 +294,7 @@ export const datasetDetail = {
           // do nothing
         }
       },
-      async fetchDataQualities(payload: {
-        id: string;
-        pagination: Pagination;
-      }) {
+      async fetchDataQualities(payload: { id: string; pagination: Pagination }) {
         const { id, pagination } = payload;
         fetchDataQualityServiceCountFlag += 1;
         try {
@@ -345,23 +304,16 @@ export const datasetDetail = {
           });
           const currentFetchDataQualityServiceCountFlag = fetchDataQualityServiceCountFlag;
           const resp = await fetchDataAllQualitiesService(id, pagination);
-          if (
-            currentFetchDataQualityServiceCountFlag ===
-            fetchDataQualityServiceCountFlag
-          ) {
+          if (currentFetchDataQualityServiceCountFlag === fetchDataQualityServiceCountFlag) {
             if (resp) {
               const { dqCases, pageNumber, pageSize, totalCount } = resp;
 
-              const respHistory = await fetchDataQualityHistoriesService(
-                dqCases.map(i => i.id),
-              );
+              const respHistory = await fetchDataQualityHistoriesService(dqCases.map(i => i.id));
 
               let cases = dqCases;
               if (respHistory) {
                 cases = cases.map(caseItem => {
-                  const caseHistory = respHistory.find(
-                    item => item.caseId === caseItem.id,
-                  )?.historyList;
+                  const caseHistory = respHistory.find(item => item.caseId === caseItem.id)?.historyList;
                   return {
                     ...caseItem,
                     historyList: caseHistory,
@@ -401,10 +353,7 @@ export const datasetDetail = {
         }
         return null;
       },
-      async updateDataset(
-        payload: { id: string; updateParams: Partial<UpdateDatasetReqBody> },
-        rootState: RootState,
-      ) {
+      async updateDataset(payload: { id: string; updateParams: Partial<UpdateDatasetReqBody> }, rootState: RootState) {
         const { id, updateParams } = payload;
         const { description, owners, tags } = rootState.datasetDetail;
         const reqBody = {
