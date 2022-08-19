@@ -646,6 +646,7 @@ export default {
   'operationCenter.runningStatistics.task.start': 'Start Time',
   'operationCenter.runningStatistics.task.end': 'End Time',
   'operationCenter.runningStatistics.task.taskWaitingFor': 'Tasks waiting for',
+  'operationCenter.runningStatistics.task.notice': 'Display up to 100 tasks',
   'settings.variableSettings.title': 'Global Variable Settings',
   'settings.variableSettings.key': 'Key',
   'settings.variableSettings.value': 'Value',

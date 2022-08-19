@@ -45,13 +45,13 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
 
   const fetchUpstreamTask = useCallback(() => {
     const params = {
-      taskRunId: query && query.taskRunId,
+      taskRunId: query?.taskRunId,
     };
     run(params);
-  }, [query, run]);
+  }, [query.taskRunId, run]);
 
   const onClickRefresh = () => {
-    if (query && query.taskRunId) {
+    if (query?.taskRunId) {
       fetchUpstreamTask();
     } else {
       fetchTask();
@@ -65,12 +65,12 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
   };
 
   useEffect(() => {
-    if (query && query.taskRunId) {
+    if (query?.taskRunId) {
       fetchUpstreamTask();
     } else {
       fetchTask();
     }
-  }, [query, fetchTask, fetchUpstreamTask]);
+  }, [query.taskRunId, fetchTask, fetchUpstreamTask]);
 
   return (
     <div className={style.MainContent}>
@@ -87,7 +87,7 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
           </div>
         </Card>
       )}
-      {data && !loading && <Gantt data={data} taskRunId={query.taskRunId} />}
+      {data && !loading && <Gantt data={data} taskRunId={query?.taskRunId} />}
     </div>
   );
 });
