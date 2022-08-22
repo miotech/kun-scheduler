@@ -11,7 +11,8 @@ import { DAGTaskNode } from '@/components/DAGGraph/DAGTaskNode';
 import { DAGTaskEdge } from '@/components/DAGGraph/DAGTaskEdge';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { EventEmitter } from 'ahooks/lib/useEventEmitter';
-
+import { DagState } from '@/rematch/models/dag';
+import useRedux from '@/hooks/useRedux';
 import './index.less';
 import { useMount, useUnmount } from 'ahooks';
 
@@ -20,16 +21,29 @@ export interface DAGTaskGraphProps {
   relations: TaskRelation[];
   width?: number;
   height?: number;
-  showMiniMap?: boolean;
   viewportCenter$?: EventEmitter<string | number>;
   centerTaskId?: string;
+  expandUpstreamDAG: (id: string) => Promise<void>;
+  expandDownstreamDAG: (id: string) => Promise<void>;
+  closeUpstreamDag: (id: string) => void;
+  closeDownstreamDag: (id: string) => void;
 }
 
 const DEFAULT_WIDTH = 150;
-const DEFAULT_HEIGHT = 40;
+const DEFAULT_HEIGHT = 90;
 
 export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
-  const { nodes, relations, width = 1024, height = 768, showMiniMap, centerTaskId } = props;
+  const {
+    nodes,
+    relations,
+    width = 1024,
+    height = 768,
+    centerTaskId,
+    expandUpstreamDAG,
+    expandDownstreamDAG,
+    closeUpstreamDag,
+    closeDownstreamDag,
+  } = props;
 
   /* Here offsetX and offsetY are applied to centering DAG position */
   const [offsetX, setOffsetX] = useState<number>(0);
@@ -41,6 +55,8 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
   const graphContainerRef: React.MutableRefObject<SVGGElement | undefined> = React.useRef();
 
   const logger = useMemo(() => LogUtils.getLoggers('DAGTaskGraph'), []);
+  const { selector } = useRedux<DagState>(state => state.dag);
+  const { currentClickId } = selector;
 
   const animate = () => {
     const nextZoomStr = zoomRef.current?.toString() || 'matrix(1, 0, 0, 1, 0, 0)';
@@ -104,54 +120,63 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
     return g;
   }, [centerTaskId, nodes, relations, logger]);
 
-  const vxGraphData = {
-    nodes: graph
-      .nodes()
-      .map(nodeName => {
-        // logger.debug('nodeName = %o; graph.node(nodeName) = %o', nodeName, graph.node(nodeName));
-        const graphNode = graph.node(nodeName);
-        if (!graphNode) {
-          return null;
-        }
-        return {
-          x: graphNode.x || 0,
-          y: graphNode.y || 0,
-          width: DEFAULT_WIDTH,
-          height: DEFAULT_HEIGHT,
-          title: graphNode.label || '',
-          data: graphNode.data || {},
-        };
-      })
-      .filter(n => !isNil(n)),
-    links: graph
-      .edges()
-      .map(edge => {
-        const graphEdge = graph.edge(edge);
-        if (!graphEdge) {
-          return null;
-        }
-        return {
-          source: graphEdge.points[0],
-          target: graphEdge.points[graphEdge.points.length - 1],
-          path: graphEdge.points,
-        };
-      })
-      .filter(e => !isNil(e)),
-  };
-
-  // debugLog('vxGraphData = %o', vxGraphData);
-  // debugLog('realGraphRef = %o', graphWrapperRef);
+  const vxGraphData = useMemo(() => {
+    return {
+      nodes: graph
+        .nodes()
+        .map(nodeName => {
+          // logger.debug('nodeName = %o; graph.node(nodeName) = %o', nodeName, graph.node(nodeName));
+          const graphNode = graph.node(nodeName);
+          if (!graphNode) {
+            return null;
+          }
+          return {
+            x: graphNode.x || 0,
+            y: graphNode.y || 0,
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
+            title: graphNode.label || '',
+            data: graphNode.data || {},
+          };
+        })
+        .filter(n => !isNil(n)),
+      links: graph
+        .edges()
+        .map(edge => {
+          const graphEdge = graph.edge(edge);
+          if (!graphEdge) {
+            return null;
+          }
+          return {
+            source: graphEdge.points[0],
+            target: graphEdge.points[graphEdge.points.length - 1],
+            path: graphEdge.points,
+          };
+        })
+        .filter(e => !isNil(e)),
+    };
+  }, [graph]);
 
   /* Update position offset after reference changes */
   useEffect(() => {
-    if (graphWrapperRef.current) {
-      setOffsetX(graphWrapperRef.current.children[0].getBoundingClientRect().width / 2);
-      setOffsetY(graphWrapperRef.current.children[0].getBoundingClientRect().height / 2);
-    } else {
-      setOffsetX(0);
-      setOffsetY(0);
+    const nodeId = currentClickId || centerTaskId;
+    const centerNode = graph.node(nodeId);
+    if (centerNode) {
+      const { x, y } = centerNode;
+      zoomRef?.current?.setTransformMatrix({
+        scaleX: 1,
+        scaleY: 1,
+        skewX: 0,
+        skewY: 0,
+        translateX: 0,
+        translateY: 0,
+      });
+      const nodeWidth = centerNode?.width;
+      const nodeHeight = centerNode?.height;
+      setOffsetX(x - nodeWidth / 2);
+      setOffsetY(y - nodeHeight / 2);
     }
-  }, [graphWrapperRef, nodes, relations]);
+  }, [graph, currentClickId, centerTaskId, zoomRef]);
 
   if (props.viewportCenter$) {
     // when receiving place center event
@@ -201,8 +226,34 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
   }, []);
 
   const graphDOM = useMemo(() => {
-    return <Graph graph={vxGraphData} linkComponent={DAGTaskEdge as any} nodeComponent={DAGTaskNode as any} />;
-  }, [vxGraphData, DAGTaskEdge, DAGTaskNode]);
+    return (
+      <Graph
+        left={-(offsetX - width / 2 + 75)}
+        top={-(offsetY - height / 2 + 45)}
+        graph={vxGraphData}
+        linkComponent={DAGTaskEdge as any}
+        nodeComponent={({ node }) => (
+          <DAGTaskNode
+            node={node}
+            expandUpstreamDAG={expandUpstreamDAG}
+            expandDownstreamDAG={expandDownstreamDAG}
+            closeUpstreamDag={closeUpstreamDag}
+            closeDownstreamDag={closeDownstreamDag}
+          />
+        )}
+      />
+    );
+  }, [
+    vxGraphData,
+    offsetX,
+    offsetY,
+    width,
+    height,
+    expandUpstreamDAG,
+    expandDownstreamDAG,
+    closeUpstreamDag,
+    closeDownstreamDag,
+  ]);
 
   const renderDragMaskRect = useCallback(
     zoom => (
@@ -286,9 +337,10 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
               <rect width={width} height={height} rx={14} fill="#FFF" />
 
               {/* When not dragging, place drag mask behind */}
-              {!zoom.isDragging ? renderDragMaskRect(zoom) : null}
+              {renderDragMaskRect(zoom)}
+              {/* {!zoom.isDragging ? renderDragMaskRect(zoom) : null} */}
 
-              <g transform={`matrix(1,0,0,1,${width * 0.5 - offsetX},${height * 0.5 - offsetY})`}>
+              <g>
                 <g
                   // @ts-ignore
                   ref={graphContainerRef}
@@ -307,31 +359,7 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
               </g>
 
               {/* When dragging, place drag mask front */}
-              {zoom.isDragging ? renderDragMaskRect(zoom) : null}
-
-              {showMiniMap && (
-                <g
-                  clipPath="url(#zoom-clip)"
-                  transform={`
-                    scale(0.25)
-                    translate(${width * 4 - width - 60}, ${height * 4 - height - 60})
-                  `}
-                >
-                  <rect width={width} height={height} fill="#eee" />
-                  <g transform={`matrix(1,0,0,1,${width * 0.5 - offsetX},${height * 0.5 - offsetY})`}>
-                    <Graph graph={vxGraphData} linkComponent={DAGTaskEdge as any} nodeComponent={DAGTaskNode as any} />
-                  </g>
-                  <rect
-                    width={width}
-                    height={height}
-                    fill="white"
-                    fillOpacity={0.2}
-                    stroke="white"
-                    strokeWidth={4}
-                    transform={zoom.toStringInvert()}
-                  />
-                </g>
-              )}
+              {/* {zoom.isDragging ? renderDragMaskRect(zoom) : null} */}
             </svg>
           );
         }}

@@ -1,12 +1,11 @@
-import React, { FunctionComponent, useEffect, useMemo } from 'react';
+import React, { FunctionComponent, useEffect, useMemo, useCallback, useState } from 'react';
 import uniqueId from 'lodash/uniqueId';
-import { useRequest } from 'ahooks';
 import { DAGTaskGraph } from '@/components/DAGGraph';
 import { KunSpin } from '@/components/KunSpin';
-import { fetchDeployedTaskDAG } from '@/services/task-deployments/deployed-tasks';
-
 import { DeployedTask } from '@/definitions/DeployedTask.type';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
+import useRedux from '@/hooks/useRedux';
+import { DagState } from '@/rematch/models/dag';
 
 interface OwnProps {
   task: DeployedTask | null;
@@ -16,38 +15,63 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-const DeployedTaskDAG: FunctionComponent<Props> = (props) => {
+const DeployedTaskDAG: FunctionComponent<Props> = props => {
   const { task, width, height } = props;
+  const { selector, dispatch } = useRedux<DagState>(state => state.dag);
+  const [loading, setLoading] = useState(false);
 
-  const {
-    data: dagData,
-    loading,
-    run: fetchDAGFromRemote,
-  } = useRequest(fetchDeployedTaskDAG, {
-    manual: true,
-  });
+  const dagData = selector;
 
   useEffect(() => {
     if (task) {
-      fetchDAGFromRemote(task.id, {
-        upstreamLevel: 3,
-        downstreamLevel: 3,
+      setLoading(true);
+      dispatch.dag.queryTaskDag(task.id).finally(() => {
+        setLoading(false);
       });
     }
-  }, [
-    fetchDAGFromRemote,
-    task,
-  ]);
+  }, [task, dispatch]);
+
+  const expandUpstreamDAG = useCallback(
+    async id => {
+      return dispatch.dag.expandUpstreamTaskDAG(id);
+    },
+    [dispatch],
+  );
+
+  const expandDownstreamDAG = useCallback(
+    async id => {
+      return dispatch.dag.expandDownstreamTaskDAG(id);
+    },
+    [dispatch],
+  );
+
+  const closeUpstreamDag = useCallback(
+    id => {
+      return dispatch.dag.closeUpstreamTaskDag(id);
+    },
+    [dispatch],
+  );
+
+  const closeDownstreamDag = useCallback(
+    id => {
+      dispatch.dag.closeDownstreamTaskDag(id);
+    },
+    [dispatch],
+  );
 
   const DAGDom = useMemo(() => {
     if (loading) {
       return <KunSpin asBlock />;
     }
     if (dagData) {
-      const nodes: TaskNode[] = dagData.nodes.map(task => {
+      const nodes: TaskNode[] = dagData.nodes.map(item => {
         return {
-          id: task.id,
-          name: task.name,
+          id: item.id,
+          name: item.name,
+          data: {
+            id: item.id,
+            name: item.name,
+          },
         };
       });
       const edges: TaskRelation[] = dagData.edges.map(edge => ({
@@ -61,6 +85,11 @@ const DeployedTaskDAG: FunctionComponent<Props> = (props) => {
           height={height}
           nodes={nodes || []}
           relations={edges || []}
+          expandUpstreamDAG={expandUpstreamDAG}
+          expandDownstreamDAG={expandDownstreamDAG}
+          closeUpstreamDag={closeUpstreamDag}
+          closeDownstreamDag={closeDownstreamDag}
+          centerTaskId={task?.id as string | undefined}
         />
       );
     }
@@ -71,13 +100,14 @@ const DeployedTaskDAG: FunctionComponent<Props> = (props) => {
     dagData,
     width,
     height,
+    expandUpstreamDAG,
+    expandDownstreamDAG,
+    closeUpstreamDag,
+    closeDownstreamDag,
+    task,
   ]);
 
-  return (
-    <div data-tid="deployed-task-dag">
-      {DAGDom}
-    </div>
-  );
+  return <div data-tid="deployed-task-dag">{DAGDom}</div>;
 };
 
 export default DeployedTaskDAG;

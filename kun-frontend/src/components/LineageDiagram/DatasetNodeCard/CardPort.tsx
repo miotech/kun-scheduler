@@ -26,11 +26,7 @@ export const CardPort: React.FC<Props> = memo(function CardPort(props) {
       return (
         <button
           type="button"
-          className={c(
-            `${clsPrefix}__port-btn`,
-            `${clsPrefix}__port-btn--collapsed`,
-            className,
-          )}
+          className={c(`${clsPrefix}__port-btn`, `${clsPrefix}__port-btn--collapsed`, className)}
           aria-label="port-collapsed"
           onClick={onExpand}
         >
@@ -41,11 +37,7 @@ export const CardPort: React.FC<Props> = memo(function CardPort(props) {
       return (
         <button
           type="button"
-          className={c(
-            `${clsPrefix}__port-btn`,
-            `${clsPrefix}__port-btn--expanded`,
-            className,
-          )}
+          className={c(`${clsPrefix}__port-btn`, `${clsPrefix}__port-btn--expanded`, className)}
           aria-label="port-expanded"
           onClick={onCollapse}
         >
@@ -56,15 +48,11 @@ export const CardPort: React.FC<Props> = memo(function CardPort(props) {
       return (
         <button
           type="button"
-          className={c(
-            `${clsPrefix}__port-btn`,
-            `${clsPrefix}__port-btn--loading`,
-            className,
-          )}
+          className={c(`${clsPrefix}__port-btn`, `${clsPrefix}__port-btn--loading`, className)}
           aria-label="port-loading"
           disabled
         >
-          ...
+          <span>···</span>
         </button>
       );
     case 'hidden':

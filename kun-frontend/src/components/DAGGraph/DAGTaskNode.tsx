@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo, useCallback, useState } from 'react';
 import { Link } from 'umi';
 import { Group } from '@visx/group';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
@@ -9,7 +9,12 @@ import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import moment from 'moment-timezone';
 import { taskColorConfig } from '@/constants/colorConfig';
+import { CardPort } from '@/components/LineageDiagram/DatasetNodeCard/CardPort';
+import c from 'clsx';
+import { DagState } from '@/rematch/models/dag';
+import useRedux from '@/hooks/useRedux';
 import TextContainer from '../TextContainer/TextContainer';
+import styles from './DAGTaskNode.less';
 
 export interface Node {
   x: number;
@@ -34,8 +39,12 @@ export interface Node {
     }>;
 }
 
-export interface DAGTaskNodeProps {
-  node: Node;
+export interface Props {
+  expandUpstreamDAG: (id: string) => Promise<void>;
+  expandDownstreamDAG: (id: string) => Promise<void>;
+  closeUpstreamDag: (id: string) => void;
+  closeDownstreamDag: (id: string) => void;
+  node: Node | null;
 }
 
 function getLinkUrl(data: any) {
@@ -60,15 +69,19 @@ function getLinkUrl(data: any) {
 }
 
 function renderStatus(status: RunStatusEnum) {
-  const color:string = taskColorConfig[status] ? taskColorConfig[status] : taskColorConfig.DEFAULT;
+  const color: string = taskColorConfig[status] ? taskColorConfig[status] : taskColorConfig.DEFAULT;
   return <Badge color={color} text={status} />;
 }
 
-export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
+export const DAGTaskNode = memo((props: Props) => {
   // const ref = useRef() as RefObject<SVGGElement>;
-  const { width, height, title, data } = props.node || {};
-
+  const { expandUpstreamDAG, expandDownstreamDAG, closeUpstreamDag, closeDownstreamDag, node } = props;
+  const { width, height, title, data } = node || {};
+  const [upstreamLoading, setUpstreamLoading] = useState(false);
+  const [downstreamLoading, setDownstreamLoading] = useState(false);
   const t = useI18n();
+  const { selector, dispatch } = useRedux<DagState>(state => state.dag);
+  const { expandUpstreamNodeIds, expandDownstreamNodeIds, currentClickId } = selector;
 
   const strokeColor = useMemo(() => {
     if (data?.isArchived) {
@@ -91,6 +104,52 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
     // else
     return '#262a2f';
   }, [data?.isArchived]);
+
+  const expandUpstreamTaskRunDAG = useCallback(async () => {
+    setUpstreamLoading(true);
+    await expandUpstreamDAG(data?.id);
+    dispatch.dag.updateState({
+      currentClickId: data?.id,
+    });
+    // setUpstreamLoading(false); dag组件会被销毁，所以不能再设置
+  }, [data, dispatch, expandUpstreamDAG]);
+
+  const expandDownstreamTaskRunDAG = useCallback(async () => {
+    setDownstreamLoading(true);
+    await expandDownstreamDAG(data?.id);
+    dispatch.dag.updateState({
+      currentClickId: data?.id,
+    });
+    // setDownstreamLoading(false);
+  }, [data, dispatch, expandDownstreamDAG]);
+
+  const closeUpstreamNode = useCallback(() => {
+    closeUpstreamDag(data?.id);
+    dispatch.dag.updateState({
+      currentClickId: data?.id,
+    });
+  }, [data, dispatch, closeUpstreamDag]);
+
+  const closeDownstreamNode = useCallback(() => {
+    closeDownstreamDag(data?.id);
+    dispatch.dag.updateState({
+      currentClickId: data?.id,
+    });
+  }, [data, dispatch, closeDownstreamDag]);
+
+  const upstreamPortState = useMemo(() => {
+    if (upstreamLoading) {
+      return 'loading';
+    }
+    return expandUpstreamNodeIds.includes(data.id) ? 'expanded' : 'collapsed';
+  }, [upstreamLoading, expandUpstreamNodeIds, data?.id]);
+
+  const downstreamPortState = useMemo(() => {
+    if (downstreamLoading) {
+      return 'loading';
+    }
+    return expandDownstreamNodeIds.includes(data.id) ? 'expanded' : 'collapsed';
+  }, [downstreamLoading, expandDownstreamNodeIds, data?.id]);
 
   const rect = useMemo(() => {
     const content = data?.renderAsTaskRunDAG ? (
@@ -155,8 +214,8 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
               color: textColor,
               margin: 0,
               display: 'block',
-              width,
-              height,
+              width: width - 4,
+              height: height - 20,
               zIndex: 2,
               // pointerEvents: 'none',
               cursor: 'pointer',
@@ -164,7 +223,9 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
               textAlign: 'center',
             }}
           >
-            <span style={{ color: data?.isCenter ? '#6997e3' : undefined }}>{title}</span>
+            <span className={styles.nodeText} style={{ color: data?.isCenter ? '#6997e3' : undefined }}>
+              {title}
+            </span>
           </p>
         </Link>
       </Popover>
@@ -177,8 +238,8 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
               color: textColor,
               margin: 0,
               display: 'block',
-              width,
-              height,
+              width: width - 4,
+              height: height - 20,
               zIndex: 2,
               // pointerEvents: 'none',
               cursor: 'pointer',
@@ -186,7 +247,9 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
               textAlign: 'center',
             }}
           >
-            <span style={{ color: data?.isCenter ? '#6997e3' : undefined }}>{title}</span>
+            <span className={styles.nodeText} style={{ color: data?.isCenter ? '#6997e3' : undefined }}>
+              {title}
+            </span>
           </p>
         </Link>
       </Tooltip>
@@ -199,9 +262,9 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
           height={height}
           y={-height / 2}
           x={-width / 2}
-          rx="8"
-          stroke={strokeColor}
-          strokeWidth={data?.isCenter ? 2 : 1}
+          // rx="8"
+          // stroke={strokeColor}
+          // strokeWidth={data?.isCenter ? 2 : 1}
           fill="#fff"
           cursor="pointer"
         />
@@ -229,14 +292,50 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
             style={{
               background: 'transparent',
               overflow: 'visible',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
           >
-            {content}
+            {currentClickId === data?.id && (
+              <div style={{ border: `2px solid #1a73e8`, position: 'relative', top: '10px' }}> {content} </div>
+            )}
+            {currentClickId !== data?.id && (
+              <div style={{ border: `1px solid ${strokeColor}`, position: 'relative', top: '10px' }}> {content} </div>
+            )}
+
+            <CardPort
+              className={c(styles.button, styles.buttonTop)}
+              portState={upstreamPortState}
+              onExpand={expandUpstreamTaskRunDAG}
+              onCollapse={closeUpstreamNode}
+            />
+            <CardPort
+              className={c(styles.button, styles.buttonBottom)}
+              portState={downstreamPortState}
+              onExpand={expandDownstreamTaskRunDAG}
+              onCollapse={closeDownstreamNode}
+            />
           </div>
         </foreignObject>
       </Group>
     );
-  }, [width, height, strokeColor, data?.isCenter, data?.id, title, textColor]);
+  }, [
+    width,
+    height,
+    strokeColor,
+    data,
+    title,
+    textColor,
+    expandUpstreamTaskRunDAG,
+    expandDownstreamTaskRunDAG,
+    closeUpstreamNode,
+    closeDownstreamNode,
+    currentClickId,
+    downstreamPortState,
+    upstreamPortState,
+    t,
+  ]);
 
   return rect;
-};
+});

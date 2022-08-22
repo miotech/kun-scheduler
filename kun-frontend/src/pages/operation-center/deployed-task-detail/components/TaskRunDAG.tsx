@@ -1,12 +1,11 @@
-import React, { FunctionComponent, useEffect, useMemo } from 'react';
+import React, { FunctionComponent, useEffect, useMemo, useState, useCallback } from 'react';
 import uniqueId from 'lodash/uniqueId';
-import { useRequest } from 'ahooks';
 import { DAGTaskGraph } from '@/components/DAGGraph';
 import { KunSpin } from '@/components/KunSpin';
-import { fetchTaskRunDAG, FetchTaskRunDAGOptionParams } from '@/services/task-deployments/deployed-tasks';
-
 import { TaskRun } from '@/definitions/TaskRun.type';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
+import { DagState } from '@/rematch/models/dag';
+import useRedux from '@/hooks/useRedux';
 
 interface OwnProps {
   taskRun: TaskRun | null;
@@ -18,25 +17,46 @@ type Props = OwnProps;
 
 export const TaskRunDAG: FunctionComponent<Props> = props => {
   const { taskRun, width, height } = props;
-
-  const { data: dagData, loading, run: fetchDAGFromRemote } = useRequest(
-    async (taskRunId: string, optionParams: FetchTaskRunDAGOptionParams = {}) => {
-      const data = await fetchTaskRunDAG(taskRunId, optionParams);
-      return data;
-    },
-    {
-      manual: true,
-    },
-  );
+  const [loading, setLoading] = useState(false);
+  const { selector, dispatch } = useRedux<DagState>(state => state.dag);
+  const dagData = selector;
 
   useEffect(() => {
     if (taskRun) {
-      fetchDAGFromRemote(taskRun.id, {
-        upstreamLevel: 3,
-        downstreamLevel: 3,
+      setLoading(true);
+      dispatch.dag.queryTaskRunDag(taskRun.id).finally(() => {
+        setLoading(false);
       });
     }
-  }, [fetchDAGFromRemote, taskRun]);
+  }, [taskRun, dispatch]);
+
+  const expandUpstreamDAG = useCallback(
+    async id => {
+      return dispatch.dag.expandUpstreamTaskRunDAG(id);
+    },
+    [dispatch],
+  );
+
+  const expandDownstreamDAG = useCallback(
+    async id => {
+      return dispatch.dag.expandDownstreamTaskRunDAG(id);
+    },
+    [dispatch],
+  );
+
+  const closeUpstreamDag = useCallback(
+    id => {
+      return dispatch.dag.closeUpstreamTaskRunDag(id);
+    },
+    [dispatch],
+  );
+
+  const closeDownstreamDag = useCallback(
+    id => {
+      dispatch.dag.closeDownstreamTaskRunDag(id);
+    },
+    [dispatch],
+  );
 
   const DAGDom = useMemo(() => {
     if (loading) {
@@ -72,13 +92,27 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
           height={height}
           nodes={nodes || []}
           relations={edges || []}
+          expandUpstreamDAG={expandUpstreamDAG}
+          expandDownstreamDAG={expandDownstreamDAG}
+          closeUpstreamDag={closeUpstreamDag}
+          closeDownstreamDag={closeDownstreamDag}
           centerTaskId={taskRun?.id as string | undefined}
         />
       );
     }
     // else
     return <></>;
-  }, [loading, dagData, width, height, taskRun?.id]);
+  }, [
+    loading,
+    dagData,
+    width,
+    height,
+    taskRun?.id,
+    expandUpstreamDAG,
+    expandDownstreamDAG,
+    closeUpstreamDag,
+    closeDownstreamDag,
+  ]);
 
   return <div data-tid="deployed-task-dag">{DAGDom}</div>;
 };
