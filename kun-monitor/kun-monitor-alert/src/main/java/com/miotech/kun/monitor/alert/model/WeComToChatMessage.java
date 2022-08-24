@@ -12,13 +12,13 @@ public class WeComToChatMessage extends WeComBaseMessage {
     private String chatid;
 
     public static WeComToChatMessage from(String chatid, String content) {
-        return from(chatid, "text", content);
+        return from(chatid, "markdown", content);
     }
 
     public static WeComToChatMessage from(String chatid, String msgType, String content) {
         WeComToChatMessage weComToChatMessage = new WeComToChatMessage();
         weComToChatMessage.setMsgtype(msgType);
-        weComToChatMessage.setText(new Text(content));
+        weComToChatMessage.setMarkdown(new Text(content));
         weComToChatMessage.setChatid(chatid);
 
         return weComToChatMessage;
