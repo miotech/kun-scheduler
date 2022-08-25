@@ -73,7 +73,7 @@ public class RedisStreamEventSubscriber implements EventSubscriber {
                         Event event = EventMapper.toEvent(eventJsonStr);
                         eventReceiver.onReceive(event);
                     } catch (Throwable e) {
-                        logger.error("Failed to process event: {}", eventJsonStr, e);
+                        logger.error("Failed to process event: " + eventJsonStr, e);
                     } finally {
                         redisCommands.xack(streamKey, group, message.getId());
                     }

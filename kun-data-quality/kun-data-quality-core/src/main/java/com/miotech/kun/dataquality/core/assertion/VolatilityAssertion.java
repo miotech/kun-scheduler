@@ -17,6 +17,12 @@ public abstract class VolatilityAssertion extends Assertion {
 
     public abstract boolean doVolatilityAssert(MetricsCollectedResult<String> currentValue, MetricsCollectedResult<String> benchmarkValue);
 
+    public Double calculateVolatility(MetricsCollectedResult<String> currentMetricsCollectedResult, MetricsCollectedResult<String> benchmarkMetricsCollectedNResult) {
+        double current = Double.parseDouble(currentMetricsCollectedResult.getValue());
+        double baseline = Double.parseDouble(benchmarkMetricsCollectedNResult.getValue());
+        return ((current - baseline) / baseline) * 100;
+    }
+
     @Override
     public boolean doAssert(AssertionSample assertionSample) {
         MetricsCollectedResult<String> currentValue= (MetricsCollectedResult<String>) assertionSample.getCurrentValue();

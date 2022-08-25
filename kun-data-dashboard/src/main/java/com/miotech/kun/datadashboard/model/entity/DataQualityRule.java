@@ -18,4 +18,6 @@ public class DataQualityRule {
     String expectedType;
 
     String expectedValue;
+
+    String volatility;
 }
