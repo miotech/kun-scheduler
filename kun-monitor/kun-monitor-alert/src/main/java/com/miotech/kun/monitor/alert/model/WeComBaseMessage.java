@@ -7,7 +7,7 @@ public class WeComBaseMessage {
 
     private String msgtype;
 
-    private Text text;
+    private Text markdown;
 
     public static class Text {
 

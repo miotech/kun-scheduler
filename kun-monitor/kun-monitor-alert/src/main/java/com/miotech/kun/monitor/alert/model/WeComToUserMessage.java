@@ -14,13 +14,13 @@ public class WeComToUserMessage extends WeComBaseMessage {
     private int agentid;
 
     public static WeComToUserMessage from(String toUser, int agentid, String content) {
-        return from(toUser, agentid, "text", content);
+        return from(toUser, agentid, "markdown", content);
     }
 
     public static WeComToUserMessage from(String toUser, int agentid, String msgType, String content) {
         WeComToUserMessage weComToUserMessage = new WeComToUserMessage();
         weComToUserMessage.setMsgtype(msgType);
-        weComToUserMessage.setText(new Text(content));
+        weComToUserMessage.setMarkdown(new Text(content));
         weComToUserMessage.setTouser(toUser);
         weComToUserMessage.setAgentid(agentid);
 

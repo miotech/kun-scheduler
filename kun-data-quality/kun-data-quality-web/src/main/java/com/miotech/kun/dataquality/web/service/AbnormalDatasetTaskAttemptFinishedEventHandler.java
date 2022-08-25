@@ -5,7 +5,7 @@ import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import com.miotech.kun.metadata.core.model.vo.DatasetDetail;
 import com.miotech.kun.monitor.facade.alert.NotifyFacade;
-import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.monitor.facade.model.alert.AlertMessage;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
@@ -18,8 +18,6 @@ import java.util.Optional;
 
 @Service
 public class AbnormalDatasetTaskAttemptFinishedEventHandler implements TaskAttemptFinishedEventHandler {
-
-    private static final String MSG_TEMPLATE = "[reason]: %s%n[dataset]: %s%n[result]: %s%n[owner]: %s%n[upstream task]: %s%n[link]: %s";
 
     @Value("${notify.urlLink.prefix}")
     private String prefix;
@@ -52,9 +50,17 @@ public class AbnormalDatasetTaskAttemptFinishedEventHandler implements TaskAttem
         Optional<DeployedTask> deployedTaskOpt = deployedTaskFacade.findByWorkflowTaskId(event.getTaskId());
         DatasetDetail datasetDetail = metadataClient.findById(abnormalDataset.getDatasetGid());
         if (isAlert) {
-            notifyFacade.notify(datasetDetail.getOwners(), String.format(MSG_TEMPLATE, "Failure", datasetDetail.getDatabase() + "." + datasetDetail.getName(),
-                    "data update failed", StringUtils.join(datasetDetail.getOwners(), ","), task.getName(),
-                    this.prefix + String.format("/data-development/task-definition/%s", deployedTaskOpt.get().getDefinitionId())));
+            String result = "data update failed";
+            String link = this.prefix + String.format("/data-development/task-definition/%s", deployedTaskOpt.get().getDefinitionId());
+            AlertMessage alertMessage = AlertMessage.newBuilder()
+                    .withReason(AlertMessage.AlertReason.FAILURE)
+                    .withDataset(datasetDetail.getDatabase() + "." + datasetDetail.getName())
+                    .withResult(result)
+                    .withOwner(StringUtils.join(datasetDetail.getOwners(), ","))
+                    .withUpstreamTask(task.getName())
+                    .withLink(link)
+                    .build();
+            notifyFacade.notify(datasetDetail.getOwners(), alertMessage.toMarkdown());
         }
     }
 

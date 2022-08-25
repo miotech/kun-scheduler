@@ -5,6 +5,7 @@ import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.dataplatform.facade.BackfillFacade;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.monitor.alert.config.NotifyLinkConfig;
+import com.miotech.kun.monitor.facade.model.alert.AlertMessage;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +20,6 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class WeComService {
-
-    private static final String MSG_TEMPLATE = "[reason]: %s%n[task]: %s%n[result]: %s%n[owner]: %s%n[link]: %s";
 
     @Value("${notify.wecom.chatid}")
     private String chatid;
@@ -81,13 +80,14 @@ public class WeComService {
             if (taskDefinitionId.isPresent() && (!derivingBackfillId.isPresent())) {
                 String reason = event.getToStatus().isSuccess() ? "Notification" : "Failure";
                 String result = event.getToStatus().isSuccess() ? "task succeeded" : "task failed";
-                return String.format(MSG_TEMPLATE,
-                        reason,
-                        event.getTaskName(),
-                        result,
-                        userInfo.getUsername(),
-                        notifyLinkConfig.getScheduledTaskLinkURL(taskDefinitionId.get(), taskRunId)
-                );
+                AlertMessage alertMessage = AlertMessage.newBuilder()
+                        .withReason(AlertMessage.AlertReason.from(reason))
+                        .withTask(event.getTaskName())
+                        .withResult(result)
+                        .withOwner(userInfo.getUsername())
+                        .withLink(notifyLinkConfig.getScheduledTaskLinkURL(taskDefinitionId.get(), taskRunId))
+                        .build();
+                return alertMessage.toMarkdown();
             }
         }
         return String.format("Task: '%s' in state: %s", event.getTaskName(), event.getToStatus().name());

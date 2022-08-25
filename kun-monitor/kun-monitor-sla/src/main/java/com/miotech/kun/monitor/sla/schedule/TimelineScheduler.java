@@ -4,14 +4,14 @@ import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.dataplatform.facade.TaskDefinitionFacade;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.monitor.facade.alert.NotifyFacade;
+import com.miotech.kun.monitor.facade.model.alert.AlertMessage;
 import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import com.miotech.kun.monitor.sla.utils.LocalDateTimeUtils;
-import com.miotech.kun.monitor.facade.alert.NotifyFacade;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.client.model.TaskRunState;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -28,8 +28,6 @@ import java.util.Optional;
 @Slf4j
 @Component
 public class TimelineScheduler {
-
-    private static final String MSG_TEMPLATE = "[reason]: %s%n[task]: %s%n[result]: %s%n[owner]: %s%n[link]: %s";
 
     @Value("${notify.urlLink.prefix}")
     private String prefix;
@@ -78,7 +76,15 @@ public class TimelineScheduler {
             String rootDefinitionName = fetchTaskDefinitionName(taskTimeline.getRootDefinitionId());
             UserInfo userInfo = deployedTaskFacade.getUserByTaskId(deployedTask.getWorkflowTaskId());
             String result = buildResult(rootDefinitionName);
-            String msg = String.format(MSG_TEMPLATE, "Overdue", deployedTask.getName(), result, userInfo.getUsername(), this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
+            String link = this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId());
+            AlertMessage alertMessage = AlertMessage.newBuilder()
+                    .withReason(AlertMessage.AlertReason.OVERDUE)
+                    .withTask(deployedTask.getName())
+                    .withResult(result)
+                    .withOwner(userInfo.getUsername())
+                    .withLink(link)
+                    .build();
+            String msg = alertMessage.toMarkdown();
             StringBuilder extraInfoSb = new StringBuilder();
             if (taskRun.getStatus().isUpstreamFailed()) {
                 extraInfoSb.append(String.format("%n[task status]: %s", TaskRunStatus.UPSTREAM_FAILED.name()));
