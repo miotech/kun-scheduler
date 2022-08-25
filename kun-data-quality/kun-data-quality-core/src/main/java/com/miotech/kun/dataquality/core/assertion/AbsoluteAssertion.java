@@ -12,13 +12,10 @@ public class AbsoluteAssertion extends VolatilityAssertion {
         super(expectedValue, ComparisonOperator.ABSOLUTE, comparisonPeriod);
     }
 
-
     @Override
     public boolean doVolatilityAssert(MetricsCollectedResult<String> currentValue, MetricsCollectedResult<String> benchmarkValue) {
         double expected = Double.parseDouble(getExpectedValue());
-        double current = Double.parseDouble(currentValue.getValue());
-        double baseline = Double.parseDouble(benchmarkValue.getValue());
-        double volatility = ((current - baseline) / baseline) * 100;
+        double volatility = calculateVolatility(currentValue, benchmarkValue);
         return Math.abs(volatility) <= expected;
     }
 }

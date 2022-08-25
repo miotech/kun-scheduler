@@ -26,14 +26,18 @@ public class DataQualityRule {
 
     String benchmarkValue;
 
+    String volatility;
+
     @Override
     public String toString() {
-        return new StringJoiner(", ", "[", "]")
-                .add("originalValue=" + originalValue)
-                .add("field=" + field)
-                .add("operator=" + operator)
-                .add("expectedType=" + expectedType)
-                .add("expectedValue=" + expectedValue)
-                .toString();
+        return "DataQualityRule{" +
+                "originalValue='" + originalValue + '\'' +
+                ", field='" + field + '\'' +
+                ", operator='" + operator + '\'' +
+                ", expectedType='" + expectedType + '\'' +
+                ", expectedValue='" + expectedValue + '\'' +
+                ", benchmarkValue='" + benchmarkValue + '\'' +
+                ", volatility='" + volatility + '\'' +
+                '}';
     }
 }

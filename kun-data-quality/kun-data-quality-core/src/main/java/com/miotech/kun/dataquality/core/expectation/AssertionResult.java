@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.dataquality.core.assertion.Assertion;
 import com.miotech.kun.dataquality.core.assertion.ComparisonOperator;
+import com.miotech.kun.dataquality.core.assertion.VolatilityAssertion;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.dataquality.core.metrics.SQLMetrics;
@@ -24,11 +25,13 @@ public class AssertionResult {
 
     private final String benchmarkValue;
 
+    private final String volatility;
+
     @JsonCreator
     public AssertionResult(@JsonProperty("field") String field, @JsonProperty("comparisonOperator") ComparisonOperator comparisonOperator,
                            @JsonProperty("operator") String operator, @JsonProperty("expectedType") String expectedType,
                            @JsonProperty("expectedValue") String expectedValue, @JsonProperty("originalValue") String originalValue,
-                           @JsonProperty("benchmarkValue") String benchmarkValue) {
+                           @JsonProperty("benchmarkValue") String benchmarkValue, @JsonProperty("volatility") String volatility) {
         this.field = field;
         this.comparisonOperator = comparisonOperator;
         this.operator = operator;
@@ -36,6 +39,7 @@ public class AssertionResult {
         this.expectedValue = expectedValue;
         this.originalValue = originalValue;
         this.benchmarkValue = benchmarkValue;
+        this.volatility = volatility;
     }
 
     public String getField() {
@@ -66,6 +70,10 @@ public class AssertionResult {
         return benchmarkValue;
     }
 
+    public String getVolatility() {
+        return volatility;
+    }
+
     public static AssertionResult from(Metrics metrics, Assertion assertion,
                                        MetricsCollectedResult<String> currentMetricsCollectedResult,
                                        MetricsCollectedResult<String> benchmarkMetricsCollectedNResult) {
@@ -78,6 +86,12 @@ public class AssertionResult {
         if (metrics instanceof SQLMetrics) {
             SQLMetrics sqlMetrics = (SQLMetrics) metrics;
             builder.withField(sqlMetrics.getField());
+        }
+
+        if (assertion instanceof VolatilityAssertion) {
+            VolatilityAssertion volatilityAssertion = (VolatilityAssertion) assertion;
+            Double volatility = volatilityAssertion.calculateVolatility(currentMetricsCollectedResult, benchmarkMetricsCollectedNResult);
+            builder.withVolatility(String.format("%.2f", volatility));
         }
 
         return builder.build();
@@ -95,6 +109,7 @@ public class AssertionResult {
         private String expectedValue;
         private String originalValue;
         private String benchmarkValue;
+        private String volatility;
 
         private Builder() {
         }
@@ -134,8 +149,13 @@ public class AssertionResult {
             return this;
         }
 
+        public Builder withVolatility(String volatility) {
+            this.volatility = volatility;
+            return this;
+        }
+
         public AssertionResult build() {
-            return new AssertionResult(field, comparisonOperator, operator, expectedType, expectedValue, originalValue, benchmarkValue);
+            return new AssertionResult(field, comparisonOperator, operator, expectedType, expectedValue, originalValue, benchmarkValue, volatility);
         }
     }
 }

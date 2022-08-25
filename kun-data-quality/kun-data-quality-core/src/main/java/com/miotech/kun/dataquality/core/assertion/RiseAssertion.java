@@ -15,9 +15,7 @@ public class RiseAssertion extends VolatilityAssertion {
     @Override
     public boolean doVolatilityAssert(MetricsCollectedResult<String> currentValue, MetricsCollectedResult<String> benchmarkValue) {
         double expected = Double.parseDouble(getExpectedValue());
-        double current = Double.parseDouble(currentValue.getValue());
-        double baseline = Double.parseDouble(benchmarkValue.getValue());
-        double volatility = ((current - baseline) / baseline) * 100;
+        double volatility = calculateVolatility(currentValue, benchmarkValue);
         return volatility >= 0 && volatility <= expected;
     }
 }
