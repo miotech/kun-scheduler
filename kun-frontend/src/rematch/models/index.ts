@@ -12,6 +12,7 @@ import { monitoringDashboard } from './monitoringDashboard';
 import { lineage } from './lineage';
 import { backfillTasks } from './operationCenter/backfillTasks';
 import { referenceData } from './dataDiscovery/referenceData';
+import { dag } from './dag';
 
 export interface RootModel {
   user: typeof user;
@@ -28,6 +29,7 @@ export interface RootModel {
   monitoringDashboard: typeof monitoringDashboard;
   lineage: typeof lineage;
   referenceData: typeof referenceData;
+  dag: typeof dag;
 }
 
 export const models: RootModel = {
@@ -44,5 +46,6 @@ export const models: RootModel = {
   deployedTaskDetail,
   monitoringDashboard,
   lineage,
-  referenceData
+  referenceData,
+  dag,
 };

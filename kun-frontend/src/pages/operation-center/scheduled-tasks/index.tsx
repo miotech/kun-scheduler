@@ -62,7 +62,9 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
         </section>
         {/* DAG container */}
         <section id="deployed-task-dag-container" className={styles.DAGContainer}>
-          <DeployedTaskDAG task={selectedTask} width={DAGContainerSize?.width} height={DAGContainerSize?.height} />
+          {selectedTask && (
+            <DeployedTaskDAG task={selectedTask} width={DAGContainerSize?.width} height={DAGContainerSize?.height} />
+          )}
         </section>
       </main>
     </div>
