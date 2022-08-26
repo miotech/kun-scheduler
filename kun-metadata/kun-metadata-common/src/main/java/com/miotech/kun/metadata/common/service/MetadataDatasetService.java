@@ -94,16 +94,13 @@ public class MetadataDatasetService implements MetadataServiceFacade {
         if (dataSourceId == null) {
             throw new IllegalStateException("datasource not exist with datastore = " + JSONUtils.toJsonString(dataStore));
         }
-        String locationInfo = dataStore.getLocationInfo();
-        String dsi = dataSourceId + ":" + locationInfo;
-        logger.debug("fetching dataset by dsi = {}", dsi);
-        Dataset dataset = metadataDatasetDao.fetchDatasetByDSI(dsi);
-        if (dataset != null) {
-            return dataset;
-        } else {
-            logger.debug("dataset with dsi = {} not exist,going to create dataset", dsi);
-            return createDataSet(dataSourceId, dataStore);
-        }
+        Dataset dataset = Dataset.newBuilder()
+                .withName(dataStore.getName())
+                .withDatasourceId(dataSourceId)
+                .withDataStore(dataStore)
+                .build();
+        return createDataSet(dataset);
+
     }
 
     public Dataset createDataSet(Dataset datasetInsert) {
@@ -127,14 +124,6 @@ public class MetadataDatasetService implements MetadataServiceFacade {
         return suggestTable(databaseName, prefix, DEFAULT_SUGGEST_DATASOURCE_TYPE);
     }
 
-    private Dataset createDataSet(Long dataSourceId, DataStore dataStore) {
-        Dataset dataset = Dataset.newBuilder()
-                .withName(dataStore.getName())
-                .withDatasourceId(dataSourceId)
-                .withDataStore(dataStore)
-                .build();
-        return createDataSet(dataset);
-    }
 
     private List<String> suggestTable(String databaseName, String prefix, String dataSourceType) {
         List<Long> dataSourceIds = dataSourceService.fetchDataSourceIdByType(dataSourceType);

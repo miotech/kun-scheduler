@@ -51,12 +51,7 @@ public class PostgresLoader implements Loader {
         if (dataset == null || dataset.getDataStore() == null) {
             return new LoadSchemaResult(-1L, -1L);
         }
-        String dsi = dataset.getDSI();
-        Dataset savedDataSet = datasetService.fetchDataSetByDSI(dsi);
-        if (savedDataSet == null) {
-            savedDataSet = datasetService.createDataSet(dataset);
-        }
-
+        Dataset savedDataSet = datasetService.createDataSet(dataset);
         return loadSchema(savedDataSet.getGid(), dataset.getFields());
     }
 
@@ -199,13 +194,13 @@ public class PostgresLoader implements Loader {
         }
 
         return dbOperator.fetchAll("SELECT name, type, description, raw_type, is_primary_key, is_nullable FROM kun_mt_dataset_field WHERE dataset_gid = ?", rs ->
-            DatasetField.newBuilder()
-                    .withName(rs.getString("name"))
-                    .withFieldType(new DatasetFieldType(DatasetFieldType.Type.valueOf(rs.getString("type")), rs.getString("raw_type")))
-                    .withComment(rs.getString("description"))
-                    .withIsPrimaryKey(rs.getBoolean("is_primary_key"))
-                    .withIsNullable(rs.getBoolean("is_nullable"))
-                    .build()
+                        DatasetField.newBuilder()
+                                .withName(rs.getString("name"))
+                                .withFieldType(new DatasetFieldType(DatasetFieldType.Type.valueOf(rs.getString("type")), rs.getString("raw_type")))
+                                .withComment(rs.getString("description"))
+                                .withIsPrimaryKey(rs.getBoolean("is_primary_key"))
+                                .withIsNullable(rs.getBoolean("is_nullable"))
+                                .build()
                 , gid);
     }
 
