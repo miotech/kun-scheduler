@@ -10,6 +10,7 @@ import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.model.enums.GlossaryRole;
 import com.miotech.kun.datadiscovery.model.enums.GlossaryUserOperation;
 import com.miotech.kun.datadiscovery.model.enums.SecurityModule;
+import com.miotech.kun.datadiscovery.service.FilterRuleAppService;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.datadiscovery.service.RdmService;
 import com.miotech.kun.datadiscovery.testing.mockdata.MockGlossaryBasicFactory;
@@ -53,6 +54,9 @@ public class GlossaryServiceTest extends DataDiscoveryTestBase {
     GlossaryService glossaryService;
     @MockBean
     private RdmService rdmService;
+
+    @MockBean
+    private FilterRuleAppService filterRuleAppService;
 
 
     @BeforeEach

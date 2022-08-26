@@ -64,6 +64,7 @@ public class RdmService extends BaseSecurityService {
     private final RefDataOperator refDataOperator;
     private final GlossaryService glossaryService;
     private final LineageAppService lineageAppService;
+    private final FilterRuleAppService filterRuleAppService;
     private final RefTableVersionRepository refTableVersionRepository;
 
     @Value("${rdm.datasource:0}")
@@ -222,6 +223,7 @@ public class RdmService extends BaseSecurityService {
         if (CollectionUtils.isEmpty(downstreamDataset)) {
             deactivateTableVersion(refVersionInfo);
             refDataOperator.remove(refVersionInfo.getDatabaseName(), refVersionInfo.getTableName());
+            filterRuleAppService.removeDatasetStatistics(refVersionInfo.getDatasetId());
             return true;
         }
         String datasets = downstreamDataset.stream().map(DatasetNodeInfo::getDatasetName).collect(Collectors.joining(","));
@@ -313,6 +315,7 @@ public class RdmService extends BaseSecurityService {
             log.debug("published table does not exist,database:{},table:{}", database, table);
             return;
         }
+        filterRuleAppService.addDatasetStatistics(event.getDatasetId());
         List<Long> glossaryList = refTableVersionInfo.getGlossaryList();
         if (CollectionUtils.isEmpty(glossaryList)) {
             log.debug("glossaryList is empty:{}", event);

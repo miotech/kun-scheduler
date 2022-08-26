@@ -106,4 +106,8 @@ public class SearchService {
         universalSearchDao.remove(searchedInfo.getResourceType(), searchedInfo.getGid());
 
     }
+
+    public void updateStatus(ResourceType resourceType, long gid, boolean deleted) {
+        universalSearchDao.updateStatus(resourceType, gid, deleted);
+    }
 }

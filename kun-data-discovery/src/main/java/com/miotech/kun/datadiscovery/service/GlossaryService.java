@@ -63,6 +63,8 @@ public class GlossaryService extends BaseSecurityService {
     private SecurityRpcClient securityRpcClient;
     @Autowired
     private RdmService rdmService;
+    @Autowired
+    private FilterRuleAppService filterRuleAppService;
 
 
     public Long getParentId(Long id) {
@@ -527,6 +529,7 @@ public class GlossaryService extends BaseSecurityService {
         List<Long> addList = assetIds.stream().filter(assetId -> !glossaryToDataSetIdList.contains(assetId)).collect(Collectors.toList());
         glossaryRepository.insertGlossaryDatasetRef(id, addList, getCurrentUsername(), DateTimeUtils.now());
         rdmService.addGlossary(id, assetIds);
+        addList.forEach(filterRuleAppService::addDatasetStatistics);
         return true;
     }
 
@@ -547,6 +550,8 @@ public class GlossaryService extends BaseSecurityService {
         List<Long> removeList = assetIds.stream().filter(glossaryToDataSetIdList::contains).collect(Collectors.toList());
         glossaryRepository.removeGlossaryRef(id, removeList, getCurrentUsername(), DateTimeUtils.now());
         rdmService.removeGlossary(id, assetIds);
+        removeList.forEach(filterRuleAppService::removeDatasetStatistics);
+
         return true;
     }
 }

@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.testing;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -14,6 +15,7 @@ import com.miotech.kun.datadiscovery.model.enums.RefTableVersionStatus;
 import com.miotech.kun.datadiscovery.model.vo.BaseRefTableVersionInfo;
 import com.miotech.kun.datadiscovery.model.vo.RefDataVersionFillInfo;
 import com.miotech.kun.datadiscovery.model.vo.RefTableVersionFillInfo;
+import com.miotech.kun.datadiscovery.service.FilterRuleAppService;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
 import com.miotech.kun.datadiscovery.service.RdmService;
@@ -24,6 +26,7 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -50,13 +53,12 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
     GlossaryService glossaryService;
     @MockBean
     LineageAppService lineageAppService;
-    @Value("${rdm.aws.bucket-name:test.ref.data}")
-    private String bucketName;
     @Value("${rdm.datasource:0}")
     private Long datasourceId;
     @MockBean
     private RefStorageFileBuilder refStorageFileBuilder;
-
+    @MockBean
+    private FilterRuleAppService filterRuleAppService;
 
     @Test
     public void parse_csv_file() {

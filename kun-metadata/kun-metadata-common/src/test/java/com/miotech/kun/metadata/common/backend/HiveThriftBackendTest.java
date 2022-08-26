@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.common.backend;
 
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.client.ClientFactory;
 import com.miotech.kun.metadata.common.client.HiveThriftBackend;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
@@ -50,7 +49,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
         clientFactory = mock(ClientFactory.class);
         bind(ClientFactory.class, clientFactory);
         hiveMetaStoreClient = mock(HiveMetaStoreClient.class);
-        
+
     }
 
     @BeforeEach
@@ -62,7 +61,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
     public void HiveThriftBackendExtractDataset() throws TException {
         //prepare
         HiveMetaStoreConnectionInfo connectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "uri");
-        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
+        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         DatasetFieldType datasetFieldType = new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "string");
         DatasetField datasetField = DatasetField.newBuilder()
@@ -72,7 +71,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
         datasetFields.add(datasetField);
         Dataset dataset = MockDatasetFactory.createDataset("HiveThriftTable", 1l, "database", datasetFields, "Hive");
         Table table = datasetToHiveTable(dataset);
-        doReturn(table).when(hiveMetaStoreClient).getTable(anyString(),anyString());
+        doReturn(table).when(hiveMetaStoreClient).getTable(anyString(), anyString());
 
         List<DatasetField> extractedFileds = hiveThriftBackend.extract(dataset);
 
@@ -88,7 +87,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
     public void hiveBackendExtractDatasource() throws TException {
         //prepare
         HiveMetaStoreConnectionInfo connectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "uri");
-        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
+        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory);
         DataSource hive = MockDataSourceFactory.createDataSource(1, "hive", connectionInfo, DatasourceType.HIVE, new ArrayList<>());
         dataSourceDao.create(hive);
         List<DatasetField> datasetFields = new ArrayList<>();
@@ -100,12 +99,11 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
         datasetFields.add(datasetField);
         Dataset dataset = MockDatasetFactory.createDataset("HiveThriftTable", 1l, "database", datasetFields, "Hive");
         Table table = datasetToHiveTable(dataset);
-        doReturn(table).when(hiveMetaStoreClient).getTable(anyString(),anyString());
+        doReturn(table).when(hiveMetaStoreClient).getTable(anyString(), anyString());
         doReturn(Arrays.asList("database")).when(hiveMetaStoreClient).getAllDatabases();
         doReturn(Arrays.asList("HiveThriftTable")).when(hiveMetaStoreClient).getAllTables("database");
 
         Iterator<Dataset> datasets = hiveThriftBackend.extract(hive);
-
 
 
         //verify
@@ -117,7 +115,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
     }
 
 
-    private Table datasetToHiveTable(Dataset dataset){
+    private Table datasetToHiveTable(Dataset dataset) {
         Table table = new Table();
         table.setTableName(dataset.getName());
         table.setDbName(dataset.getDatabaseName());

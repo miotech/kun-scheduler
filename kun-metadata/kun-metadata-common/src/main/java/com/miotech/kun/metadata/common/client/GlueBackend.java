@@ -4,7 +4,6 @@ import com.amazonaws.services.glue.AWSGlue;
 import com.amazonaws.services.glue.model.*;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.connection.GlueConnectionInfo;
@@ -46,8 +45,7 @@ public class GlueBackend extends BaseMetadataBackend {
     private Map<String, Table> tables = Maps.newHashMap();
     private AtomicBoolean initedCache = new AtomicBoolean(false);
 
-    public GlueBackend(GlueConnectionInfo glueConnectionInfo, FieldMappingService fieldMappingService, ClientFactory clientFactory, CatalogerConfig config) {
-        super(config);
+    public GlueBackend(GlueConnectionInfo glueConnectionInfo, FieldMappingService fieldMappingService, ClientFactory clientFactory) {
         this.glueConnectionInfo = glueConnectionInfo;
         this.fieldMappingService = fieldMappingService;
         this.clientFactory = clientFactory;

@@ -3,13 +3,13 @@ package com.miotech.kun.metadata.databuilder.builder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.cataloger.Cataloger;
-import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.cataloger.CatalogerFactory;
-import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.service.DataSourceService;
-import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.common.service.FilterRuleService;
+import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.core.model.constant.StatisticsMode;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractorFactory;
@@ -23,30 +23,32 @@ import java.util.Optional;
 public class MSEBuilder {
     private static final Logger logger = LoggerFactory.getLogger(MSEBuilder.class);
 
-    private final MetadataDatasetDao datasetDao;
+    private final MetadataDatasetService metadataDatasetService;
     private final DataSourceService dataSourceService;
     private final Loader loader;
     private final CatalogerFactory catalogerFactory;
+    private final FilterRuleService filterRuleService;
 
     @Inject
-    public MSEBuilder(MetadataDatasetDao datasetDao, DataSourceService dataSourceService, Loader loader,
-                      CatalogerFactory catalogerFactory) {
-        this.datasetDao = datasetDao;
+    public MSEBuilder(MetadataDatasetService metadataDatasetService, DataSourceService dataSourceService, Loader loader,
+                      CatalogerFactory catalogerFactory, FilterRuleService filterRuleService) {
+        this.metadataDatasetService = metadataDatasetService;
         this.dataSourceService = dataSourceService;
         this.loader = loader;
         this.catalogerFactory = catalogerFactory;
+        this.filterRuleService = filterRuleService;
     }
 
     public void extractStatistics(Long gid, Long snapshotId, StatisticsMode statisticsMode) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Begin to extractStat, gid: {}", gid);
-        }
-
-        Optional<Dataset> dataset = datasetDao.fetchDatasetByGid(gid);
+        Optional<Dataset> dataset = metadataDatasetService.fetchDatasetByGid(gid);
         if (!dataset.isPresent()) {
             logger.warn("Dataset not found, gid: {}", gid);
             return;
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Begin to extractStat, gid: {}", gid);
+        }
+
 
         if (dataset.get().isDeleted()) {
             logger.warn("Dataset: {} has been marked as `deleted`", gid);
@@ -59,8 +61,7 @@ public class MSEBuilder {
             return;
         }
         DataSource dataSource = dataSourceOptional.get();
-        CatalogerConfig config = CatalogerConfig.newBuilder().build();
-        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource, config);
+        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource);
         DatasetStatisticsExtractor extractor = DatasetStatisticsExtractorFactory.createExtractor(dataSource, dataset.get(), cataloger);
         boolean existed = extractor.judgeExistence(dataset.get(), DatasetExistenceJudgeMode.DATASET);
         if (!existed) {

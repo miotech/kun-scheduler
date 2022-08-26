@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
@@ -214,5 +215,33 @@ public class MetadataDatasetService implements MetadataServiceFacade {
             searchService.saveOrUpdate(searchedInfoUpdate);
         }
 
+    }
+
+    public void updateDatasetStatus(boolean accept, long gid) {
+        if (!accept) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Dataset: {} no longer existed, marked as `deleted`", gid);
+            }
+            int updateRowCount = metadataDatasetDao.updateStatus(gid, true);
+            updateSearchDataSetInfo(gid, true);
+            if (updateRowCount == 1) {
+                metadataDatasetDao.recordLifecycle(gid, DatasetLifecycleStatus.DELETED);
+            }
+            return;
+        }
+        int updateRowCount = metadataDatasetDao.updateStatus(gid, false);
+        updateSearchDataSetInfo(gid, false);
+        if (updateRowCount == 1) {
+            metadataDatasetDao.recordLifecycle(gid, DatasetLifecycleStatus.MANAGED);
+        }
+    }
+
+
+    public List<Dataset> getListByDatasource(Long datasourceId) {
+        return metadataDatasetDao.getListByDatasource(datasourceId);
+    }
+
+    public Optional<Dataset> fetchDataSet(Long datasourceId, String databaseName, String name) {
+        return metadataDatasetDao.fetchDataSet(datasourceId, databaseName, name);
     }
 }

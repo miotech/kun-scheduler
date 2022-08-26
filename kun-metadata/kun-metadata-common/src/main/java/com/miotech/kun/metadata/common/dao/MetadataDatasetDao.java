@@ -183,14 +183,31 @@ public class MetadataDatasetDao {
         );
     }
 
-    public Dataset fetchDataSet(Long datasourceId, String database, String table) {
+    public Optional<Dataset> fetchDataSet(Long datasourceId, String database, String table) {
         String sql = new DefaultSQLBuilder()
                 .select(DATASET_COLUMNS)
                 .from(DATASET_TABLE_NAME)
                 .where("datasource_id = ? AND database_name = ? AND name = ?")
                 .asPrepared()
                 .getSQL();
-        return dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, datasourceId, database, table);
+        Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, datasourceId, database, table);
+        logger.debug("Fetched dataset: {} with tableName = {}", fetchedDataset, table);
+
+        if (fetchedDataset == null) {
+            return Optional.ofNullable(null);
+        }
+
+        SQLBuilder fieldsSQLBuilder = new DefaultSQLBuilder();
+        String fieldsSQL = fieldsSQLBuilder.select(DATASET_FIELD_COLUMNS)
+                .from(DATASET_FIELD_TABLE_NAME)
+                .where("dataset_gid = ?")
+                .getSQL();
+
+        List<DatasetField> fields = dbOperator.fetchAll(fieldsSQL, MetadataDatasetFieldMapper.INSTANCE, fetchedDataset.getGid());
+        Dataset dataset = fetchedDataset.cloneBuilder()
+                .withFields(fields).build();
+
+        return Optional.ofNullable(dataset);
     }
 
     public List<String> suggestDatabase(Long dataSourceId, String prefix) {
@@ -269,33 +286,6 @@ public class MetadataDatasetDao {
         return Pair.of(result + "and " + DATASET_FIELD_MODEL_NAME + ".name like concat(cast(? as text), '%')", params);
     }
 
-    public Optional<Dataset> findByName(String tableName) {
-        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
-        String sql = sqlBuilder.select(DATASET_COLUMNS)
-                .from(DATASET_TABLE_NAME)
-                .where("name = ?")
-                .getSQL();
-        logger.debug("Fetching dataset with tableName: {}", tableName);
-        logger.debug("Dataset query sql: {}", sql);
-        Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, tableName);
-        logger.debug("Fetched dataset: {} with tableName = {}", fetchedDataset, tableName);
-
-        if (fetchedDataset == null) {
-            return Optional.ofNullable(null);
-        }
-
-        SQLBuilder fieldsSQLBuilder = new DefaultSQLBuilder();
-        String fieldsSQL = fieldsSQLBuilder.select(DATASET_FIELD_COLUMNS)
-                .from(DATASET_FIELD_TABLE_NAME)
-                .where("dataset_gid = ?")
-                .getSQL();
-
-        List<DatasetField> fields = dbOperator.fetchAll(fieldsSQL, MetadataDatasetFieldMapper.INSTANCE, fetchedDataset.getGid());
-        Dataset dataset = fetchedDataset.cloneBuilder()
-                .withFields(fields).build();
-
-        return Optional.ofNullable(dataset);
-    }
 
     public List<DatabaseBaseInfo> getDatabases(List<Long> dataSourceIds) {
         if (CollectionUtils.isEmpty(dataSourceIds)) {
@@ -317,7 +307,7 @@ public class MetadataDatasetDao {
 
     public DatasetDetail getDatasetDetail(Long id) {
         String sql = "select kmd.*, " +
-                "kmdsrct.name as type, " +
+                "kmdsrc.datasource_type as type, " +
                 "kmdsrca.name as datasource_name, " +
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
@@ -327,7 +317,6 @@ public class MetadataDatasetDao {
                 "kmd.deleted as deleted\n" +
                 "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
-                "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
                 "         inner join kun_mt_datasource_attrs kmdsrca on kmdsrca.datasource_id = kmdsrc.id\n" +
                 "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
@@ -482,7 +471,7 @@ public class MetadataDatasetDao {
 
     public List<DatasetDetail> getDatasetDetailList(List<Long> idList) {
         String sql = "select kmd.*, " +
-                "kmdsrct.name as type, " +
+                "kmdsrc.datasource_type as type, " +
                 "kmdsrca.name as datasource_name, " +
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
@@ -492,7 +481,6 @@ public class MetadataDatasetDao {
                 "kmd.deleted as deleted\n" +
                 "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
-                "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
                 "         inner join kun_mt_datasource_attrs kmdsrca on kmdsrca.datasource_id = kmdsrc.id\n" +
                 "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
@@ -513,6 +501,11 @@ public class MetadataDatasetDao {
             datasetDetailList.forEach(datasetBasicInfo -> datasetBasicInfo.setRowCount(getRowCount(datasetBasicInfo.getGid())));
         }
         return datasetDetailList;
+    }
+
+    public void recordLifecycle(long gid, DatasetLifecycleStatus datasetLifecycleStatus) {
+        // 记录MANAGED事件
+        dbOperator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, datasetLifecycleStatus.name(), DateTimeUtils.now());
     }
 
     /**
@@ -540,6 +533,14 @@ public class MetadataDatasetDao {
         }
     }
 
+    public int updateStatus(long gid, Boolean deleted) {
+        if (!deleted) {
+            return dbOperator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ? AND deleted is true", gid);
+        } else {
+            return dbOperator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ? AND deleted is false", gid);
+        }
+    }
+
     private static class MetadataDatasetFieldMapper implements ResultSetMapper<DatasetField> {
         public static final ResultSetMapper<DatasetField> INSTANCE = new MetadataDatasetFieldMapper();
 
@@ -560,6 +561,16 @@ public class MetadataDatasetDao {
                     .withIsNullable(isNullable)
                     .build();
         }
+    }
+
+    public List<Dataset> getListByDatasource(Long datasourceId) {
+        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
+        String sql = sqlBuilder.select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("datasource_id = ?")
+                .getSQL();
+        return dbOperator.fetchAll(sql, MetadataDatasetMapper.INSTANCE, datasourceId);
+
     }
 
     private void setDatasetBasicField(DatasetBasicInfo datasetBasicInfo, ResultSet rs) throws SQLException {

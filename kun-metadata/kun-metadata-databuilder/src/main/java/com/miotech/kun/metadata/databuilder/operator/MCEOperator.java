@@ -14,11 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.miotech.kun.metadata.core.model.constant.OperatorKey.*;
 
@@ -91,9 +88,7 @@ public class MCEOperator extends KunOperator {
                 .define(STREAM_KEY, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, STREAM_KEY, STREAM_KEY)
                 .define(GID, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, GID, GID)
                 .define(MCE, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MCE, MCE)
-                .define(MSE_URL, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MSE_URL, MSE_URL)
-                .define(CATALOGER_WHITE_LIST, ConfigDef.Type.LIST, new ArrayList<>(), true, CATALOGER_WHITE_LIST, CATALOGER_WHITE_LIST)
-                .define(CATALOGER_BLACK_LIST, ConfigDef.Type.LIST, new ArrayList<>(), true, CATALOGER_BLACK_LIST, CATALOGER_BLACK_LIST);
+                .define(MSE_URL, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MSE_URL, MSE_URL);
 
         return configDef;
     }
@@ -105,7 +100,7 @@ public class MCEOperator extends KunOperator {
 
     private Props buildPropsFromVariable(OperatorContext operatorContext) {
         Props props = PropsBuilder.putConn(operatorContext);
-        Map<String,Object> map = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
 
         map.put(DEPLOY_MODE, operatorContext.getConfig().getString(DEPLOY_MODE));
         map.put(DATASOURCE_ID, operatorContext.getConfig().getString(DATASOURCE_ID));
@@ -114,10 +109,6 @@ public class MCEOperator extends KunOperator {
         map.put(GID, operatorContext.getConfig().getString(GID));
         map.put(MCE, operatorContext.getConfig().getString(MCE));
         map.put(MSE_URL, operatorContext.getConfig().getString(MSE_URL));
-        List<String> whiteList = operatorContext.getConfig().getList(CATALOGER_WHITE_LIST);
-        List<String> blackList = operatorContext.getConfig().getList(CATALOGER_BLACK_LIST);
-        map.put(CATALOGER_WHITE_LIST, whiteList.stream().collect(Collectors.joining(",")));
-        map.put(CATALOGER_BLACK_LIST, blackList.stream().collect(Collectors.joining(",")));
         PropsProvider runTimeProvider = new MapProps(map);
         props.addPropsProvider(runTimeProvider);
         return props;
