@@ -71,7 +71,7 @@ public class MockDatasetFactory {
     }
 
     public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, List<DatasetField> fields, String dataStoreType) {
-        DataStore dataStore = createDataStore(dataStoreType, databaseName, "table");
+        DataStore dataStore = createDataStore(dataStoreType, databaseName, name);
         return Dataset.newBuilder()
                 .withGid(gid)
                 .withDatasourceId(dataSourceId)

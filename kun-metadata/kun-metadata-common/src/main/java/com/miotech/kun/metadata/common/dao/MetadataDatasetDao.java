@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -121,20 +122,33 @@ public class MetadataDatasetDao {
 
     public Dataset createDataset(Dataset dataset) {
         String dsi = dataset.getDSI();
+        logger.debug("fetching dataset by dsi = {}", dsi);
+        Dataset fetchDatasetByDSI = fetchDatasetByDSI(dsi);
+        if (fetchDatasetByDSI != null) {
+            return fetchDatasetByDSI;
+        }
         long gid = IdGenerator.getInstance().nextId();
         String datasetSql = new DefaultSQLBuilder()
                 .insert(DATASET_COLUMNS)
                 .into(DATASET_TABLE_NAME)
                 .asPrepared()
                 .getSQL();
-        dbOperator.update(datasetSql,
-                gid, dataset.getName(),
-                dataset.getDatasourceId(),
-                DataStoreJsonUtil.toJson(dataset.getDataStore()),
-                dataset.getDatabaseName(),
-                dsi,
-                false
-        );
+        try {
+            dbOperator.update(datasetSql,
+                    gid, dataset.getName(),
+                    dataset.getDatasourceId(),
+                    DataStoreJsonUtil.toJson(dataset.getDataStore()),
+                    dataset.getDatabaseName(),
+                    dsi,
+                    false
+            );
+        } catch (Exception e) {
+            if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
+                return fetchDatasetByDSI(dsi);
+            }
+            logger.error("insert into error", e);
+            throw e;
+        }
         SchemaSnapshot.Builder builder = SchemaSnapshot.newBuilder();
         if (dataset.getFields() != null) {
             builder.withFields(dataset.getFields().stream().map(field -> field.convert()).collect(Collectors.toList()));
