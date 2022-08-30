@@ -2,6 +2,7 @@ package com.miotech.kun.datadiscovery.service.rdm.file;
 
 import com.miotech.kun.datadiscovery.model.entity.rdm.*;
 import com.miotech.kun.datadiscovery.model.enums.ColumnType;
+import com.miotech.kun.datadiscovery.util.DateFormatFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.Lists;
@@ -101,7 +102,14 @@ public class RefUploadExeclFileResolver extends RefUploadFileResolver {
         switch (cell.getCellType()) {
             case NUMERIC:
                 //数字
-                cellValue = BigDecimal.valueOf(cell.getNumericCellValue()).stripTrailingZeros().toPlainString();
+                double numericCellValue = cell.getNumericCellValue();
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    Date javaDate = DateUtil.getJavaDate(cell.getNumericCellValue());
+                    cellValue = DateFormatFactory.getFormat().format(javaDate);
+                } else {
+
+                    cellValue = BigDecimal.valueOf(numericCellValue).stripTrailingZeros().toPlainString();
+                }
                 break;
             case STRING:
                 //字符串
@@ -114,7 +122,8 @@ public class RefUploadExeclFileResolver extends RefUploadFileResolver {
                 break;
             case BOOLEAN:
                 //Boolean
-                cellValue = String.valueOf(cell.getBooleanCellValue());
+                DataFormatter dataFormatter=new DataFormatter();
+                cellValue= dataFormatter.formatCellValue(cell);
                 break;
             case FORMULA:
                 //公式

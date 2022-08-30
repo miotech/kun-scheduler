@@ -298,7 +298,6 @@ public class RdmService extends BaseSecurityService {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    @OperationRecord(type = OperationRecordType.RDM_LINKAGE, args = {"#event"})
     public void linkage(DatasetCreatedEvent event) {
         if (Objects.isNull(event.getDataSourceId()) || (!event.getDataSourceId().equals(datasourceId))) {
             return;

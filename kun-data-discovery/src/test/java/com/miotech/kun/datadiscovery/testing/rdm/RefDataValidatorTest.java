@@ -133,15 +133,12 @@ public class RefDataValidatorTest extends DataDiscoveryTestBase {
         ValidationResult valid = refDataValidator.valid(refBaseTable);
         assertThat(valid.getStatus(), is(false));
         List<ValidationMessage> validationMessageList = valid.getValidationMessageList();
-        assertThat(valid.size(), is(4));
+        assertThat(valid.size(), is(2));
         assertThat(validationMessageList.get(0).getLineNumber(), is(1L));
         assertThat(validationMessageList.get(0).getMessage(), is("format error,column Type:int,line Numbers:1 ,data:data2,column:c2"));
         assertThat(validationMessageList.get(1).getLineNumber(), is(3L));
-        assertThat(validationMessageList.get(1).getMessage(), is("constraint:PRIMARY_KEY validate is error,line Numbers:[3] ,data:\",null\""));
-        assertThat(validationMessageList.get(2).getLineNumber(), is(3L));
-        assertThat(validationMessageList.get(2).getMessage(), is("constraint:PRIMARY_KEY validate is error,line Numbers:[3,4] ,data:\",null\""));
-        assertThat(validationMessageList.get(3).getLineNumber(), is(4L));
-        assertThat(validationMessageList.get(3).getMessage(), is("constraint:PRIMARY_KEY validate is error,line Numbers:[4] ,data:\",null\""));
+        assertThat(validationMessageList.get(1).getMessage(), is("constraint:PRIMARY_KEY validate is error,line Numbers:[3,4] ,data:\",null\""));
+
     }
 
     @Test
@@ -253,16 +250,14 @@ public class RefDataValidatorTest extends DataDiscoveryTestBase {
 
         ValidationResult valid = refDataValidator.valid(refBaseTable);
         assertThat(valid.getStatus(), is(false));
-        assertThat(valid.size(), is(4));
+        assertThat(valid.size(), is(2));
         ValidationResultVo validationResultVo = new ValidationResultVo(valid);
         String summary = validationResultVo.getSummary();
         assertThat(summary, is(new StringJoiner(",").add(Constants.CONSTRAINT_INFO).add(Constants.DATA_FORMAT_ERROR).toString()));
         List<ValidationMessageVo> validationMessageVoList = validationResultVo.getValidationMessageVoList();
-        assertThat(validationMessageVoList.size(), is(3));
+        assertThat(validationMessageVoList.size(), is(2));
         assertThat(validationMessageVoList.get(0).getLineNumber(), is(1L));
         assertThat(validationMessageVoList.get(1).getLineNumber(), is(3L));
-        assertThat(validationMessageVoList.get(2).getLineNumber(), is(4L));
-
     }
 
 

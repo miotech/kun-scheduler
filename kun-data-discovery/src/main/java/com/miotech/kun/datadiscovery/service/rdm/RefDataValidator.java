@@ -158,11 +158,7 @@ public class RefDataValidator {
         ArrayListMultimap<String, Integer> multimap = ArrayListMultimap.create();
         for (int i = 0; i < dataRecordList.size(); i++) {
             DataRecord dataRecord = dataRecordList.get(i);
-            boolean nullValue = columns.stream().map(dataRecord::get).collect(Collectors.toList()).stream().anyMatch(Objects::isNull);
             String value = columns.stream().map(column -> String.valueOf(dataRecord.get(column))).collect(Collectors.joining(","));
-            if (nullValue) {
-                validationMessages.add(ValidationMessage.constraintErrorMessage(constraintType, value, ImmutableSet.of((i + 1))));
-            }
             multimap.put(value, i + 1);
         }
         multimap.asMap().forEach((data, lines) -> {
