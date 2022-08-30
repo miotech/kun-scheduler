@@ -1008,7 +1008,6 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.updateTaskRun(taskRun1);
         taskRunDao.updateTaskRun(taskRun2);
         List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
-        System.out.println(JSONUtils.toJsonString(result));
         assertThat(result.size(), is(1));
     }
 
@@ -1029,6 +1028,31 @@ public class TaskRunServiceTest extends CommonTestBase {
 
         List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
         assertThat(result.size(), is(30));
+    }
+    
+    @Test
+    public void getTaskRunWaitingGantt_withSameQueueName() {
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        Task task = MockTaskFactory.createTask();
+        TaskRun targetTaskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(baseTime).withStartAt(baseTime.plusMinutes(60)).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(targetTaskRun);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun1, taskRun2));
+        taskRun1 = taskRun1.cloneBuilder()
+                .withCreatedAt(baseTime)
+                .withStartAt(baseTime.minusMinutes(20)).withTermAt(baseTime.plusMinutes(20)).build();
+        taskRun2 = taskRun2.cloneBuilder()
+                .withCreatedAt(baseTime)
+                .withStartAt(baseTime.minusMinutes(10)).withTermAt(baseTime.plusMinutes(30))
+                .withQueueName("non-default").build();
+        taskRunDao.updateTaskRun(taskRun1);
+        taskRunDao.updateTaskRun(taskRun2);
+        List<RunningTaskRunInfo> result = taskRunService.getTaskRunWaitingFor(targetTaskRun.getId());
+        assertThat(result.size(), is(1));
+        assertThat(result.get(0).getTaskRunId(), is(taskRun1.getId()));
     }
 
     @Test

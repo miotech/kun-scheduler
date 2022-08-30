@@ -330,6 +330,19 @@ public class TaskRunDao {
             }
         }
 
+        // Search by queue name
+        if (Objects.nonNull(filter.getQueueNames()) && (!filter.getQueueNames().isEmpty())) {
+            List<String> queueNames = filter.getQueueNames();
+            if (queueNames.size() == 1) {
+                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".queue_name = ?)");
+                sqlArgs.add(queueNames.get(0));
+            } else {
+                String filterQueueNames = queueNames.stream().map(x -> "?").collect(Collectors.joining(","));
+                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".queue_name in (" + filterQueueNames + "))");
+                sqlArgs.addAll(queueNames);
+            }
+        }
+
         //Search by taskRunIds
         if (Objects.nonNull(filter.getTaskRunIds()) && (!filter.getTaskRunIds().isEmpty())) {
             List<Long> taskRunIds = filter.getTaskRunIds();

@@ -329,6 +329,7 @@ public class TaskRunService {
 
         TaskRunSearchFilter filterBuilder1 = TaskRunSearchFilter.newBuilder()
                 .withScheduleType(ImmutableList.of(taskRun.getScheduledType().name()))
+                .withQueueName(ImmutableList.of(taskRun.getQueueName()))
                 .withDateFrom(taskRun.getCreatedAt().minusDays(TRACE_LIMIT_DAYS))
                 .withStartTo(queueStart)
                 .withEndAfter(queueStart).build();
@@ -336,6 +337,7 @@ public class TaskRunService {
 
         TaskRunSearchFilter filterBuilder2 = TaskRunSearchFilter.newBuilder()
                 .withScheduleType(ImmutableList.of(taskRun.getScheduledType().name()))
+                .withQueueName(ImmutableList.of(taskRun.getQueueName()))
                 .withDateFrom(taskRun.getCreatedAt().minusDays(TRACE_LIMIT_DAYS))
                 .withStartFrom(queueStart)
                 .withStartTo(queueEnd).build();
