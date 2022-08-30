@@ -432,6 +432,7 @@ export default {
   'dataDevelopment.definition.paramConfig': 'Parameters Config',
   'dataDevelopment.definition.scheduleConfig': 'Scheduling Config',
   'dataDevelopment.definition.versionHistory': 'Version History',
+  'dataDevelopment.definition.dag': 'DAG',
   'dataDevelopment.definition.retryConfig': 'Retry Config',
   'dataDevelopment.definition.commitModalTitle': 'Commit & Publish Task',
   'dataDevelopment.definition.commitModalMsg': 'Commit Message',

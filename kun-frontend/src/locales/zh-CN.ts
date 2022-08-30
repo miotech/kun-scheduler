@@ -425,6 +425,7 @@ export default {
   'dataDevelopment.definition.paramConfig': '参数规则',
   'dataDevelopment.definition.scheduleConfig': '调度规则',
   'dataDevelopment.definition.versionHistory': '版本历史',
+  'dataDevelopment.definition.dag': 'DAG',
   'dataDevelopment.definition.retryConfig': '失败重试配置',
   'dataDevelopment.definition.commitModalTitle': '发布任务',
   'dataDevelopment.definition.commitModalMsg': '发布信息',
