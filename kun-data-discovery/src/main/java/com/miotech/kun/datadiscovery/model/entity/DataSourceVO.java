@@ -31,8 +31,6 @@ public class DataSourceVO {
 
     private String name;
 
-    @JsonSerialize(using= ToStringSerializer.class)
-    private Long typeId;
 
     @JsonProperty("information")
     private JSONObject connectionConfig;

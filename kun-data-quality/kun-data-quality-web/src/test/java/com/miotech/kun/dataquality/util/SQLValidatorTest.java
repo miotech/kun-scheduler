@@ -34,7 +34,7 @@ public class SQLValidatorTest extends DataQualityTestBase {
         String database = "test_db";
         String table = "test_table";
         String field = "id";
-        String type = "AWS";
+        String type = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, type);
 
         Long datasetId = IdGenerator.getInstance().nextId();
@@ -54,7 +54,7 @@ public class SQLValidatorTest extends DataQualityTestBase {
         String database = "test_db";
         String table = "test_table";
         String field = "id";
-        String type = "AWS";
+        String type = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, type);
 
         Long datasetId = IdGenerator.getInstance().nextId();
@@ -74,7 +74,7 @@ public class SQLValidatorTest extends DataQualityTestBase {
         String database = "test_db";
         String table = "test_table";
         String field = "id";
-        String type = "AWS";
+        String type = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, type);
 
         Long datasetId = IdGenerator.getInstance().nextId();
@@ -94,7 +94,7 @@ public class SQLValidatorTest extends DataQualityTestBase {
         String database = "test_db";
         String table = "test_table";
         String field = "id";
-        String type = "AWS";
+        String type = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, type);
 
         Long datasetId = IdGenerator.getInstance().nextId();

@@ -179,7 +179,7 @@ public class DataQualityServiceTest extends DataQualityTestBase {
         String database = "test_db";
         String table = "test_table";
         String field = "id";
-        String type = "AWS";
+        String type = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, type);
 
         String sqlText = String.format("select %s from %s.%s", field, database, table);
@@ -215,7 +215,7 @@ public class DataQualityServiceTest extends DataQualityTestBase {
         String table = "test_table";
         String other_table = "other_test_table";
         String field = "id";
-        String invalidType = "AWS";
+        String invalidType = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, other_table, invalidType);
 
         String sqlText = String.format("select %s from %s.%s", field, database, table);
@@ -234,7 +234,7 @@ public class DataQualityServiceTest extends DataQualityTestBase {
         String table = "test_table";
         String field = "id";
         String other_field = "other_id";
-        String invalidType = "AWS";
+        String invalidType = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, invalidType);
 
         String sqlText = String.format("select %s from %s.%s", field, database, table);
@@ -252,7 +252,7 @@ public class DataQualityServiceTest extends DataQualityTestBase {
         String database = "test_db";
         String table = "test_table";
         String field = "id";
-        String invalidType = "AWS";
+        String invalidType = "HIVE";
         DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, invalidType);
 
         String sqlText = String.format("delete from %s.%s", field, database, table);

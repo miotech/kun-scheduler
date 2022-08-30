@@ -13,10 +13,10 @@ public class URLUtils {
                                        String database,
                                        String customUrlPostfix) {
         String finalDatabase = database;
-        if (DataSourceType.PostgreSQL.name().equals(datasourceType)) {
+        if (DataSourceType.POSTGRESQL.name().equals(datasourceType)) {
             String[] splitStr = database.split("\\.");
             finalDatabase = splitStr[0] + "?currentSchema=" + splitStr[1];
-        } else if (DataSourceType.AWS.name().equals(datasourceType)) {
+        } else if (DataSourceType.HIVE.name().equals(datasourceType)) {
             finalDatabase = "";
         }
 

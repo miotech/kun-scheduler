@@ -12,9 +12,9 @@ import org.json.simple.JSONObject;
  */
 public enum DataSourceType {
 
-    PostgreSQL("postgresql", "org.postgresql.Driver"),
+    POSTGRESQL("postgresql", "org.postgresql.Driver"),
 
-    AWS("awsathena", "com.simba.athena.jdbc.Driver");
+    HIVE("awsathena", "com.simba.athena.jdbc.Driver");
 
     private static final String PROTOCOL_DELIMITER = ":";
 
@@ -39,15 +39,15 @@ public enum DataSourceType {
             throw ExceptionUtils.wrapIfChecked(new RuntimeException("DataSource type is empty, unable to parse url"));
         }
 
-        if (StringUtils.equals(PostgreSQL.name(), mcInfo.getDatasourceType())) {
-            return parseFormalConnectionInfo(PostgreSQL, mcInfo);
+        if (StringUtils.equals(POSTGRESQL.name(), mcInfo.getDatasourceType())) {
+            return parseFormalConnectionInfo(POSTGRESQL, mcInfo);
 
-        } else if (StringUtils.equals(AWS.name(), mcInfo.getDatasourceType())) {
+        } else if (StringUtils.equals(HIVE.name(), mcInfo.getDatasourceType())) {
             JDBCConnectionInfo connectionInfo = new JDBCConnectionInfo();
             connectionInfo.setUrl((String) mcInfo.getConnectionInfo().get("athenaUrl"));
             connectionInfo.setUsername((String) mcInfo.getConnectionInfo().get("athenaUsername"));
             connectionInfo.setPassword((String) mcInfo.getConnectionInfo().get("athenaPassword"));
-            connectionInfo.setDriverClass(AWS.getDriverClass());
+            connectionInfo.setDriverClass(HIVE.getDriverClass());
             return connectionInfo;
         } else {
             throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported datasource type: " + mcInfo.getDatasourceType()));

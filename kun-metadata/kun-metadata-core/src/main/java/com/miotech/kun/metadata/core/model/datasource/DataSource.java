@@ -12,7 +12,7 @@ public class DataSource {
 
     private final Long id;
     private final String name;
-    private final Long typeId;
+
     private final ConnectionConfig connectionConfig;
     private final DatasourceType datasourceType;
     private final List<String> tags;
@@ -21,11 +21,10 @@ public class DataSource {
     private final String updateUser;
     private final OffsetDateTime updateTime;
 
-    public DataSource(Long id, String name, Long typeId, ConnectionConfig connectionConfig, DatasourceType datasourceType, List<String> tags, String createUser,
+    public DataSource(Long id, String name, ConnectionConfig connectionConfig, DatasourceType datasourceType, List<String> tags, String createUser,
                       OffsetDateTime createTime, String updateUser, OffsetDateTime updateTime) {
         this.id = id;
         this.name = name;
-        this.typeId = typeId;
         this.connectionConfig = connectionConfig;
         this.datasourceType = datasourceType;
         this.tags = tags;
@@ -71,10 +70,6 @@ public class DataSource {
         return updateTime;
     }
 
-    public Long getTypeId() {
-        return typeId;
-    }
-
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -83,7 +78,6 @@ public class DataSource {
         return DataSource.newBuilder()
                 .withId(id)
                 .withName(name)
-                .withTypeId(typeId)
                 .withConnectionConfig(connectionConfig)
                 .withDatasourceType(datasourceType)
                 .withTags(tags)
@@ -97,7 +91,6 @@ public class DataSource {
     public static final class Builder {
         private Long id;
         private String name;
-        private Long typeId;
         private ConnectionConfig connectionConfig;
         private DatasourceType datasourceType;
         private List<String> tags;
@@ -116,11 +109,6 @@ public class DataSource {
 
         public Builder withName(String name) {
             this.name = name;
-            return this;
-        }
-
-        public Builder withTypeId(Long typeId){
-            this.typeId = typeId;
             return this;
         }
 
@@ -160,7 +148,7 @@ public class DataSource {
         }
 
         public DataSource build() {
-            return new DataSource(id, name, typeId, connectionConfig, datasourceType, tags, createUser, createTime, updateUser, updateTime);
+            return new DataSource(id, name, connectionConfig, datasourceType, tags, createUser, createTime, updateUser, updateTime);
         }
     }
 }
