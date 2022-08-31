@@ -38,17 +38,14 @@ export default memo(function TestCaseRuleTable({ data }: Props) {
         dataIndex: 'expectedValue',
         width: 100,
       },
+      {
+        title: t('monitoringDashboard.testCaseRuleTable.volatility'),
+        dataIndex: 'volatility',
+        width: 100,
+      },
     ],
     [t],
   );
 
-  return (
-    <Table
-      style={{ width: '100%' }}
-      dataSource={data}
-      columns={columns}
-      pagination={false}
-      size="small"
-    />
-  );
+  return <Table style={{ width: '100%' }} dataSource={data} columns={columns} pagination={false} size="small" />;
 });

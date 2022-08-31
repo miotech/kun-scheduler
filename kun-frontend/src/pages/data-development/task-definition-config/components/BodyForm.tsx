@@ -35,7 +35,6 @@ export const BodyForm: React.FC<BodyFormProps> = function TaskDefinitionBodyForm
   const ref = useRef(null);
   const size = useSize(ref);
   const { initTaskDefinition, taskTemplate, form } = props;
-
   return (
     <div ref={ref}>
       <Form
@@ -84,14 +83,18 @@ export const BodyForm: React.FC<BodyFormProps> = function TaskDefinitionBodyForm
             />
           </Tabs.TabPane>
           {/* Version history */}
-          <Tabs.TabPane tab={t('dataDevelopment.definition.versionHistory')} key="versionHistory" forceRender>
-            <VersionHistory taskCommits={initTaskDefinition?.taskCommits || []} />
-          </Tabs.TabPane>
+          {initTaskDefinition?.isDeployed && (
+            <Tabs.TabPane tab={t('dataDevelopment.definition.versionHistory')} key="versionHistory" forceRender>
+              <VersionHistory taskCommits={initTaskDefinition?.taskCommits || []} />
+            </Tabs.TabPane>
+          )}
 
           {/* task dag */}
-          <Tabs.TabPane tab={t('dataDevelopment.definition.dag')} key="taskDag" forceRender>
-            <TaskDag task={initTaskDefinition} width={size?.width} height={600} />
-          </Tabs.TabPane>
+          {initTaskDefinition?.isDeployed && (
+            <Tabs.TabPane tab={t('dataDevelopment.definition.dag')} key="taskDag" forceRender>
+              <TaskDag task={initTaskDefinition} width={size?.width} height={600} />
+            </Tabs.TabPane>
+          )}
         </Tabs>
       </Form>
     </div>
