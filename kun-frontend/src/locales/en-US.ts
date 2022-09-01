@@ -612,6 +612,7 @@ export default {
   'monitoringDashboard.testCaseRuleTable.operator': 'Operator',
   'monitoringDashboard.testCaseRuleTable.expectedType': 'Expected type',
   'monitoringDashboard.testCaseRuleTable.expectedValue': 'Expected value',
+  'monitoringDashboard.testCaseRuleTable.volatility': 'Volatility',
   'operationCenter.backfill.filters.search.placeholder': 'Search by keyword in instance name',
   'operationCenter.backfill.filters.userSelect.placeholder': 'Filter by creator',
   'operationCenter.backfill.property.id': 'Backfill Instance ID',

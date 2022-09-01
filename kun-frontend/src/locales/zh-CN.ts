@@ -598,6 +598,7 @@ export default {
   'monitoringDashboard.testCaseRuleTable.operator': '操作符',
   'monitoringDashboard.testCaseRuleTable.expectedType': '期望类型',
   'monitoringDashboard.testCaseRuleTable.expectedValue': '期望值',
+  'monitoringDashboard.testCaseRuleTable.volatility': '波动率',
   'operationCenter.backfill.filters.search.placeholder': '按实例名称关键字搜索',
   'operationCenter.backfill.filters.userSelect.placeholder': '按创建人搜索',
   'operationCenter.backfill.property.id': '补数据实例 ID',

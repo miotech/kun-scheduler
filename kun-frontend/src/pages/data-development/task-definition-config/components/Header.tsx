@@ -12,7 +12,6 @@ import {
   commitAndDeployTaskDefinition,
   deleteTaskDefinition,
   updateTaskDefinition,
-  fetchTaskDefinitionDetail,
 } from '@/services/data-development/task-definitions';
 import { getFlattenedTaskDefinition } from '@/utils/transformDataset';
 import { TaskCommitModal } from '@/pages/data-development/task-definition-config/components/TaskCommitModal';
@@ -270,9 +269,8 @@ export const Header: React.FC<Props> = props => {
         onConfirm={async (commitMsg: string) => {
           const respData = await commitAndDeployTaskDefinition(taskDefId, commitMsg);
           if (respData) {
-            const newTaskDefinition = await await fetchTaskDefinitionDetail(taskDefId);
+            dispatch.dataDevelopment.fetchEditingTaskDefinition(taskDefId);
             message.success('Commit success.');
-            setDraftTaskDef(newTaskDefinition);
             setCommitModalVisible(false);
           }
           return respData;
