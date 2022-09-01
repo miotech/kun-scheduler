@@ -420,6 +420,17 @@ public class WorkflowApi {
         });
     }
 
+    public Integer countTaskRunsLaterThan(TaskRunSearchRequest request, Long taskRunId) {
+        HttpUrl url = buildUrl("/taskruns/_countLaterThan")
+                .addQueryParameter("taskRunId", taskRunId.toString())
+                .build();
+        Request postRequest = new Request.Builder().url(url)
+                .post(jsonBody(request))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(postRequest, Integer.class);
+    }
+
     public Integer countTaskRuns(TaskRunSearchRequest request) {
         HttpUrl url = buildUrl("/taskruns/_count")
                 .build();

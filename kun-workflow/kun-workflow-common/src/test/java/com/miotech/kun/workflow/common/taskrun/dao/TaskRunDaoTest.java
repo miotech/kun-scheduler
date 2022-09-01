@@ -776,6 +776,27 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(taskRun3.getId(), is(result2.get(0).getId()));
     }
 
+    @Test
+    public void fetchTotalCount_LaterThanTargetTaskRun() {
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        List<TaskRun> taskRunList = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+            taskRunList.add(taskRun);
+            taskRunDao.createTaskRun(taskRun);
+        }
+        TaskRunSearchFilter filter = TaskRunSearchFilter.newBuilder().build();
+
+        Integer result1 = taskRunDao.fetchTotalCountLaterThan(filter, taskRunList.get(0).getId());
+        assertThat(result1, is(9));
+
+        Integer result2 = taskRunDao.fetchTotalCountLaterThan(filter, taskRunList.get(5).getId());
+        assertThat(result2, is(4));
+
+        Integer result3 = taskRunDao.fetchTotalCountLaterThan(filter, taskRunList.get(9).getId());
+        assertThat(result3, is(0));
+    }
 
     @Test
     public void fetchTaskRunByTaskAndTick() {

@@ -85,7 +85,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
                             );
                 })))
                 .thenReturn(PaginationVO.<TaskRunVO>newBuilder()
-                        .withPageNumber(filterToMatch.getPageNum())
+                        .withPageNum(filterToMatch.getPageNum())
                         .withPageSize(filterToMatch.getPageSize())
                         .withRecords(records)
                         .withTotalCount(count)
@@ -270,7 +270,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
             List<TaskRun> records = mockFilterTaskRuns(allTaskRunCollection, filter);
             return PaginationVO.<TaskRun>newBuilder()
                     .withRecords(records)
-                    .withPageNumber(filter.getPageNum())
+                    .withPageNum(filter.getPageNum())
                     .withPageSize(filter.getPageSize())
                     .withTotalCount(records.size())
                     .build();

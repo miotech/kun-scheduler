@@ -985,6 +985,26 @@ public class TaskRunDao {
         return dbOperator.fetchOne(sql, rs -> rs.getInt(1), params.toArray());
     }
 
+    public Integer fetchTotalCountLaterThan(TaskRunSearchFilter filter, Long taskRunId) {
+        Pair<String, List<Object>> whereClauseAndParams = generateWhereClauseAndParamsByFilter(filter);
+        String whereClause = whereClauseAndParams.getLeft();
+        List<Object> params = whereClauseAndParams.getRight();
+
+        whereClause = whereClause + " AND (" + TASK_RUN_MODEL_NAME + ".id > ?)";
+        params.add(taskRunId);
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("COUNT(*)")
+                .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".task_id = " + TaskDao.TASK_MODEL_NAME + ".id")
+                .autoAliasColumns()
+                .where(whereClause)
+                .getSQL();
+
+        return dbOperator.fetchOne(sql, rs -> rs.getInt(1), params.toArray());
+    }
+
     public List<TaskRunDailyStatisticInfo> fetchTotalCountByDay(TaskRunSearchFilter filter, Integer offsetHour) {
         Pair<String, List<Object>> whereClauseAndParams = generateWhereClauseAndParamsByFilter(filter);
         String whereClause = whereClauseAndParams.getLeft();

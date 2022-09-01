@@ -32,7 +32,7 @@ public class WorkerImageService {
     public PaginationVO<WorkerImage> fetchWorkerImage(WorkerImageFilter filter) {
         List<WorkerImage> workerImageList = workerImageDao.fetchWorkerImage(filter);
         return PaginationVO.<WorkerImage>newBuilder()
-                .withPageNumber(filter.getPage())
+                .withPageNum(filter.getPage())
                 .withPageSize(filter.getPageSize())
                 .withRecords(workerImageList)
                 .build();

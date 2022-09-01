@@ -291,7 +291,7 @@ public class TaskService {
     public PaginationVO<Task> fetchTasksByFilters(TaskSearchFilter filters) {
         Preconditions.checkNotNull(filters, "Invalid argument `filters`: null");
         return PaginationVO.<Task>newBuilder()
-                .withPageNumber(filters.getPageNum())
+                .withPageNum(filters.getPageNum())
                 .withPageSize(filters.getPageSize())
                 .withRecords(taskDao.fetchWithFilters(filters))
                 .withTotalCount(taskDao.fetchTotalCountWithFilters(filters))
