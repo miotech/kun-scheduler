@@ -20,7 +20,6 @@ export default function DataSettings() {
   const { selector, dispatch } = useRedux(state => state.dataSettings);
 
   const doRefresh = useCallback(() => {
-    dispatch.dataSettings.fetchDatabaseTypeList();
     dispatch.dataSettings.searchDataBases();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -30,13 +29,7 @@ export default function DataSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const {
-    searchContent,
-    pagination,
-    currentDatabase,
-    // searchLoading,
-    fetchDatabaseTypeLoading,
-  } = selector;
+  const { searchContent, pagination, currentDatabase, searchLoading } = selector;
 
   const handleSearch = useCallback(() => {
     dispatch.dataSettings.searchDataBases();
@@ -167,7 +160,7 @@ export default function DataSettings() {
         </div>
 
         <div className={styles.databasesArea}>
-          <Spin spinning={fetchDatabaseTypeLoading}>
+          <Spin spinning={searchLoading}>
             <div className={styles.databasesCount}>
               {t('dataSettings.datasourceCount', {
                 count: selector.dataSourceList?.length ?? 0,

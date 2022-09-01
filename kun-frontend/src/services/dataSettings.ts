@@ -1,4 +1,4 @@
-import { DataSource, DatasourceInfo, UpdateDatasourceInfo, DatabaseTypeList } from '@/rematch/models/dataSettings';
+import { DataSource, DatasourceInfo, UpdateDatasourceInfo } from '@/rematch/models/dataSettings';
 import { Pagination, Sort } from '@/definitions/common-types';
 
 import { delet, get, post } from '@/utils/requestUtils';
@@ -8,10 +8,6 @@ import { DatasetPullProcessVO } from './datasetDetail';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
   datasources: DataSource[];
-}
-
-export async function fetchDatabaseTypesService() {
-  return get<DatabaseTypeList>('/metadata/datasource/types');
 }
 
 export async function searchDataBasesService(search: string, pagination: Pagination) {
