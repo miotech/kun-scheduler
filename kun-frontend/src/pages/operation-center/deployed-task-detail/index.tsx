@@ -23,7 +23,7 @@ import styles from './index.less';
 interface DeployedTaskDetailViewProps {}
 
 const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = () => {
-  const match = useRouteMatch<{ id: string }>();
+  const match = useRouteMatch<{ id: string}>();
 
   const rightPanelRef = useRef() as RefObject<any>;
 
@@ -49,7 +49,6 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   useMount(async () => {
     // highlight corresponding aside menu item
-    dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks/:id');
     dispatch.route.updateCurrentParams({
       id: match.params.id,
     });
@@ -59,6 +58,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       id: match.params.id,
       scheduleTypes: ['SCHEDULED'],
       ...filters,
+      locateTaskRunId: query?.taskRunId,
     });
   });
 
