@@ -8,7 +8,6 @@ import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
 import com.miotech.kun.datadiscovery.util.JSONUtils;
 import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import com.miotech.kun.operationrecord.common.anno.OperationRecord;
 import com.miotech.kun.operationrecord.common.model.OperationRecordType;
@@ -46,7 +45,6 @@ public class DataSourceService extends BaseSecurityService {
                 .map(ds -> DataSourceVO.builder()
                         .id(ds.getId())
                         .datasourceType(ds.getDatasourceType().name())
-                        .typeId(ds.getTypeId())
                         .name(ds.getName())
                         .connectionConfig(JSONUtils.jsonToObject(toFlatMap(ds.getConnectionConfig()), JSONObject.class))
                         .createUser(ds.getCreateUser())
@@ -61,13 +59,6 @@ public class DataSourceService extends BaseSecurityService {
         dataSourcePage.setPageSize(datasourceSearchRequest.getPageSize());
 
         return dataSourcePage;
-    }
-
-    public List<DataSourceTemplateVO> getAllTypes() {
-        List<DatasourceTemplate> types = metadataService.getDataSourceTypes();
-        return types.stream()
-                .map(type -> new DataSourceTemplateVO(type.getType(), type.getId()))
-                .collect(Collectors.toList());
     }
 
     @OperationRecord(type = OperationRecordType.DATASOURCE_ADD, args = {"#dataSourceRequest"})

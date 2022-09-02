@@ -9,11 +9,8 @@ import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
-import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import com.miotech.kun.metadata.web.model.vo.AcknowledgementVO;
-
-import java.util.List;
 
 @Singleton
 public class DataSourceController {
@@ -41,11 +38,6 @@ public class DataSourceController {
     public AcknowledgementVO deleteDataSource(@RouteVariable Long id) {
         dataSourceService.delete(id);
         return new AcknowledgementVO("Delete success");
-    }
-
-    @RouteMapping(url = "/datasource/types", method = "GET")
-    public List<DatasourceTemplate> getDataSourceTypes() {
-        return dataSourceService.getAllTypes();
     }
 
     @RouteMapping(url = "/datasource/{id}", method = "GET")
