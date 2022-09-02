@@ -9,7 +9,7 @@ import java.util.Objects;
 @JsonDeserialize(builder = PaginationVO.PaginationVOBuilder.class)
 public class PaginationVO<T> {
 
-    private final Integer pageNumber;
+    private final Integer pageNum;
 
     private final Integer pageSize;
 
@@ -18,14 +18,14 @@ public class PaginationVO<T> {
     private final List<T> records;
 
     private PaginationVO(PaginationVOBuilder<T> builder) {
-        this.pageNumber = builder.pageNumber;
+        this.pageNum = builder.pageNum;
         this.pageSize = builder.pageSize;
         this.totalCount = builder.totalCount;
         this.records = builder.records;
     }
 
-    public Integer getPageNumber() {
-        return pageNumber;
+    public Integer getPageNum() {
+        return pageNum;
     }
 
     public Integer getPageSize() {
@@ -46,7 +46,7 @@ public class PaginationVO<T> {
 
     public PaginationVOBuilder<T> cloneBuilder() {
         return new PaginationVOBuilder<T>()
-                .withPageNumber(pageNumber)
+                .withPageNum(pageNum)
                 .withPageSize(pageSize)
                 .withTotalCount(totalCount)
                 .withRecords(records);
@@ -57,7 +57,7 @@ public class PaginationVO<T> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PaginationVO<?> that = (PaginationVO<?>) o;
-        return pageNumber == that.pageNumber &&
+        return pageNum == that.pageNum &&
                 pageSize == that.pageSize &&
                 totalCount == that.totalCount &&
                 Objects.equals(records, that.records);
@@ -65,12 +65,12 @@ public class PaginationVO<T> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(pageNumber, pageSize, totalCount, records);
+        return Objects.hash(pageNum, pageSize, totalCount, records);
     }
 
     @JsonPOJOBuilder
     public static final class PaginationVOBuilder<T> {
-        private Integer pageNumber;
+        private Integer pageNum;
         private Integer pageSize;
         private Integer totalCount;
         private List<T> records;
@@ -78,8 +78,8 @@ public class PaginationVO<T> {
         private PaginationVOBuilder() {
         }
 
-        public PaginationVOBuilder<T> withPageNumber(Integer pageNumber) {
-            this.pageNumber = pageNumber;
+        public PaginationVOBuilder<T> withPageNum(Integer pageNum) {
+            this.pageNum = pageNum;
             return this;
         }
 

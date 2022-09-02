@@ -169,6 +169,12 @@ public class TaskRunController {
         return taskRunService.searchTaskRunVOs(filter);
     }
 
+    @RouteMapping(url = "/taskruns/_countLaterThan", method = "POST")
+    public int countTaskRunsLaterThan(@RequestBody TaskRunSearchFilter filter,
+                                      @QueryParameter Long taskRunId) {
+        return taskRunService.countTaskRunsLaterThan(filter, taskRunId);
+    }
+
     @RouteMapping(url = "/taskruns/_count", method = "POST")
     public int countTaskRuns(@RequestBody TaskRunSearchFilter requestFilter) {
         TaskRunSearchFilter filter = requestFilter.cloneBuilder().build();

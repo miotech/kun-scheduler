@@ -210,6 +210,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public Integer countTaskRunsLaterThan(TaskRunSearchRequest request, Long taskRunId) {
+        return wfApi.countTaskRunsLaterThan(request, taskRunId);
+    }
+
+    @Override
     public Integer countTaskRun(TaskRunSearchRequest request) {
         return wfApi.countTaskRuns(request);
     }

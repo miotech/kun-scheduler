@@ -337,7 +337,6 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         Preconditions.checkArgument(request.getPageNum() > 0, "page number should be a positive number");
         Preconditions.checkArgument(request.getPageSize() > 0, "page size should be a positive number");
         TaskRunSearchRequest.Builder searchRequestBuilder = TaskRunSearchRequest.newBuilder()
-                .withPageNum(request.getPageNum())
                 .withPageSize(request.getPageSize())
                 .withDateFrom(request.getStartTime())
                 .withDateTo(request.getEndTime());
@@ -364,11 +363,14 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         if (request.getOwner().isPresent()) {
             filterTags.add(new Tag(TagUtils.TAG_OWNER_NAME, request.getOwner().get()));
         }
+        searchRequestBuilder.withTags(filterTags);
 
-        TaskRunSearchRequest searchRequest = searchRequestBuilder
-                .withTags(filterTags)
-                .build();
-        return workflowClient.searchTaskRun(searchRequest);
+        if (request.getLocateTaskRunId() != null) {
+            searchRequestBuilder.withPageNum(workflowClient.countTaskRunsLaterThan(searchRequestBuilder.build(), request.getLocateTaskRunId()) / request.getPageSize() + 1);
+        } else {
+            searchRequestBuilder.withPageNum(request.getPageNum());
+        }
+        return workflowClient.searchTaskRun(searchRequestBuilder.build());
     }
 
     @OperationRecord(type = OperationRecordType.TASK_REMOVE_DEPENDENCY, args = {"#taskRunId", "#upstreamTaskRunIds"})

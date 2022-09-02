@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.model.executor.ExecutorInfo;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -219,10 +221,14 @@ public class WorkflowApiTest extends MockServerTestBase {
                 .build();
         mockPost("/taskruns/_search",
                 JSONUtils.toJsonString(request),
-                JSONUtils.toJsonString(new PaginationResult<>(1, 0, 1, taskRuns)));
-
+                JSONUtils.toJsonString(PaginationVO.<TaskRun>newBuilder()
+                        .withPageNum(1)
+                        .withPageSize(1)
+                        .withTotalCount(1)
+                        .withRecords(taskRuns).build()));
         PaginationResult<TaskRun> result = wfApi.searchTaskRuns(request);
         assertThat(result.getRecords().size(), is(1));
+        assertThat(result.getPageNum(), is(1));
         TaskRun taskRun1 = result.getRecords().get(0);
         assertTrue(taskRun1.getId() > 0);
     }

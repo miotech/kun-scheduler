@@ -101,7 +101,8 @@ public class DeployedTaskController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
-            @RequestParam(required = false) List<String> scheduleTypes
+            @RequestParam(required = false) List<String> scheduleTypes,
+            @RequestParam(required = false) Long locateTaskRunId
     ) {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
@@ -113,7 +114,8 @@ public class DeployedTaskController {
                 TaskRunStatus.resolve(status),
                 startTime,
                 endTime,
-                scheduleTypes
+                scheduleTypes,
+                locateTaskRunId
         );
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }
@@ -132,7 +134,8 @@ public class DeployedTaskController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
-            @RequestParam(required = false) List<String> scheduleTypes
+            @RequestParam(required = false) List<String> scheduleTypes,
+            @RequestParam(required = false) Long locateTaskRunId
     ) {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
@@ -144,7 +147,8 @@ public class DeployedTaskController {
                 TaskRunStatus.resolve(status),
                 startTime,
                 endTime,
-                scheduleTypes
+                scheduleTypes,
+                locateTaskRunId
         );
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }

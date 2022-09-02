@@ -1,6 +1,5 @@
 package com.miotech.kun.workflow.common.taskrun.service;
 
-import com.fasterxml.jackson.databind.ser.std.StdKeySerializers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -23,8 +22,6 @@ import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
-import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
-import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.WorkerLogs;
 import com.miotech.kun.workflow.core.model.common.GanttChartTaskRunInfo;
 import com.miotech.kun.workflow.core.model.taskrun.*;
@@ -411,21 +408,27 @@ public class TaskRunService {
         Preconditions.checkNotNull(filter.getPageSize(), "Invalid argument `pageSize`: null");
 
         return PaginationVO.<TaskRun>newBuilder()
-                .withPageNumber(filter.getPageNum())
+                .withPageNum(filter.getPageNum())
                 .withPageSize(filter.getPageSize())
                 .withRecords(taskRunDao.fetchTaskRunsByFilter(filter))
                 .withTotalCount(taskRunDao.fetchTotalCountByFilter(filter))
                 .build();
     }
 
+    //todo
     public PaginationVO<TaskRunVO> searchTaskRunVOs(TaskRunSearchFilter filter) {
         PaginationVO<TaskRun> runsPage = searchTaskRuns(filter);
         return PaginationVO.<TaskRunVO>newBuilder()
-                .withPageNumber(filter.getPageNum())
+                .withPageNum(filter.getPageNum())
                 .withPageSize(filter.getPageSize())
                 .withRecords(convertToVO(runsPage.getRecords()))
                 .withTotalCount(runsPage.getTotalCount())
                 .build();
+    }
+
+    public int countTaskRunsLaterThan(TaskRunSearchFilter filter, Long taskRunId) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        return taskRunDao.fetchTotalCountLaterThan(filter, taskRunId);
     }
 
     public int countTaskRunVOs(TaskRunSearchFilter filter) {

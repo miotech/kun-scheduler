@@ -375,7 +375,7 @@ public class OperatorService {
 
         return PaginationVO.<OperatorVO>newBuilder()
                 .withRecords(operatorVOs)
-                .withPageNumber(pageNum)
+                .withPageNum(pageNum)
                 .withPageSize(pageSize)
                 .withTotalCount(count)
                 .build();
