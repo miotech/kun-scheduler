@@ -745,6 +745,37 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 filteredTaskRunsWithIncludeStartedOnlyFlag.stream().map(TaskRun::getId).toArray());
     }
 
+    @Test
+    public void fetchTaskRunsByFilter_withQueueName() {
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueueName("queue1").build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueueName("queue2").build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueueName("queue3").build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        //process
+        TaskRunSearchFilter filter1 = TaskRunSearchFilter.newBuilder()
+                .withQueueName(Arrays.asList("queue1", "queue2")).build();
+        List<TaskRun> result1 = taskRunDao.fetchTaskRunsByFilter(filter1);
+        assertThat(result1.size(), is(2));
+        assertThat(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun2.getId())),
+                is(result1.stream().map(TaskRun::getId).collect(Collectors.toSet())));
+
+        TaskRunSearchFilter filter2 = TaskRunSearchFilter.newBuilder()
+                .withQueueName(Arrays.asList("queue3")).build();
+        List<TaskRun> result2 = taskRunDao.fetchTaskRunsByFilter(filter2);
+
+        assertThat(result2.size(), is(1));
+        assertThat(taskRun3.getId(), is(result2.get(0).getId()));
+    }
+
 
     @Test
     public void fetchTaskRunByTaskAndTick() {

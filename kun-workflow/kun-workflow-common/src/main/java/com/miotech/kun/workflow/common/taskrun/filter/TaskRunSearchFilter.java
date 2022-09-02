@@ -57,6 +57,8 @@ public class TaskRunSearchFilter {
 
     private final List<String> scheduleTypes;
 
+    private final List<String> queueNames;
+
     private final Integer pageNum;
 
     private final Integer pageSize;
@@ -99,6 +101,7 @@ public class TaskRunSearchFilter {
         this.sortOrder = builder.sortOrder;
         this.includeStartedOnly = builder.includeStartedOnly;
         this.scheduleTypes = builder.scheduleTypes;
+        this.queueNames = builder.queueNames;
         this.taskRunIds = builder.taskRunIds;
     }
 
@@ -164,6 +167,10 @@ public class TaskRunSearchFilter {
         return scheduleTypes;
     }
 
+    public List<String> getQueueNames() {
+        return queueNames;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -190,6 +197,7 @@ public class TaskRunSearchFilter {
                 .withSortKey(sortKey)
                 .withSortOrder(sortOrder)
                 .withScheduleType(scheduleTypes)
+                .withQueueName(queueNames)
                 .withTaskRunIds(taskRunIds);
     }
 
@@ -210,6 +218,7 @@ public class TaskRunSearchFilter {
                 Objects.equals(getEndBefore(), that.getEndBefore()) &&
                 Objects.equals(getEndAfter(), that.getEndAfter()) &&
                 Objects.equals(getScheduleTypes(), that.getScheduleTypes()) &&
+                Objects.equals(getQueueNames(), that.getQueueNames()) &&
                 Objects.equals(getPageNum(), that.getPageNum()) &&
                 Objects.equals(getPageSize(), that.getPageSize()) &&
                 Objects.equals(getTags(), that.getTags()) &&
@@ -221,7 +230,7 @@ public class TaskRunSearchFilter {
     @Override
     public int hashCode() {
         return Objects.hash(getTaskIds(), getTaskRunIds(), getStatus(), getDateFrom(), getDateTo(), getStartFrom(),
-                getStartTo(), getQueueFrom(), getQueueTo(),getEndBefore(), getEndAfter(), getScheduleTypes(),
+                getStartTo(), getQueueFrom(), getQueueTo(),getEndBefore(), getEndAfter(), getScheduleTypes(), getQueueNames(),
                 getPageNum(), getPageSize(), getTags(), getSortKey(), getSortOrder(), getIncludeStartedOnly());
     }
 
@@ -244,6 +253,7 @@ public class TaskRunSearchFilter {
         private String sortOrder;
         private Boolean includeStartedOnly;
         private List<String> scheduleTypes;
+        private List<String> queueNames;
         private List<Long> taskRunIds;
 
 
@@ -337,6 +347,11 @@ public class TaskRunSearchFilter {
 
         public Builder withScheduleType(List<String> scheduleTypes){
             this.scheduleTypes = scheduleTypes;
+            return this;
+        }
+
+        public Builder withQueueName(List<String> queueNames){
+            this.queueNames = queueNames;
             return this;
         }
 
