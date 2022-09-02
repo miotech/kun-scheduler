@@ -43,7 +43,6 @@ export default memo(function AddUpdateDatabaseModal({ visible, database, onClose
 
   const { selector, dispatch } = useRedux(state => ({
     allTagList: state.dataDiscovery.allTagList,
-    databaseTypeFieldMapList: state.dataSettings.databaseTypeFieldMapList,
   }));
 
   const modalTitle = useMemo(() => (database ? database.name : t('dataSettings.addDatasource')), [database, t]);

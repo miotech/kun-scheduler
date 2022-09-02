@@ -4,12 +4,10 @@ import {
   updateDatabaseService,
   pullDatasetsFromDatabaseService,
   deleteDatabaseService,
-  fetchDatabaseTypesService,
   DataSourcePullProcessVO,
   fetchLatestPullProcessesOfDataSources,
 } from '@/services/dataSettings';
 import { Pagination } from '@/definitions/common-types';
-import { DbType } from '@/definitions/Database.type';
 import { Watermark } from '@/definitions/Dataset.type';
 import { RootDispatch, RootState } from '../store';
 
@@ -38,14 +36,6 @@ export interface DatabaseTypeItemFieldItem {
   format: DatabaseTypeItemFieldItemFormat;
   require: boolean;
 }
-
-export interface DatabaseTypeItem {
-  id: string;
-  type: DbType;
-  fields: DatabaseTypeItemFieldItem[];
-}
-
-export type DatabaseTypeList = DatabaseTypeItem[];
 
 export type DatabaseInfomation = {
   [k: string]: {
@@ -78,8 +68,6 @@ export interface DataSettingsState {
   pagination: Pagination;
   dataSourceList: DataSource[];
   currentDatabase: DataSource | null;
-  databaseTypeFieldMapList: DatabaseTypeList;
-  fetchDatabaseTypeLoading: boolean;
   pullProcesses: Record<string, DataSourcePullProcessVO>;
   pullProcessesIsLoading: boolean;
 }
@@ -95,8 +83,6 @@ export const dataSettings = {
     },
     dataSourceList: [],
     currentDatabase: null,
-    fetchDatabaseTypeLoading: false,
-    databaseTypeFieldMapList: [],
     pullProcesses: {},
     pullProcessesIsLoading: false,
   } as DataSettingsState,
@@ -133,28 +119,6 @@ export const dataSettings = {
   effects: (dispatch: RootDispatch) => {
     let searchDataBasesFlag = 0;
     return {
-      async fetchDatabaseTypeList() {
-        try {
-          dispatch.dataSettings.updateState({
-            key: 'fetchDatabaseTypeLoading',
-            value: true,
-          });
-          const resp = await fetchDatabaseTypesService();
-          if (resp) {
-            dispatch.dataSettings.updateState({
-              key: 'databaseTypeFieldMapList',
-              value: resp,
-            });
-          }
-        } catch (e) {
-          // do nothing
-        } finally {
-          dispatch.dataSettings.updateState({
-            key: 'fetchDatabaseTypeLoading',
-            value: false,
-          });
-        }
-      },
       async searchDataBases(_payload: any, rootState: RootState) {
         const { searchContent, pagination } = rootState.dataSettings;
         dispatch.dataSettings.updateState({
