@@ -42,6 +42,9 @@ export default memo(function TestCaseRuleTable({ data }: Props) {
         title: t('monitoringDashboard.testCaseRuleTable.volatility'),
         dataIndex: 'volatility',
         width: 100,
+        render: (volatility: string) => {
+          return <div>{volatility && `${volatility} %`}</div>;
+        },
       },
     ],
     [t],

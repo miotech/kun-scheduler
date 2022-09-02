@@ -29,11 +29,17 @@ export const effects = (dispatch: RootDispatch) => ({
         startTime: payload.startTime ? moment(payload.startTime).toISOString() : undefined,
         endTime: payload.endTime ? moment(payload.endTime).toISOString() : undefined,
         scheduleTypes: payload.scheduleTypes,
+        locateTaskRunId: payload.locateTaskRunId,
       });
       if (respData && respData.records) {
+        dispatch.deployedTaskDetail.updateFilter({
+          pageNum: respData.pageNum,
+          pageSize: respData.pageSize,
+        });
         dispatch.deployedTaskDetail.setTaskRunsCount(respData.totalCount);
         dispatch.deployedTaskDetail.setTaskRuns(respData.records);
       }
+      return respData;
     } catch (e) {}
   },
 });
