@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
-import { Button, Popconfirm, Select, Space, Table, Tooltip, Dropdown, Menu } from 'antd';
+import { Button, Popconfirm, Select, Space, Table, Tooltip, Popover, Dropdown, Menu } from 'antd';
 import range from 'lodash/range';
 import moment from 'moment-timezone';
 import momentDurationFormatSetup from 'moment-duration-format';
@@ -24,6 +24,7 @@ import { skipTaskrun } from '@/services/task-deployments/deployed-tasks';
 import { DependenceRemove } from './DependenceRemove';
 import TaskRerunModal from './TaskRerunModal';
 import styles from './TaskRunsTable.less';
+import UpstreamFailed from './UpstreamFailed';
 
 interface TaskRunsTableProps {
   tableData?: TaskRun[];
@@ -303,6 +304,18 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
             return '-';
           }
           // else
+          if (latestAttempt.status === 'UPSTREAM_FAILED') {
+            return (
+              <Popover
+                title={t('taskRun.property.failedLink')}
+                content={<UpstreamFailed failedUpstreamTaskRuns={record.failedUpstreamTaskRuns} />}
+              >
+                <div>
+                  <StatusText status={latestAttempt.status} />
+                </div>
+              </Popover>
+            );
+          }
           return <StatusText status={latestAttempt.status} />;
         },
       },

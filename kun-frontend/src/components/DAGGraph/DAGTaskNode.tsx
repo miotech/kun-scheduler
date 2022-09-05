@@ -194,7 +194,7 @@ export const DAGTaskNode = memo((props: Props) => {
                   <td>{t('taskRun.property.failedLink')}</td>
                   <td>
                     {data.failedUpstreamTaskRuns.map(i => (
-                      <TextContainer key={i.id} maxWidth={190} ellipsis tooltipTitle={i.name}>
+                      <TextContainer key={i.id} maxWidth={190} ellipsis tooltipTitle={i.name} mouseEnterDelay={0.5}>
                         <Link to={`/operation-center/task-run-id/${i.id}`} target="_blank">
                           {i.name}
                         </Link>
