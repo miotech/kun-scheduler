@@ -13,6 +13,7 @@ import com.miotech.kun.metadata.core.model.connection.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
+import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,13 +36,19 @@ public class DataSourceDao {
     private static final String DATASOURCE_TABLE_NAME = "kun_mt_datasource";
     private static final String DATASOURCE_ATTR_TABLE_NAME = "kun_mt_datasource_attrs";
     private static final String DATASOURCE_TAG_TABLE_NAME = "kun_mt_datasource_tags";
+    private static final String DATASOURCE_TYPE_TABLE_NAME = "kun_mt_datasource_type";
+    private static final String DATASOURCE_TYPE_FIELD_TABLE_NAME = "kun_mt_datasource_type_fields";
 
     public static final String DATASOURCE_MODEL_NAME = "datasource";
     public static final String DATASOURCE_ATTR_MODEL_NAME = "datasource_attrs";
+    public static final String DATASOURCE_TYPE_MODEL_NAME = "datasource_type";
+    public static final String DATASOURCE_TYPE_FIELD_MODEL_NAME = "datasource_type_field";
 
-    private static final String[] DATASOURCE_TABLE_COLUMNS = {"id", "connection_info", "connection_config", "datasource_type"};
+    private static final String[] DATASOURCE_TABLE_COLUMNS = {"id", "connection_info", "type_id", "connection_config", "datasource_type"};
     private static final String[] DATASOURCE_ATTR_TABLE_COLUMNS = {"datasource_id", "name", "create_user", "create_time", "update_user", "update_time"};
     private static final String[] DATASOURCE_TAG_TABLE_COLUMNS = {"datasource_id", "tag"};
+    private static final String[] DATASOURCE_TYPE_TABLE_COLUMNS = {"id", "name"};
+    private static final String[] DATASOURCE_TYPE_FIELD_TABLE_COLUMNS = {"id", "type_id", "name", "sequence_order", "format", "require"};
 
     @Inject
     DatabaseOperator dbOperator;
@@ -215,6 +222,7 @@ public class DataSourceDao {
 
         //compatible old data
         ConnectionInfoV1 connectionInfoV1 = generateConnectionInfoV1(dataSource);
+        Long typeId = generateTypeId(dataSource);
 
         dbOperator.transaction(() -> {
                     String insertDataSourceSQL = DefaultSQLBuilder.newBuilder()
@@ -225,6 +233,7 @@ public class DataSourceDao {
                     dbOperator.update(insertDataSourceSQL,
                             dataSource.getId(),
                             JSONUtils.toJsonString(connectionInfoV1.getValues()),
+                            typeId,
                             JSONUtils.toJsonString(dataSource.getConnectionConfig()),
                             dataSource.getDatasourceType().name());
 
@@ -257,16 +266,18 @@ public class DataSourceDao {
 
         //compatible old data
         ConnectionInfoV1 connectionInfoV1 = generateConnectionInfoV1(dataSource);
+        Long typeId = generateTypeId(dataSource);
 
         dbOperator.transaction(() -> {
                     String insertDataSourceSQL = DefaultSQLBuilder.newBuilder()
                             .update(DATASOURCE_TABLE_NAME)
-                            .set("connection_info", "connection_config", "datasource_type")
+                            .set("connection_info","type_id","connection_config", "datasource_type")
                             .where("id = ?")
                             .asPrepared()
                             .getSQL();
                     dbOperator.update(insertDataSourceSQL,
                             JSONUtils.toJsonString(connectionInfoV1.getValues()),
+                            typeId,
                             JSONUtils.toJsonString(dataSource.getConnectionConfig()),
                             dataSource.getDatasourceType().name(), dataSource.getId());
 
@@ -330,6 +341,14 @@ public class DataSourceDao {
         dbOperator.update(deleteDataSourceSQL, id);
     }
 
+    public List<DatasourceTemplate> getAllTypes() {
+        String dataSourceTypeSQL = DefaultSQLBuilder.newBuilder()
+                .select(DATASOURCE_TYPE_TABLE_COLUMNS)
+                .from(DATASOURCE_TYPE_TABLE_NAME)
+                .getSQL();
+        List<DatasourceTemplate> datasourceTemplates = dbOperator.fetchAll(dataSourceTypeSQL, DataSourceTemplateMapper.INSTANCE);
+        return datasourceTemplates;
+    }
 
     private static class DataSourceResultMapper implements ResultSetMapper<DataSource> {
         public static final DataSourceDao.DataSourceResultMapper INSTANCE = new DataSourceDao.DataSourceResultMapper();
@@ -342,6 +361,7 @@ public class DataSourceDao {
             return DataSource.newBuilder()
                     .withId(rs.getLong(DATASOURCE_MODEL_NAME + "_id"))
                     .withName(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_name"))
+                    .withTypeId(rs.getLong(DATASOURCE_MODEL_NAME + "_type_id"))
                     .withConnectionConfig(connectionConfig)
                     .withDatasourceType(DatasourceType.valueOf(rs.getString(DATASOURCE_MODEL_NAME + "_datasource_type")))
                     .withCreateUser(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_create_user"))
@@ -365,6 +385,19 @@ public class DataSourceDao {
         }
     }
 
+    private static class DataSourceTemplateMapper implements ResultSetMapper<DatasourceTemplate> {
+        public static final DataSourceDao.DataSourceTemplateMapper INSTANCE = new DataSourceDao.DataSourceTemplateMapper();
+
+
+        @Override
+        public DatasourceTemplate map(ResultSet rs) throws SQLException {
+            return DatasourceTemplate.newBuilder()
+                    .withType(rs.getString("name"))
+                    .withId(rs.getLong("id"))
+                    .build();
+        }
+    }
+
     private Pair<String, List<Object>> generateWhereClauseAndParamsFromFilter(DataSourceSearchFilter filters) {
         Preconditions.checkNotNull(filters, "Invalid argument `filters`: null");
 
@@ -379,6 +412,37 @@ public class DataSourceDao {
         }
 
         return Pair.of(whereClause, params);
+    }
+
+
+    /**
+     * just used to compatible old data
+     * will be removed after discovery refactor
+     */
+    private Long generateTypeId(DataSource dataSource){
+        DatasourceType datasourceType = dataSource.getDatasourceType();
+        ConnectionInfo userConnection = dataSource.getConnectionConfig().getUserConnection();
+        ConnectionType userConnectionType = userConnection.getConnectionType();
+        switch (datasourceType){
+            case POSTGRESQL:
+                return 3l;
+            case MONGODB:
+                return 2l;
+            case ARANGO:
+                return 5l;
+            case ELASTICSEARCH:
+                return 4l;
+            case MYSQL:
+                return 7l;
+            case HIVE:
+                if(userConnectionType.equals(ConnectionType.ATHENA)){
+                    return 1l;
+                }else {
+                    return 6l;
+                }
+            default:
+                throw new IllegalStateException(datasourceType + " is not supported");
+        }
     }
 
 

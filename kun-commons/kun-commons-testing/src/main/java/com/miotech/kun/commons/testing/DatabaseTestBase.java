@@ -38,16 +38,16 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     protected String flywayLocation;
 
-    protected void setFlywayLocation() {
+    protected void setFlywayLocation(){
         flywayLocation = "kun-infra/";
     }
 
-    protected void setFlywayLocation(String flywayLocation) {
+    protected void setFlywayLocation(String flywayLocation){
         this.flywayLocation = flywayLocation;
     }
 
     protected List<String> ignoredTables() {
-        return ImmutableList.of("kun_mt_dataset_field_mapping", "kun_dq_expectation_template");
+        return ImmutableList.of("kun_mt_datasource_type", "kun_mt_dataset_field_mapping", "kun_dq_expectation_template");
     }
 
     @Override
@@ -126,7 +126,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         @Provides
         @Singleton
         @Named("executorDatasource")
-        public DataSource getExecutorDatasource() {
+        public DataSource getExecutorDatasource(){
             HikariConfig config = new HikariConfig();
             config.setUsername(postgres.getUsername());
             config.setPassword(postgres.getPassword());

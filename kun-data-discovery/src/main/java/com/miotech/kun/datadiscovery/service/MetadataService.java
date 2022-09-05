@@ -221,6 +221,13 @@ public class MetadataService {
                 .getBody();
     }
 
+    public List<DatasourceTemplate> getDataSourceTypes() {
+        String createUrl = url + "/datasource/types";
+        return restTemplate.exchange(createUrl, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<DatasourceTemplate>>() {
+                }).getBody();
+    }
+
     public Map<String, PullProcessVO> fetchLatestPullProcessByDataSourceIds(List<Long> datasourceIds) {
         String fullUrl = url + String.format("/datasources/_pull/latest?dataSourceIds=%s",
                 StringUtils.join(datasourceIds.stream().map(Object::toString).collect(Collectors.toList()), ","));

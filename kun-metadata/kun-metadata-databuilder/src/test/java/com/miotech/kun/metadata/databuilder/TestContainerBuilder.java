@@ -32,7 +32,8 @@ public class TestContainerBuilder {
     private static final String ARANGO_IMAGE_VERSION = "3.6.4";
     private static final Integer MONGO_PORT = 27017;
 
-    private static String DATASOURCE_INSERT_SQL = "INSERT INTO \"public\".kun_mt_datasource(id, connection_info) VALUES (1, '{\"host\": \"%s\", \"port\": %d, \"username\": \"%s\", \"password\": \"%s\"}')";
+    private static String DATASOURCE_INSERT_SQL = "INSERT INTO \"public\".kun_mt_datasource(id, connection_info, type_id) VALUES (1, '{\"host\": \"%s\", \"port\": %d, \"username\": \"%s\", \"password\": \"%s\"}', %d)";
+    private static String DATASOURCE_TYPE_INSERT_SQL = "INSERT INTO \"public\".\"kun_mt_datasource_type\"(\"id\", \"name\") VALUES (%d, '%s')";
 
     private DatabaseOperator dbOperator;
 
@@ -45,7 +46,8 @@ public class TestContainerBuilder {
         MongoDBContainer mongodb = new MongoDBContainer(MONGO_IMAGE).withExposedPorts(MONGO_PORT);
         mongodb.start();
 
-        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, mongodb.getHost(), mongodb.getFirstMappedPort(), "", ""));
+        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, mongodb.getHost(), mongodb.getFirstMappedPort(), "", "", 2));
+        dbOperator.update(String.format(DATASOURCE_TYPE_INSERT_SQL, 2, "MONGODB"));
 
         return mongodb;
     }
@@ -54,7 +56,8 @@ public class TestContainerBuilder {
         PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE).withInitScript("sql/init_postgresql.sql");
         postgres.start();
 
-        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, postgres.getHost(), postgres.getFirstMappedPort(), postgres.getUsername(), postgres.getPassword()));
+        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, postgres.getHost(), postgres.getFirstMappedPort(), postgres.getUsername(), postgres.getPassword(), 3));
+        dbOperator.update(String.format(DATASOURCE_TYPE_INSERT_SQL, 3, "POSTGRESQL"));
 
         return postgres;
     }
@@ -74,7 +77,8 @@ public class TestContainerBuilder {
             logger.error("DataBuilderTest.initEs error:", e);
         }
 
-        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, elasticsearchContainer.getHost(), elasticsearchContainer.getFirstMappedPort(), "elastic", "changeme"));
+        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, elasticsearchContainer.getHost(), elasticsearchContainer.getFirstMappedPort(), "elastic", "changeme", 4));
+        dbOperator.update(String.format(DATASOURCE_TYPE_INSERT_SQL, 4, "ELASTICSEARCH"));
 
         return elasticsearchContainer;
 
@@ -96,13 +100,15 @@ public class TestContainerBuilder {
         myObject.addAttribute("name", "test_name");
         client.db("test_db").collection("test_collection").insertDocument(myObject);
 
-        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, arango.getHost(), arango.getPort(), arango.getUser(), ""));
+        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, arango.getHost(), arango.getPort(), arango.getUser(), "", 5));
+        dbOperator.update(String.format(DATASOURCE_TYPE_INSERT_SQL, 5, "ARANGO"));
 
         return arango;
     }
 
-    public void initDatasource(String host, int port, String username, String password) {
-        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, host, port, username, password));
+    public void initDatasource(String host, int port, String username, String password, long typeId, String typeName) {
+        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, host, port, username, password, typeId));
+        dbOperator.update(String.format(DATASOURCE_TYPE_INSERT_SQL, typeId, typeName));
     }
 
     public void verifyDatasetRowCount(long rowCount) {
