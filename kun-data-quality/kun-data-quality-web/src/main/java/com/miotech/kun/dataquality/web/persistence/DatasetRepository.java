@@ -17,9 +17,10 @@ public class DatasetRepository {
 
     public DatasetBasic findBasic(Long gid) {
         String sql = "select kmd.gid, kmd.name as dataset_name, kmd.database_name, " +
-                "kmdsrca.name as datasource_name, kmdsrc.datasource_type as datasource_type from kun_mt_dataset kmd\n" +
+                "kmdsrca.name as datasource_name, kmdsrct.name as datasource_type from kun_mt_dataset kmd\n" +
                 "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
-                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
+                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n"+
+                "inner join kun_mt_datasource_type kmdsrct on kmdsrc.type_id = kmdsrct.id\n";
 
         String whereClause = "where kmd.gid = ?\n";
         sql += whereClause;
@@ -40,8 +41,10 @@ public class DatasetRepository {
     public DatasetBasic findDatasetId(DatasetBasic basic) {
         String sql = "select kmd.gid from kun_mt_dataset kmd\n" +
                 "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
-                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
-        String whereClause = "where kmd.name = ? AND kmd.database_name = ? AND kmdsrca.name = ? AND kmdsrc.datasource_type = ?\n";
+                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n"+
+                "inner join kun_mt_datasource_type kmdsrct on kmdsrc.type_id = kmdsrct.id\n";
+
+        String whereClause = "where kmd.name = ? AND kmd.database_name = ? AND kmdsrca.name = ? AND kmdsrct.name = ?\n";
         sql += whereClause;
 
         return jdbcTemplate.query(sql, rs -> {

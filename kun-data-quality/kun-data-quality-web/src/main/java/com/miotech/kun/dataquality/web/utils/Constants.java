@@ -18,8 +18,8 @@ public class Constants {
     final public static Map<String, String> DATASOURCE_TO_DRUID_TYPE = Maps.newHashMap();
 
     static {
-        DATASOURCE_TO_DRUID_TYPE.put("HIVE", JdbcConstants.HIVE);
-        DATASOURCE_TO_DRUID_TYPE.put("POSTGRESQL", JdbcConstants.POSTGRESQL);
-        DATASOURCE_TO_DRUID_TYPE.put("ELASTICSEARCH", JdbcConstants.ELASTIC_SEARCH);
+        DATASOURCE_TO_DRUID_TYPE.put("AWS", JdbcConstants.HIVE);
+        DATASOURCE_TO_DRUID_TYPE.put("PostgreSQL", JdbcConstants.POSTGRESQL);
+        DATASOURCE_TO_DRUID_TYPE.put("Elasticsearch", JdbcConstants.ELASTIC_SEARCH);
     }
 }

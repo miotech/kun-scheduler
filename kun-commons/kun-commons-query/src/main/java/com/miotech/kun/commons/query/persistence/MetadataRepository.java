@@ -54,8 +54,9 @@ public class MetadataRepository {
     public MetadataConnectionInfo getConnectionInfo(QuerySite querySite) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("kmd.connection_info as connInfo",
-                        "kmd.datasource_type as datasource_type")
+                        "kmdt.name as datasource_type")
                 .from("kun_mt_datasource", "kmd")
+                .join("inner", "kun_mt_datasource_type", "kmdt").on("kmd.type_id = kmdt.id")
                 .where("kmd.id = ?")
                 .getSQL();
 

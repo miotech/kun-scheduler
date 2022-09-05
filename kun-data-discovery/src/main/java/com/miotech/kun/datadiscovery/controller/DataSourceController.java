@@ -76,5 +76,9 @@ public class DataSourceController {
         return RequestResult.success(map);
     }
 
+    @GetMapping("/metadata/datasource/types")
+    public RequestResult<List<DataSourceTemplateVO>> getDataSourceTypes() {
+        return RequestResult.success(dataSourceService.getAllTypes());
+    }
 
 }

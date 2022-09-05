@@ -11,6 +11,7 @@ import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
+import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import org.apache.commons.lang3.StringUtils;
 
@@ -119,10 +120,13 @@ public class DataSourceService {
         dataSourceDao.delete(id);
     }
 
+    public List<DatasourceTemplate> getAllTypes() {
+        return dataSourceDao.getAllTypes();
+    }
 
-    public DataSource fetchDatasource(Long datasourceId) {
+    public DataSource fetchDatasource(Long datasourceId){
         Optional<DataSource> dataSource = dataSourceDao.findById(datasourceId);
-        if (dataSource.isPresent()) {
+        if(dataSource.isPresent()){
             return dataSource.get();
         }
         return null;
