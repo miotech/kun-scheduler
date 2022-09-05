@@ -101,29 +101,20 @@ public class RefUploadExeclFileResolver extends RefUploadFileResolver {
         }
         switch (cell.getCellType()) {
             case NUMERIC:
-                //数字
-                double numericCellValue = cell.getNumericCellValue();
-                if (DateUtil.isCellDateFormatted(cell)) {
-                    Date javaDate = DateUtil.getJavaDate(cell.getNumericCellValue());
-                    cellValue = DateFormatFactory.getFormat().format(javaDate);
-                } else {
-
-                    cellValue = BigDecimal.valueOf(numericCellValue).stripTrailingZeros().toPlainString();
-                }
-                break;
-            case STRING:
-                //字符串
-                String stringCellValue = cell.getStringCellValue();
-                if (StringUtils.isBlank(stringCellValue)) {
-                    cellValue = null;
-                } else {
-                    cellValue = stringCellValue;
-                }
-                break;
             case BOOLEAN:
                 //Boolean
                 DataFormatter dataFormatter=new DataFormatter();
                 cellValue= dataFormatter.formatCellValue(cell);
+                if (StringUtils.isBlank(cellValue)) {
+                    cellValue = null;
+                }
+                break;
+            case STRING:
+                //字符串
+                cellValue = cell.getStringCellValue();
+                if (StringUtils.isBlank(cellValue)) {
+                    cellValue = null;
+                }
                 break;
             case FORMULA:
                 //公式

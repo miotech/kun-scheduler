@@ -39,6 +39,9 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -260,12 +263,15 @@ public class RdmService extends BaseSecurityService {
 
     public PageResult<RefTableVersionFillInfo> pageRefTableInfo(PageRequest pageRequest) {
         PageResult<RefTableVersionInfo> pageResult = refTableVersionRepository.pageRefTableInfo(pageRequest.getPageNum(), pageRequest.getPageSize());
-        List<RefTableVersionFillInfo> refTableVersionFillInfoList = pageResult.getRecords().stream().map(refTableVersionInfo -> {
-            RefTableVersionFillInfo refTableVersionFillInfo = new RefTableVersionFillInfo(refTableVersionInfo);
-            fillRefTableVersionFillInfo(refTableVersionInfo, refTableVersionFillInfo);
-            return refTableVersionFillInfo;
-        }).collect(Collectors.toList());
-        return new PageResult<>(pageResult.getPageSize(), pageResult.getPageNumber(), pageResult.getTotalCount(), refTableVersionFillInfoList);
+        List<RefTableVersionFillInfo> collect = Flux.fromIterable(pageResult.getRecords())
+                .flatMap(refTableVersionInfo -> Mono.fromCallable(() -> {
+                    RefTableVersionFillInfo refTableVersionFillInfo = new RefTableVersionFillInfo(refTableVersionInfo);
+                    fillRefTableVersionFillInfo(refTableVersionInfo, refTableVersionFillInfo);
+                    return refTableVersionFillInfo;
+                }).subscribeOn(Schedulers.boundedElastic()), 10)
+                .toStream()
+                .collect(Collectors.toList());
+        return new PageResult<>(pageResult.getPageSize(), pageResult.getPageNumber(), pageResult.getTotalCount(), collect);
     }
 
     private void fillRefTableVersionFillInfo(RefTableVersionInfo refTableVersionInfo, RefTableVersionFillInfo refTableVersionFillInfo) {
