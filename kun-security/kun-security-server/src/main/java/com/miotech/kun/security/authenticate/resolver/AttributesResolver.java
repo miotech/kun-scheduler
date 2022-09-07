@@ -10,5 +10,9 @@ public interface AttributesResolver {
 
     String getUsernameKey();
 
+    String getFullNameKey();
+
     String resolveUsername(Map userInfoMap);
+
+    String resolveFullName(Map userInfoMap);
 }

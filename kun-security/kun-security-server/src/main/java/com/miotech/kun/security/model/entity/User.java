@@ -38,4 +38,6 @@ public class User {
     String updateUser;
 
     Long updateTime;
+
+    String fullName;
 }

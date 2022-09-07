@@ -65,9 +65,11 @@ public class OAuth2AuthorizationCodeFilter extends AbstractAuthenticationProcess
         JSONObject userInfos = new JSONObject((Map) getUserInfo(userInfoUri, accessToken).get("data"));
         logger.info("userInfos: {}", JSONUtils.toJsonString(userInfos));
         String username = attributesResolverMap.get(registrationId).resolveUsername(userInfos);
+        String fullName = attributesResolverMap.get(registrationId).resolveFullName(userInfos);
 
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(username);
+        userInfo.setFullName(fullName);
 
         OAuth2User oAuth2User = new DefaultOAuth2User(Lists.newArrayList(new SimpleGrantedAuthority("OAUTH2")), userInfos, attributesResolverMap.get(registrationId).getUsernameKey());
         OAuth2AuthenticationToken authenticationToken = new OAuth2AuthenticationToken(oAuth2User, null, registrationId);

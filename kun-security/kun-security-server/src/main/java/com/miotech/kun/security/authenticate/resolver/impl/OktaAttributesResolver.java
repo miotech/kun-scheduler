@@ -16,8 +16,20 @@ public class OktaAttributesResolver implements AttributesResolver {
     }
 
     @Override
+    public String getFullNameKey() {
+        return "fullname";
+    }
+
+    @Override
     public String resolveUsername(Map userInfoMap) {
         String usernameKey = getUsernameKey();
         return String.valueOf(userInfoMap.get(usernameKey));
     }
+
+    @Override
+    public String resolveFullName(Map userInfoMap) {
+        String fullNameKey = getFullNameKey();
+        return String.valueOf(userInfoMap.get(fullNameKey));
+    }
+
 }

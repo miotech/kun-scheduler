@@ -36,4 +36,6 @@ public class UserInfo implements Serializable {
 
     private Long userGroupId;
 
+    private String fullName;
+
 }

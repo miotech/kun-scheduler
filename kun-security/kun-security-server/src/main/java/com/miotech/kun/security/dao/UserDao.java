@@ -24,7 +24,7 @@ public class UserDao {
 
     private static final String USER_TABLE_NAME = "kun_security_user";
 
-    private static final List<String> userCols = ImmutableList.of("id", "username", "password", "external_information", "created_at", "updated_at", "status");
+    private static final List<String> userCols = ImmutableList.of("id", "username", "password", "external_information", "created_at", "updated_at", "status", "full_name");
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -45,7 +45,8 @@ public class UserDao {
                 JSONUtils.toJsonString(extensionInformation),
                 DateTimeUtils.now(),
                 DateTimeUtils.now(),
-                UserStatus.ACTIVE.name());
+                UserStatus.ACTIVE.name(),
+                userRequest.getFullName());
 
         return findByUsername(userRequest.getUsername());
     }
@@ -86,6 +87,23 @@ public class UserDao {
         }
     }
 
+    public User updateFullName(String username, String fullName) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(USER_TABLE_NAME)
+                .set("updated_at", "status", "full_name")
+                .where("username = ?")
+                .asPrepared()
+                .getSQL();
+
+        jdbcTemplate.update(sql,
+                DateTimeUtils.now(),
+                UserStatus.ACTIVE.name(),
+                fullName,
+                username);
+
+        return findByUsername(username);
+    }
+
     public void updateStatus(Long id, UserStatus userStatus) {
         String query = DefaultSQLBuilder.newBuilder()
                 .update(USER_TABLE_NAME)
@@ -115,7 +133,7 @@ public class UserDao {
 
             user.setCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("created_at")).toEpochSecond() * 1000);
             user.setUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("updated_at")).toEpochSecond() * 1000);
-
+            user.setFullName(rs.getString("full_name"));
             return user;
         }
     }

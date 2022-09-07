@@ -1,0 +1,1 @@
+ALTER TABLE kun_security_user ADD full_name varchar(128)

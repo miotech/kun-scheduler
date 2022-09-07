@@ -43,6 +43,8 @@ public class UserRequest {
 
     Long updateTime;
 
+    String fullName;
+
     public static UserRequest convertFrom(UserInfo userInfo) {
         return UserRequest.builder()
                 .id(userInfo.getId())
@@ -51,6 +53,7 @@ public class UserRequest {
                 .firstName(userInfo.getFirstName())
                 .lastName(userInfo.getLastName())
                 .email(userInfo.getEmail())
+                .fullName(userInfo.getFullName())
                 .build();
     }
 }

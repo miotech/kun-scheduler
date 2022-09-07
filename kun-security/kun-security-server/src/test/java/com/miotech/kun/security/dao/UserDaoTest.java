@@ -104,10 +104,10 @@ public class UserDaoTest extends SecurityTestBase {
         UserRequest userRequest = MockUserRequestFactory.create();
         User user = userDao.create(userRequest);
 
-        User userFindById = userDao.findByUsername(user.getName());
-        assertThat(userFindById.getName(), is(userRequest.getUsername()));
-        assertThat(userFindById.getEmail(), is(userRequest.getEmail()));
-        assertThat(userFindById.getWeComId(), is(userRequest.getWeComId()));
+        User userFindByUsername = userDao.findByUsername(user.getName());
+        assertThat(userFindByUsername.getName(), is(userRequest.getUsername()));
+        assertThat(userFindByUsername.getEmail(), is(userRequest.getEmail()));
+        assertThat(userFindByUsername.getWeComId(), is(userRequest.getWeComId()));
     }
 
     @Test
@@ -118,4 +118,17 @@ public class UserDaoTest extends SecurityTestBase {
         userDao.updateStatus(user.getId(), UserStatus.DISABLE);
     }
 
+    @Test
+    public void testUpdateFullName() {
+        UserRequest userRequest = MockUserRequestFactory.create();
+        User user = userDao.create(userRequest);
+
+        assertThat(user.getFullName(), is(nullValue()));
+
+        userDao.updateFullName(user.getName(), "administrator");
+
+        User userFindByUsername = userDao.findByUsername(user.getName());
+
+        assertThat(userFindByUsername.getFullName(), is("administrator"));
+    }
 }
