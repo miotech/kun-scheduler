@@ -1,25 +1,28 @@
-import React, { memo, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { memo, useEffect, useState, useCallback } from 'react';
 import { queryGanttTasks } from '@/services/gantt';
-import { useHistory } from 'umi';
-
 import { Filters } from '@/definitions/Gantt.type';
-import { useRequest } from 'ahooks';
+import { useRequest, useEventListener } from 'ahooks';
 import moment from 'moment';
 import { Card } from 'antd';
 import { KunSpin } from '@/components/KunSpin';
+import useUrlState from '@ahooksjs/use-url-state';
 import { ViewFilters } from './components/ViewFilters';
 import { Gantt } from './components/Gantt';
-
+import { WaitTask } from './components/WaitTask';
 import style from './index.less';
+import SearchTaskModal from './components/SearchTaskModal';
 
-interface OwnProps {}
+interface OwnProps { }
 
 type Props = OwnProps;
 
 export const RunningStatistics: React.FC<Props> = memo(function RunningStatistics() {
-  const history = useHistory();
-  const query = useMemo(() => (history.location as any)?.query ?? {}, [history.location]);
+  const [routeState] = useUrlState<any>({});
   const [filters, setFilters] = useState<Filters>({});
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [searchWords, setSearchWords] = useState('');
+  const [searchModalVisible, setSearchModalVisible] = useState<boolean>(false);
+
   const { data, loading, run } = useRequest(queryGanttTasks, {
     manual: true,
   });
@@ -45,13 +48,13 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
 
   const fetchUpstreamTask = useCallback(() => {
     const params = {
-      taskRunId: query?.taskRunId,
+      taskRunId: routeState?.taskRunId,
     };
     run(params);
-  }, [query.taskRunId, run]);
+  }, [routeState?.taskRunId, run]);
 
   const onClickRefresh = () => {
-    if (query?.taskRunId) {
+    if (routeState?.taskRunId) {
       fetchUpstreamTask();
     } else {
       fetchTask();
@@ -64,13 +67,28 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
     });
   };
 
+
+  const setScrollTo = useCallback((index) => {
+    const scrollTop = index * 40 - 100 > 0 ? index * 40 - 100 : 0;
+    setCurrentIndex(index);
+    document.getElementById('bar').scrollTop = scrollTop;
+  }, []);
+
+  useEventListener('keydown', (e) => {
+    const { ctrlKey, metaKey, key } = e;
+    if (key === 'f' && (ctrlKey || metaKey)) {
+      setSearchModalVisible(true);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  });
   useEffect(() => {
-    if (query?.taskRunId) {
+    if (routeState?.taskRunId) {
       fetchUpstreamTask();
     } else {
       fetchTask();
     }
-  }, [query.taskRunId, fetchTask, fetchUpstreamTask]);
+  }, [routeState.taskRunId, fetchTask, fetchUpstreamTask]);
 
   return (
     <div className={style.MainContent}>
@@ -87,7 +105,22 @@ export const RunningStatistics: React.FC<Props> = memo(function RunningStatistic
           </div>
         </Card>
       )}
-      {data && !loading && <Gantt data={data} taskRunId={query?.taskRunId} />}
+      {data && !loading &&
+        <Gantt
+          data={data}
+          searchWords={searchWords}
+          currentIndex={currentIndex}
+          taskRunId={routeState?.taskRunId}
+        />
+      }
+      <WaitTask drawerVisible={routeState?.waitForTaskRunId} waitForTaskRunId={routeState?.waitForTaskRunId} />
+      {searchModalVisible &&
+        <SearchTaskModal
+          setSearchModalVisible={setSearchModalVisible}
+          setSearchWords={setSearchWords}
+          infoList={data?.infoList}
+          setScrollTo={setScrollTo}
+        />}
     </div>
   );
 });
