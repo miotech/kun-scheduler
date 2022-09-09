@@ -9,12 +9,20 @@ interface Props {
   className?: string;
   ellipsis?: boolean;
   tooltipTitle?: string;
+  mouseEnterDelay?: number;
 }
 
-export default memo(function TextContainer({ children, maxWidth, className, ellipsis, tooltipTitle }: Props) {
+export default memo(function TextContainer({
+  children,
+  maxWidth,
+  className,
+  ellipsis,
+  tooltipTitle,
+  mouseEnterDelay,
+}: Props) {
   if (ellipsis) {
     return (
-      <Tooltip title={tooltipTitle || children}>
+      <Tooltip title={tooltipTitle || children} mouseEnterDelay={mouseEnterDelay}>
         <div className={c('TextContainer-ellipsis', className)} style={{ maxWidth }}>
           {children}
         </div>
