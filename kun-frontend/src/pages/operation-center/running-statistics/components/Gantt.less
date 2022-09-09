@@ -33,14 +33,14 @@
   .bar {
     width: 100%;
     height: calc(~"100% - 30px");
-    overflow: scroll;
-    // position: relative;
-
+    overflow: auto;
+    position: relative;
+    will-change: transform; direction: ltr;
 
     .barItem {
 
       height: 40px;
-
+      position: absolute;
       // &:hover {
       //   background-color: #f9f9f9;
       // }

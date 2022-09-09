@@ -1,6 +1,6 @@
 // @ts-noCheck
 
-import React, { memo, useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback, useState, useRef } from 'react';
 import moment from 'moment';
 import { Tasks } from '@/definitions/Gantt.type';
 import useI18n from '@/hooks/useI18n';
@@ -33,7 +33,9 @@ function getIntervalMinutes(startDate: string, endDate: string) {
 export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
   const t = useI18n();
   const { data, taskRunId } = props;
+  const toolbarRef = useRef(null);
   const [routeState, setRouteState] = useUrlState({});
+  const [offsetState, setOffsetState] = useState(0);
   const { earliestTime, latestTime, infoList } = data;
   const toolBarStartTime = useMemo(() => moment(earliestTime).format('YYYY-MM-DD, HH:00:00'), [earliestTime]); // 坐标轴开始时间
   // 时间轴有多少格
@@ -94,23 +96,37 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
   );
 
   const closeCurrentTime = useCallback(() => {
+
     document.getElementById('line').style.display = 'none';
     document.getElementById('currentTime').style.display = 'none';
   }, []);
 
   const onBarScroll = useCallback(
     e => {
-      document.getElementById('toolbar').scrollLeft = e.target.scrollLeft;
+
+      const { clientHeight, scrollHeight, scrollTop, scrollLeft } = e.currentTarget;
+      console.log(scrollLeft);
+
+      const scrollOffset = Math.max(
+        0,
+        Math.min(scrollTop, scrollHeight - clientHeight)
+      );
+      setOffsetState(scrollOffset);
+      const {clientWidth} = toolbarRef.current;
+      document.getElementById('toolbar').style.paddingRight = `${scrollLeft}px`;
+      document.getElementById('toolbar').scrollLeft = scrollLeft;
       closeCurrentTime();
     },
-    [closeCurrentTime],
+    [closeCurrentTime, toolbarRef],
   );
+
 
   const changePadding = (dom: any) => {
     if (dom) {
-      const barScrollWidth = document.getElementById('bar').scrollWidth;
-      const toolbarScrollWidth = dom.scrollWidth;
-      document.getElementById('toolbar').style.paddingRight = `${barScrollWidth - toolbarScrollWidth}px`;
+      // const { scrollWidth } = document.getElementById('container');
+      // const toolbarScrollWidth = dom.scrollWidth;
+
+
     }
   };
 
@@ -123,6 +139,18 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
     [setRouteState],
   );
 
+  // const _getRangeToRender = ()  => { 
+  const [startIndex, stopIndex] = useMemo(() => {
+    const start = Math.floor(offsetState / 40) - 5;
+    const stop = start + 25;
+    return [start, stop];
+  }, [offsetState]);
+
+  // };
+  // const [startIndex, stopIndex] = _getRangeToRender();
+
+
+
   return (
     <div className={style.content} onMouseLeave={() => closeCurrentTime()}>
       <div className={style.line} id="line" style={{ display: 'none' }} />
@@ -130,72 +158,79 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
         {' '}
       </div>
       <div className={style.bar} id="bar" onScroll={onBarScroll}>
-        {res.map(item => {
-          return (
-            <div className={style.barItem} key={item.taskRunId}>
-              <Popover
-                content={
-                  <TooltipHtml
-                    waitTime={item.waitWidth}
-                    runTime={item.runWidth}
-                    averageRunTime={item.averageWidth}
-                    taskRunId={item.taskRunId}
-                    openDrawer={openDrawer}
-                  />
-                }
-                mouseEnterDelay={0.3}
-                placement="topLeft"
-                destroyTooltipOnHide
-                trigger="hover"
-              >
-                <div
-                  key={item.taskRunId}
-                  onMouseMove={e => onMouseMove(e)}
-                  className={style.barCon}
-                  style={{ transform: `translateX(${item.waitLeft}px)` }}
-                >
-                  <div
-                    className={style.barWait}
-                    onClick={() => openDrawer(item.taskRunId)}
-                    style={{ width: `${item.waitWidth}px` }}
-                    data-id="barWait"
-                  />
-                  {item.status === 'SUCCESS' && (
-                    <div className={style.barRun} style={{ width: `${item.runWidth}px` }} data-id="barRun" />
-                  )}
-                  {item.status === 'FAILED' && (
-                    <div
-                      className={style.barRunFailed}
-                      style={{
-                        width: `${item.runWidth}px`,
-                      }}
-                      data-id="barRunFailed"
-                    />
-                  )}
 
-                  <div
-                    className={style.average}
-                    style={{ width: `${item.averageWidth}px`, transform: `translateX(${item.waitWidth}px)` }}
-                  />
-                  <Link
-                    to={`/operation-center/running-statistics?taskRunId=${item.taskRunId}&taskName=${item.name}`}
-                    className={style.name}
-                    style={{ color: item.taskRunId === taskRunId && 'red' }}
-                    data-id="name"
+        <div style={{ height: `${res.length * 40}px`, width: '100%' }} id="container">
+
+          {res.map((item, index) => {
+            if (index >= startIndex && index <= stopIndex) {
+              return (
+                <div className={style.barItem} style={{ top: `${index * 40}px` }} key={item.taskRunId}>
+                  <Popover
+                    content={
+                      <TooltipHtml
+                        waitTime={item.waitWidth}
+                        runTime={item.runWidth}
+                        averageRunTime={item.averageWidth}
+                        taskRunId={item.taskRunId}
+                        openDrawer={openDrawer}
+                      />
+                    }
+                    mouseEnterDelay={0.3}
+                    placement="topLeft"
+                    destroyTooltipOnHide
+                    trigger="hover"
                   >
-                    {item.name}
-                  </Link>
-                  <Link to={`/operation-center/task-run-id/${item.taskRunId}`} style={{ zIndex: 999 }} target="_blank">
-                    &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
-                  </Link>
+                    <div
+                      key={item.taskRunId}
+                      onMouseMove={e => onMouseMove(e)}
+                      className={style.barCon}
+                      style={{ transform: `translateX(${item.waitLeft}px)` }}
+                    >
+                      <div
+                        className={style.barWait}
+                        onClick={() => openDrawer(item.taskRunId)}
+                        style={{ width: `${item.waitWidth}px` }}
+                        data-id="barWait"
+                      />
+                      {item.status === 'SUCCESS' && (
+                        <div className={style.barRun} style={{ width: `${item.runWidth}px` }} data-id="barRun" />
+                      )}
+                      {item.status === 'FAILED' && (
+                        <div
+                          className={style.barRunFailed}
+                          style={{
+                            width: `${item.runWidth}px`,
+                          }}
+                          data-id="barRunFailed"
+                        />
+                      )}
+
+                      <div
+                        className={style.average}
+                        style={{ width: `${item.averageWidth}px`, transform: `translateX(${item.waitWidth}px)` }}
+                      />
+                      <Link
+                        to={`/operation-center/running-statistics?taskRunId=${item.taskRunId}&taskName=${item.name}`}
+                        className={style.name}
+                        style={{ color: item.taskRunId === taskRunId && 'red' }}
+                        data-id="name"
+                      >
+                        {item.name}
+                      </Link>
+                      <Link to={`/operation-center/task-run-id/${item.taskRunId}`} style={{ zIndex: 999 }} target="_blank">
+                        &nbsp;&nbsp;&nbsp;{t('operationCenter.runningStatistics.task.jumpToInstance')}
+                      </Link>
+                    </div>
+                  </Popover>
                 </div>
-              </Popover>
-            </div>
-          );
-        })}
+              );
+            }
+          })}
+        </div>
       </div>
-      <div className={style.toolBar} id="toolbar" ref={dom => changePadding(dom)}>
-        <div className={style.bottom}>
+
+      <div className={style.toolBar} id="toolbar" ref={toolbarRef}>
+        <div className={style.bottom} id="bottom">
           {countArray().map((item, index) => (
             <div key={item} className={style.timeItem}>
               {moment(earliestTime)
