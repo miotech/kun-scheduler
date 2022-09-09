@@ -63,6 +63,7 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(adminUsername);
         userInfo.setPassword(adminPassword);
+        userInfo.setFullName(adminUsername);
         getOrSave(userInfo);
     }
 
@@ -82,6 +83,15 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
     public UserInfo saveUser(UserInfo userInfo) {
         UserRequest userRequest = UserRequest.convertFrom(userInfo);
         User user = userService.addUser(userRequest);
+        userInfo.setId(user.getId());
+        if (IdUtils.isNotEmpty(userInfo.getUserGroupId())) {
+            saveUserPermission(user.getId(), userInfo.getUserGroupId());
+        }
+        return convertToUserInfo(user);
+    }
+
+    public UserInfo updateUser(UserInfo userInfo) {
+        User user = userService.updateUserFullName(userInfo.getUsername(), userInfo.getFullName());
         userInfo.setId(user.getId());
         if (IdUtils.isNotEmpty(userInfo.getUserGroupId())) {
             saveUserPermission(user.getId(), userInfo.getUserGroupId());
@@ -111,6 +121,9 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
         if (savedUserInfo == null) {
             SecurityContextHolder.setUserInfo(userInfo);
             savedUserInfo = saveUser(userInfo);
+        } else if (savedUserInfo.getFullName() == null || savedUserInfo.getFullName().isEmpty()) {
+            SecurityContextHolder.setUserInfo(userInfo);
+            savedUserInfo = updateUser(userInfo);
         }
         SecurityContextHolder.setUserInfo(savedUserInfo);
         return savedUserInfo;
@@ -154,6 +167,7 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
             AuthenticationOriginInfo info = new AuthenticationOriginInfo();
             info.setAuthType(user.getAuthOrigin());
             userInfo.setAuthOriginInfo(info);
+            userInfo.setFullName(user.getFullName());
             return userInfo;
         }
         return null;

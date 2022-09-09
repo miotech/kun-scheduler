@@ -48,6 +48,10 @@ public class UserService extends BaseSecurityService {
         return userDao.create(userRequest);
     }
 
+    public User updateUserFullName(String username, String fullName) {
+        return userDao.updateFullName(username, fullName);
+    }
+
     public void updateUserStatus(Long id, UserStatus userStatus) {
         userDao.updateStatus(id, userStatus);
     }
