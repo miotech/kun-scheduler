@@ -68,15 +68,15 @@ export default function Login() {
         </div>
         <Form {...layout} name="basic" onFinish={onFinish as (values: Store) => void}>
           <Form.Item name="username" rules={[{ required: true, message: t('login.pleaseInput.username') }]}>
-            <Input size="large" placeholder={t('login.userName')} />
+            <Input data-testid="username" size="large" placeholder={t('login.userName')} />
           </Form.Item>
 
           <Form.Item name="password" rules={[{ required: true, message: t('login.pleaseInput.password') }]}>
-            <Input.Password size="large" placeholder={t('login.password')} />
+            <Input.Password data-testid="password" size="large" placeholder={t('login.password')} />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: '10px' }}>
-            <Button size="large" block type="primary" htmlType="submit">
+            <Button size="large" block type="primary" htmlType="submit" data-testid="login">
               {t('login.confirmButton')}
             </Button>
           </Form.Item>
