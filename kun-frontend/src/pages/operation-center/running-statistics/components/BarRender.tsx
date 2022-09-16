@@ -127,9 +127,9 @@ export const BarRender = memo((props: BarRendererProps) => {
     const runWidth = task.startAt ? getIntervalMinutes(task.startAt, task.endAt) || 1 : 0;
     let yarnInfoObj = null;
     if (yarnInfo) {
-      const yarnWaitWidth = yarnInfo?.runningAt && yarnInfo?.startAt ? getIntervalMinutes(yarnInfo.runningAt, yarnInfo.startAt) || 1 : 0;
-      const yarnRunWidth = yarnInfo?.startAt && yarnInfo?.endAt ? getIntervalMinutes(yarnInfo.startAt, yarnInfo.endAt) || 1 : 0;
-      const overheadWidth = task?.endAt && yarnInfo?.endAt ? getIntervalMinutes(task?.endAt, yarnInfo.endAt) || 1 : 0;
+      const yarnWaitWidth = yarnInfo?.runningAt && yarnInfo?.startAt ? getIntervalMinutes(yarnInfo.startAt, yarnInfo.runningAt) || 1 : 0;
+      const yarnRunWidth = yarnInfo?.startAt && yarnInfo?.endAt ? getIntervalMinutes(yarnInfo.runningAt, yarnInfo.endAt) || 1 : 0;
+      const overheadWidth = task?.endAt && yarnInfo?.endAt ? getIntervalMinutes(yarnInfo.endAt, task?.endAt) || 1 : 0;
       const yarnAverageWidth = yarnInfo?.averageRunningTime ? Math.ceil(parseInt(yarnInfo.averageRunningTime, 10) / 60) : 0;
       yarnInfoObj = {
         yarnWaitWidth,
