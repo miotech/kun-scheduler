@@ -33,61 +33,9 @@
   .bar {
     width: 100%;
     height: calc(~"100% - 30px");
-    overflow: scroll;
-    // position: relative;
-
-
-    .barItem {
-
-      height: 40px;
-
-      // &:hover {
-      //   background-color: #f9f9f9;
-      // }
-      .barCon {
-        display: flex;
-        align-items: center;
-        height: 40px;
-        width: max-content;
-        position: relative;
-        cursor: pointer;
-  
-        .barWait {
-          background-color: @status-color-queued;
-          height: 20px;
-        }
-
-        .barRun {
-          background-color: @status-color-success;
-          height: 20px;
-          z-index: 10;
-
-        }
-        .barRunFailed {
-          background-color: @status-color-failed
-          ;
-          height: 20px;
-          z-index: 10;
-        }
-
-        .average {
-          width: 100px;
-          height: 28px;
-          background-color: #49a9de;
-          opacity: 0.2;
-          position: absolute;
-        }
-
-        .name {
-          padding-left: 10px;
-          height: 40px;
-          line-height: 40px;
-          color: #7a7e87;
-          z-index: 999;
-     }
-      }
-
-    }
+    overflow: auto;
+    position: relative;
+    will-change: transform; direction: ltr;
   }
 
   .toolBar {
@@ -95,19 +43,17 @@
     width: 100%;
     height: 23px;
     overflow: hidden;
-    .title {
-      width: 80px;
-    }
 
     .bottom {
       display: flex;
       border-top: 1px solid #000;
-
       .timeItem {
         width: 120px; //1分钟1px
         text-align: center;
       }
-
+      .title {
+        width: 80px;
+      }
     }
   }
 

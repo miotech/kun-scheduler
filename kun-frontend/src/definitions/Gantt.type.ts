@@ -1,15 +1,34 @@
+export enum ResourceManagementPlatform {
+  'YARN' = 'YARN',
+  "OTHER" = "OTHER"
+}
+
+export enum FinalStatus {
+  'SUCCEEDED' = 'SUCCEEDED',
+  'FAILED' = 'FAILED',
+}
+
+export interface YarnInfo {
+  startAt: Date;
+  runningAt: Date;
+  endAt: Date;
+  averageRunningTime: string;
+  finalStatus: FinalStatus
+}
 export interface Task {
   taskRunId: string;
   taskId: string;
   name: string;
   status: string;
-  queuedAt: string;
-  startAt: string;
-  endAt: string;
-  createdAt: string;
+  queuedAt: Date;
+  startAt: Date;
+  endAt: Date;
+  createdAt: Date;
   averageRunningTime: string;
   averageQueuingTime: string;
   dependentTaskRunIds: string[];
+  resourceManagementPlatform: ResourceManagementPlatform;
+  yarnInfo?: YarnInfo;
 }
 export interface Tasks {
   infoList: Task[];
@@ -17,6 +36,9 @@ export interface Tasks {
   latestTime: string;
 }
 
+// export interface GanttData extends Task {
+
+// }
 export interface QueryGanttTasksParams {
   startTime?: string | null;
   endTime?: string | null;

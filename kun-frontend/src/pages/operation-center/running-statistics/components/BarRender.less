@@ -1,0 +1,84 @@
+.barItem {
+
+  height: 40px;
+  position: absolute;
+  // &:hover {
+  //   background-color: #f9f9f9;
+  // }
+  .barCon {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    width: max-content;
+    position: relative;
+    cursor: pointer;
+
+    .barWait {
+      background-color: @status-color-queued;
+      height: 20px;
+    }
+
+    .barRun {
+      background-color: @status-color-success;
+      height: 20px;
+      z-index: 10;
+
+    }
+    .barRunFailed {
+      background-color: @status-color-failed
+      ;
+      height: 20px;
+      z-index: 10;
+    }
+
+    .average {
+      width: 100px;
+      height: 28px;
+      background-color: #49a9de;
+      opacity: 0.2;
+      position: absolute;
+    }
+
+    .name {
+      padding-left: 10px;
+      height: 40px;
+      line-height: 40px;
+      color: #7a7e87;
+      z-index: 999;
+      .highlight{
+        background-color:rgb(251,255,57)
+      }
+      .highlightSelected{
+        background-color:rgb(255,141,59)
+      }
+      
+    }
+
+    .yarnWait {
+      background-color: #95f204;
+      height: 20px;
+      
+    }
+
+    .yarnRun {
+      background-color: #9ac655;
+      height: 20px;
+    }
+
+    .yarnRunFailed {
+      background-color: @status-color-failed;
+      height: 20px;
+    }
+
+    .overhead{
+      background-color: #4b7902;
+      height: 20px;
+    }
+    .overheadFailed {
+      background-color: red;
+      height: 20px;
+    }
+
+  }
+
+}
