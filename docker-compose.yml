@@ -41,6 +41,8 @@ services:
       DB_PG_PORT:
       DB_PG_USERNAME:
       DB_PG_PASSWORD:
+      DB_NEO4J_IP:
+      DB_NEO4J_PORT:
     restart: always
     volumes:
       - ./logs/kun-security:/server/target/kun-security-logs/:z
