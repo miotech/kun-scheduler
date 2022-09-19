@@ -50,3 +50,15 @@ export interface TaskRunDAG {
   nodes: TaskRun[];
   edges: TaskRunDependency[];
 }
+
+export interface TaskRunDiagnosis {
+  taskRunId: string;
+  memorySeconds: number;
+  memoryUsagePercentage: string;
+  maxExecutorNumber?: number;
+  medianExecutorNumber?: number;
+  maxExecutorMemory: string;
+  medianExecutorMemory: string;
+  maxDriverMemory: string;
+  medianDriverMemory: string;
+}
