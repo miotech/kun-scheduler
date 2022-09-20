@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Breadcrumb as AntdBreadcrumb } from 'antd';
 import { IRoute, Link } from 'umi';
+import { pick } from 'lodash';
 import { shallowEqual, useSelector } from 'react-redux';
 import { RootState } from '@/rematch/store';
 import * as pathToRegexp from 'path-to-regexp';
@@ -68,6 +69,12 @@ function Breadcrumb({ route }: Props) {
         return (
           <Link to={realPth(routeItem.path || '/', selectedData.currentParams || {})}>
             {selectedData.deployedTaskName ?? '...'}
+          </Link>
+        );
+      case '/operation-center/dryRun-tasks/:id':
+        return (
+          <Link to={{ pathname: realPth(routeItem.path || '/', pick(selectedData.currentParams, ['id'])) }}>
+            {(selectedData.currentParams as Record<string, string>)?.taskName ?? '...'}
           </Link>
         );
       case '/operation-center/backfill-tasks/:id':

@@ -193,6 +193,25 @@ export const appRoutes = [
         showChildren: true,
         routes: [
           {
+            title: 'common.pageTitle.operationCenter.dryRunTasks',
+            path: './dry-run-tasks',
+            menuDisplay: false,
+            breadcrumbLink: false,
+            routes: [
+              {
+                title: 'common.pageTitle.operationCenter.dryRunTasks',
+                menuDisplay: false,
+                path: './:id',
+                component: '@/pages/operation-center/dry-run-task-detail',
+                exact: true,
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+              {
+                component: 'error-page/Error404/index',
+              },
+            ],
+          },
+          {
             title: 'common.pageTitle.operationCenter.scheduledTasks',
             path: './scheduled-tasks',
             menuDisplay: true,
