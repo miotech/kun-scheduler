@@ -17,8 +17,8 @@ interface Props {
 export const DiffVersion: React.FC<Props> = memo(props => {
   const t = useI18n();
   const { setView, diffRows, goBack } = props;
-  const leftDiff = diffRows[0];
-  const rightDiff = diffRows[1];
+  const leftDiff = diffRows[1];
+  const rightDiff = diffRows[0];
 
   const objKeys = useMemo(() => {
     const keys = findKeys(leftDiff?.snapshot?.taskPayload);
