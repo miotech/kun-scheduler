@@ -8,27 +8,31 @@ import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskTry;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
-import com.miotech.kun.dataplatform.web.common.commit.vo.CommitSearchRequest;
-import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
+import com.miotech.kun.dataplatform.web.common.deploy.vo.TaskTryRunSearchRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.web.common.taskdefview.service.TaskDefinitionViewService;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.workflow.client.model.PaginationResult;
+import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/")
@@ -47,6 +51,8 @@ public class TaskDefinitionController {
 
     @Autowired
     private DeployService deployService;
+
+    /*-------- task definitions -------*/
 
     @PostMapping("/task-definitions")
     @ApiOperation("Create TaskDefinition")
@@ -133,8 +139,19 @@ public class TaskDefinitionController {
         return RequestResult.success(deployService.convertVO(deploy));
     }
 
+    @GetMapping("/task-definitions/{taskDefId}/task-def-views")
+    @ApiOperation("Fetch all task definition views that contain target task definition")
+    public RequestResult<List<TaskDefinitionViewVO>> getTaskDefinitionViewsContainingTaskDefinition(@PathVariable Long taskDefId) {
+        taskDefinitionService.find(taskDefId);   // throws NoSuchElementException if not found
+        List<TaskDefinitionViewVO> viewVOList = taskDefinitionViewService.fetchAllByTaskDefinitionId(taskDefId);
+        return RequestResult.success(viewVOList);
+    }
+
+    /*--------- task tries ----------*/
+
     @PostMapping("/task-definitions/{id}/_run")
     @ApiOperation("Try to run TaskDefinition")
+    @OperationRecord(type = OperationRecordType.TASK_TRY_RUN, args = {"#id", "#taskRunRequest"})
     public RequestResult<TaskTryVO> runTaskDefinition(@PathVariable Long id,
                                                       @RequestBody TaskRunRequest taskRunRequest) {
         TaskTry taskTry = taskDefinitionService.run(id, taskRunRequest);
@@ -189,11 +206,44 @@ public class TaskDefinitionController {
         return RequestResult.success(taskDefinitionService.runLog(request.build()));
     }
 
-    @GetMapping("/task-definitions/{taskDefId}/task-def-views")
-    @ApiOperation("Fetch all task definition views that contain target task definition")
-    public RequestResult<List<TaskDefinitionViewVO>> getTaskDefinitionViewsContainingTaskDefinition(@PathVariable Long taskDefId) {
-        taskDefinitionService.find(taskDefId);   // throws NoSuchElementException if not found
-        List<TaskDefinitionViewVO> viewVOList = taskDefinitionViewService.fetchAllByTaskDefinitionId(taskDefId);
-        return RequestResult.success(viewVOList);
+    @GetMapping("/task-tries/{taskDefId}/taskruns")
+    public RequestResult<PaginationResult<TaskRun>> getTaskTryRuns(@PathVariable Long taskDefId,
+                                                                       @RequestParam(defaultValue = "1") int pageNum,
+                                                                       @RequestParam(defaultValue = "25") int pageSize,
+                                                                       @RequestParam(required = false) String status,
+                                                                       @RequestParam(required = false)
+                                                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
+                                                                       @RequestParam(required = false)
+                                                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime) {
+        TaskTryRunSearchRequest taskTryRunSearchRequest = new TaskTryRunSearchRequest(
+                pageSize,
+                pageNum,
+                Collections.singletonList(taskDefId),
+                TaskRunStatus.resolve(status),
+                startTime,
+                endTime);
+        return RequestResult.success(taskDefinitionService.searchTaskTryRuns(taskTryRunSearchRequest));
+    }
+
+    @GetMapping("/task-tries/taskruns/{taskRunId}/log")
+    public RequestResult<TaskRunLogVO> getTaskTryRunLog(@PathVariable Long taskRunId,
+                                                        @RequestParam(required = false) Integer start,
+                                                        @RequestParam(required = false) Integer end,
+                                                        @RequestParam(required = false) Integer attempt) {
+        int attemptNum = Objects.nonNull(attempt) ? attempt : -1;
+        return RequestResult.success(taskDefinitionService.getTaskTryRunLog(taskRunId, start, end, attemptNum));
+
+    }
+
+    @PostMapping("/task-tries/taskruns/{taskRunId}/abort")
+    @OperationRecord(type = OperationRecordType.TASK_TRY_TASKRUN_ABORT, args = {"#taskRunId"})
+    public RequestResult<TaskRun> stopTaskTryRun(@PathVariable Long taskRunId) {
+        return RequestResult.success(taskDefinitionService.stopTaskTryRun(taskRunId));
+    }
+
+    @PostMapping("/task-tries/taskruns/{taskRunId}/restart")
+    @OperationRecord(type = OperationRecordType.TASK_TRY_TASKRUN_RESTART, args = {"#taskRunId"})
+    public RequestResult<TaskRun> restartTaskTryRun(@PathVariable Long taskRunId) {
+        return RequestResult.success(taskDefinitionService.restartTaskTryRun(taskRunId));
     }
 }

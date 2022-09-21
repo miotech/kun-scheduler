@@ -15,10 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class TaskTryDao {
@@ -64,6 +61,19 @@ public class TaskTryDao {
         String sql = getSelectSQL(TASK_TRY_MODEL_NAME + String.format(".id in (%s)",
                 com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", ids.size())));
         return jdbcTemplate.query(sql, TaskTryMapper.INSTANCE, ids.toArray());
+    }
+
+    public List<TaskTry> fetchByTaskDefinitionIds(List<Long> taskDefinitionIds) {
+        Preconditions.checkNotNull(taskDefinitionIds, "task definition ids should not be `null`");
+
+        if (taskDefinitionIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String sql = getSelectSQL(TASK_TRY_MODEL_NAME + String.format(".definition_id in (%s)",
+                com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", taskDefinitionIds.size())));
+
+        return jdbcTemplate.query(sql, TaskTryMapper.INSTANCE, taskDefinitionIds.toArray());
     }
 
     public void create(TaskTry taskTry) {

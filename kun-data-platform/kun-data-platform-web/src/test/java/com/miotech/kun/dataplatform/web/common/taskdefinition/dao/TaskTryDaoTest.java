@@ -76,4 +76,28 @@ public class TaskTryDaoTest extends DataPlatformTestBase {
 
     }
 
+    @Test
+    public void fetchByDefIds_success() {
+        TaskTry taskTry1 = MockTaskDefinitionFactory.createTaskTry();
+        TaskTry taskTry2 = MockTaskDefinitionFactory.createTaskTry();
+        taskTryDao.create(taskTry1);
+        taskTryDao.create(taskTry2);
+        List<Long> taskDefIdList = Arrays.asList(taskTry1.getDefinitionId(), taskTry2.getDefinitionId());
+        List<TaskTry> taskTryList = taskTryDao.fetchByTaskDefinitionIds(taskDefIdList);
+        assertThat(taskTryList.size(), is(2));
+        assertThat(new HashSet<>(Arrays.asList(taskTry1.getId(), taskTry2.getId())),
+                is(new HashSet<>(taskTryList.stream().map(TaskTry::getId).collect(Collectors.toList()))));
+    }
+
+    @Test
+    public void fetchByDefIds_notFound() {
+        TaskTry taskTry1 = MockTaskDefinitionFactory.createTaskTry();
+        TaskTry taskTry2 = MockTaskDefinitionFactory.createTaskTry();
+        taskTryDao.create(taskTry1);
+        taskTryDao.create(taskTry2);
+        List<Long> taskDefIdList = Arrays.asList(1L, 2L);
+        List<TaskTry> taskTryList = taskTryDao.fetchByTaskDefinitionIds(taskDefIdList);
+        assertThat(taskTryList.size(), is(0));
+    }
+
 }

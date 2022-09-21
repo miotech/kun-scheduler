@@ -4,21 +4,22 @@ import com.miotech.kun.dataplatform.DataPlatformTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskRunFactory;
+import com.miotech.kun.dataplatform.mocking.MockWorkflowTaskFactory;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
+import com.miotech.kun.dataplatform.web.common.deploy.vo.TaskTryRunSearchRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDao;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskTryDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.RunTaskRequest;
-import com.miotech.kun.workflow.client.model.Task;
-import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
+import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.json.simple.JSONObject;
 import org.junit.jupiter.api.Assertions;
@@ -28,6 +29,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -67,6 +69,9 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
 
     @Autowired
     private SlaFacade slaFacade;
+
+    @Autowired
+    private TaskTryDao taskTryDao;
 
     @Test
     public void create_ok() {
@@ -724,10 +729,6 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
                     updateRequest);
         });
         assertTrue(thrown.getMessage().contains("Task definition is already deleted"));
-
-
-
-
     }
 
     @Test
@@ -760,6 +761,119 @@ public class TaskDefinitionServiceTest extends DataPlatformTestBase {
         assertThat(taskDefinitionIds, containsInAnyOrder(taskDefinition1.getDefinitionId(), taskDefinition2.getDefinitionId()));
         List<String> taskDefinitionNames = taskDefinitions.stream().map(TaskDefinition::getName).collect(Collectors.toList());
         assertThat(taskDefinitionNames, containsInAnyOrder(taskDefinitionName1, taskDefinitionName2));
+    }
+
+    @Test
+    public void getTaskTryRuns_fetchSuccess() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+        taskTryDao.create(taskTry);
+        OffsetDateTime now = DateTimeUtils.now();
+
+        Mockito.doAnswer(invocation -> {
+            Task task = MockWorkflowTaskFactory.mockTask(1L).cloneBuilder()
+                    .withId(taskTry.getWorkflowTaskId()).build();
+            TaskRun taskRun = TaskRun.newBuilder()
+                    .withId(taskTry.getWorkflowTaskRunId())
+                    .withTask(task)
+                    .withCreatedAt(now).build();
+            return new PaginationResult<>(1, 1, 1,Arrays.asList(taskRun));
+        }).when(workflowClient).searchTaskRun(any(TaskRunSearchRequest.class));
+
+        TaskTryRunSearchRequest request = new TaskTryRunSearchRequest(1,1, Arrays.asList(taskTry.getDefinitionId()),
+                SUCCESS, now.minusDays(1), now.plusDays(1));
+
+        PaginationResult<TaskRun> result = taskDefinitionService.searchTaskTryRuns(request);
+        assertThat(result.getTotalCount(), is(1));
+        assertThat(result.getPageNum(), is(1));
+        assertThat(result.getPageSize(), is(1));
+        assertThat(result.getRecords().get(0).getId(), is(taskTry.getWorkflowTaskRunId()));
+    }
+
+    @Test
+    public void getTaskTryRuns_fetchNotFound() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+        TaskTryRunSearchRequest request = new TaskTryRunSearchRequest(5,1, Arrays.asList(taskTry.getDefinitionId()),
+                SUCCESS, null, null);
+        PaginationResult<TaskRun> result = taskDefinitionService.searchTaskTryRuns(request);
+        assertThat(result.getTotalCount(), is(0));
+    }
+
+    @Test
+    public void getTaskTryRunLog_withoutLineNumber() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+
+        Mockito.doAnswer(invocation -> {
+            TaskRunLog log = new TaskRunLog();
+            log.setAttempt(1);
+            log.setStartLine(1);
+            log.setEndLine(2);
+            log.setLogs(Arrays.asList("test1","test2"));
+            log.setTaskRunId(taskTry.getWorkflowTaskRunId());
+            return log;
+        }).when(workflowClient).getLatestRunLog(any(), any());
+        Mockito.doReturn(new TaskRunState(SUCCESS)).when(workflowClient).getTaskRunState(any());
+
+        TaskRunLogVO result = taskDefinitionService.getTaskTryRunLog(taskTry.getWorkflowTaskRunId(), null, null, -1);
+        assertThat(result.getTaskRunId(), is(taskTry.getWorkflowTaskRunId()));
+        assertThat(result.getAttempt(), is(1));
+    }
+
+    @Test
+    public void getTaskTryRunLog_withLineNumber() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+
+        Mockito.doAnswer(invocation -> {
+            TaskRunLog log = new TaskRunLog();
+            log.setAttempt(1);
+            log.setStartLine(1);
+            log.setEndLine(2);
+            log.setLogs(Arrays.asList("test1","test2"));
+            log.setTaskRunId(taskTry.getWorkflowTaskRunId());
+            return log;
+        }).when(workflowClient).getLatestRunLog(any(), any(), any(), any());
+        Mockito.doReturn(new TaskRunState(SUCCESS)).when(workflowClient).getTaskRunState(any());
+
+        TaskRunLogVO result = taskDefinitionService.getTaskTryRunLog(taskTry.getWorkflowTaskRunId(), 1, 2, -1);
+        assertThat(result.getTaskRunId(), is(taskTry.getWorkflowTaskRunId()));
+        assertThat(result.getAttempt(), is(1));
+    }
+
+    @Test
+    public void stopTaskTryRun() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+
+        Mockito.doAnswer(invocation -> {
+            Task task = MockWorkflowTaskFactory.mockTask(1L).cloneBuilder()
+                    .withId(taskTry.getWorkflowTaskId()).build();
+            TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+            taskRun.setId(taskTry.getWorkflowTaskRunId());
+            taskRun.setStatus(ABORTED);
+            return taskRun;
+        }).when(workflowClient).stopTaskRun(any(Long.class));
+
+        TaskRun result = taskDefinitionService.stopTaskTryRun(taskTry.getWorkflowTaskRunId());
+
+        assertThat(result.getId(), is(taskTry.getWorkflowTaskRunId()));
+        assertThat(result.getStatus(), is(ABORTED));
+    }
+
+    @Test
+    public void restartTaskTryRun() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+
+        Mockito.doAnswer(invocation -> {
+            Task task = MockWorkflowTaskFactory.mockTask(1L).cloneBuilder()
+                    .withId(taskTry.getWorkflowTaskId()).build();
+            TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+            taskRun.setId(taskTry.getWorkflowTaskRunId());
+            taskRun.setStatus(CREATED);
+            return taskRun;
+        }).when(workflowClient).restartTaskRun(any(Long.class));
+
+        TaskRun result = taskDefinitionService.restartTaskTryRun(taskTry.getWorkflowTaskRunId());
+
+        assertThat(result.getId(), is(taskTry.getWorkflowTaskRunId()));
+        assertThat(result.getStatus(), is(CREATED));
     }
 
 }
