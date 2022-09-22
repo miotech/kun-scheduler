@@ -222,7 +222,8 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertTrue(persistedTaskRunOptional.isPresent());
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
-        assertThat(persistedTaskRun, sameBeanAs(taskRunWithUpdatedProps).ignoring(startsWith("createdAt")).ignoring(startsWith("updatedAt")));
+        assertThat(persistedTaskRun, sameBeanAs(taskRunWithUpdatedProps)
+                .ignoring(startsWith("createdAt")).ignoring(startsWith("updatedAt")).ignoring("taskRunPhase"));
         // Here startAt & endAt may differ since database converts datetime offset to system default,
         // but epoch second will guaranteed to be the same
         assertEquals(persistedTaskRun.getStartAt().toEpochSecond(), taskRunWithUpdatedProps.getStartAt().toEpochSecond());
@@ -314,12 +315,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(attemptOptional.isPresent());
         TaskAttempt attempt = attemptOptional.get();
         TaskAttempt baselineModel = MockTaskRunFactory.createTaskAttempt(3L, sampleTaskRun, 3);
-        assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun"));
+        assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun","taskRunPhase"));
         // TaskRun instance should be nested inside
         assertThat(attempt.getTaskRun(), notNullValue());
         assertThat(attempt.getTaskRun(), sameBeanAs(sampleTaskRun)
                 .ignoring(startsWith("createdAt"))
                 .ignoring(startsWith("updatedAt"))
+                .ignoring(startsWith("taskRunPhase"))
         );
         // And Task model object should be nested inside that TaskRun object
         assertThat(attempt.getTaskRun().getTask(), notNullValue());
@@ -911,7 +913,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(satisfiedTaskRuns.get(0), is(taskRun1.getId()));
 
         taskRunDao.updateTaskRunStatusByTaskRunId(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
-        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunPhase.SUCCESS);
 
         satisfiedTaskRuns = taskRunDao.fetchAllSatisfyTaskRunId();
         assertThat(satisfiedTaskRuns.size(), is(1));
@@ -975,7 +977,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         taskRun1 = taskRun1.cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
         List<Long> downstreamTaskRunIds = Arrays.asList(taskRun2.getId(), taskRun3.getId());
-        taskRunDao.updateTaskRunWithFailedUpstream(taskRun1.getId(), downstreamTaskRunIds, TaskRunStatus.UPSTREAM_FAILED);
+        taskRunDao.updateTaskRunWithFailedUpstream(taskRun1.getId(), downstreamTaskRunIds, TaskRunPhase.UPSTREAM_FAILED);
 
         assertThat(taskRunDao.fetchTaskRunById(taskRun2.getId()).get().getFailedUpstreamTaskRunIds().get(0),
                 is(taskRun1.getId()));
@@ -983,7 +985,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 is(taskRun1.getId()));
 
         taskRun1 = taskRun1.cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
-        taskRunDao.updateTaskRunWithFailedUpstream(taskRun1.getId(), downstreamTaskRunIds, TaskRunStatus.CREATED);
+        taskRunDao.updateTaskRunWithFailedUpstream(taskRun1.getId(), downstreamTaskRunIds, TaskRunPhase.CREATED);
         assertThat(taskRunDao.fetchTaskRunById(taskRun2.getId()).get().getFailedUpstreamTaskRunIds(),
                 is(empty()));
         assertThat(taskRunDao.fetchTaskRunById(taskRun3.getId()).get().getFailedUpstreamTaskRunIds(),
@@ -1089,7 +1091,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(taskRun3);
 
         //taskRun1 success
-        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunPhase.SUCCESS);
 
         //check taskRun 2&3's condition result
         TaskRunCondition tc2 = taskRunDao.fetchTaskRunConditionsById(taskRun2.getId()).get(0);
@@ -1137,7 +1139,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun taskRun3 = taskRunList.get(3);
         TaskRun taskRun4 = taskRunList.get(4);
         // 0 success
-        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun0.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun0.getId()), TaskRunPhase.SUCCESS);
         Condition condition = new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString()));
         List<Long> restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
         List<Long> taskRunIdsWithUpstreamFailed = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
@@ -1147,7 +1149,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 is(new HashSet<>(Arrays.asList(taskRun3.getId(), taskRun4.getId()))));
 
         //1 success
-        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunPhase.SUCCESS);
         condition = new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString()));
         restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
         taskRunIdsWithUpstreamFailed = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
@@ -1158,7 +1160,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 is(new HashSet<>(Arrays.asList(taskRun3.getId(), taskRun4.getId()))));
 
         // 2 success
-        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun2.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun2.getId()), TaskRunPhase.SUCCESS);
         condition = new Condition(Collections.singletonMap("taskRunId", taskRun2.getId().toString()));
         restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
         taskRunIdsWithUpstreamFailed = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);

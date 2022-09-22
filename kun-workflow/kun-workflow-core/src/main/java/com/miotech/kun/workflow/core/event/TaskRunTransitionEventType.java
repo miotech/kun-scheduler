@@ -1,13 +1,20 @@
 package com.miotech.kun.workflow.core.event;
 
 public enum TaskRunTransitionEventType {
+    ASSEMBLED,
     SUBMIT,
     HANGUP,
+    WAIT,
     UPSTREAM_FAILED,
-    RUNNING,
+    CONDITION_CHANGE,
+    CONDITION_REMOVE,
+    READY,
     ABORT,
+    RECOVER,
     RESCHEDULE,
+    RESET,
     AWAKE,
+    COMPLETE,
     CHECK,
     FAILED,
     CHECK_SUCCESS,

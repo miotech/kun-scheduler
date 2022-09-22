@@ -62,4 +62,15 @@ public class TaskAttemptStatusChangeEvent extends PublicEvent {
         // taskAttemptId = taskRunId | attemptNum
         return IdGenerator.getInstance().split(attemptId)[0];
     }
+
+    @Override
+    public String toString() {
+        return "TaskAttemptStatusChangeEvent{" +
+                "attemptId=" + attemptId +
+                ", from=" + from +
+                ", to=" + to +
+                ", taskName='" + taskName + '\'' +
+                ", taskId=" + taskId +
+                '}';
+    }
 }

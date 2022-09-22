@@ -11,7 +11,7 @@ import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.workflow.TaskRunStateMachine;
+import com.miotech.kun.workflow.TaskRunStateMachineDispatcher;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
@@ -78,7 +78,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
     private EventBus eventBus;
 
     @Inject
-    private TaskRunStateMachine taskRunStateMachine;
+    private TaskRunStateMachineDispatcher taskRunStateMachineDispatcher;
 
     private EventCollector eventCollector;
 
@@ -288,7 +288,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         eventBus.register(eventCollector);
         kubernetesResourceManager = prepareQueueManage();
         spyManager = spy(kubernetesResourceManager);
-        taskRunStateMachine.start();
+        taskRunStateMachineDispatcher.start();
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {

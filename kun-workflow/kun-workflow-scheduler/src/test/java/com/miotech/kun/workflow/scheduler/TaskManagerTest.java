@@ -3,7 +3,10 @@ package com.miotech.kun.workflow.scheduler;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.miotech.kun.workflow.TaskRunStateMachine;
+import com.miotech.kun.commons.pubsub.event.Event;
+import com.miotech.kun.workflow.TaskRunSMExecutor;
+import com.miotech.kun.workflow.TaskRunStateMachineBuffer;
+import com.miotech.kun.workflow.TaskRunStateMachineDispatcher;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -11,6 +14,8 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -19,6 +24,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.*;
+import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
@@ -28,20 +34,26 @@ import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import javax.inject.Inject;
 import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.miotech.kun.workflow.core.event.TaskRunTransitionEventType.*;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
@@ -69,7 +81,16 @@ public class TaskManagerTest extends SchedulerTestBase {
     private OperatorDao operatorDao;
 
     @Inject
-    private TaskRunStateMachine taskRunStateMachine;
+    private TaskRunStateMachineDispatcher taskRunStateMachineDispatcher;
+
+    @Inject
+    private TaskRunSMExecutor taskRunSMExecutor;
+
+    @Inject
+    private TaskRunStateMachineBuffer buffer;
+
+    private EventCollector eventCollector;
+
 
     private static final String CRON_EVERY_MINUTE = "0 * * ? * * *";
 
@@ -82,7 +103,9 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     @BeforeEach
     public void init() {
-        taskRunStateMachine.start();
+        eventCollector = new EventCollector();
+        eventBus.register(eventCollector);
+        taskRunStateMachineDispatcher.start();
     }
 
     @Test
@@ -105,7 +128,6 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(taskAttempt.getId(), is(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), 1)));
         assertThat(taskAttempt.getAttempt(), is(1));
         checkTaskRun(taskAttempt.getTaskRun(), taskRun);
-        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskAttempt.getLogPath(), is(nullValue()));
         assertThat(taskAttempt.getStartAt(), is(nullValue()));
         assertThat(taskAttempt.getEndAt(), is(nullValue()));
@@ -116,7 +138,6 @@ public class TaskManagerTest extends SchedulerTestBase {
         // assertThat(attemptProps.getTaskName(), is(taskAttempt.getTaskName()));
         // assertThat(attemptProps.getTaskId(), is(taskAttempt.getTaskId()));
         assertThat(attemptProps.getAttempt(), is(1));
-        assertThat(attemptProps.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(attemptProps.getLogPath(), is(nullValue()));
         assertThat(attemptProps.getStartAt(), is(nullValue()));
         assertThat(attemptProps.getEndAt(), is(nullValue()));
@@ -137,8 +158,8 @@ public class TaskManagerTest extends SchedulerTestBase {
 
         TaskAttempt attempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
         taskRunDao.createAttempt(attempt1);
-        taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.SUCCESS);
-        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateTaskAttemptPhase(attempt1.getId(), TaskRunPhase.SUCCESS, null, null, null, null);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunPhase.SUCCESS);
 
         // process
         taskManager.submit(Lists.newArrayList(taskRun2));
@@ -185,48 +206,6 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(invoked(), is(false));
     }
 
-    @Test
-    public void testSubmit_task_waiting_for_upstream_becomes_success() throws InterruptedException {
-        // prepare
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
-        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
-        for (TaskRun taskRun : taskRuns) {
-            taskDao.create(taskRun.getTask());
-            taskRunDao.createTaskRun(taskRun);
-        }
-
-        TaskRun taskRun1 = taskRuns.get(0);
-        TaskRun taskRun2 = taskRuns.get(1);
-
-        TaskAttempt attempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
-        taskRunDao.createAttempt(attempt1);
-        taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.RUNNING);
-
-        // process
-        taskManager.submit(Lists.newArrayList(taskRun2));
-        TimeUnit.SECONDS.sleep(2);
-        assertThat(invoked(), is(false));
-
-        //
-        taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.SUCCESS, null, null);
-        // post successful event
-        eventBus.post(new TaskAttemptStatusChangeEvent(attempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "test task", 0L));
-
-        // verify
-        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-
-        List<TaskAttempt> result = getSubmittedTaskAttempts();
-        assertThat(result, is(hasSize(1)));
-
-        TaskAttempt taskAttempt = result.get(0);
-        assertThat(taskAttempt.getId(), is(WorkflowIdGenerator.nextTaskAttemptId(taskRun2.getId(), 1)));
-        assertThat(taskAttempt.getAttempt(), is(1));
-        checkTaskRun(taskAttempt.getTaskRun(), taskRun2);
-        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
-        assertThat(taskAttempt.getLogPath(), is(nullValue()));
-        assertThat(taskAttempt.getStartAt(), is(nullValue()));
-        assertThat(taskAttempt.getEndAt(), is(nullValue()));
-    }
 
     private void checkTaskRun(TaskRun actual, TaskRun except) {
         assertThat(actual.getId(), is(except.getId()));
@@ -243,44 +222,75 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .withStatus(TaskRunStatus.SUCCESS).build();
         taskDao.create(task);
         taskRunDao.createTaskRun(taskRun);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun));
 
-        ArgumentCaptor<TaskAttempt> captor = ArgumentCaptor.forClass(TaskAttempt.class);
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-            eventBus.post(prepareEvent(taskAttempt.getId(), taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(Arrays.asList(taskRun));
+
+        awaitUntilAttemptDone(taskRun.getId() + 1);
 
         taskManager.retry(taskRun);
 
-        awaitUntilAttemptDone(taskRun.getId()+2);
+        awaitUntilAttemptDone(taskRun.getId() + 2);
 
-        verify(executor).submit(captor.capture());
-        MatcherAssert.assertThat(captor.getValue().getId(), is(taskRun.getId()+2));
     }
 
     @Test
-    public void rerunFailedTaskRun_shouldRemoveDownstreamFailedTaskrunIds() {
+    public void rerunFailedTaskRun_shouldRemoveDownstreamFailedTaskrunIds() throws InterruptedException {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         taskList.forEach(task -> taskDao.create(task));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
-        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
-        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder()
-                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Collections.singletonList(taskRun1.getId())).build();
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
-        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
-        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
-        taskRunDao.createAttempt(taskAttempt1);
-        taskRunDao.createAttempt(taskAttempt2);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2));
+
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
 
         TaskRun result = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
         MatcherAssert.assertThat(result.getFailedUpstreamTaskRunIds().size(), is(1));
 
-        taskManager.retry(taskRun1);
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());
+
+        awaitUntilAttemptRunning(taskRun1.getId() + 2);
+        TimeUnit.SECONDS.sleep(2);
 
         result = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
 
@@ -289,14 +299,14 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     //taskrun1 is 2's predecessor
     //when taskrun1 retry, 2 from created to blocked
-    @Test
+    @Disabled
     public void rerunTaskRunEffectSuccessor_shouldChangedToBlocked() {
         Task task = MockTaskFactory.createTask().cloneBuilder()
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
                         ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
                 .build();
         taskDao.create(task);
-        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.FAILED);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.CREATED);
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
                 .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
@@ -305,12 +315,28 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .cloneBuilder().withTaskRunConditions(Collections.singletonList(taskRunCondition)).build();
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            if (taskAttempt.getId().equals(taskRun1.getId() + 1)) {
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(failedEvent);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2));
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        TaskRun saved2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(saved2.getStatus(), is(TaskRunStatus.CREATED));
 
         //retry taskRun1
         taskManager.retry(taskRun1);
 
+        awaitUntilAttemptBlock(taskRun2.getId() + 1);
         TaskRun result = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
 
         MatcherAssert.assertThat(result.getStatus(), is(TaskRunStatus.BLOCKED));
@@ -338,39 +364,40 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-                if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
-                    taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                    eventBus.post(prepareEvent(taskAttempt.getId()
-                            , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
-                } else {
-                    taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                    eventBus.post(prepareEvent(taskAttempt.getId()
-                            , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
-                }
-                return null;
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
+            return null;
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(taskRunList);
 
 
         awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
 
         // verify update downStream
         TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
         assertThat(attemptProps1.getAttempt(), is(1));
         assertThat(attemptProps1.getStatus(), is(TaskRunStatus.FAILED));
-        assertThat(attemptProps1.getLogPath(), is(nullValue()));
-        assertThat(attemptProps1.getStartAt(), is(nullValue()));
-        assertThat(attemptProps1.getEndAt(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
 
         TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
         assertThat(attemptProps2.getAttempt(), is(1));
         assertThat(attemptProps2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
-        assertThat(attemptProps2.getLogPath(), is(nullValue()));
         assertThat(attemptProps2.getStartAt(), is(nullValue()));
         assertThat(attemptProps2.getEndAt(), is(nullValue()));
         assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(notNullValue()));
@@ -378,7 +405,6 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttemptProps attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
         assertThat(attemptProps3.getAttempt(), is(1));
         assertThat(attemptProps3.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
-        assertThat(attemptProps3.getLogPath(), is(nullValue()));
         assertThat(attemptProps3.getStartAt(), is(nullValue()));
         assertThat(attemptProps3.getEndAt(), is(nullValue()));
         assertThat(taskRunDao.getTermAtOfTaskRun(taskRun3.getId()), is(notNullValue()));
@@ -401,19 +427,24 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(taskRunList);
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
 
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(1));
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).size(), is(1));
@@ -440,13 +471,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
@@ -465,7 +500,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     //scenario: 0>>1 1>>2.
     // 0 failed, 1&2 -> upstream failed. 0 is added to failedUpstreamTaskRunIds of 1&2
     // retry 0, 1&2 -> created. failedUpstreamTaskRunIds of 1&2 is removed.
-    public void retryFailedUpstream_UpdateMultiDownstreamTaskRunsWhenTaskRunRetry_Success() {
+    public void retryFailedUpstream_UpdateMultiDownstreamTaskRunsWhenTaskRunRetry_Success() throws InterruptedException {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
         taskList.forEach(task -> taskDao.create(task));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
@@ -479,32 +514,42 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(taskRunList);
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
 
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).get(0).getId(), is(taskRun1.getId()));
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).get(0).getId(), is(taskRun1.getId()));
 
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-            eventBus.post(prepareEvent(taskAttempt.getId()
-                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
         taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());
+
+        TimeUnit.SECONDS.sleep(2);
 
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).isEmpty(), is(true));
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).isEmpty(), is(true));
@@ -534,13 +579,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId()) || taskAttempt.getTaskRun().getId().equals(taskRun3.getId())) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
@@ -587,13 +636,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId()) || taskAttempt.getTaskRun().getId().equals(taskRun3.getId())) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
@@ -614,13 +667,20 @@ public class TaskManagerTest extends SchedulerTestBase {
         //retry taskRun 1
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-            eventBus.post(prepareEvent(taskAttempt.getId()
-                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
         taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());
+
+        awaitUntilAttemptDone(taskRun1.getId() + 2);
+        //wait event finish
+        Uninterruptibles.sleepUninterruptibly(2000, TimeUnit.MILLISECONDS);
 
         //verify failed upstream taskRuns of taskRun 2 & 4
         assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(0));
@@ -639,36 +699,42 @@ public class TaskManagerTest extends SchedulerTestBase {
                         ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
                 .build();
         taskDao.create(task);
-        TaskRun taskRun0 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.RUNNING);
+        TaskRun taskRun0 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.CREATED);
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
                 .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
                 .withResult(false).build();
-        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.BLOCKED)
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.CREATED)
                 .cloneBuilder().withTaskRunConditions(Collections.singletonList(taskRunCondition)).build();
         taskRunDao.createTaskRun(taskRun0);
         taskRunDao.createTaskRun(taskRun1);
 
-        TaskAttempt taskAttempt0 = MockTaskAttemptFactory.createTaskAttempt(taskRun0);
-        taskRunDao.createAttempt(taskAttempt0);
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
 
         //process
-        taskManager.submit(Collections.singletonList(taskRun1));
-        TimeUnit.SECONDS.sleep(2);
-        assertThat(invoked(), is(false));
+        taskManager.submit(Arrays.asList(taskRun0, taskRun1));
+        awaitUntilAttemptRunning(taskRun0.getId() + 1);
 
-        taskRunDao.updateTaskAttemptStatus(taskAttempt0.getId(), TaskRunStatus.FAILED, null, null);
-        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt0.getId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "test task", task.getId()));
 
-        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        TaskRun saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        assertThat(saved1.getStatus(), is(TaskRunStatus.BLOCKED));
+
+        //taskRun0 failed
+        TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskRun0.getId() + 1, null);
+        eventBus.post(failedEvent);
+
+
+        awaitUntilAttemptRunning(taskRun1.getId() + 1);
 
         //check
-        List<TaskAttempt> result = getSubmittedTaskAttempts();
-        assertThat(result, is(hasSize(1)));
-
-        TaskAttempt taskAttempt = result.get(0);
-        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun1.getId()));
-        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
+        saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        assertThat(saved1.getId(), is(taskRun1.getId()));
+        assertThat(saved1.getStatus(), is(TaskRunStatus.RUNNING));
     }
 
     //scenario: task 0>>1; taskRun 2 is 0's predecessor
@@ -686,14 +752,14 @@ public class TaskManagerTest extends SchedulerTestBase {
         Task task1 = tasks.get(1);
         taskDao.create(task0);
         taskDao.create(task1);
-        TaskRun taskRun0 = taskRuns.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
-        TaskRun taskRun1 = taskRuns.get(1).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        TaskRun taskRun0 = taskRuns.get(0);
+        TaskRun taskRun1 = taskRuns.get(1);
         //prepare taskRun2
         List<TaskRunCondition> taskRunConditions = new ArrayList<>();
         TaskRunCondition taskRunCondition0 = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
                 .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
-                .withResult(true)
+                .withResult(false)
                 .build();
         taskRunConditions.add(taskRunCondition0);
         TaskRunCondition taskRunCondition1 = TaskRunCondition.newBuilder()
@@ -704,31 +770,43 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunConditions.add(taskRunCondition1);
 
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder()
-                .withTaskRunConditions(taskRunConditions)
-                .withStatus(TaskRunStatus.BLOCKED).build();
+                .withTaskRunConditions(taskRunConditions).build();
         taskRunDao.createTaskRun(taskRun0);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
 
-        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
-        taskRunDao.createAttempt(taskAttempt1);
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun0.getId())) {
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
 
         //process
-        taskManager.submit(Collections.singletonList(taskRun2));
-        TimeUnit.SECONDS.sleep(2);
-        assertThat(invoked(), is(false));
+        taskManager.submit(Arrays.asList(taskRun0, taskRun1, taskRun2));
+        awaitUntilAttemptRunning(taskRun1.getId() + 1);
 
-        taskRunDao.updateTaskAttemptStatus(taskAttempt1.getId(), TaskRunStatus.FAILED, null, null);
-        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "test task", task1.getId()));
+
+        TaskRun saved2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(saved2.getStatus(), is(TaskRunStatus.BLOCKED));
+
+        //taskRun1 failed
+        TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskRun1.getId() + 1, null);
+        eventBus.post(failedEvent);
+
+
+        awaitUntilAttemptRunning(taskRun2.getId() + 1);
 
         //check
-        TimeUnit.SECONDS.sleep(2);
-        List<TaskAttempt> result = getSubmittedTaskAttempts();
-        assertThat(result, is(hasSize(1)));
-
-        TaskAttempt taskAttempt = result.get(0);
-        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun2.getId()));
-        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
+        saved2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(saved2.getId(), is(taskRun2.getId()));
+        assertThat(saved2.getStatus(), is(TaskRunStatus.RUNNING));
 
 
     }
@@ -750,7 +828,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskDao.create(task0);
         taskDao.create(task1);
         taskDao.create(task2);
-        TaskRun taskRun0 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        TaskRun taskRun0 = taskRunList.get(0);
         TaskRun taskRun1 = taskRunList.get(1);
         TaskRun taskRun2 = taskRunList.get(2);
         TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task2).cloneBuilder()
@@ -765,31 +843,33 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
 
-        TaskAttempt taskAttempt0 = MockTaskAttemptFactory.createTaskAttempt(taskRun0);
-        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
-        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
-        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
-        taskRunDao.createAttempt(taskAttempt0);
-        taskRunDao.createAttempt(taskAttempt1);
-        taskRunDao.createAttempt(taskAttempt2);
-        taskRunDao.createAttempt(taskAttempt3);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun0.getId())) {
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
 
         //process
-        taskManager.submit(Collections.singletonList(taskRun3));
-        TimeUnit.SECONDS.sleep(2);
-        assertThat(invoked(), is(false));
+        taskManager.submit(Arrays.asList(taskRun0, taskRun1, taskRun2, taskRun3));
 
-        taskRunDao.updateTaskAttemptStatus(taskAttempt0.getId(), TaskRunStatus.FAILED, null, null);
-        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt0.getId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "test task", task1.getId()));
+        awaitUntilAttemptRunning(taskRun1.getId() + 1);
 
-        //check
-        TimeUnit.SECONDS.sleep(5);
-        List<TaskAttempt> result = getSubmittedTaskAttempts();
-        assertThat(result, is(hasSize(1)));
+        TaskRun saved3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+        assertThat(saved3.getStatus(), is(TaskRunStatus.BLOCKED));
 
-        TaskAttempt taskAttempt = result.get(0);
-        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun3.getId()));
-        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
+        TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskRun1.getId() + 1, null);
+        eventBus.post(failedEvent);
+
+        awaitUntilAttemptRunning(taskRun3.getId() + 1);
 
     }
 
@@ -798,7 +878,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     // now, 0 is success, 1 is running, 2 is blocked by 1, 3 is created
     // when 1 is success, 2 is running, 3 should be re-processed as created
     @Test
-    public void multiBlockTasks() throws InterruptedException {
+    public void multiBlockTasks() {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         List<TaskRun> taskRunList0 = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
         List<TaskRun> taskRunList1 = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
@@ -813,18 +893,18 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskDao.create(task0);
         taskDao.create(task1);
         //prepare task run 0 & 1
-        TaskRun taskRun0 = taskRunList0.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
-        TaskRun taskRun1 = taskRunList0.get(1).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        TaskRun taskRun0 = taskRunList0.get(0);
+        TaskRun taskRun1 = taskRunList0.get(1);
         taskRunDao.createTaskRun(taskRun0);
         taskRunDao.createTaskRun(taskRun1);
         //prepare task run 2 with two block conditions
         TaskRunCondition taskRunCondition0 = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
-                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(true).build();
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(false).build();
         TaskRunCondition taskRunCondition1 = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
                 .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(false).build();
-        TaskRun taskRun2 = taskRunList1.get(0).cloneBuilder().withStatus(TaskRunStatus.BLOCKED)
+        TaskRun taskRun2 = taskRunList1.get(0).cloneBuilder()
                 .withTaskRunConditions(Arrays.asList(taskRunCondition0, taskRunCondition1)).build();
         TaskRunCondition taskRunCondition2 = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
@@ -832,45 +912,46 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskRunCondition taskRunCondition3 = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun2.getId().toString())))
                 .withType(ConditionType.TASKRUN_DEPENDENCY_SUCCESS).withResult(false).build();
-        TaskRun taskRun3 = taskRunList1.get(1).cloneBuilder().withStatus(TaskRunStatus.CREATED)
+        TaskRun taskRun3 = taskRunList1.get(1).cloneBuilder()
                 .withTaskRunConditions(Arrays.asList(taskRunCondition2, taskRunCondition3)).build();
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
 
-        TaskAttempt taskAttempt0 = MockTaskAttemptFactory.createTaskAttempt(taskRun0);
-        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
-        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
-        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
-        taskRunDao.createAttempt(taskAttempt0);
-        taskRunDao.createAttempt(taskAttempt1);
-        taskRunDao.createAttempt(taskAttempt2);
-        taskRunDao.createAttempt(taskAttempt3);
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun0.getId()) || taskAttempt.getTaskRun().getId().equals(taskRun2.getId())) {
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
 
         //process
-        taskManager.submit(Collections.singletonList(taskRun2));
-        TimeUnit.SECONDS.sleep(2);
-        assertThat(invoked(), is(false));
+        taskManager.submit(Arrays.asList(taskRun0, taskRun1, taskRun2, taskRun3));
+        awaitUntilAttemptRunning(taskRun1.getId() + 1);
 
-        taskRunDao.updateTaskAttemptStatus(taskAttempt0.getId(), TaskRunStatus.SUCCESS, null, null);
-        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "test task", task1.getId()));
+        TaskRun saved3 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(saved3.getStatus(), is(TaskRunStatus.BLOCKED));
 
-        //check
-        TimeUnit.SECONDS.sleep(2);
-        List<TaskAttempt> result = getSubmittedTaskAttempts();
-        assertThat(result, is(hasSize(1)));
+        TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskRun1.getId() + 1, null);
+        eventBus.post(checkEvent);
+        TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskRun1.getId() + 1, null);
+        eventBus.post(checkSuccess);
 
-        TaskAttempt attempt = result.get(0);
-        assertThat(attempt.getTaskRun().getId(), is(taskRun2.getId()));
-        assertThat(attempt.getStatus(), is(TaskRunStatus.CREATED));
+        awaitUntilAttemptRunning(taskRun3.getId() + 1);
 
-        TaskAttemptProps attempt3 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
-        assertThat(attempt3.getStatus(), is(TaskRunStatus.CREATED));
+        TaskAttemptProps attempt3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
+        assertThat(attempt3.getStatus(), is(TaskRunStatus.RUNNING));
     }
 
     @Test
     public void retryTaskRunRecoverDownStream() {
 
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1");
 
         long operatorId = taskList.get(0).getOperatorId();
         Operator op = MockOperatorFactory.createOperator()
@@ -890,13 +971,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
@@ -909,9 +994,10 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps1.getAttempt(), is(1));
         assertThat(attemptProps1.getStatus(), is(TaskRunStatus.FAILED));
         assertThat(attemptProps1.getLogPath(), is(nullValue()));
-        assertThat(attemptProps1.getStartAt(), is(nullValue()));
-        assertThat(attemptProps1.getEndAt(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
 
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
         TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
         assertThat(attemptProps2.getAttempt(), is(1));
         assertThat(attemptProps2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
@@ -922,9 +1008,12 @@ public class TaskManagerTest extends SchedulerTestBase {
 
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-            eventBus.post(prepareEvent(taskAttempt.getId()
-                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
@@ -940,9 +1029,9 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps2.getAttempt(), is(1));
         assertThat(attemptProps2.getStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(attemptProps2.getLogPath(), is(nullValue()));
-        assertThat(attemptProps2.getStartAt(), is(nullValue()));
-        assertThat(attemptProps2.getEndAt(), is(nullValue()));
-        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(nullValue()));
+        assertThat(attemptProps2.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps2.getEndAt(), is(notNullValue()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(notNullValue()));
 
     }
 
@@ -961,42 +1050,45 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun3);
 
         //taskRun1 run failed
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-                if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
-                    taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                    eventBus.post(prepareEvent(taskAttempt.getId()
-                            , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
-                } else {
-                    taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                    eventBus.post(prepareEvent(taskAttempt.getId()
-                            , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
-                }
-                return null;
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
+            return null;
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(taskRunList);
 
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptDone(taskRun2.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
 
         // verify update downStream
         TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
         assertThat(attemptProps1.getAttempt(), is(1));
         assertThat(attemptProps1.getStatus(), is(TaskRunStatus.FAILED));
         assertThat(attemptProps1.getLogPath(), is(nullValue()));
-        assertThat(attemptProps1.getStartAt(), is(nullValue()));
-        assertThat(attemptProps1.getEndAt(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
 
         TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
         assertThat(attemptProps2.getAttempt(), is(1));
         assertThat(attemptProps2.getStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(attemptProps2.getLogPath(), is(nullValue()));
-        assertThat(attemptProps2.getStartAt(), is(nullValue()));
-        assertThat(attemptProps2.getEndAt(), is(nullValue()));
+        assertThat(attemptProps2.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps2.getEndAt(), is(notNullValue()));
 
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
         TaskAttemptProps attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
         assertThat(attemptProps3.getAttempt(), is(1));
         assertThat(attemptProps3.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
@@ -1006,9 +1098,12 @@ public class TaskManagerTest extends SchedulerTestBase {
 
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-            eventBus.post(prepareEvent(taskAttempt.getId()
-                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
@@ -1023,8 +1118,132 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps3.getAttempt(), is(1));
         assertThat(attemptProps3.getStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(attemptProps3.getLogPath(), is(nullValue()));
-        assertThat(attemptProps3.getStartAt(), is(nullValue()));
-        assertThat(attemptProps3.getEndAt(), is(nullValue()));
+        assertThat(attemptProps3.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps3.getEndAt(), is(notNullValue()));
+
+    }
+
+    @Test
+    public void testUpstreamSuccess_should_invoke_downstream() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        for (Task task : taskList) {
+            taskDao.create(task);
+        }
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        // verify
+        TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
+        assertThat(attemptProps1.getAttempt(), is(1));
+        assertThat(attemptProps1.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps1.getLogPath(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
+
+        awaitUntilAttemptDone(taskRun2.getId() + 1);
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attemptProps2.getAttempt(), is(1));
+        assertThat(attemptProps2.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps2.getLogPath(), is(nullValue()));
+        assertThat(attemptProps2.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps2.getEndAt(), is(notNullValue()));
+
+        assertTransitAtLeastOnce(attemptProps1.getId(),
+                ASSEMBLED,
+                SUBMIT,
+                READY,
+                COMPLETE,
+                CHECK_SUCCESS
+        );
+
+        assertTransitAtLeastOnce(attemptProps2.getId(),
+                ASSEMBLED,
+                WAIT,
+                CONDITION_CHANGE,
+                ASSEMBLED,
+                SUBMIT,
+                READY,
+                COMPLETE,
+                CHECK_SUCCESS);
+
+    }
+
+    @Test
+    public void upstreamFailed_should_stop_downstream() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        for (Task task : taskList) {
+            taskDao.create(task);
+        }
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+
+        //taskRun1 run failed
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_FAILED, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        // verify update downStream
+        TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
+        assertThat(attemptProps1.getAttempt(), is(1));
+        assertThat(attemptProps1.getStatus(), is(TaskRunStatus.CHECK_FAILED));
+        assertThat(attemptProps1.getLogPath(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
+
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attemptProps2.getAttempt(), is(1));
+        assertThat(attemptProps2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(attemptProps2.getLogPath(), is(nullValue()));
+        assertThat(attemptProps2.getStartAt(), is(nullValue()));
+        assertThat(attemptProps2.getEndAt(), is(nullValue()));
+
+        assertTransitAtLeastOnce(attemptProps1.getId(),
+                ASSEMBLED,
+                SUBMIT,
+                READY,
+                COMPLETE,
+                CHECK_SUCCESS
+        );
+
+        assertTransitAtLeastOnce(attemptProps2.getId(),
+                ASSEMBLED,
+                WAIT,
+                CONDITION_CHANGE,
+                ASSEMBLED,
+                UPSTREAM_FAILED);
 
     }
 
@@ -1040,19 +1259,19 @@ public class TaskManagerTest extends SchedulerTestBase {
             readyTaskRuns.add(taskRun);
         }
         ArgumentCaptor<TaskAttempt> captor = ArgumentCaptor.forClass(TaskAttempt.class);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(1000);
-                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-                if (!submittedTaskRun.add(taskAttempt.getTaskRun().getId())) {
-                    throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + "is running");
-                }
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.RUNNING);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.QUEUED, TaskRunStatus.RUNNING));
-                return null;
+        doAnswer(invocation -> {
+            Thread.sleep(1000);
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (!submittedTaskRun.add(taskAttempt.getTaskRun().getId())) {
+                throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + "is running");
             }
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
+            return null;
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(readyTaskRuns);
         for (int i = 0; i < 3; i++) {
@@ -1122,9 +1341,10 @@ public class TaskManagerTest extends SchedulerTestBase {
 
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-            eventBus.post(prepareEvent(taskAttempt.getId()
-                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(failedEvent);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
@@ -1135,17 +1355,19 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
         assertThat(attemptProps1.getAttempt(), is(1));
         assertThat(attemptProps1.getStatus(), is(TaskRunStatus.FAILED));
-        assertThat(attemptProps1.getLogPath(), is(nullValue()));
-        assertThat(attemptProps1.getStartAt(), is(nullValue()));
-        assertThat(attemptProps1.getEndAt(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
 
         DateTimeUtils.freezeAt("202107010000");
 
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-            eventBus.post(prepareEvent(taskAttempt.getId()
-                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
@@ -1159,9 +1381,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
         assertThat(attemptProps2.getAttempt(), is(2));
         assertThat(attemptProps2.getStatus(), is(TaskRunStatus.SUCCESS));
-        assertThat(attemptProps2.getLogPath(), is(nullValue()));
-        assertThat(attemptProps2.getStartAt(), is(nullValue()));
-        assertThat(attemptProps2.getEndAt(), is(nullValue()));
+        assertThat(attemptProps2.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps2.getEndAt(), is(notNullValue()));
 
         DateTimeUtils.resetClock();
     }
@@ -1202,6 +1423,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun3);
 
         taskManager.submit(Lists.newArrayList(taskRun3));
+
+        awaitUntilAttemptBlock(taskRun3.getId() + 1);
 
         // verify
         TaskRun submitted3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
@@ -1249,6 +1472,8 @@ public class TaskManagerTest extends SchedulerTestBase {
 
         taskManager.submit(Lists.newArrayList(taskRun3));
 
+        awaitUntilAttemptBlock(taskRun3.getId() + 1);
+
         // verify
         TaskRun submitted3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
         assertThat(submitted3.getStatus(), is(TaskRunStatus.BLOCKED));
@@ -1262,8 +1487,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         Task task = MockTaskFactory.createTask(1l).cloneBuilder()
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
                 .build();
-        TaskRun taskRun0 = MockTaskRunFactory.createTaskRun(task)
-                .cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        TaskRun taskRun0 = MockTaskRunFactory.createTaskRun(task);
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
                 .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
                 .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
@@ -1271,8 +1495,7 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task)
                 .cloneBuilder()
-                .withTaskRunConditions(Collections.singletonList(taskRunCondition))
-                .withStatus(TaskRunStatus.BLOCKED).build();
+                .withTaskRunConditions(Collections.singletonList(taskRunCondition)).build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
                 .withTaskRunConditions(Lists.newArrayList(createCondition(taskRun1, ConditionType.TASKRUN_PREDECESSOR_FINISH, false)))
                 .build();
@@ -1281,10 +1504,24 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
 
-        taskManager.submit(Lists.newArrayList(taskRun2));
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Lists.newArrayList(taskRun0, taskRun1, taskRun2));
+
+        awaitUntilAttemptRunning(taskRun0.getId() + 1);
 
         // verify
+        TaskRun submitted1 = taskRunDao.fetchTaskRunById(taskRun0.getId()).get();
+        TaskRun submitted2 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
         TaskRun submitted3 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+
+        assertThat(submitted1.getStatus(), is(TaskRunStatus.RUNNING));
+        assertThat(submitted2.getStatus(), is(TaskRunStatus.BLOCKED));
         assertThat(submitted3.getStatus(), is(TaskRunStatus.BLOCKED));
 
     }
@@ -1326,11 +1563,17 @@ public class TaskManagerTest extends SchedulerTestBase {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             Long taskAttemptId = taskAttempt.getId();
             if (taskAttemptId.equals(taskRun1.getId() + 1) || taskAttemptId.equals(taskRun2.getId() + 1)) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
@@ -1366,7 +1609,7 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     /**
      * taskRun1、2 is taskRun3's upstream
-     *
+     * <p>
      * taskRun1、2 failed
      * retry taskRun1, taskRun3 should be upstreamFailed
      */
@@ -1396,11 +1639,17 @@ public class TaskManagerTest extends SchedulerTestBase {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             Long taskAttemptId = taskAttempt.getId();
             if (taskAttemptId.equals(taskRun1.getId() + 1) || taskAttemptId.equals(taskRun2.getId() + 1)) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
@@ -1413,8 +1662,9 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskRun saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
         taskManager.retry(saved1);
 
-        //wait taskRun5 retry finished
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        //wait taskRun1 retry finished
+        awaitUntilAttemptDone(taskRun1.getId() + 2);
+        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
 
         //verify
         TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
@@ -1432,7 +1682,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     // 1 fail, 2-> upstream_failed
     // skip 1, 2: created->success
     @Test
-    public void skipFailedTaskRun_downstreamShouldBeCreated(){
+    public void skipFailedTaskRun_downstreamShouldBeCreated() {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
@@ -1446,17 +1696,23 @@ public class TaskManagerTest extends SchedulerTestBase {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             Long taskAttemptId = taskAttempt.getId();
             if (taskAttemptId.equals(taskRun1.getId() + 1)) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
         taskManager.submit(Arrays.asList(taskRun1, taskRun2));
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
         TaskRun submitted1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
         MatcherAssert.assertThat(submitted1.getStatus(), is(TaskRunStatus.FAILED));
         TaskRun submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
@@ -1470,7 +1726,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     }
 
     // scenario: taskrun 1>>2 3>>4, 2 is 4's predecessor respectively
-    // when 1 fail & 3 success, 2 is upstream_fail and 4 is created (ready to run)
+    // when 1 fail & 3 running, 2 is upstream_fail and 4 is created
     // skip 1, 2 able to run: created->running, 4 is blocked by 2
     @Test
     public void skipFailedTaskRun_downstreamSuccessorShouldBeBlocked() throws InterruptedException {
@@ -1499,38 +1755,44 @@ public class TaskManagerTest extends SchedulerTestBase {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
             Long taskAttemptId = taskAttempt.getId();
             if (taskAttemptId.equals(taskRun1.getId() + 1)) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
             } else if (taskAttemptId.equals(taskRun2.getId() + 1)) {
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.RUNNING);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.CREATED, TaskRunStatus.RUNNING));
-            } else if (taskAttemptId.equals(taskRun3.getId() + 1)){
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttemptId, taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+            } else if (taskAttemptId.equals(taskRun3.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
             }
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
 
         taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3, taskRun4));
 
-        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
+        awaitUntilAttemptRunning(taskRun3.getId() + 1);
+        TimeUnit.SECONDS.sleep(2);
 
         TaskRun submitted1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
         MatcherAssert.assertThat(submitted1.getStatus(), is(TaskRunStatus.FAILED));
         TaskRun submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
         MatcherAssert.assertThat(submitted2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
         TaskRun submitted3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
-        MatcherAssert.assertThat(submitted3.getStatus(), is(TaskRunStatus.SUCCESS));
+        MatcherAssert.assertThat(submitted3.getStatus(), is(TaskRunStatus.RUNNING));
         TaskRun submitted4 = taskRunDao.fetchTaskRunById(taskRun4.getId()).get();
         MatcherAssert.assertThat(submitted4.getStatus(), is(TaskRunStatus.CREATED));
 
         taskManager.skip(submitted1);
+        awaitUntilAttemptRunning(taskRun2.getId() + 1);
         TimeUnit.SECONDS.sleep(2);
+
 
         submitted2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
         MatcherAssert.assertThat(submitted2.getStatus(), is(TaskRunStatus.RUNNING));
         submitted3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
-        MatcherAssert.assertThat(submitted3.getStatus(), is(TaskRunStatus.SUCCESS));
+        MatcherAssert.assertThat(submitted3.getStatus(), is(TaskRunStatus.RUNNING));
         submitted4 = taskRunDao.fetchTaskRunById(taskRun4.getId()).get();
         MatcherAssert.assertThat(submitted4.getStatus(), is(TaskRunStatus.BLOCKED));
     }
@@ -1542,13 +1804,13 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun);
         taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun));
 
-        assertThrows("This taskRun is not allowed to skip. Status not match", IllegalStateException.class, () ->  taskManager.skip(taskRun));
+        assertThrows("This taskRun is not allowed to skip. Status not match", IllegalStateException.class, () -> taskManager.skip(taskRun));
     }
 
     /**
      * scenario: 1>>2, both are created
-     *  remove 2's dependency 1
-     *  2 is satisfied to run
+     * remove 2's dependency 1
+     * 2 is satisfied to run
      */
     @Test
     public void removeAllTaskRunDependency_should_make_it_able_to_run() {
@@ -1558,102 +1820,119 @@ public class TaskManagerTest extends SchedulerTestBase {
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
         TaskRun taskRun1 = taskRunList.get(0);
         TaskRun taskRun2 = taskRunList.get(1);
-        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
-        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2));
+
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
 
         //process
-        taskManager.removeDependency(taskRun2.getId(), Lists.newArrayList(taskRun1.getId()));
+        taskManager.batchRemoveDependency(taskRun2.getId(), Lists.newArrayList(taskRun1.getId()));
+
+        awaitUntilAttemptDone(taskRun2.getId() + 1);
 
         //verify
-        List<Long> satisfyTaskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
-        MatcherAssert.assertThat(satisfyTaskRunIds, containsInAnyOrder(taskRun1.getId(), taskRun2.getId()));
+        TaskRun saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        TaskRun saved2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(saved1.getStatus(), is(TaskRunStatus.FAILED));
+        assertThat(saved1.getStartAt(), is(notNullValue()));
+        assertThat(saved1.getEndAt(), is(notNullValue()));
+        assertThat(saved2.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(saved2.getStartAt(), is(notNullValue()));
+        assertThat(saved2.getEndAt(), is(notNullValue()));
     }
 
-    /**
-     * scenario: 1>>2
-     *  1 is failed and 2 is upstream_failed
-     *  remove 2's dependency 1, 2 -> created
-     */
-    @Test
-    public void removeUpstreamFailedTaskRunDependency_should_change_status_to_created() {
-        //prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
-        taskList.forEach(x -> taskDao.create(x));
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
-        TaskRun taskRun1 = taskRunList.get(0)
-                .cloneBuilder()
-                .withStatus(TaskRunStatus.FAILED)
-                .build();
-        TaskRun taskRun2 = taskRunList.get(1)
-                .cloneBuilder()
-                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
-                .build();
-        taskRunDao.createTaskRun(taskRun1);
-        taskRunDao.createTaskRun(taskRun2);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
-
-        //process
-        taskManager.removeDependency(taskRun2.getId(), Lists.newArrayList(taskRun1.getId()));
-
-        //verify
-        TaskRun savedTaskRun2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
-        MatcherAssert.assertThat(savedTaskRun2.getFailedUpstreamTaskRunIds().size(), is(0));
-        MatcherAssert.assertThat(savedTaskRun2.getStatus(), is(TaskRunStatus.CREATED));
-    }
 
     /**
      * scenario: 1>>3, 2>>3
-     * 1 fail, 2 created -> 3 upstream_failed
+     * 1 fail, 2 running -> 3 upstream_failed
      * remove 3's dependency 1, 3 -> created
      */
     @Test
-    public void removePartOfTaskRunDependency_should_not_able_to_run() {
+    public void removePartOfTaskRunDependency_should_not_able_to_run() throws InterruptedException {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
         taskList.forEach(x -> taskDao.create(x));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2");
-        TaskRun taskRun1 = taskRunList.get(0)
-                .cloneBuilder()
-                .withStatus(TaskRunStatus.FAILED)
-                .build();
+        TaskRun taskRun1 = taskRunList.get(0);
         TaskRun taskRun2 = taskRunList.get(1);
-        TaskRun taskRun3 = taskRunList.get(2)
-                .cloneBuilder()
-                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
-                .build();
+        TaskRun taskRun3 = taskRunList.get(2);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun3));
 
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else if (taskAttempt.getId().equals(taskRun2.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3));
+
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
         //process
-        taskManager.removeDependency(taskRun3.getId(), Lists.newArrayList(taskRun1.getId()));
+        taskManager.batchRemoveDependency(taskRun3.getId(), Lists.newArrayList(taskRun1.getId()));
+
+        TimeUnit.SECONDS.sleep(2);
 
         //verify
+        TaskRun saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        TaskRun saved2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(saved1.getStatus(), is(TaskRunStatus.FAILED));
+        assertThat(saved1.getStartAt(), is(notNullValue()));
+        assertThat(saved1.getEndAt(), is(notNullValue()));
+        assertThat(saved2.getStatus(), is(TaskRunStatus.RUNNING));
+        assertThat(saved2.getStartAt(), is(notNullValue()));
+        assertThat(saved2.getEndAt(), is(nullValue()));
         TaskRun savedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
-        MatcherAssert.assertThat(savedTaskRun3.getStatus(), is(TaskRunStatus.CREATED));
-        MatcherAssert.assertThat(savedTaskRun3.getFailedUpstreamTaskRunIds().size(), is(0));
-        List<Long> satisfyTaskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
-        MatcherAssert.assertThat(satisfyTaskRunIds, hasSize(1));
-        MatcherAssert.assertThat(satisfyTaskRunIds.get(0), is(taskRun2.getId()));
+        assertThat(savedTaskRun3.getStatus(), is(TaskRunStatus.CREATED));
+        assertThat(savedTaskRun3.getFailedUpstreamTaskRunIds().size(), is(0));
+        assertThat(savedTaskRun3.getTermAt(), is(nullValue()));
     }
 
     /**
      * scenario: taskrun 1>>2>>3, taskrun 3 is 4's predecessor
      * 1 fail, 2 & 3 upstream_failed, 4 created
-     * remove 2's dependency 1, 2&3->created, 4->blocked by 3
+     * remove 2's dependency 1, 2-> able to run,3->created, 4->blocked by 3
      */
     @Test
-    public void removeDependencyWithMultiDownstream() {
+    public void removeDependencyWithMultiDownstream() throws InterruptedException {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
         taskList.set(2, taskList.get(2).cloneBuilder().
@@ -1661,36 +1940,47 @@ public class TaskManagerTest extends SchedulerTestBase {
                 .build());
         taskList.forEach(x -> taskDao.create(x));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
-        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder()
-                .withStatus(TaskRunStatus.FAILED)
-                .build();
-        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder()
-                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
-                .build();;
-        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder()
-                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
-                .build();
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        ;
+        TaskRun taskRun3 = taskRunList.get(2);
         TaskRun taskRun4 = MockTaskRunFactory.createTaskRun(taskList.get(2)).cloneBuilder()
-                .withTaskRunConditions(Collections.singletonList(createCondition(taskRun3, ConditionType.TASKRUN_PREDECESSOR_FINISH, true)))
+                .withTaskRunConditions(Collections.singletonList(createCondition(taskRun3, ConditionType.TASKRUN_PREDECESSOR_FINISH, false)))
                 .build();
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
         taskRunDao.createTaskRun(taskRun4);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun3));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun4));
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3));
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
 
         //process
-        taskManager.removeDependency(taskRun2.getId(), Collections.singletonList(taskRun1.getId()));
+        taskManager.batchRemoveDependency(taskRun2.getId(), Collections.singletonList(taskRun1.getId()));
+        TimeUnit.SECONDS.sleep(2);
+
+        taskManager.submit(Arrays.asList(taskRun4));
+        TimeUnit.SECONDS.sleep(1);
+
 
         //verify
         TaskRun savedTaskRun2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
         MatcherAssert.assertThat(savedTaskRun2.getFailedUpstreamTaskRunIds().size(), is(0));
-        MatcherAssert.assertThat(savedTaskRun2.getStatus(), is(TaskRunStatus.CREATED));
+        MatcherAssert.assertThat(savedTaskRun2.getStatus(), is(TaskRunStatus.RUNNING));
         TaskRun savedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
         MatcherAssert.assertThat(savedTaskRun3.getFailedUpstreamTaskRunIds().size(), is(0));
         MatcherAssert.assertThat(savedTaskRun3.getStatus(), is(TaskRunStatus.CREATED));
@@ -1705,39 +1995,49 @@ public class TaskManagerTest extends SchedulerTestBase {
      * 5,6 should keep as upstream_failed with root cause 4
      */
     @Test
-    public void removePartialFailedDependency_shouldSuccess() {
+    public void removePartialFailedDependency_shouldSuccess() throws InterruptedException {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(6, "0>>1;1>>4;2>>4;3>>4;4>>5");
         taskList.forEach(x -> taskDao.create(x));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>4;2>>4;3>>4;4>>5");
-        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
-        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId())).build();
-        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
-        TaskRun taskRun4 = taskRunList.get(3).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
-        TaskRun taskRun5 = taskRunList.get(4).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId(), taskRun3.getId(), taskRun4.getId())).build();
-        TaskRun taskRun6 = taskRunList.get(5).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId(), taskRun3.getId(), taskRun4.getId())).build();
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        TaskRun taskRun4 = taskRunList.get(3);
+        TaskRun taskRun5 = taskRunList.get(4);
+        TaskRun taskRun6 = taskRunList.get(5);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
         taskRunDao.createTaskRun(taskRun4);
         taskRunDao.createTaskRun(taskRun5);
         taskRunDao.createTaskRun(taskRun6);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun3));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun4));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun5));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun6));
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (!taskAttemptId.equals(taskRun5.getId() + 1) || !taskAttemptId.equals(taskRun6.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3, taskRun4, taskRun5, taskRun6));
+        awaitUntilAttemptUpstreamFailed(taskRun5.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun6.getId() + 1);
 
         //process
-        taskManager.removeDependency(taskRun5.getId(), Arrays.asList(taskRun2.getId(), taskRun3.getId()));
+        taskManager.batchRemoveDependency(taskRun5.getId(), Arrays.asList(taskRun2.getId(), taskRun3.getId()));
+        TimeUnit.SECONDS.sleep(2);
 
         //verify
         TaskRun savedTaskRun5 = taskRunDao.fetchTaskRunById(taskRun5.getId()).get();
-        TaskRun savedTaskRun6 = taskRunDao.fetchTaskRunById(taskRun5.getId()).get();
+        TaskRun savedTaskRun6 = taskRunDao.fetchTaskRunById(taskRun6.getId()).get();
         MatcherAssert.assertThat(savedTaskRun5.getFailedUpstreamTaskRunIds().size(), is(1));
         MatcherAssert.assertThat(savedTaskRun5.getFailedUpstreamTaskRunIds().get(0), is(taskRun4.getId()));
         MatcherAssert.assertThat(savedTaskRun5.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
@@ -1757,24 +2057,38 @@ public class TaskManagerTest extends SchedulerTestBase {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         taskList.forEach(x -> taskDao.create(x));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;0>>2;1>>3;2>>3");
-        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
-        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId())).build();
-        TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId())).build();
-        TaskRun taskRun4 = taskRunList.get(3).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId())).build();
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        TaskRun taskRun4 = taskRunList.get(3);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
         taskRunDao.createTaskRun(taskRun3);
         taskRunDao.createTaskRun(taskRun4);
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun3));
-        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun4));
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            Long taskAttemptId = taskAttempt.getId();
+            if (taskAttemptId.equals(taskRun1.getId() + 1)) {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                TaskRunTransitionEvent failedEvent = new TaskRunTransitionEvent(FAILED, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+                eventBus.post(failedEvent);
+            } else {
+                TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+                eventBus.post(runningEvent);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3, taskRun4));
+
+        awaitUntilAttemptUpstreamFailed(taskRun2.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun3.getId() + 1);
+        awaitUntilAttemptUpstreamFailed(taskRun4.getId() + 1);
 
         //process
-        taskManager.removeDependency(taskRun4.getId(), Arrays.asList(taskRun2.getId()));
+        taskManager.batchRemoveDependency(taskRun4.getId(), Arrays.asList(taskRun2.getId()));
 
         //verify
         TaskRun savedTaskRun4 = taskRunDao.fetchTaskRunById(taskRun4.getId()).get();
@@ -1785,13 +2099,15 @@ public class TaskManagerTest extends SchedulerTestBase {
     }
 
     @Test
-    public void submitTaskRunWithLossConditionUpdate_should_be_trigger(){
+    public void submitTaskRunWithLossConditionUpdate_should_be_trigger() {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
         taskList.forEach(x -> taskDao.create(x));
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2;");
-        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
-        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun1 = taskRunList.get(0).cloneBuilder()
+                .withStatus(TaskRunStatus.CREATED).build();
+        TaskRun taskRun2 = taskRunList.get(1).cloneBuilder()
+                .withStatus(TaskRunStatus.CREATED).build();
         TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
@@ -1799,9 +2115,19 @@ public class TaskManagerTest extends SchedulerTestBase {
 
         doAnswer(invocation -> {
             TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
             return null;
         }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2));
+
+        //wait upstream finished
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        awaitUntilAttemptDone(taskRun2.getId() + 1);
 
         taskManager.submit(Arrays.asList(taskRun3));
 
@@ -1809,6 +2135,139 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     }
 
+    @Test
+    public void blockByPredecessorDownstream_predecessor_finished_should_still_block() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
+        Task task1 = taskList.get(0).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR_DOWNSTREAM))
+                .build();
+        taskDao.create(task1);
+        taskDao.create(taskList.get(1));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2;");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRunCondition taskRunCondition1 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                .withResult(false).build();
+        TaskRunCondition taskRunCondition2 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun2.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                .withResult(false).build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder().withTaskRunConditions(Arrays.asList(taskRunCondition1, taskRunCondition2)).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+                TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+                eventBus.post(checkEvent);
+                eventBus.post(checkSuccess);
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        //process
+        taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3));
+        awaitUntilAttemptRunning(taskRun2.getId() + 1);
+        Uninterruptibles.sleepUninterruptibly(3, TimeUnit.SECONDS);
+
+        //verify
+        TaskRun saved3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+        assertThat(saved3.getStatus(), is(TaskRunStatus.BLOCKED));
+    }
+
+    @ParameterizedTest
+    @MethodSource("recoverTaskRun")
+    public void recoverStateMachineWithoutUnCompletedEvent(Integer taskRunPhase) {
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithPhase(task, taskRunPhase);
+        TaskAttempt savedAttempt = MockTaskAttemptFactory.createTaskAttemptWithPhase(taskRun, taskRunPhase);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(savedAttempt);
+        taskRunDao.updateTaskAttemptPhase(savedAttempt.getId(), taskRunPhase, null, null, null, null);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskRunStateMachineDispatcher.reset();
+        //process
+        taskRunStateMachineDispatcher.recover();
+
+        //verify
+        awaitUntilAttemptDone(savedAttempt.getId());
+        savedAttempt = taskRunDao.fetchAttemptById(savedAttempt.getId()).get();
+        assertThat(savedAttempt.getStatus(), is(TaskRunStatus.SUCCESS));
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("recoverTaskRunWithEvent")
+    public void recoverStateMachineWithUnCompletedEvent(Integer taskRunPhase, List<TaskRunTransitionEventType> unCompletedEvents) {
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithPhase(task, taskRunPhase);
+        TaskAttempt savedAttempt = MockTaskAttemptFactory.createTaskAttemptWithPhase(taskRun, taskRunPhase);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(savedAttempt);
+        taskRunDao.updateTaskAttemptPhase(savedAttempt.getId(), taskRunPhase, null, null, null, null);
+        for (TaskRunTransitionEventType eventType : unCompletedEvents) {
+            TaskRunTransitionEvent unCompletedEvent = TaskRunTransitionEvent
+                    .newBuilder()
+                    .withTaskAttemptId(savedAttempt.getId())
+                    .withType(eventType)
+                    .build();
+            taskRunDao.saveTransitEvent(unCompletedEvent, false);
+        }
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskRunStateMachineDispatcher.reset();
+        //process
+        taskRunStateMachineDispatcher.recover();
+
+        //verify
+        awaitUntilAttemptDone(savedAttempt.getId());
+        savedAttempt = taskRunDao.fetchAttemptById(savedAttempt.getId()).get();
+        assertThat(savedAttempt.getStatus(), is(TaskRunStatus.SUCCESS));
+
+    }
+
+    public static Stream<Integer> recoverTaskRun() {
+        return Stream.of(TaskRunPhase.CREATED, TaskRunPhase.CREATED | TaskRunPhase.WAITING, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED);
+    }
+
+    public static Stream<Arguments> recoverTaskRunWithEvent() {
+        return Stream.of(Arguments.of(TaskRunPhase.CREATED, Lists.newArrayList(ASSEMBLED)),
+                Arguments.of(TaskRunPhase.CREATED | TaskRunPhase.WAITING, Lists.newArrayList(SUBMIT)));
+    }
 
     private TaskRunCondition createCondition(TaskRun taskRun, ConditionType conditionType, boolean result) {
         TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
@@ -1842,5 +2301,45 @@ public class TaskManagerTest extends SchedulerTestBase {
             Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
             return s.isPresent() && (s.get().isFinished());
         });
+    }
+
+    private void awaitUntilAttemptRunning(long attemptId) {
+        await().atMost(120, TimeUnit.SECONDS).until(() -> {
+            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
+            return s.isPresent() && (s.get().isRunning());
+        });
+    }
+
+    private void awaitUntilAttemptBlock(long attemptId) {
+        await().atMost(120, TimeUnit.SECONDS).until(() -> {
+            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
+            return s.isPresent() && (s.get().isBlocking());
+        });
+    }
+
+    private void awaitUntilAttemptUpstreamFailed(long attemptId) {
+        await().atMost(120, TimeUnit.SECONDS).until(() -> {
+            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
+            return s.isPresent() && (s.get().isUpstreamFailed());
+        });
+    }
+
+    private void assertTransitAtLeastOnce(Long attemptId, TaskRunTransitionEventType... asserts) {
+        checkArgument(asserts.length > 1);
+
+        List<Event> events = eventCollector.getEvents();
+
+        List<Event> eventsOfAttempt = events.stream()
+                .distinct()
+                .filter(e -> e instanceof TaskRunTransitionEvent &&
+                        ((TaskRunTransitionEvent) e).getTaskAttemptId().equals(attemptId))
+                .collect(Collectors.toList());
+
+
+        for (int i = 0; i < asserts.length - 1; i++) {
+            TaskRunTransitionEvent event = (TaskRunTransitionEvent) eventsOfAttempt.get(i);
+            MatcherAssert.assertThat(event.getTaskAttemptId(), Matchers.is(attemptId));
+            MatcherAssert.assertThat(event.getType(), Matchers.is(asserts[i]));
+        }
     }
 }

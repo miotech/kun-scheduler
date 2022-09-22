@@ -2,118 +2,188 @@ package com.miotech.kun.workflow.core.model.taskrun;
 
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class BasicTaskRunState implements TaskRunState{
+import java.util.HashMap;
+import java.util.Map;
 
-    private final TaskRunStatus taskRunStatus;
+public class BasicTaskRunState implements TaskRunState {
 
-    public BasicTaskRunState(TaskRunStatus taskRunStatus) {
-        this.taskRunStatus = taskRunStatus;
+    protected final Logger logger = LoggerFactory.getLogger(BasicTaskRunState.class);
+    protected Integer taskRunParse;
+    private Map<TaskRunTransitionEventType, TaskRunAction> taskRunActionMap = new HashMap<>();
+
+    public BasicTaskRunState(Integer taskRunParse) {
+        this.taskRunParse = taskRunParse;
     }
 
     @Override
-    public TaskRunStatus doTransition(TaskRunTransitionEvent taskRunTransitionEvent) {
+    public TaskRunState doTransition(TaskRunSMMessage message) {
+        TaskRunTransitionEvent taskRunTransitionEvent = message.getEvent();
         TaskRunTransitionEventType eventType = taskRunTransitionEvent.getType();
-        TaskRunStatus nextStatus = null;
-        switch (eventType){
+        TaskRunState nextState = null;
+        switch (eventType) {
+            case RECOVER:
+                nextState = onRecover();
+                break;
             case RESCHEDULE:
-                nextStatus = onReschedule();
+                nextState = onReschedule();
+                break;
+            case RESET:
+                nextState = onReSet();
+                break;
+            case ASSEMBLED:
+                nextState = onAssembled();
+                break;
+            case WAIT:
+                nextState = onWait();
                 break;
             case SUBMIT:
-                nextStatus = onSubmit();
+                nextState = onSubmit();
                 break;
             case EXCEPTION:
-                nextStatus = onException();
+                nextState = onException();
                 break;
-            case RUNNING:
-                nextStatus = onRunning();
+            case READY:
+                nextState = onReady();
                 break;
             case UPSTREAM_FAILED:
-                nextStatus = onUpstreamFailed();
+                nextState = onUpstreamFailed();
                 break;
             case HANGUP:
-                nextStatus = onHangup();
-                break;
-            case AWAKE:
-                nextStatus = onAwake();
+                nextState = onHangup();
                 break;
             case FAILED:
-                nextStatus = onFailed();
+                nextState = onFailed();
                 break;
-            case CHECK:
-                nextStatus = onCheck();
+            case COMPLETE:
+                nextState = onCheck();
                 break;
             case CHECK_SUCCESS:
-                nextStatus = onCheckSuccess();
+                nextState = onCheckSuccess();
                 break;
             case CHECK_FAILED:
-                nextStatus = onCheckFailed();
+                nextState = onCheckFailed();
                 break;
             case ABORT:
-                nextStatus = onAbort();
+                nextState = onAbort();
                 break;
             case SKIP:
-                nextStatus = onSkip();
+                nextState = onSkip();
+                break;
+            case CONDITION_CHANGE:
+                nextState = onUpstreamFinished();
+                break;
+            case CONDITION_REMOVE:
+                nextState = onConditionRemoved();
                 break;
             default:
                 //do nothing
         }
-        return nextStatus;
-    }
+        TaskRunAction taskRunAction = taskRunActionMap.get(eventType);
+        logger.info("going to do action for {} when receive event {}", taskRunParse, eventType.name());
+        if (taskRunAction == null) {
+            logger.warn("not action register for {} when receive event {}", taskRunParse, eventType.name());
+        } else {
+            taskRunAction.run(message);
+        }
 
-    protected TaskRunStatus onReschedule(){
-        throw new IllegalStateException("Reschedule is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onSubmit(){
-        throw new IllegalStateException("Submit is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onException(){
-        throw new IllegalStateException("exception is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onRunning(){
-        throw new IllegalStateException("Running is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onCheck(){
-        throw new IllegalStateException("Check is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onFailed(){
-        throw new IllegalStateException("Failed is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onUpstreamFailed(){
-        throw new IllegalStateException("UpstreamFailed is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onHangup(){
-        throw new IllegalStateException("Hangup is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onAbort(){
-        throw new IllegalStateException("Abort is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onCheckSuccess(){
-        throw new IllegalStateException("CheckSuccess is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onCheckFailed(){
-        throw new IllegalStateException("CheckFailed is not support for status : " + taskRunStatus);
-    }
-
-    protected TaskRunStatus onAwake(){
-        throw new IllegalStateException("Awake is not support for status : " + taskRunStatus);
-    }
-    protected TaskRunStatus onSkip() {
-        throw new IllegalStateException("Skip is not support for status: " + taskRunStatus);
+        return nextState;
     }
 
     @Override
-    public TaskRunStatus getStatus() {
-        return taskRunStatus;
+    public void afterTransition(TaskRunTransitionEvent taskRunTransitionEvent, TaskAttempt taskAttempt) {
+        //do nothing
     }
+
+    @Override
+    public void registerAction(TaskRunTransitionEventType eventType, TaskRunAction taskRunAction) {
+        taskRunActionMap.put(eventType, taskRunAction);
+    }
+
+    @Override
+    public Integer getPhase() {
+        return taskRunParse;
+    }
+
+    @Override
+    public String toString() {
+        return "BasicTaskRunState{" +
+                "taskRunParse=" + taskRunParse +
+                '}';
+    }
+
+    protected TaskRunState onRecover(){
+        throw new IllegalStateException("Recover is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onReSet() {
+        throw new IllegalStateException("Reset is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onAssembled() {
+        throw new IllegalStateException("Assembled is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onWait(){
+        throw new IllegalStateException("Wait is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onUpstreamFinished() {
+        throw new IllegalStateException("UpstreamFinished is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onConditionRemoved(){
+        throw new IllegalStateException("ConditionRemoved is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onReady() {
+        throw new IllegalStateException("ready is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onReschedule() {
+        throw new IllegalStateException("Reschedule is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onSubmit() {
+        throw new IllegalStateException("Submit is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onException() {
+        throw new IllegalStateException("exception is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onCheck() {
+        throw new IllegalStateException("Check is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onFailed() {
+        throw new IllegalStateException("Failed is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onUpstreamFailed() {
+        throw new IllegalStateException("UpstreamFailed is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onHangup() {
+        throw new IllegalStateException("Hangup is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onAbort() {
+        throw new IllegalStateException("Abort is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onCheckSuccess() {
+        throw new IllegalStateException("CheckSuccess is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onCheckFailed() {
+        throw new IllegalStateException("CheckFailed is not support for phase : " + taskRunParse);
+    }
+
+    protected TaskRunState onSkip() {
+        throw new IllegalStateException("Skip is not support for phase: " + taskRunParse);
+    }
+
 }

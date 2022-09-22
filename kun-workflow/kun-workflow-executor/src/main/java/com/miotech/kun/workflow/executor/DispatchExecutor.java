@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DispatchExecutor implements Executor{
+public class DispatchExecutor implements Executor {
 
     private final Logger logger = LoggerFactory.getLogger(DispatchExecutor.class);
 
@@ -46,12 +46,12 @@ public class DispatchExecutor implements Executor{
             String executorName = executorConfig.getName();
             ExecutorKind executorKind = ExecutorKind.valueOf(executorConfig.getKind().toUpperCase());
             Executor executor;
-            if(executorKind.equals(ExecutorKind.LOCAL)){
+            if (executorKind.equals(ExecutorKind.LOCAL)) {
                 executor = new LocalExecutor(executorConfig);
-                taskLabelToExecutorNameMap.put("LOCAL",executorName);
-            } else if(executorKind.equals(ExecutorKind.KUBERNETES)){
+                taskLabelToExecutorNameMap.put("LOCAL", executorName);
+            } else if (executorKind.equals(ExecutorKind.KUBERNETES)) {
                 KubeExecutorConfig kubeExecutorConfig = (KubeExecutorConfig) executorConfig;
-                executor = new KubernetesExecutor(kubeExecutorConfig,executorName);
+                executor = new KubernetesExecutor(kubeExecutorConfig, executorName);
                 String[] labels = StringUtils.split(kubeExecutorConfig.getLabel(), ",");
                 for (String label : labels) {
                     taskLabelToExecutorNameMap.put(label, executorName);
@@ -80,7 +80,7 @@ public class DispatchExecutor implements Executor{
     public boolean submit(TaskAttempt taskAttempt) {
         Executor executor = findExecutor(taskAttempt);
         String runtimeLabel = defaultExecutor;
-        if(taskAttempt.getExecutorLabel() != null){
+        if (taskAttempt.getExecutorLabel() != null) {
             runtimeLabel = taskAttempt.getExecutorLabel();
         }
         TaskAttempt attemptWithLabel = taskAttempt.cloneBuilder()
@@ -88,6 +88,18 @@ public class DispatchExecutor implements Executor{
                 .build();
         taskRunDao.updateAttempt(attemptWithLabel);
         return executor.submit(attemptWithLabel);
+    }
+
+    @Override
+    public void execute(TaskAttempt taskAttempt) {
+        Executor executor = findExecutor(taskAttempt);
+        executor.execute(taskAttempt);
+    }
+
+    @Override
+    public void check(TaskAttempt taskAttempt) {
+        Executor executor = findExecutor(taskAttempt);
+        executor.check(taskAttempt);
     }
 
     @Override

@@ -4,8 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
-import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.config.ExecutorConfig;
@@ -73,9 +71,6 @@ public abstract class AbstractQueueManager {
                 throw new NoSuchElementException("no such queue,name = " + taskAttempt.getQueueName());
             }
             logger.debug("submit taskAttempt = {} to queue = {}", taskAttempt.getId(), queue.getName());
-            //post event must before behavior to ensure status transition events order
-            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.SUBMIT,taskAttempt.getId());
-            eventBus.post(taskRunTransitionEvent);
             queue.add(taskAttempt);
         } finally {
             lock.unlock();

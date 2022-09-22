@@ -40,7 +40,10 @@ public class TaskRunProps {
 
     private final ExecuteTarget executeTarget;
 
-    public TaskRunProps(Long id, Config config, Tick scheduledTick, ScheduleType scheduleType, TaskRunStatus status, OffsetDateTime queuedAt, OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt, Integer priority, String queueName, ExecuteTarget executeTarget) {
+    private final Integer taskRunPhase;
+
+    public TaskRunProps(Long id, Config config, Tick scheduledTick, ScheduleType scheduleType, TaskRunStatus status, OffsetDateTime queuedAt, OffsetDateTime startAt, OffsetDateTime endAt
+            , OffsetDateTime createdAt, OffsetDateTime updatedAt, Integer priority, String queueName, ExecuteTarget executeTarget, Integer taskRunPhase) {
         this.id = id;
         this.config = config;
         this.scheduledTick = scheduledTick;
@@ -54,6 +57,7 @@ public class TaskRunProps {
         this.priority = priority;
         this.queueName = queueName;
         this.executeTarget = executeTarget;
+        this.taskRunPhase = taskRunPhase;
     }
 
     public Long getId() {
@@ -108,6 +112,10 @@ public class TaskRunProps {
         return executeTarget;
     }
 
+    public Integer getTaskRunPhase() {
+        return taskRunPhase;
+    }
+
     public static TaskRunPropsBuilder newBuilder(){
         return new TaskRunPropsBuilder();
     }
@@ -146,6 +154,7 @@ public class TaskRunProps {
         private Integer priority;
         private String queueName;
         private ExecuteTarget executeTarget;
+        private Integer taskRunPhase;
 
 
         public TaskRunPropsBuilder withId(Long id) {
@@ -213,8 +222,13 @@ public class TaskRunProps {
             return this;
         }
 
+        public TaskRunPropsBuilder withTaskRunPhase(Integer taskRunPhase){
+            this.taskRunPhase = taskRunPhase;
+            return this;
+        }
+
         public TaskRunProps build() {
-            return new TaskRunProps(id, config, scheduledTick, scheduleType, status, queuedAt, startAt, endAt, createdAt, updatedAt, priority, queueName, executeTarget);
+            return new TaskRunProps(id, config, scheduledTick, scheduleType, status, queuedAt, startAt, endAt, createdAt, updatedAt, priority, queueName, executeTarget, taskRunPhase);
         }
     }
 }

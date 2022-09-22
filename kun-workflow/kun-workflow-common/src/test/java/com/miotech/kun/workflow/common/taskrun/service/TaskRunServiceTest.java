@@ -5,7 +5,9 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.LocalScheduler;
-import com.miotech.kun.workflow.TaskRunStateMachine;
+import com.miotech.kun.workflow.TaskRunSMExecutor;
+import com.miotech.kun.workflow.TaskRunStateMachineBuffer;
+import com.miotech.kun.workflow.TaskRunStateMachineDispatcher;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
@@ -29,7 +31,6 @@ import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
 import org.hamcrest.MatcherAssert;
@@ -79,14 +80,16 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Inject
     private Props props;
 
-    private TaskRunStateMachine taskRunStateMachine;
+    @Inject
+    private TaskRunStateMachineDispatcher taskRunStateMachineDispatcher;
 
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Override
     protected void configuration() {
         super.configuration();
-        bind(Executor.class,mock(Executor.class));
+        bind(Executor.class, mock(Executor.class));
+        bind(LineageService.class,mock(LineageService.class));
     }
 
 
@@ -101,8 +104,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 eventBus,
                 props
         ));
-        taskRunStateMachine = new TaskRunStateMachine(taskRunDao, eventBus, mock(LineageService.class));
-        taskRunStateMachine.start();
+        taskRunStateMachineDispatcher.start();
     }
 
     @Test
@@ -344,7 +346,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     public void fetchLatestTaskRunsOrderByCreateTime() {
         prepareTaskRuns();
         List<Long> taskIdsToQuery = Lists.newArrayList(22L);
-        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10,false);
+        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10, false);
         List<TaskRunVO> taskRunVOS = mappings.get(22L);
         assertThat(taskRunVOS, hasSize(2));
         assertThat(taskRunVOS.get(0).getId(), is(2L));
@@ -790,7 +792,7 @@ public class TaskRunServiceTest extends CommonTestBase {
             for (int task_index = 0; task_index < 3; task_index++) {
                 int processBase_hour = 1;
                 TaskRun taskRun = taskRuns.get(task_index).cloneBuilder()
-                        .withCreatedAt(baseTime.minusDays(3-day).plusHours(processBase_hour++)).build();
+                        .withCreatedAt(baseTime.minusDays(3 - day).plusHours(processBase_hour++)).build();
                 taskRunDao.createTaskRun(taskRun);
                 // average time is 0 when no prev success taskrun
                 if (day == 0) {
@@ -800,9 +802,9 @@ public class TaskRunServiceTest extends CommonTestBase {
                 }
                 taskRun = taskRun.cloneBuilder()
                         .withStatus(TaskRunStatus.SUCCESS)
-                        .withQueuedAt(baseTime.minusDays(3-day).plusHours(processBase_hour++))
-                        .withStartAt(baseTime.minusDays(3-day).plusHours(processBase_hour++))
-                        .withEndAt(baseTime.minusDays(3-day).plusHours(processBase_hour++)).build();
+                        .withQueuedAt(baseTime.minusDays(3 - day).plusHours(processBase_hour++))
+                        .withStartAt(baseTime.minusDays(3 - day).plusHours(processBase_hour++))
+                        .withEndAt(baseTime.minusDays(3 - day).plusHours(processBase_hour++)).build();
                 taskRunDao.updateTaskRun(taskRun);
             }
         }
@@ -849,10 +851,10 @@ public class TaskRunServiceTest extends CommonTestBase {
             taskRunDao.createTaskRun(taskRun);
             taskRun = taskRun.cloneBuilder()
                     .withStatus(TaskRunStatus.SUCCESS)
-                    .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
-                    .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-1))
-                    .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-3))
-                    .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-6))
+                    .withCreatedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index)))
+                    .withQueuedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 1))
+                    .withStartAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 3))
+                    .withEndAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 6))
                     .build();
             taskRunDao.updateTaskRun(taskRun);
             if (taskRun_index == 0) {
@@ -904,24 +906,24 @@ public class TaskRunServiceTest extends CommonTestBase {
             if (taskRun_index < 2) {
                 taskRun = taskRun.cloneBuilder()
                         .withStatus(TaskRunStatus.SUCCESS)
-                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
-                        .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-1))
-                        .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-3))
-                        .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-6))
+                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index)))
+                        .withQueuedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 1))
+                        .withStartAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 3))
+                        .withEndAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 6))
                         .build();
             } else if (taskRun_index == 2) {
                 taskRun = taskRun.cloneBuilder()
                         .withStatus(TaskRunStatus.FAILED)
-                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
-                        .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-1))
-                        .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-3))
-                        .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-6))
+                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index)))
+                        .withQueuedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 1))
+                        .withStartAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 3))
+                        .withEndAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index) - 6))
                         .build();
             } else {
                 taskRun = taskRun.cloneBuilder()
                         .withStatus(TaskRunStatus.UPSTREAM_FAILED)
-                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
-                        .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
+                        .withCreatedAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index)))
+                        .withEndAt(baseTime.minusHours(taskRunGap_hours * (5 - taskRun_index)))
                         .build();
             }
             taskRunDao.updateTaskRun(taskRun);
@@ -1022,7 +1024,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         for (int i = 0; i < 30; i++) {
             TaskRun taskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
                     .withStartAt(baseTime.plusMinutes(10))
-                    .withTermAt(baseTime.plusMinutes(20+i)).build();
+                    .withTermAt(baseTime.plusMinutes(20 + i)).build();
             taskRunDao.createTaskRun(taskRun);
         }
 
@@ -1113,7 +1115,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         });
 
         TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
-        assertThat(attemptProps2.getId(), Matchers.is(taskRun2.getId()+2));
+        assertThat(attemptProps2.getId(), Matchers.is(taskRun2.getId() + 2));
         assertThat(attemptProps2.getAttempt(), Matchers.is(2));
         assertThat(attemptProps2.getStatus(), Matchers.is(TaskRunStatus.SUCCESS));
     }

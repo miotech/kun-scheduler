@@ -56,6 +56,16 @@ public class KubernetesExecutor implements Executor {
         return true;
     }
 
+    @Override
+    public void execute(TaskAttempt taskAttempt) {
+        podLifeCycleManager.executeTaskAttempt(taskAttempt);
+    }
+
+    @Override
+    public void check(TaskAttempt taskAttempt) {
+        podLifeCycleManager.check(taskAttempt);
+    }
+
 
     @Override
     public void shutdown() {
