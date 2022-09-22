@@ -5,7 +5,9 @@ import com.miotech.kun.metadata.core.model.filter.FilterRule;
 import com.miotech.kun.metadata.core.model.filter.FilterRuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -19,16 +21,15 @@ import java.util.*;
  * @author: zemin  huang
  * @create: 2022-03-14 19:52
  **/
-@RequiredArgsConstructor
 @Service
 @Slf4j
 public class FilterRuleAppService {
     @Value("${metadata.base-url:localhost:8084}")
     String url;
-
-    private final RestTemplate restTemplate;
-
-    private final MetadataService metadataService;
+    @Autowired
+    private  RestTemplate restTemplate;
+    @Autowired
+    private  MetadataService metadataService;
 
     public void addDatasetStatistics(Long datasetId) {
         if (Objects.isNull(datasetId)) {

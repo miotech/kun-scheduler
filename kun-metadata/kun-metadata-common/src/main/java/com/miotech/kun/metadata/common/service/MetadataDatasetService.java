@@ -6,12 +6,14 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.common.utils.MetadataTypeConvertor;
 import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.search.DataSetResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.*;
@@ -115,9 +117,8 @@ public class MetadataDatasetService implements MetadataServiceFacade {
     }
 
     private Long getDataSourceIdByDatastore(DataStore dataStore) {
-        ConnectionInfo connectionInfo = dataStore.getConnectionInfo();
-        Long dataSourceId = dataSourceService.getDataSourceIdByConnectionInfo(dataStore.getType(), connectionInfo);
-        return dataSourceId;
+        DatasourceType datasourceType = MetadataTypeConvertor.covertStoreTypeToSourceType(dataStore.getType());
+        return dataSourceService.fetchDataSourceByConnectionInfo(datasourceType, dataStore.getConnectionConfigInfo());
     }
 
 

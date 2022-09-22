@@ -5,6 +5,7 @@ import com.miotech.kun.datadiscovery.service.SecurityRpcClient;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,6 +25,9 @@ public abstract class DataDiscoveryTestBase extends KunAppTestBase {
     protected WorkflowClient workflowClient;
     @MockBean
     protected RestTemplate restTemplate;
+
+    @Value("${metadata.base-url:localhost:8084}")
+    protected String url;
 
     @Configuration
     @EnableAutoConfiguration

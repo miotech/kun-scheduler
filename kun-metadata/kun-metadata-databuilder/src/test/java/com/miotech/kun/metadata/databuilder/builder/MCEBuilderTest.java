@@ -9,10 +9,9 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.common.service.FilterRuleService;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
-import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
@@ -20,6 +19,7 @@ import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.filter.FilterRule;
 import com.miotech.kun.metadata.core.model.filter.FilterRuleType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceBasicInfoRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.databuilder.container.PostgreSQLTestContainer;
 import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
@@ -36,6 +36,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -80,13 +81,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         // Start PostgreSQL Container
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
-        // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
-                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
-
-        DataSource dataSource = dataSourceService.create(sourceRequest);
+        DataSource dataSource = mockPgDatasource(postgreSQLContainer);
         // Execute
         mceBuilder.extractSchemaOfDataSource(dataSource.getId());
         // Assert
@@ -124,17 +119,21 @@ public class MCEBuilderTest extends DatabaseTestBase {
         assertThat(datasetField2.getFieldType(), sameBeanAs(new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "varchar")));
     }
 
+    private DataSource mockPgDatasource(PostgreSQLContainer postgreSQLContainer) {
+        // Mock DataSource
+        ConnectionConfigInfo connectionConfigInfo = new PostgresConnectionConfigInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
+                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
+        Map<String, Object> hostPortDatasourceConfig = DataSourceFactory.createHostPortDatasourceConfig(postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort());
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", hostPortDatasourceConfig, connectionConfigInfo, DatasourceType.POSTGRESQL);
+        return dataSourceService.create(sourceRequest);
+    }
+
     @Test
     public void testExtractSchemaOfDataset_dropTableThenPull() {
         // Start PostgreSQL Container
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
-                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
-
-        DataSource dataSource = dataSourceService.create(sourceRequest);
+        DataSource dataSource = mockPgDatasource(postgreSQLContainer);
         String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
         FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
         filterRuleService.addFilterRule(filterRule);
@@ -158,11 +157,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
-                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest dataSourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
-        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        DataSource dataSource = mockPgDatasource(postgreSQLContainer);
         String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
 
         FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
@@ -201,11 +196,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
-                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest dataSourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
-        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        DataSource dataSource = mockPgDatasource(postgreSQLContainer);
         String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
         FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
         filterRuleService.addFilterRule(filterRule);
@@ -233,11 +224,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
-                , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest dataSourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
-        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        DataSource dataSource = mockPgDatasource(postgreSQLContainer);
         String mceRule = FilterRuleType.mceRule("%", "%", "%", "%");
         FilterRule filterRule = FilterRule.FilterRuleBuilder.builder().withType(FilterRuleType.MCE).withPositive(true).withRule(mceRule).build();
         filterRuleService.addFilterRule(filterRule);

@@ -7,7 +7,7 @@ import com.miotech.kun.metadata.common.connector.ConnectorFactory;
 import com.miotech.kun.metadata.common.connector.Query;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -30,13 +30,13 @@ public class PostgresBackend extends BaseMetadataBackend implements StorageBacke
 
     private final static Logger logger = LoggerFactory.getLogger(PostgresBackend.class);
 
-    private final PostgresConnectionInfo connectionInfo;
+    private final PostgresConnectionConfigInfo connectionConfig;
     private final FieldMappingService fieldMappingService;
     private final Connector connector;
 
-    public PostgresBackend(PostgresConnectionInfo connectionInfo, FieldMappingService fieldMappingService) {
-        this.connectionInfo = connectionInfo;
-        this.connector = ConnectorFactory.generateConnector(connectionInfo);
+    public PostgresBackend(PostgresConnectionConfigInfo connectionConfig, FieldMappingService fieldMappingService) {
+        this.connectionConfig = connectionConfig;
+        this.connector = ConnectorFactory.generateConnector(connectionConfig);
         this.fieldMappingService = fieldMappingService;
     }
 
@@ -241,7 +241,7 @@ public class PostgresBackend extends BaseMetadataBackend implements StorageBacke
 
     private Dataset buildDataset(Long datasourceId, String database, String schema, String table) {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
-        DataStore dataStore = new PostgresDataStore(connectionInfo.getHost(), connectionInfo.getPort(), database, schema, table);
+        DataStore dataStore = new PostgresDataStore(connectionConfig.getHost(), connectionConfig.getPort(), database, schema, table);
         try {
             List<DatasetField> fields = extract(database, schema, table);
             if (logger.isDebugEnabled()) {

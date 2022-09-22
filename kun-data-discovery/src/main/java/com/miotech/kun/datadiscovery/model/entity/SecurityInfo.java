@@ -4,7 +4,9 @@ import com.google.common.collect.Sets;
 import com.miotech.kun.security.common.KunRole;
 import com.miotech.kun.datadiscovery.model.enums.SecurityModule;
 import com.miotech.kun.security.common.UserOperation;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -16,6 +18,8 @@ import java.util.Set;
  * @create: 2022-05-23 13:38
  **/
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SecurityInfo implements Serializable {
     private SecurityModule securityModule;
     private Long sourceSystemId;

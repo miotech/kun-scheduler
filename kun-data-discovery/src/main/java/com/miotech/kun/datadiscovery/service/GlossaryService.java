@@ -491,7 +491,7 @@ public class GlossaryService extends BaseSecurityService {
     public List<String> getGlossaryEditorList(Long id) {
         String moduleName = SecurityModule.GLOSSARY.name();
         String role = GlossaryRole.GLOSSARY_EDITOR.name();
-        return securityRpcClient.getGlossaryEditorList(moduleName, role, id);
+        return securityRpcClient.findUserList(moduleName, role, id);
     }
 
     @Transactional(rollbackFor = Exception.class)

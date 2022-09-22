@@ -4,19 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.metadata.common.dao.DataSourceDao;
+import com.miotech.kun.metadata.common.factory.MockConnectionFactory;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.connection.*;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
-import com.miotech.kun.metadata.core.model.dataset.DataStore;
-import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.core.model.dataset.DatasetField;
-import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.dataset.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
@@ -25,18 +20,13 @@ import com.miotech.kun.metadata.core.model.vo.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,7 +40,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
     private DatabaseOperator dbOperator;
 
     @Inject
-    private DataSourceDao dataSourceDao;
+    private DataSourceService dataSourceService;
 
     @Inject
     private MetadataDatasetService metadataDatasetService;
@@ -60,6 +50,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     @Inject
     private javax.sql.DataSource dataSource;
+
     @AfterEach
     @Override
     public void tearDown() {
@@ -91,20 +82,16 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     @Test
     public void testSuggestDatabase() {
+        DataSource dataSource = mockHiveServerDatasource();
         // Prepare
-        Dataset datasetOfFoo = MockDatasetFactory.createDataset("foo", 1L, "dm", Lists.newArrayList(), "Hive");
+        Dataset datasetOfFoo = MockDatasetFactory.createDataset("foo", dataSource.getId(), "dm", Lists.newArrayList(), DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfFoo);
 
-        Dataset datasetOfBar = MockDatasetFactory.createDataset("bar", 1L, "dw", null, "Hive");
+        Dataset datasetOfBar = MockDatasetFactory.createDataset("bar", dataSource.getId(), "dw", null, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfBar);
 
-        Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
+        Dataset datasetOfBook = MockDatasetFactory.createDataset("book", dataSource.getId(), "dw", null, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfBook);
-
-        // Prepare
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 10000);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
-        dataSourceDao.create(dataSource);
 
         // Execute
         String prefix = "d";
@@ -126,25 +113,33 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         suggestDatabases = metadataDatasetService.suggestDatabase(prefix);
 
         // Validate
-        assertTrue(suggestDatabases.isEmpty());
+        Assertions.assertTrue(suggestDatabases.isEmpty());
+    }
+
+    private DataSource mockHiveServerDatasource() {
+        HiveMetaStoreConnectionConfigInfo connectionInfo = new HiveMetaStoreConnectionConfigInfo(ConnectionType.HIVE_THRIFT, "uri");
+        ConnectionConfigInfo storageConnectionConfigInfo = new HDFSConnectionConfigInfo(ConnectionType.HDFS);
+        ConnectionConfigInfo hiveServerConnectionConfigInfo = new HiveServerConnectionConfigInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 5000);
+        DatasourceConnection datasourceConnection = MockConnectionFactory.createDatasourceConnection(hiveServerConnectionConfigInfo, hiveServerConnectionConfigInfo, connectionInfo, storageConnectionConfigInfo);
+        Map<String, Object> hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig("127.0.0.1", 5000);
+        DataSourceRequest dataSourceRequest = MockDataSourceFactory.createRequest("hive", hostPortDatasourceConfig, datasourceConnection, DatasourceType.HIVE, new ArrayList<>(), "admin");
+        return dataSourceService.create(dataSourceRequest);
     }
 
     @Test
     public void testSuggestTable() {
+        DataSource dataSource = mockHiveServerDatasource();
+
         // Prepare
-        Dataset datasetOfFoo = MockDatasetFactory.createDataset("foo", 1L, "dm", Lists.newArrayList(), "Hive");
+        Dataset datasetOfFoo = MockDatasetFactory.createDataset("foo", dataSource.getId(), "dm", Lists.newArrayList(), DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfFoo);
 
-        Dataset datasetOfBar = MockDatasetFactory.createDataset("bar", 1L, "dw", null, "Hive");
+        Dataset datasetOfBar = MockDatasetFactory.createDataset("bar", dataSource.getId(), "dw", null, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfBar);
 
-        Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
+        Dataset datasetOfBook = MockDatasetFactory.createDataset("book", dataSource.getId(), "dw", null, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfBook);
 
-        // Prepare
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 10000);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
-        dataSourceDao.create(dataSource);
 
         // Execute
         List<String> suggestTables = metadataDatasetService.suggestTable("dw", "b");
@@ -164,28 +159,25 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         suggestTables = metadataDatasetService.suggestTable("dw", "t");
 
         // Validate
-        assertTrue(suggestTables.isEmpty());
+        Assertions.assertTrue(suggestTables.isEmpty());
     }
 
     @Test
     public void testSuggestColumn() {
+        DataSource dataSource = mockHiveServerDatasource();
         // Prepare
         List<DatasetField> datasetFields = Lists.newArrayList(DatasetField.newBuilder().withName("id").withFieldType(new DatasetFieldType(DatasetFieldType.Type.NUMBER, "bigint")).build(),
                 DatasetField.newBuilder().withName("name").withFieldType(new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "varchar")).build(),
                 DatasetField.newBuilder().withName("note").withFieldType(new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "varchar")).build());
-        Dataset datasetOfFoo = MockDatasetFactory.createDataset("foo", 1L, "dm", datasetFields, "Hive");
+        Dataset datasetOfFoo = MockDatasetFactory.createDataset("foo", dataSource.getId(), "dm", datasetFields, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfFoo);
 
-        Dataset datasetOfBar = MockDatasetFactory.createDataset("bar", 1L, "dw", null, "Hive");
+        Dataset datasetOfBar = MockDatasetFactory.createDataset("bar", dataSource.getId(), "dw", null, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfBar);
 
-        Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
+        Dataset datasetOfBook = MockDatasetFactory.createDataset("book", dataSource.getId(), "dw", null, DataStoreType.HIVE_TABLE);
         insertDataset(dbOperator, datasetOfBook);
 
-        // Prepare
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 10000);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
-        dataSourceDao.create(dataSource);
 
         // Execute
         List<DatasetColumnSuggestRequest> columnSuggestRequests = Lists.newArrayList(new DatasetColumnSuggestRequest("dm", "foo", "n"));
@@ -212,19 +204,17 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         DatasetColumnSuggestResponse datasetColumnSuggestResponse = suggestColumns.get(0);
         assertThat(datasetColumnSuggestResponse.getDatabaseName(), is("dm"));
         assertThat(datasetColumnSuggestResponse.getTableName(), is("foo"));
-        assertTrue(datasetColumnSuggestResponse.getColumns().isEmpty());
+        Assertions.assertTrue(datasetColumnSuggestResponse.getColumns().isEmpty());
     }
 
     @Test
     public void createDatasetDSIExist_should_return_old_one() {
         // Prepare
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 10000);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
-        dataSourceDao.create(dataSource);
-        DataStore oldStore = MockDatasetFactory.createDataStore("Hive", "test", "old");
+        mockHiveServerDatasource();
+        DataStore oldStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "test", "old");
         Dataset oldSet = metadataDatasetService.createDataSetIfNotExist(oldStore);
 
-        DataStore newStore = MockDatasetFactory.createDataStore("Hive", "test", "old");
+        DataStore newStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "test", "old");
         Dataset newSet = metadataDatasetService.createDataSetIfNotExist(newStore);
 
         //verify
@@ -236,12 +226,10 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
     @Test
     public void createDatasetNotExist_should_create_new_one() {
         // Prepare
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
-        dataSourceDao.create(dataSource);
-        DataStore oldStore = MockDatasetFactory.createDataStore("Hive", "test", "old");
+        DataSource dataSource = mockHiveServerDatasource();
+        DataStore oldStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "test", "old");
         Dataset oldSet = metadataDatasetService.createDataSetIfNotExist(oldStore);
-        DataStore newStore = MockDatasetFactory.createDataStore("Hive", "test", "new");
+        DataStore newStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "test", "new");
 
         Dataset newSet = metadataDatasetService.createDataSetIfNotExist(newStore);
 
@@ -255,41 +243,49 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     }
 
-    public static Stream<DataSource> testDataSources() {
+    public static Stream<DataSourceRequest> testDataSources() {
         // Prepare
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
-        DataSource hive = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
+        ConnectionConfigInfo hiveServerConnectionConfigInfo = new HiveServerConnectionConfigInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 10000);
+        Map<String, Object> hive_hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig("127.0.0.1", 10000);
+        DatasourceConnection hive_datasourceConnection = MockConnectionFactory.createDatasourceConnection(hiveServerConnectionConfigInfo);
+        DataSourceRequest hive = MockDataSourceFactory.createRequest("Hive", hive_hostPortDatasourceConfig, hive_datasourceConnection, DatasourceType.HIVE, Lists.newArrayList("test"), "admin");
 
-        ConnectionInfo mongoConnection = new MongoConnectionInfo(ConnectionType.MONGODB,"127.0.0.1",27017);
-        DataSource mongo = MockDataSourceFactory.createDataSource(2, "mongo", mongoConnection, DatasourceType.MONGODB, null);
+        ConnectionConfigInfo mongoConnection = new MongoConnectionConfigInfo(ConnectionType.MONGODB, "127.0.0.1", 27017);
+        Map<String, Object> mongo_hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig("127.0.0.1", 27017);
+        DatasourceConnection mongo_datasourceConnection = MockConnectionFactory.createDatasourceConnection(mongoConnection);
+        DataSourceRequest mongo = MockDataSourceFactory.createRequest("mongo", mongo_hostPortDatasourceConfig, mongo_datasourceConnection, DatasourceType.MONGODB, null, "admin");
 
-        ConnectionInfo pgConnection = new PostgresConnectionInfo(ConnectionType.POSTGRESQL,"127.0.0.1",5432);
-        DataSource pg = MockDataSourceFactory.createDataSource(3, "postgres", pgConnection, DatasourceType.POSTGRESQL, null);
+        ConnectionConfigInfo pgConnection = new PostgresConnectionConfigInfo(ConnectionType.POSTGRESQL, "127.0.0.1", 5432);
+        Map<String, Object> pg_hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig("127.0.0.1", 5432);
+        DatasourceConnection pg_datasourceConnection = MockConnectionFactory.createDatasourceConnection(pgConnection);
+        DataSourceRequest pg = MockDataSourceFactory.createRequest("postgres", pg_hostPortDatasourceConfig, pg_datasourceConnection, DatasourceType.POSTGRESQL, null, "admin");
 
-        ConnectionInfo arangoConnection = new ArangoConnectionInfo(ConnectionType.ARANGO,"127.0.0.1",8529);
-        DataSource arango = MockDataSourceFactory.createDataSource(4, "arango", arangoConnection, DatasourceType.ARANGO, null);
+        ConnectionConfigInfo arangoConnection = new ArangoConnectionConfigInfo(ConnectionType.ARANGO, "127.0.0.1", 8529);
+        Map<String, Object> arango_hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig("127.0.0.1", 8529);
+        DatasourceConnection arango_datasourceConnection = MockConnectionFactory.createDatasourceConnection(arangoConnection);
+        DataSourceRequest arango = MockDataSourceFactory.createRequest("arango", arango_hostPortDatasourceConfig, arango_datasourceConnection, DatasourceType.ARANGO, null, "admin");
 
         return Stream.of(hive, mongo, pg, arango);
     }
 
 
-    private String covertSourceTypeToStoreType(DatasourceType sourceType) {
-        String storeType;
+    private DataStoreType covertSourceTypeToStoreType(DatasourceType sourceType) {
+        DataStoreType storeType;
         switch (sourceType) {
             case HIVE:
-                storeType = "Hive";
+                storeType = DataStoreType.HIVE_TABLE;
                 break;
             case MONGODB:
-                storeType = "MongoDB";
+                storeType = DataStoreType.MONGO_COLLECTION;
                 break;
             case POSTGRESQL:
-                storeType = "PostgreSQL";
+                storeType = DataStoreType.POSTGRES_TABLE;
                 break;
             case ELASTICSEARCH:
-                storeType = "Elasticsearch";
+                storeType = DataStoreType.ELASTICSEARCH_INDEX;
                 break;
             case ARANGO:
-                storeType = "Arango";
+                storeType = DataStoreType.ARANGO_COLLECTION;
                 break;
             default:
                 throw new IllegalStateException("not support sourceType :" + sourceType);
@@ -299,10 +295,10 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     @ParameterizedTest
     @MethodSource("testDataSources")
-    public void fetchDatasetByDSI(DataSource dataSource) {
+    public void fetchDatasetByDSI(DataSourceRequest dataSourceRequest) {
         //prepare
-        dataSourceDao.create(dataSource);
-        String dataStoreType = covertSourceTypeToStoreType(dataSource.getDatasourceType());
+        DataSource dataSource = dataSourceService.create(dataSourceRequest);
+        DataStoreType dataStoreType = covertSourceTypeToStoreType(dataSource.getDatasourceType());
         DataStore dataStore = MockDatasetFactory.createDataStore(dataStoreType, "test", "table");
         Dataset dataset = metadataDatasetService.createDataSetIfNotExist(dataStore);
 
@@ -321,16 +317,14 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
     public void createHiveDataSet_dataset_name_should_be_lowerCase() {
         //prepare
         String tableName = "UpperCaseTable";
-        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
-        DataSource hive = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
-        dataSourceDao.create(hive);
-        DataStore dataStore = MockDatasetFactory.createDataStore("Hive", "test", tableName);
+        mockHiveServerDatasource();
+        DataStore dataStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "test", tableName);
         Dataset dataset = metadataDatasetService.createDataSetIfNotExist(dataStore);
 
         //verify
         assertThat(dataset.getName(), is(tableName.toLowerCase()));
         assertThat(dataset.getDatabaseName(), is("test"));
-        assertThat(dataset.getDatasourceId(), is(1l));
+        assertThat(dataset.getDatasourceId(), is(notNullValue()));
     }
 
     private void insertDataset(DatabaseOperator dbOperator, Dataset dataset) {
@@ -347,17 +341,15 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
             }
         }
     }
+
     @Test
     public void test_updateSearchInfo() {
+        DataSource dataSource = mockHiveServerDatasource();
         // Prepare
-        Dataset dataset1 = MockDatasetFactory.createDataset("test-1");
-        Dataset dataset2 = MockDatasetFactory.createDataset("test-2");
+        Dataset dataset1 = MockDatasetFactory.createDataset("test-1", dataSource.getId(), "default", DataStoreType.HIVE_TABLE);
+        Dataset dataset2 = MockDatasetFactory.createDataset("test-2", dataSource.getId(), "default", DataStoreType.HIVE_TABLE);
         Dataset dataSetR1 = metadataDatasetService.createDataSet(dataset1);
         Dataset dataSetR2 = metadataDatasetService.createDataSet(dataset2);
-        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
-                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
-                .build(), DatasourceType.HIVE, ImmutableList.of());
-        dataSourceDao.create(dataSource);
         ArrayList<String> owners = Lists.newArrayList("test-user", "dev-user");
         ArrayList<String> tags = Lists.newArrayList("hive", "test");
         metadataDatasetService.updateDataset(dataSetR1.getGid(), MockDatasetFactory.createDatasetUpdateRequest(dataSetR1.getGid(), owners, tags));
@@ -372,10 +364,10 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         UniversalSearchRequest request = new UniversalSearchRequest();
         request.setSearchFilterOptions(searchFilterOptionList);
         UniversalSearchInfo search = searchService.search(request);
-        assertThat(search,is(notNullValue()));
+        assertThat(search, is(notNullValue()));
         List<SearchedInfo> searchedInfoList = search.getSearchedInfoList();
-        assertThat(searchedInfoList,is(notNullValue()));
-        assertThat(searchedInfoList.size(),is(2));
+        assertThat(searchedInfoList, is(notNullValue()));
+        assertThat(searchedInfoList.size(), is(2));
 
 
     }

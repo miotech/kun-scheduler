@@ -1,11 +1,7 @@
 package com.miotech.kun.datadiscovery.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.miotech.kun.common.model.AcknowledgementVO;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.datadiscovery.constant.Constants;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.*;
@@ -18,14 +14,11 @@ import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
-import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.*;
-import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.operationrecord.common.anno.OperationRecord;
 import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
-import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskRequest;
 import com.miotech.kun.workflow.core.model.task.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -179,71 +172,6 @@ public class MetadataService {
                 .getBody();
     }
 
-    @OperationRecord(type = OperationRecordType.DATASOURCE_PULL, args = {"#datasourceId"})
-    public PullProcessVO pullDataSource(Long datasourceId) {
-        String fullUrl = url + "/datasources/{id}/_pull";
-        log.info("Request url : " + fullUrl);
-        return restTemplate
-                .postForEntity(fullUrl, null, PullProcessVO.class, datasourceId)
-                .getBody();
-    }
-
-    public PaginationVO<DataSource> searchDataSource(String name, int pageNum, int pageSize) {
-        String searchUrl = url + "/datasources/_search";
-        ParameterizedTypeReference<PaginationVO<DataSource>> typeRef = new ParameterizedTypeReference<PaginationVO<DataSource>>() {
-        };
-        HttpEntity httpEntity = new HttpEntity(DataSourceSearchFilter.newBuilder()
-                .withName(name)
-                .withPageNum(pageNum)
-                .withPageSize(pageSize)
-                .build());
-        return restTemplate.exchange(searchUrl, HttpMethod.POST, httpEntity, typeRef).getBody();
-    }
-
-    public DataSource createDataSource(DataSourceRequest request) {
-        String createUrl = url + "/datasource";
-        return restTemplate
-                .exchange(createUrl, HttpMethod.POST, new HttpEntity(request), DataSource.class)
-                .getBody();
-    }
-
-    public DataSource updateDataSource(Long id, DataSourceRequest request) {
-        String updateUrl = url + "/datasource/{id}";
-        return restTemplate
-                .exchange(updateUrl, HttpMethod.PUT, new HttpEntity(request), DataSource.class, id)
-                .getBody();
-    }
-
-    public AcknowledgementVO deleteDataSource(Long id) {
-        String createUrl = url + "/datasource/{id}";
-        return restTemplate
-                .exchange(createUrl, HttpMethod.DELETE, null, AcknowledgementVO.class, id)
-                .getBody();
-    }
-
-    public List<DatasourceTemplate> getDataSourceTypes() {
-        String createUrl = url + "/datasource/types";
-        return restTemplate.exchange(createUrl, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<DatasourceTemplate>>() {
-                }).getBody();
-    }
-
-    public Map<String, PullProcessVO> fetchLatestPullProcessByDataSourceIds(List<Long> datasourceIds) {
-        String fullUrl = url + String.format("/datasources/_pull/latest?dataSourceIds=%s",
-                StringUtils.join(datasourceIds.stream().map(Object::toString).collect(Collectors.toList()), ","));
-        log.info("Request url : " + fullUrl);
-        String json = restTemplate.getForObject(fullUrl, String.class);
-        Map<String, PullProcessVO> result;
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            result = objectMapper.readValue(json, new TypeReference<Map<String, PullProcessVO>>() {
-            });
-        } catch (Exception e) {
-            log.error("Failed to converting json \"{}\" to map", json, e);
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
-        return result;
-    }
 
     public Optional<PullProcessVO> fetchLatestPullProcessForDataset(Long datasetId) {
         String fullUrl = url + "/datasets/{datasetId}/_pull/latest";

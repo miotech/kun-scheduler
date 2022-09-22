@@ -3,6 +3,7 @@ package com.miotech.kun.datadiscovery.testing.mockdata;
 import com.miotech.kun.datadiscovery.model.enums.GlossaryRole;
 import com.miotech.kun.datadiscovery.model.enums.SecurityModule;
 import com.miotech.kun.security.SecurityContextHolder;
+import com.miotech.kun.security.common.KunRole;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedModuleResp;
 import com.miotech.kun.security.facade.rpc.RoleOnSpecifiedResourcesResp;
 import com.miotech.kun.security.facade.rpc.ScopeRole;
@@ -19,12 +20,12 @@ import java.util.List;
  **/
 public class MockSecurityRpcClientFactory {
 
-    public static RoleOnSpecifiedModuleResp mockRoleOnSpecifiedModule(String userName, GlossaryRole role) {
+    public static RoleOnSpecifiedModuleResp mockRoleOnSpecifiedModule(String userName, KunRole role) {
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(userName);
         SecurityContextHolder.setUserInfo(userInfo);
         String securityModule = SecurityModule.GLOSSARY.name();
-        List<String> roleNames = ImmutableList.of(role.name());
+        List<String> roleNames = ImmutableList.of(role.getName());
 
         return RoleOnSpecifiedModuleResp.newBuilder()
                 .setModule(securityModule)
@@ -33,11 +34,10 @@ public class MockSecurityRpcClientFactory {
                 .build();
     }
 
-    public static RoleOnSpecifiedResourcesResp mockUserRoleRespGlossary(String userName, List<ScopeRole> scopeRoles) {
+    public static RoleOnSpecifiedResourcesResp mockUserRoleRespGlossary(String userName, String securityModule, List<ScopeRole> scopeRoles) {
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(userName);
         SecurityContextHolder.setUserInfo(userInfo);
-        String securityModule = SecurityModule.GLOSSARY.name();
         return RoleOnSpecifiedResourcesResp.newBuilder()
                 .setModule(securityModule)
                 .setUsername(userName)

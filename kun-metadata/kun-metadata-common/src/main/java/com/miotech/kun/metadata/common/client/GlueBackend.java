@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.connection.GlueConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.GlueConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -35,7 +35,7 @@ public class GlueBackend extends BaseMetadataBackend {
 
     private final AWSGlue awsGlue;
 
-    private final GlueConnectionInfo glueConnectionInfo;
+    private final GlueConnectionConfigInfo connectionConfig;
 
     private final FieldMappingService fieldMappingService;
 
@@ -45,11 +45,11 @@ public class GlueBackend extends BaseMetadataBackend {
     private Map<String, Table> tables = Maps.newHashMap();
     private AtomicBoolean initedCache = new AtomicBoolean(false);
 
-    public GlueBackend(GlueConnectionInfo glueConnectionInfo, FieldMappingService fieldMappingService, ClientFactory clientFactory) {
-        this.glueConnectionInfo = glueConnectionInfo;
+    public GlueBackend(GlueConnectionConfigInfo connectionConfig, FieldMappingService fieldMappingService, ClientFactory clientFactory) {
+        this.connectionConfig = connectionConfig;
         this.fieldMappingService = fieldMappingService;
         this.clientFactory = clientFactory;
-        awsGlue = clientFactory.getAWSGlue(glueConnectionInfo.getGlueAccessKey(), glueConnectionInfo.getGlueSecretKey(), glueConnectionInfo.getGlueRegion());
+        awsGlue = clientFactory.getAWSGlue(connectionConfig.getGlueAccessKey(), connectionConfig.getGlueSecretKey(), connectionConfig.getGlueRegion());
 
     }
 

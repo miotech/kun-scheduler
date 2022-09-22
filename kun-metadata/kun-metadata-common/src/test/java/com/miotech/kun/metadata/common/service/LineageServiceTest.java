@@ -10,6 +10,7 @@ import com.miotech.kun.metadata.common.exception.EntityNotFoundException;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
 import com.miotech.kun.metadata.common.factory.MockLineageNodesFactory;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
@@ -575,10 +576,10 @@ public class LineageServiceTest extends DatabaseTestBase {
     public void testUpdateLineage() {
         // Prepare
         Long upstreamDataSetId = IdGenerator.getInstance().nextId();
-        DataStore upstreamStore = MockDatasetFactory.createDataStore("Hive", "upstreamStore", "table");
+        DataStore upstreamStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "upstreamStore", "table");
         Dataset upstreamSet = MockDatasetFactory.createDatasetWithDataStore(upstreamDataSetId, "upstreamSet", 1l, null, upstreamStore);
         Long downstreamDataSetId = IdGenerator.getInstance().nextId();
-        DataStore downstreamStore = MockDatasetFactory.createDataStore("Hive", "downstreamStore", "table");
+        DataStore downstreamStore = MockDatasetFactory.createDataStore(DataStoreType.HIVE_TABLE, "downstreamStore", "table");
         Dataset downstreamSet = MockDatasetFactory.createDatasetWithDataStore(downstreamDataSetId, "downstreamSet", 1l, null, downstreamStore);
         //mock fetch dataset by datastore
         doAnswer(invocation -> {

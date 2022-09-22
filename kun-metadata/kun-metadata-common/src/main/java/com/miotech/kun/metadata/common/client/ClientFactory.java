@@ -9,7 +9,6 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.connection.ArangoConnectionInfo;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;

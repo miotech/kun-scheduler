@@ -7,21 +7,22 @@ import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.common.client.ClientFactory;
 import com.miotech.kun.metadata.common.client.GlueBackend;
-import com.miotech.kun.metadata.common.dao.DataSourceDao;
+import com.miotech.kun.metadata.common.factory.MockConnectionFactory;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
+import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.core.model.connection.*;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
-import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.core.model.dataset.DatasetField;
-import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
-import com.miotech.kun.metadata.core.model.dataset.TableStatistics;
+import com.miotech.kun.metadata.core.model.dataset.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
+import com.miotech.kun.metadata.core.model.vo.DataSourceBasicInfoRequest;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ public class GlueBackendTest extends DatabaseTestBase {
     @Inject
     private FieldMappingService fieldMappingService;
     @Inject
-    private DataSourceDao dataSourceDao;
+    private DataSourceService dataSourceService;
 
     private ClientFactory clientFactory;
     private AWSGlue awsGlue;
@@ -68,8 +69,9 @@ public class GlueBackendTest extends DatabaseTestBase {
     @Test
     public void glueBackendExtractDataset() {
         //prepare
-        GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        DataSource hive = mockHiveGlueDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        GlueBackend glueBackend = new GlueBackend((GlueConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         DatasetFieldType datasetFieldType = new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "string");
         DatasetField datasetField = DatasetField.newBuilder()
@@ -77,82 +79,85 @@ public class GlueBackendTest extends DatabaseTestBase {
                 .withFieldType(datasetFieldType)
                 .build();
         datasetFields.add(datasetField);
-        Dataset dataset = MockDatasetFactory.createDataset("glueTable", 1l, "database", datasetFields, "Hive");
-        SearchTablesResult searchTablesResult = prepareSearchTable(Arrays.asList(dataset));
+        Dataset dataset = MockDatasetFactory.createDataset("glueTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE);
+        SearchTablesResult searchTablesResult = prepareSearchTable(Collections.singletonList(dataset));
         doReturn(searchTablesResult).when(awsGlue).searchTables(any(SearchTablesRequest.class));
 
         List<DatasetField> extractedFileds = glueBackend.extract(dataset);
 
         //verify
-        assertThat(extractedFileds.size(), is(1));
+        MatcherAssert.assertThat(extractedFileds.size(), is(1));
         DatasetField extractedFiled = extractedFileds.get(0);
-        assertThat(extractedFiled.getName(), is("column1"));
-        assertThat(datasetField.getFieldType(), is(datasetFieldType));
+        MatcherAssert.assertThat(extractedFiled.getName(), is("column1"));
+        MatcherAssert.assertThat(datasetField.getFieldType(), is(datasetFieldType));
 
     }
 
     @Test
     public void glueBackendLastUpdatedTime() {
         //prepare
-        GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        DataSource hive = mockHiveGlueDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        GlueBackend glueBackend = new GlueBackend((GlueConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         OffsetDateTime expectedTime = DateTimeUtils.fromISODateTimeString("2021-11-03T10:15:30+00:00");
         TableStatistics tableStatistics = TableStatistics
                 .newBuilder()
                 .withLastUpdatedTime(expectedTime)
                 .build();
-        Dataset dataset = MockDatasetFactory.createDataset("glueTable", 1l, "database", datasetFields, "Hive")
+        Dataset dataset = MockDatasetFactory.createDataset("glueTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE)
                 .cloneBuilder()
                 .withTableStatistics(tableStatistics)
                 .build();
-        SearchTablesResult searchTablesResult = prepareSearchTable(Arrays.asList(dataset));
+        SearchTablesResult searchTablesResult = prepareSearchTable(Collections.singletonList(dataset));
         doReturn(searchTablesResult).when(awsGlue).searchTables(any(SearchTablesRequest.class));
 
         OffsetDateTime updatedTime = glueBackend.getLastUpdatedTime(dataset);
 
         //verify
-        assertThat(updatedTime, is(expectedTime));
+        MatcherAssert.assertThat(updatedTime, is(expectedTime));
 
     }
 
     @Test
     public void glueBackendJudgeExistence() {
         //prepare
-        GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        DataSource hive = mockHiveGlueDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        GlueBackend glueBackend = new GlueBackend((GlueConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         OffsetDateTime expectedTime = DateTimeUtils.fromISODateTimeString("2021-11-03T10:15:30+00:00");
         TableStatistics tableStatistics = TableStatistics
                 .newBuilder()
                 .withLastUpdatedTime(expectedTime)
                 .build();
-        Dataset dataset = MockDatasetFactory.createDataset("glueTable", 1l, "database", datasetFields, "Hive")
+        Dataset dataset = MockDatasetFactory.createDataset("glueTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE)
                 .cloneBuilder()
                 .withTableStatistics(tableStatistics)
                 .build();
-        SearchTablesResult searchTablesResult = prepareSearchTable(Arrays.asList(dataset));
+        SearchTablesResult searchTablesResult = prepareSearchTable(Collections.singletonList(dataset));
         doReturn(searchTablesResult).when(awsGlue).searchTables(any(SearchTablesRequest.class));
 
         boolean isExist = glueBackend.judgeExistence(dataset, DatasetExistenceJudgeMode.DATASET);
 
         //verify
-        assertThat(isExist, is(true));
+        MatcherAssert.assertThat(isExist, is(true));
 
     }
 
     @Test
     public void glueBackendExtractMceEvent() {
         //prepare
-        GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        DataSource hive = mockHiveGlueDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        GlueBackend glueBackend = new GlueBackend((GlueConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         OffsetDateTime expectedTime = DateTimeUtils.fromISODateTimeString("2021-11-03T10:15:30+00:00");
         TableStatistics tableStatistics = TableStatistics
                 .newBuilder()
                 .withLastUpdatedTime(expectedTime)
                 .build();
-        Dataset dataset = MockDatasetFactory.createDataset("glueTable", 1l, "database", datasetFields, "Hive")
+        Dataset dataset = MockDatasetFactory.createDataset("glueTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE)
                 .cloneBuilder()
                 .withTableStatistics(tableStatistics)
                 .build();
@@ -164,28 +169,26 @@ public class GlueBackendTest extends DatabaseTestBase {
                 .withTableName(dataset.getName())
                 .withDataSourceId(dataset.getDatasourceId())
                 .build();
-        SearchTablesResult searchTablesResult = prepareSearchTable(Arrays.asList(dataset));
+        SearchTablesResult searchTablesResult = prepareSearchTable(Collections.singletonList(dataset));
         doReturn(searchTablesResult).when(awsGlue).searchTables(any(SearchTablesRequest.class));
 
         Dataset extractedDateset = glueBackend.extract(metadataChangeEvent);
 
         //verify
-        assertThat(extractedDateset.getName(), is(dataset.getName()));
-        assertThat(extractedDateset.getDatabaseName(), is(dataset.getDatabaseName()));
-        assertThat(extractedDateset.getDatasourceId(), is(dataset.getDatasourceId()));
+        MatcherAssert.assertThat(extractedDateset.getName(), is(dataset.getName()));
+        MatcherAssert.assertThat(extractedDateset.getDatabaseName(), is(dataset.getDatabaseName()));
+        MatcherAssert.assertThat(extractedDateset.getDatasourceId(), is(dataset.getDatasourceId()));
 
     }
 
     @Test
     public void glueBackendExtractDatasource() {
         //prepare
-        GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
-        ConnectionInfo athenaConnectionInfo = new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena", "user", "password");
-        DataSource hive = MockDataSourceFactory.createDataSource(1, "hive", athenaConnectionInfo, DatasourceType.HIVE, new ArrayList<>());
-        dataSourceDao.create(hive);
+        DataSource hive = mockHiveGlueDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        GlueBackend glueBackend = new GlueBackend((GlueConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
-        Dataset dataset = MockDatasetFactory.createDataset("glueTable", hive.getId(), "database", datasetFields, "Hive");
+        Dataset dataset = MockDatasetFactory.createDataset("glueTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE);
         List<Dataset> datasetList = new ArrayList<>();
         datasetList.add(dataset);
         SearchTablesResult searchTablesResult = prepareSearchTable(datasetList);
@@ -196,12 +199,22 @@ public class GlueBackendTest extends DatabaseTestBase {
         Iterator<Dataset> datasets = glueBackend.extract(hive);
 
         //verify
-        assertThat(datasets.hasNext(), is(true));
+        MatcherAssert.assertThat(datasets.hasNext(), is(true));
         Dataset extractedDateset = datasets.next();
-        assertThat(extractedDateset.getName(), is(dataset.getName()));
-        assertThat(extractedDateset.getDatabaseName(), is(dataset.getDatabaseName()));
-        assertThat(extractedDateset.getDatasourceId(), is(dataset.getDatasourceId()));
+        MatcherAssert.assertThat(extractedDateset.getName(), is(dataset.getName()));
+        MatcherAssert.assertThat(extractedDateset.getDatabaseName(), is(dataset.getDatabaseName()));
+        MatcherAssert.assertThat(extractedDateset.getDatasourceId(), is(dataset.getDatasourceId()));
 
+    }
+
+    private DataSource mockHiveGlueDatasource() {
+        GlueConnectionConfigInfo connectionInfo = new GlueConnectionConfigInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
+        ConnectionConfigInfo storageConnectionConfigInfo = new S3ConnectionConfigInfo(ConnectionType.S3, "glue", "glue", "glue");
+        ConnectionConfigInfo athenaConnectionConfigInfo = new AthenaConnectionConfigInfo(ConnectionType.ATHENA, "jdbc:awsathena", "user", "password");
+        DatasourceConnection datasourceConnection = MockConnectionFactory.createDatasourceConnection(athenaConnectionConfigInfo, athenaConnectionConfigInfo, connectionInfo, storageConnectionConfigInfo);
+        Map<String, Object> athenaDatasourceConfig = MockDataSourceFactory.createAthenaDatasourceConfig("jdbc:awsathena");
+        DataSourceRequest dataSourceRequest = MockDataSourceFactory.createRequest("hive", athenaDatasourceConfig, datasourceConnection, DatasourceType.HIVE, new ArrayList<>(), "admin");
+        return dataSourceService.create(dataSourceRequest);
     }
 
     private GetTablesResult prepareGlueTable(List<Dataset> datasets) {

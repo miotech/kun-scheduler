@@ -8,7 +8,7 @@ import com.miotech.kun.dataquality.core.factory.MockExpectationFactory;
 import com.miotech.kun.dataquality.core.factory.MockExpectationTemplateFactory;
 import com.miotech.kun.dataquality.core.metrics.MetricsCollectedResult;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionConfigInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -56,7 +56,7 @@ public class ExpectationExecutorTest {
         payload.put("comparisonPeriod", comparisonPeriod);
 
         ExpectationTemplate expectationTemplate = MockExpectationTemplateFactory.create("com.miotech.kun.dataquality.core.converter.CustomSQLExpectationConverter");
-        PostgresConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgresContainer.getHost(), postgresContainer.getFirstMappedPort(), postgresContainer.getUsername(), postgresContainer.getPassword());
+        PostgresConnectionConfigInfo connectionInfo = new PostgresConnectionConfigInfo(ConnectionType.POSTGRESQL, postgresContainer.getHost(), postgresContainer.getFirstMappedPort(), postgresContainer.getUsername(), postgresContainer.getPassword());
         Expectation expectation = MockExpectationFactory.createCustomSQLExpectation(expectationTemplate, payload, connectionInfo);
 
         MetricsCollectedResult<String> resultOfMock = new MetricsCollectedResult<>(null, DateTimeUtils.now(), expectedValue);

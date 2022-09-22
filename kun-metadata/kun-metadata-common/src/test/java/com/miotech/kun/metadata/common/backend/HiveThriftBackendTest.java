@@ -3,33 +3,33 @@ package com.miotech.kun.metadata.common.backend;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.common.client.ClientFactory;
 import com.miotech.kun.metadata.common.client.HiveThriftBackend;
-import com.miotech.kun.metadata.common.dao.DataSourceDao;
+import com.miotech.kun.metadata.common.factory.MockConnectionFactory;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
+import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
-import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.HiveMetaStoreConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.*;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceBasicInfoRequest;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TException;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
@@ -38,7 +38,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
     @Inject
     private FieldMappingService fieldMappingService;
     @Inject
-    private DataSourceDao dataSourceDao;
+    private DataSourceService dataSourceService;
 
     private ClientFactory clientFactory;
     private HiveMetaStoreClient hiveMetaStoreClient;
@@ -57,11 +57,22 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
         doReturn(hiveMetaStoreClient).when(clientFactory).getHiveClient(anyString());
     }
 
+    private DataSource mockHiveServerDatasource() {
+        HiveMetaStoreConnectionConfigInfo hiveMetaStoreConnectionConfigInfo = new HiveMetaStoreConnectionConfigInfo(ConnectionType.HIVE_THRIFT, "uri");
+        ConnectionConfigInfo storageConnectionConfigInfo = new HDFSConnectionConfigInfo(ConnectionType.HDFS);
+        ConnectionConfigInfo hiveServerConnectionConfigInfo = new HiveServerConnectionConfigInfo(ConnectionType.HIVE_SERVER, "127.0.0.1", 5000);
+        DatasourceConnection datasourceConnection = MockConnectionFactory.createDatasourceConnection(hiveServerConnectionConfigInfo, hiveServerConnectionConfigInfo, hiveMetaStoreConnectionConfigInfo, storageConnectionConfigInfo);
+        Map<String, Object> hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig("127.0.0.1", 5000);
+        DataSourceRequest dataSourceRequest = MockDataSourceFactory.createRequest("hive", hostPortDatasourceConfig, datasourceConnection, DatasourceType.HIVE, new ArrayList<>(), "admin");
+        return dataSourceService.create(dataSourceRequest);
+    }
+
     @Test
     public void HiveThriftBackendExtractDataset() throws TException {
         //prepare
-        HiveMetaStoreConnectionInfo connectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "uri");
-        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory);
+        DataSource hive = mockHiveServerDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend((HiveMetaStoreConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         DatasetFieldType datasetFieldType = new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "string");
         DatasetField datasetField = DatasetField.newBuilder()
@@ -69,27 +80,26 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
                 .withFieldType(datasetFieldType)
                 .build();
         datasetFields.add(datasetField);
-        Dataset dataset = MockDatasetFactory.createDataset("HiveThriftTable", 1l, "database", datasetFields, "Hive");
+        Dataset dataset = MockDatasetFactory.createDataset("HiveThriftTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE);
         Table table = datasetToHiveTable(dataset);
         doReturn(table).when(hiveMetaStoreClient).getTable(anyString(), anyString());
 
         List<DatasetField> extractedFileds = hiveThriftBackend.extract(dataset);
 
         //verify
-        assertThat(extractedFileds.size(), is(1));
+        MatcherAssert.assertThat(extractedFileds.size(), is(1));
         DatasetField extractedFiled = extractedFileds.get(0);
-        assertThat(extractedFiled.getName(), is("column1"));
-        assertThat(datasetField.getFieldType(), is(datasetFieldType));
+        MatcherAssert.assertThat(extractedFiled.getName(), is("column1"));
+        MatcherAssert.assertThat(datasetField.getFieldType(), is(datasetFieldType));
 
     }
 
     @Test
     public void hiveBackendExtractDatasource() throws TException {
         //prepare
-        HiveMetaStoreConnectionInfo connectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "uri");
-        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory);
-        DataSource hive = MockDataSourceFactory.createDataSource(1, "hive", connectionInfo, DatasourceType.HIVE, new ArrayList<>());
-        dataSourceDao.create(hive);
+        DataSource hive = mockHiveServerDatasource();
+        ConnectionConfigInfo connectionConfigInfo = hive.getDatasourceConnection().getMetadataConnection().getConnectionConfigInfo();
+        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend((HiveMetaStoreConnectionConfigInfo) connectionConfigInfo, fieldMappingService, clientFactory);
         List<DatasetField> datasetFields = new ArrayList<>();
         DatasetFieldType datasetFieldType = new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "string");
         DatasetField datasetField = DatasetField.newBuilder()
@@ -97,21 +107,20 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
                 .withFieldType(datasetFieldType)
                 .build();
         datasetFields.add(datasetField);
-        Dataset dataset = MockDatasetFactory.createDataset("HiveThriftTable", 1l, "database", datasetFields, "Hive");
+        Dataset dataset = MockDatasetFactory.createDataset("HiveThriftTable", hive.getId(), "database", datasetFields, DataStoreType.HIVE_TABLE);
         Table table = datasetToHiveTable(dataset);
         doReturn(table).when(hiveMetaStoreClient).getTable(anyString(), anyString());
-        doReturn(Arrays.asList("database")).when(hiveMetaStoreClient).getAllDatabases();
-        doReturn(Arrays.asList("HiveThriftTable")).when(hiveMetaStoreClient).getAllTables("database");
+        doReturn(Collections.singletonList("database")).when(hiveMetaStoreClient).getAllDatabases();
+        doReturn(Collections.singletonList("HiveThriftTable")).when(hiveMetaStoreClient).getAllTables("database");
 
         Iterator<Dataset> datasets = hiveThriftBackend.extract(hive);
 
-
         //verify
-        assertThat(datasets.hasNext(), is(true));
+        MatcherAssert.assertThat(datasets.hasNext(), is(true));
         Dataset extractedDateset = datasets.next();
-        assertThat(extractedDateset.getName(), is(dataset.getName()));
-        assertThat(extractedDateset.getDatabaseName(), is(dataset.getDatabaseName()));
-        assertThat(extractedDateset.getDatasourceId(), is(dataset.getDatasourceId()));
+        MatcherAssert.assertThat(extractedDateset.getName(), is(dataset.getName()));
+        MatcherAssert.assertThat(extractedDateset.getDatabaseName(), is(dataset.getDatabaseName()));
+        MatcherAssert.assertThat(extractedDateset.getDatasourceId(), is(dataset.getDatasourceId()));
     }
 
 

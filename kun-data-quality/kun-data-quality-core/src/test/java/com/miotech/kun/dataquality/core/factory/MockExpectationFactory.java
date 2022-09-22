@@ -7,9 +7,10 @@ import com.miotech.kun.dataquality.core.expectation.Dataset;
 import com.miotech.kun.dataquality.core.expectation.Expectation;
 import com.miotech.kun.dataquality.core.expectation.ExpectationTemplate;
 import com.miotech.kun.dataquality.core.metrics.Metrics;
-import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
-import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.DatasourceConnection;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 
 import java.util.Map;
 
@@ -43,7 +44,10 @@ public class MockExpectationFactory {
                 .build();
     }
 
-    public static Expectation createWithTaskId(Long taskId, ExpectationTemplate template, Map<String, Object> payload, PostgresConnectionInfo connectionInfo) {
+    public static Expectation createWithTaskId(Long taskId, ExpectationTemplate template, Map<String, Object> payload, PostgresConnectionConfigInfo connectionConfigInfo) {
+        Map<String, Object> hostPortDatasourceConfig = MockDataSourceFactory.createHostPortDatasourceConfig(connectionConfigInfo.getHost(), connectionConfigInfo.getPort());
+        DatasourceConnection datasourceConnection = MockConnectionFactory.createDatasourceConnection(connectionConfigInfo);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(IdGenerator.getInstance().nextId(), "pg-1", hostPortDatasourceConfig, datasourceConnection, DatasourceType.POSTGRESQL);
         return Expectation.newBuilder()
                 .withExpectationId(IdGenerator.getInstance().nextId())
                 .withName("Expectation Name")
@@ -52,8 +56,7 @@ public class MockExpectationFactory {
                 .withTemplate(template)
                 .withPayload(payload)
                 .withTrigger(Expectation.ExpectationTrigger.SCHEDULED)
-                .withDataset(Dataset.builder().gid(IdGenerator.getInstance().nextId()).dataSource(DataSource.newBuilder().withId(IdGenerator.getInstance().nextId())
-                        .withConnectionConfig(ConnectionConfig.newBuilder().withDataConnection(connectionInfo).build()).build()).build())
+                .withDataset(Dataset.builder().gid(IdGenerator.getInstance().nextId()).dataSource(dataSource).build())
                 .withTaskId(taskId)
                 .withCaseType(CaseType.BLOCK)
                 .withCreateTime(DateTimeUtils.now())
@@ -63,7 +66,8 @@ public class MockExpectationFactory {
                 .build();
     }
 
-    public static Expectation createCustomSQLExpectation(ExpectationTemplate template, Map<String, Object> payload, PostgresConnectionInfo connectionInfo) {
+
+    public static Expectation createCustomSQLExpectation(ExpectationTemplate template, Map<String, Object> payload, PostgresConnectionConfigInfo connectionInfo) {
         Long taskId = IdGenerator.getInstance().nextId();
         return createWithTaskId(taskId, template, payload, connectionInfo);
     }

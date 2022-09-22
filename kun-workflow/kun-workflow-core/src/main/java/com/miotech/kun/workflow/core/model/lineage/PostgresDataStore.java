@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionConfigInfo;
 
 public class PostgresDataStore extends DataStore {
 
@@ -68,8 +68,8 @@ public class PostgresDataStore extends DataStore {
     }
 
     @Override
-    public ConnectionInfo getConnectionInfo() {
-        return new PostgresConnectionInfo(ConnectionType.POSTGRESQL, host, port);
+    public ConnectionConfigInfo getConnectionConfigInfo() {
+        return new PostgresConnectionConfigInfo(ConnectionType.POSTGRESQL, host, port);
     }
 
     @Override

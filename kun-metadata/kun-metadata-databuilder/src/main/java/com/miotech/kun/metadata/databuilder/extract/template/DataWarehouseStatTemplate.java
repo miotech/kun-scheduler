@@ -39,7 +39,7 @@ public class DataWarehouseStatTemplate {
     public static final Set ignoreRowTypeSet = ImmutableSet.of("array<string>");
 
     public DataWarehouseStatTemplate(String dbName, String schemaName, String tableName, DataSource dataSource) {
-        connectionType = dataSource.getConnectionConfig().getDataConnection().getConnectionType();
+        connectionType = dataSource.getDatasourceConnection().getDataConnection().getConnectionType();
         this.dbName = dbName;
         this.dbNameAfterEscape = DatabaseIdentifierProcessor.escape(dbName, connectionType);
         this.schemaName = schemaName;
@@ -174,6 +174,7 @@ public class DataWarehouseStatTemplate {
         return ignoreTypeSet.contains(type.getType()) || ignoreRowTypeSet.contains(type.getRawType());
 
     }
+
     private boolean isSpecialType(DatasetFieldType.Type type) {
         return type == DatasetFieldType.Type.JSON;
     }

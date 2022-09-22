@@ -13,6 +13,7 @@ import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionSearchRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
+import com.miotech.kun.openapi.model.response.DataSourceVO;
 import com.miotech.kun.openapi.model.request.*;
 import com.miotech.kun.openapi.model.response.*;
 import com.miotech.kun.openapi.service.ApiService;
@@ -91,9 +92,9 @@ public class ApiController {
                 taskName,
                 taskTemplateName,
                 ImmutableList.of(),
-                owner == null? ImmutableList.of() : ImmutableList.of(owner),
+                owner == null ? ImmutableList.of() : ImmutableList.of(owner),
                 Optional.of(false),
-                taskViewId == null? ImmutableList.of() : ImmutableList.of(taskViewId)
+                taskViewId == null ? ImmutableList.of() : ImmutableList.of(taskViewId)
         );
         return RequestResult.success(apiService.searchTask(searchRequest));
     }
@@ -105,13 +106,13 @@ public class ApiController {
 
     @PostMapping("/task/create")
     public RequestResult<TaskVO> createTask(@RequestBody TaskCreateRequest request,
-                                                      @RequestHeader("Authorization") String token) {
+                                            @RequestHeader("Authorization") String token) {
         return RequestResult.success(apiService.createTask(request, token));
     }
 
     @PutMapping("/task/update")
     public RequestResult<TaskVO> updateTask(@RequestBody TaskUpdateRequest request,
-                                                      @RequestHeader("Authorization") String token) {
+                                            @RequestHeader("Authorization") String token) {
         return RequestResult.success(apiService.updateTask(request, token));
     }
 
@@ -130,8 +131,8 @@ public class ApiController {
 
     @GetMapping("/task/{taskId}/dependencies")
     public RequestResult<TaskVOWithDependencies> fetchTaskWithDependencies(@PathVariable Long taskId,
-                                                                    @RequestParam(required = false, defaultValue = "1") int upstreamLevel,
-                                                                    @RequestParam(required = false, defaultValue = "1") int downstreamLevel) {
+                                                                           @RequestParam(required = false, defaultValue = "1") int upstreamLevel,
+                                                                           @RequestParam(required = false, defaultValue = "1") int downstreamLevel) {
         Preconditions.checkNotNull(taskId, "task id should not be null");
         return RequestResult.success(apiService.fetchTaskWithDependencies(taskId, upstreamLevel, downstreamLevel));
     }
@@ -199,8 +200,8 @@ public class ApiController {
 
     @PostMapping("/taskrun/{taskRunId}/removeDependency")
     public RequestResult<Object> removeTaskRunDependency(@PathVariable Long taskRunId,
-                                                          @RequestBody List<Long> upstreamTaskRunIds,
-                                                          @RequestHeader("Authorization") String token) {
+                                                         @RequestBody List<Long> upstreamTaskRunIds,
+                                                         @RequestHeader("Authorization") String token) {
         apiService.setUserByToken(token);
         Preconditions.checkNotNull(taskRunId, "task run id should not be null");
         apiService.removeTaskRunDependency(taskRunId, upstreamTaskRunIds);
@@ -228,9 +229,9 @@ public class ApiController {
 
     @GetMapping("/backfill")
     public RequestResult<PageResult<Backfill>> fetchBackfillList(@RequestParam(required = false, defaultValue = "1") int pageNum,
-                                                     @RequestParam(required = false, defaultValue = "100") int pageSize,
-                                                     @RequestParam(required = false, defaultValue = "DESC") String sortOrder,
-                                                     @RequestParam(required = false, defaultValue = "id") String sortKey) {
+                                                                 @RequestParam(required = false, defaultValue = "100") int pageSize,
+                                                                 @RequestParam(required = false, defaultValue = "DESC") String sortOrder,
+                                                                 @RequestParam(required = false, defaultValue = "id") String sortKey) {
         BackfillSearchParams searchParams = new BackfillSearchParams();
         searchParams.setPageNumber(pageNum);
         searchParams.setPageSize(pageSize);
@@ -245,4 +246,9 @@ public class ApiController {
         return RequestResult.success(apiService.fetchBackfillDetail(backfillId));
     }
 
+
+    @GetMapping("/metadata/datasource/{id}")
+    public RequestResult<DataSourceVO> findDataSource(@PathVariable Long id) {
+        return RequestResult.success(apiService.findDataSource(id));
+    }
 }

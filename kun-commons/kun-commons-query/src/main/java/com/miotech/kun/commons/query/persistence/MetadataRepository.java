@@ -53,10 +53,10 @@ public class MetadataRepository {
 
     public MetadataConnectionInfo getConnectionInfo(QuerySite querySite) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("kmd.connection_info as connInfo",
-                        "kmdt.name as datasource_type")
+                .select("kmci.connection_config as connInfo",
+                        "kmd.datasource_type as datasource_type")
                 .from("kun_mt_datasource", "kmd")
-                .join("inner", "kun_mt_datasource_type", "kmdt").on("kmd.type_id = kmdt.id")
+                .join("inner", "kun_mt_connection_info", "kmci").on("kmd.id = kmci.datasource_id and conn_scope='DATA_CONN'")
                 .where("kmd.id = ?")
                 .getSQL();
 

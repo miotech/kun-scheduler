@@ -1,35 +1,32 @@
 package com.miotech.kun.metadata.common.factory;
 
 
-import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
-import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.common.utils.DatasourceDsiFormatter;
+import com.miotech.kun.metadata.core.model.connection.DatasourceConnection;
+import com.miotech.kun.metadata.core.model.datasource.DataSourceBasicInfo;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceBasicInfoRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MockDataSourceFactory {
 
     private MockDataSourceFactory() {
     }
 
-    public static DataSource createDataSource(long dataSourceId, String name, ConnectionInfo connectionInfo, DatasourceType type, List<String> tags) {
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        return createDataSource(dataSourceId, name, connectionConfig, type, tags, "admin", "admin");
-    }
 
-    public static DataSource createDataSource(long dataSourceId, String name, ConnectionConfig connectionConfig, DatasourceType type, List<String> tags) {
-        return createDataSource(dataSourceId, name, connectionConfig, type, tags, "admin", "admin");
-    }
-
-    public static DataSource createDataSource(long dataSourceId, String name, ConnectionConfig connectionConfig, DatasourceType type, List<String> tags, String createUser, String updateUser) {
-        return DataSource.newBuilder()
+    public static DataSourceBasicInfo createDataSourceBasicInfo(long dataSourceId, String name, Map<String, Object> datasourceConfigInfo, DatasourceType type, List<String> tags, String createUser, String updateUser) {
+        String dsi = DatasourceDsiFormatter.getDsi(type, datasourceConfigInfo);
+        return DataSourceBasicInfo.newBuilder()
                 .withId(dataSourceId)
                 .withDatasourceType(type)
                 .withName(name)
-                .withConnectionConfig(connectionConfig)
+                .withDatasourceConfigInfo(datasourceConfigInfo)
+                .withDsi(dsi)
                 .withTags(tags)
                 .withCreateUser(createUser)
                 .withCreateTime(OffsetDateTime.now())
@@ -38,19 +35,29 @@ public class MockDataSourceFactory {
                 .build();
     }
 
-    public static DataSourceRequest createRequest(String name, ConnectionInfo connectionInfo, DatasourceType type, List<String> tags) {
-        return createRequest(name, ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build(), type, tags);
-    }
 
-    public static DataSourceRequest createRequest(String name, ConnectionConfig connectionConfig, DatasourceType type, List<String> tags) {
+    public static DataSourceRequest createRequest(String name, Map<String, Object> datasourceConfigInfo, DatasourceConnection datasourceConnection, DatasourceType type, List<String> tags, String user) {
         return DataSourceRequest.newBuilder()
                 .withName(name)
-                .withConnectionConfig(connectionConfig)
+                .withDatasourceConnection(datasourceConnection)
+                .withDatasourceConfigInfo(datasourceConfigInfo)
                 .withDatasourceType(type)
                 .withTags(tags)
-                .withCreateUser("createUser")
-                .withUpdateUser("updateUser")
+                .withCreateUser(user)
+                .withUpdateUser(user)
                 .build();
     }
 
+    public static Map<String, Object> createHostPortDatasourceConfig(String host, Integer port) {
+        Map<String, Object> datasourceConfigInfo = new HashMap<>();
+        datasourceConfigInfo.put("host", host);
+        datasourceConfigInfo.put("port", port);
+        return datasourceConfigInfo;
+    }
+
+    public static Map<String, Object> createAthenaDatasourceConfig(String url) {
+        Map<String, Object> datasourceConfigInfo = new HashMap<>();
+        datasourceConfigInfo.put("athenaUrl", url);
+        return datasourceConfigInfo;
+    }
 }

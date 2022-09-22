@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.vo.DatasetUpdateRequest;
@@ -26,19 +27,19 @@ public class MockDatasetFactory {
 
     public static Dataset createDatasetWithDatabase(long dataSourceId, String name) {
         String random = UUID.randomUUID().toString();
-        return createDataset(IdGenerator.getInstance().nextId(), "dataset:" + random, dataSourceId, name, null, "Hive");
+        return createDataset(IdGenerator.getInstance().nextId(), "dataset:" + random, dataSourceId, name, null, DataStoreType.HIVE_TABLE);
     }
 
     public static Dataset createDatasetWithDatabase(long dataSourceId, String datasetName, String databaseName) {
         String random = UUID.randomUUID().toString();
-        return createDataset(IdGenerator.getInstance().nextId(), datasetName, dataSourceId, databaseName, null, "Hive");
+        return createDataset(IdGenerator.getInstance().nextId(), datasetName, dataSourceId, databaseName, null, DataStoreType.HIVE_TABLE);
     }
 
     public static Dataset createDatasetWithName(long dataSourceId, String name, List<DatasetField> fields) {
-        return createDataset(IdGenerator.getInstance().nextId(), name, dataSourceId, "db", fields, "Hive");
+        return createDataset(IdGenerator.getInstance().nextId(), name, dataSourceId, "db", fields, DataStoreType.HIVE_TABLE);
     }
 
-    public static Dataset createDataset(String name, long dataSourceId, String databaseName, List<DatasetField> fields, String dataStoreType) {
+    public static Dataset createDataset(String name, long dataSourceId, String databaseName, List<DatasetField> fields, DataStoreType dataStoreType) {
         long gid = IdGenerator.getInstance().nextId();
         return createDataset(gid, name, dataSourceId, databaseName, fields, dataStoreType);
     }
@@ -49,10 +50,15 @@ public class MockDatasetFactory {
     }
 
     public static Dataset createDataset(long gid, String name) {
-        return createDataset(gid, name, 1L, "default", "Hive");
+        return createDataset(gid, name, 1L, "default", DataStoreType.HIVE_TABLE);
     }
 
-    public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, String dataStoreType) {
+    public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, DataStoreType dataStoreType) {
+        return createDataset(gid, name, dataSourceId, databaseName, Lists.newArrayList(), dataStoreType);
+    }
+
+    public static Dataset createDataset(String name, long dataSourceId, String databaseName, DataStoreType dataStoreType) {
+        Long gid = IdGenerator.getInstance().nextId();
         return createDataset(gid, name, dataSourceId, databaseName, Lists.newArrayList(), dataStoreType);
     }
 
@@ -70,7 +76,7 @@ public class MockDatasetFactory {
         return createDatasetWithFields(dataSourceId, Lists.newArrayList());
     }
 
-    public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, List<DatasetField> fields, String dataStoreType) {
+    public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, List<DatasetField> fields, DataStoreType dataStoreType) {
         DataStore dataStore = createDataStore(dataStoreType, databaseName, name);
         return Dataset.newBuilder()
                 .withGid(gid)
@@ -93,19 +99,17 @@ public class MockDatasetFactory {
                 .build();
     }
 
-    public static DataStore createDataStore(String dataStoreType, String databaseName, String tableName) {
-        Preconditions.checkArgument(StringUtils.isNotBlank(dataStoreType), "Param `dataStoreType` should not be empty");
-
+    public static DataStore createDataStore(DataStoreType dataStoreType, String databaseName, String tableName) {
         switch (dataStoreType) {
-            case "Hive":
+            case HIVE_TABLE:
                 return new HiveTableStore("location", databaseName, tableName);
-            case "MongoDB":
+            case MONGO_COLLECTION:
                 return new MongoDataStore("127.0.0.1", 27017, databaseName, tableName);
-            case "PostgreSQL":
+            case POSTGRES_TABLE:
                 return new PostgresDataStore("127.0.0.1", 5432, databaseName, "public", tableName);
-            case "Arango":
+            case ARANGO_COLLECTION:
                 return new ArangoCollectionStore("127.0.0.1", 8529, databaseName, tableName);
-            case "Elasticsearch":
+            case ELASTICSEARCH_INDEX:
                 return new ElasticSearchIndexStore("127.0.0.1", 9200, tableName);
             default:
                 throw new IllegalArgumentException("Invalid dataStoreType: " + dataStoreType);

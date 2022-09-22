@@ -15,8 +15,6 @@ import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
-import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskDependencyVO;
-import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.CreateTaskDefinitionRequest;
@@ -31,6 +29,8 @@ import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionView
 import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.web.common.utils.TagUtils;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.openapi.model.response.DataSourceVO;
 import com.miotech.kun.openapi.model.request.*;
 import com.miotech.kun.openapi.model.response.*;
 import com.miotech.kun.operationrecord.common.anno.OperationRecord;
@@ -40,7 +40,10 @@ import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -49,6 +52,11 @@ import static com.miotech.kun.dataplatform.web.common.utils.TagUtils.TAG_TASK_DE
 
 @Service
 public class ApiService extends BaseSecurityService {
+    @Value("${metadata.base-url:localhost:8084}")
+    String url;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private TaskDefinitionViewService taskDefinitionViewService;
@@ -179,7 +187,6 @@ public class ApiService extends BaseSecurityService {
     }
 
 
-
     public TaskVO createTask(TaskCreateRequest request, String token) {
         String owner = setUserByToken(token);
         TaskDefinition taskDefinition = taskDefinitionService.create(new CreateTaskDefinitionRequest(request.getTaskName(),
@@ -209,9 +216,9 @@ public class ApiService extends BaseSecurityService {
         TaskDefinition originalTaskDef = taskDefinitionService.find(request.getTaskId());
         TaskDefinition taskDefinition = taskDefinitionService.update(request.getTaskId(),
                 new UpdateTaskDefinitionRequest(request.getTaskId(),
-                        request.getTaskName() == null? originalTaskDef.getName() : request.getTaskName(),
-                        request.getTaskPayload() == null? originalTaskDef.getTaskPayload() : request.getTaskPayload(),
-                        request.getOwner() == null? originalTaskDef.getOwner() : request.getOwner()
+                        request.getTaskName() == null ? originalTaskDef.getName() : request.getTaskName(),
+                        request.getTaskPayload() == null ? originalTaskDef.getTaskPayload() : request.getTaskPayload(),
+                        request.getOwner() == null ? originalTaskDef.getOwner() : request.getOwner()
                 ));
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
     }
@@ -297,6 +304,18 @@ public class ApiService extends BaseSecurityService {
         return getCurrentUser().getUsername();
     }
 
+    public DataSourceVO findDataSource(Long id) {
+        return new DataSourceVO(findDataSourceById(id));
+    }
+
+
+    private DataSource findDataSourceById(Long id) {
+        String createUrl = url + "/datasource/{id}";
+        return restTemplate
+                .exchange(createUrl, HttpMethod.GET, null, DataSource.class, id)
+                .getBody();
+    }
+
     // TaskDefinitionVO is designed for web-frontend usage
     // convert TaskDefinitionVO to TaskVO for openapi usage with customization
     private TaskVO convertToTaskVO(TaskDefinitionVO taskDefinitionVO) {
@@ -320,4 +339,6 @@ public class ApiService extends BaseSecurityService {
                 taskDefinitionVO.getTaskCommits(),
                 taskViewIds);
     }
+
+
 }

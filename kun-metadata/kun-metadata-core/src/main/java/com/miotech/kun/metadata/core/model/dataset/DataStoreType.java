@@ -19,4 +19,5 @@ public enum DataStoreType implements Serializable {
     SHEET,
     // File
     FILE;
+
 }

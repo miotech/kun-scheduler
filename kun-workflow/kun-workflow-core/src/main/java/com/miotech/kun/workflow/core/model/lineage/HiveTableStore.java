@@ -2,9 +2,9 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 
 import java.util.Objects;
 
@@ -67,8 +67,8 @@ public class HiveTableStore extends DataStore {
     }
 
     @Override
-    public ConnectionInfo getConnectionInfo() {
-        return new ConnectionInfo(null);
+    public ConnectionConfigInfo getConnectionConfigInfo() {
+        return new ConnectionConfigInfo(null);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class HiveTableStore extends DataStore {
         return table;
     }
 
-    private String toLowCase(String table){
+    private String toLowCase(String table) {
         return table.toLowerCase();
     }
 }

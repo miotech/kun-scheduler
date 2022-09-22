@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.common.connector;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.JdbcConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.JdbcConnectionConfigInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,15 +12,15 @@ public class JdbcConnector implements Connector {
 
     private static final Logger logger = LoggerFactory.getLogger(JdbcConnector.class);
 
-    private final JdbcConnectionInfo jdbcConnectionInfo;
+    private final JdbcConnectionConfigInfo jdbcConnectionInfo;
 
     private Connection connection;
 
-    public JdbcConnector(JdbcConnectionInfo jdbcConnectionInfo) {
+    public JdbcConnector(JdbcConnectionConfigInfo jdbcConnectionInfo) {
         this.jdbcConnectionInfo = jdbcConnectionInfo;
     }
 
-    protected Connection getJdbcConnection(String database,String schema) {
+    protected Connection getJdbcConnection(String database, String schema) {
         String url = useSchema(jdbcConnectionInfo.getJdbcUrl(), database, schema);
         String user = jdbcConnectionInfo.getUsername();
         String password = jdbcConnectionInfo.getPassword();
@@ -40,7 +40,7 @@ public class JdbcConnector implements Connector {
 
     @Override
     public synchronized ResultSet query(Query query) {
-        connection = getJdbcConnection(query.getDatabase(),query.getSchema());
+        connection = getJdbcConnection(query.getDatabase(), query.getSchema());
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -55,7 +55,7 @@ public class JdbcConnector implements Connector {
     @Override
     public synchronized void close() {
         try {
-            if(connection != null){
+            if (connection != null) {
                 connection.close();
             }
         } catch (Exception exception) {
@@ -102,7 +102,7 @@ public class JdbcConnector implements Connector {
     }
 
     private String useSchema(String url, String database, String schema) {
-        if(database == null){
+        if (database == null) {
             return url;
         }
         url = fixUrl(url);

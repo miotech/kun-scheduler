@@ -8,9 +8,9 @@ import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.metadata.common.utils.DatasourceDsiFormatter;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
-import com.miotech.kun.metadata.core.model.connection.*;
-import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DataSourceBasicInfo;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
 import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
@@ -25,8 +25,6 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.miotech.kun.metadata.common.utils.ConvertUtil.generateConnectionInfoV1;
-
 @Singleton
 public class DataSourceDao {
 
@@ -36,19 +34,14 @@ public class DataSourceDao {
     private static final String DATASOURCE_TABLE_NAME = "kun_mt_datasource";
     private static final String DATASOURCE_ATTR_TABLE_NAME = "kun_mt_datasource_attrs";
     private static final String DATASOURCE_TAG_TABLE_NAME = "kun_mt_datasource_tags";
-    private static final String DATASOURCE_TYPE_TABLE_NAME = "kun_mt_datasource_type";
-    private static final String DATASOURCE_TYPE_FIELD_TABLE_NAME = "kun_mt_datasource_type_fields";
 
     public static final String DATASOURCE_MODEL_NAME = "datasource";
     public static final String DATASOURCE_ATTR_MODEL_NAME = "datasource_attrs";
-    public static final String DATASOURCE_TYPE_MODEL_NAME = "datasource_type";
-    public static final String DATASOURCE_TYPE_FIELD_MODEL_NAME = "datasource_type_field";
 
-    private static final String[] DATASOURCE_TABLE_COLUMNS = {"id", "connection_info", "type_id", "connection_config", "datasource_type"};
+    private static final String[] DATASOURCE_TABLE_COLUMNS = {"id", "datasource_type", "datasource_config", "dsi"};
     private static final String[] DATASOURCE_ATTR_TABLE_COLUMNS = {"datasource_id", "name", "create_user", "create_time", "update_user", "update_time"};
     private static final String[] DATASOURCE_TAG_TABLE_COLUMNS = {"datasource_id", "tag"};
     private static final String[] DATASOURCE_TYPE_TABLE_COLUMNS = {"id", "name"};
-    private static final String[] DATASOURCE_TYPE_FIELD_TABLE_COLUMNS = {"id", "type_id", "name", "sequence_order", "format", "require"};
 
     @Inject
     DatabaseOperator dbOperator;
@@ -60,12 +53,11 @@ public class DataSourceDao {
                 .from(DATASOURCE_TABLE_NAME)
                 .where("datasource_type = ?")
                 .getSQL();
-
         return dbOperator.fetchAll(dataSourceIdSQL, rs -> rs.getLong(1), typeName);
     }
 
-    public Optional<DataSource> findById(Long id) {
-        logger.debug("Fetch dataSource with id: {}", id);
+    public Optional<DataSourceBasicInfo> findById(Long id) {
+        logger.debug("Fetch dataSourceBasicInfo with id: {}", id);
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(DATASOURCE_MODEL_NAME, Arrays.asList(DATASOURCE_TABLE_COLUMNS));
         columnsMap.put(DATASOURCE_ATTR_MODEL_NAME, Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
@@ -78,7 +70,6 @@ public class DataSourceDao {
                 .on(DATASOURCE_MODEL_NAME + ".id = " + DATASOURCE_ATTR_MODEL_NAME + ".datasource_id")
                 .where("id = ?")
                 .getSQL();
-
         return Optional.ofNullable(fetchDataSourceJoiningTag(dataSourceSQL, id));
     }
 
@@ -95,8 +86,8 @@ public class DataSourceDao {
         return dbOperator.fetchOne(dataSourcesSQL, rs -> rs.getInt(1), whereClauseAndParams.getRight().toArray());
     }
 
-    public List<DataSource> fetchWithFilter(DataSourceSearchFilter filter) {
-        Integer pageNum = filter.getPageNum();
+    public List<DataSourceBasicInfo> fetchWithFilter(DataSourceSearchFilter filter) {
+        int pageNum = filter.getPageNum();
         Integer pageSize = filter.getPageSize();
         Integer offset = (pageNum - 1) * pageSize;
 
@@ -122,79 +113,44 @@ public class DataSourceDao {
         return fetchDataSourcesJoiningTag(dataSourcesSQL, whereClauseAndParams.getRight().toArray());
     }
 
-    public DataSource fetchDataSourceByConnectionInfo(DatasourceType datasourceType, ConnectionInfo connectionInfo) {
-        logger.debug("Fetch dataSourceId with type: {},connectionInfo:{}", datasourceType, connectionInfo);
+    public List<DataSourceBasicInfo> fetchList() {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(DATASOURCE_MODEL_NAME, Arrays.asList(DATASOURCE_TABLE_COLUMNS));
         columnsMap.put(DATASOURCE_ATTR_MODEL_NAME, Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
-        String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
+
+        String dataSourcesSQL = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .autoAliasColumns()
                 .from(DATASOURCE_TABLE_NAME, DATASOURCE_MODEL_NAME)
                 .join("INNER", DATASOURCE_ATTR_TABLE_NAME, DATASOURCE_ATTR_MODEL_NAME)
                 .on(DATASOURCE_MODEL_NAME + ".id = " + DATASOURCE_ATTR_MODEL_NAME + ".datasource_id")
-                .where(DATASOURCE_MODEL_NAME + ".datasource_type = ?")
-                .getSQL();
-
-        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceResultMapper.INSTANCE, datasourceType.name());
-        if (datasourceType.equals(DatasourceType.HIVE)) {
-            return fetchHiveDatasource(dataSourceList);
-        }
-        for (DataSource dataSource : dataSourceList) {
-            if (checkConnectionInfo(dataSource, connectionInfo)) {
-                return dataSource;
-            }
-        }
-        return null;
-    }
-
-    public boolean isDatasourceExist(DataSource dataSource) {
-        ConnectionInfo connectionInfo = dataSource.getConnectionConfig().getDataConnection();
-        DatasourceType type = dataSource.getDatasourceType();
-        String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
-                .select(DATASOURCE_TABLE_COLUMNS)
-                .from(DATASOURCE_TABLE_NAME)
-                .where("datasource_type = ?")
                 .asPrepared()
                 .getSQL();
-        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceBasicMapper.INSTANCE, type.name());
-        for (DataSource savedSource : dataSourceList) {
-            if (checkConnectionInfo(savedSource, connectionInfo)) {
-                return true;
-            }
+
+        return fetchDataSourcesJoiningTag(dataSourcesSQL);
+    }
+
+    public boolean isDatasourceExistByDsi(DataSourceBasicInfo dataSourceBasicInfo) {
+        String dsi = dataSourceBasicInfo.getDsi();
+        if (StringUtils.isBlank(dataSourceBasicInfo.getDsi())) {
+            dsi = DatasourceDsiFormatter.getDsi(dataSourceBasicInfo.getDatasourceType(), dataSourceBasicInfo.getDatasourceConfigInfo());
         }
-        return false;
+        String dataSourceSQL = DefaultSQLBuilder.newBuilder()
+                .select("COUNT(1)")
+                .from(DATASOURCE_TABLE_NAME)
+                .where("dsi = ?")
+                .getSQL();
+        Integer count = dbOperator.fetchOne(dataSourceSQL, rs -> rs.getInt(1), dsi);
+        return count > 0;
     }
 
-    private DataSource fetchHiveDatasource(List<DataSource> dataSources) {
-        DataSource athena = null;
-        for (DataSource dataSource : dataSources) {
-            ConnectionType connectionType = dataSource.getConnectionConfig().getDataConnection().getConnectionType();
-            if (connectionType.equals(ConnectionType.HIVE_SERVER)) {
-                return dataSource;
-            }
-            if (connectionType.equals(ConnectionType.ATHENA)) {
-                athena = dataSource;
-            }
-        }
-        return athena;
-    }
-
-    private boolean checkConnectionInfo(DataSource dataSource, ConnectionInfo searchConnectionInfo) {
-        logger.debug("check datasource : {},searchConnectionInfo:{}", dataSource, searchConnectionInfo);
-        ConnectionInfo dataSourceConnectionInfo = dataSource.getConnectionConfig().getDataConnection();
-        //hashcode and equals method of connectionInfo should ignore user and password
-        return dataSourceConnectionInfo.equals(searchConnectionInfo);
-    }
-
-    private DataSource fetchDataSourceJoiningTag(String sql, Object... params) {
-        DataSource dataSource = dbOperator.fetchOne(sql, DataSourceResultMapper.INSTANCE, params);
-        if (dataSource == null) {
+    private DataSourceBasicInfo fetchDataSourceJoiningTag(String sql, Object... params) {
+        DataSourceBasicInfo dataSourceBasicInfo = dbOperator.fetchOne(sql, DataSourceResultMapper.INSTANCE, params);
+        if (dataSourceBasicInfo == null) {
             return null;
         }
-
-        List<String> tags = fetchTags(dataSource.getId());
-        return dataSource.cloneBuilder()
+        List<String> tags = fetchTags(dataSourceBasicInfo.getId());
+        return dataSourceBasicInfo.cloneBuilder()
                 .withTags(tags)
                 .build();
     }
@@ -208,22 +164,19 @@ public class DataSourceDao {
         return dbOperator.fetchAll(dataSourceTagSQL, rs -> rs.getString("tag"), dataSourceId);
     }
 
-    private List<DataSource> fetchDataSourcesJoiningTag(String sql, Object... params) {
-        List<DataSource> dataSources = dbOperator.fetchAll(sql, DataSourceResultMapper.INSTANCE, params);
-        return dataSources.stream().map(dataSource -> {
-            List<String> tags = fetchTags(dataSource.getId());
-            return dataSource.cloneBuilder().withTags(tags).build();
+    private List<DataSourceBasicInfo> fetchDataSourcesJoiningTag(String sql, Object... params) {
+        List<DataSourceBasicInfo> dataSourceBasicInfoList = dbOperator.fetchAll(sql, DataSourceResultMapper.INSTANCE, params);
+        return dataSourceBasicInfoList.stream().map(dataSourceBasicInfo -> {
+            List<String> tags = fetchTags(dataSourceBasicInfo.getId());
+            return dataSourceBasicInfo.cloneBuilder().withTags(tags).build();
         }).collect(Collectors.toList());
     }
 
-    public void create(DataSource dataSource) {
+    public DataSourceBasicInfo create(DataSourceBasicInfo dataSourceBasicInfo) {
         // Update tag
-        updateTag(dataSource);
+        updateTag(dataSourceBasicInfo);
 
         //compatible old data
-        ConnectionInfoV1 connectionInfoV1 = generateConnectionInfoV1(dataSource);
-        Long typeId = generateTypeId(dataSource);
-
         dbOperator.transaction(() -> {
                     String insertDataSourceSQL = DefaultSQLBuilder.newBuilder()
                             .insert(DATASOURCE_TABLE_COLUMNS)
@@ -231,55 +184,50 @@ public class DataSourceDao {
                             .asPrepared()
                             .getSQL();
                     dbOperator.update(insertDataSourceSQL,
-                            dataSource.getId(),
-                            JSONUtils.toJsonString(connectionInfoV1.getValues()),
-                            typeId,
-                            JSONUtils.toJsonString(dataSource.getConnectionConfig()),
-                            dataSource.getDatasourceType().name());
+                            dataSourceBasicInfo.getId(),
+                            dataSourceBasicInfo.getDatasourceType().name(),
+                            JSONUtils.toJsonString(dataSourceBasicInfo.getDatasourceConfigInfo()),
+                            dataSourceBasicInfo.getDsi());
 
                     String insertDataSourceAttrSQL = DefaultSQLBuilder.newBuilder()
                             .insert(DATASOURCE_ATTR_TABLE_COLUMNS)
                             .into(DATASOURCE_ATTR_TABLE_NAME)
                             .asPrepared()
                             .getSQL();
-                    dbOperator.update(insertDataSourceAttrSQL, dataSource.getId(), dataSource.getName(), dataSource.getCreateUser(),
-                            dataSource.getCreateTime(), dataSource.getUpdateUser(), dataSource.getUpdateTime());
+                    dbOperator.update(insertDataSourceAttrSQL, dataSourceBasicInfo.getId(), dataSourceBasicInfo.getName(), dataSourceBasicInfo.getCreateUser(),
+                            dataSourceBasicInfo.getCreateTime(), dataSourceBasicInfo.getUpdateUser(), dataSourceBasicInfo.getUpdateTime());
 
-                    if (CollectionUtils.isNotEmpty(dataSource.getTags())) {
+                    if (CollectionUtils.isNotEmpty(dataSourceBasicInfo.getTags())) {
                         String insertDataSourceTagSQL = DefaultSQLBuilder.newBuilder()
                                 .insert(DATASOURCE_TAG_TABLE_COLUMNS)
                                 .into(DATASOURCE_TAG_TABLE_NAME)
                                 .asPrepared()
                                 .getSQL();
-                        Object[][] params = dataSource.getTags().stream().map(tag -> new Object[]{dataSource.getId(), tag}).toArray(Object[][]::new);
+                        Object[][] params = dataSourceBasicInfo.getTags().stream().map(tag -> new Object[]{dataSourceBasicInfo.getId(), tag}).toArray(Object[][]::new);
                         dbOperator.batch(insertDataSourceTagSQL, params);
                     }
 
-                    return null;
+                    return dataSourceBasicInfo;
                 }
         );
+        return dataSourceBasicInfo;
     }
 
-    public void update(DataSource dataSource) {
-        // Update tag
-        updateTag(dataSource);
-
-        //compatible old data
-        ConnectionInfoV1 connectionInfoV1 = generateConnectionInfoV1(dataSource);
-        Long typeId = generateTypeId(dataSource);
+    public void update(DataSourceBasicInfo dataSourceBasicInfo) {
 
         dbOperator.transaction(() -> {
+                    updateTag(dataSourceBasicInfo);
                     String insertDataSourceSQL = DefaultSQLBuilder.newBuilder()
                             .update(DATASOURCE_TABLE_NAME)
-                            .set("connection_info","type_id","connection_config", "datasource_type")
+                            .set("datasource_type", "datasource_config", "dsi")
                             .where("id = ?")
                             .asPrepared()
                             .getSQL();
                     dbOperator.update(insertDataSourceSQL,
-                            JSONUtils.toJsonString(connectionInfoV1.getValues()),
-                            typeId,
-                            JSONUtils.toJsonString(dataSource.getConnectionConfig()),
-                            dataSource.getDatasourceType().name(), dataSource.getId());
+                            dataSourceBasicInfo.getDatasourceType().name(),
+                            JSONUtils.toJsonString(dataSourceBasicInfo.getDatasourceConfigInfo()),
+                            dataSourceBasicInfo.getDsi(),
+                            dataSourceBasicInfo.getId());
 
                     String insertDataSourceAttrSQL = DefaultSQLBuilder.newBuilder()
                             .update(DATASOURCE_ATTR_TABLE_NAME)
@@ -287,22 +235,22 @@ public class DataSourceDao {
                             .where("datasource_id = ?")
                             .asPrepared()
                             .getSQL();
-                    dbOperator.update(insertDataSourceAttrSQL, dataSource.getName(), dataSource.getUpdateUser(), dataSource.getUpdateTime(), dataSource.getId());
+                    dbOperator.update(insertDataSourceAttrSQL, dataSourceBasicInfo.getName(), dataSourceBasicInfo.getUpdateUser(), dataSourceBasicInfo.getUpdateTime(), dataSourceBasicInfo.getId());
 
                     String deleteDataSourceTagSQL = DefaultSQLBuilder.newBuilder()
                             .delete()
                             .from(DATASOURCE_TAG_TABLE_NAME)
                             .where("datasource_id = ?")
                             .getSQL();
-                    dbOperator.update(deleteDataSourceTagSQL, dataSource.getId());
+                    dbOperator.update(deleteDataSourceTagSQL, dataSourceBasicInfo.getId());
 
-                    if (CollectionUtils.isNotEmpty(dataSource.getTags())) {
+                    if (CollectionUtils.isNotEmpty(dataSourceBasicInfo.getTags())) {
                         String insertDataSourceTagSQL = DefaultSQLBuilder.newBuilder()
                                 .insert(DATASOURCE_TAG_TABLE_COLUMNS)
                                 .into(DATASOURCE_TAG_TABLE_NAME)
                                 .asPrepared()
                                 .getSQL();
-                        Object[][] params = dataSource.getTags().stream().map(tag -> new Object[]{dataSource.getId(), tag}).toArray(Object[][]::new);
+                        Object[][] params = dataSourceBasicInfo.getTags().stream().map(tag -> new Object[]{dataSourceBasicInfo.getId(), tag}).toArray(Object[][]::new);
                         dbOperator.batch(insertDataSourceTagSQL, params);
                     }
 
@@ -311,9 +259,9 @@ public class DataSourceDao {
         );
     }
 
-    private void updateTag(DataSource dataSource) {
-        if (CollectionUtils.isNotEmpty(dataSource.getTags())) {
-            dataSource.getTags().stream()
+    private void updateTag(DataSourceBasicInfo dataSourceBasicInfo) {
+        if (CollectionUtils.isNotEmpty(dataSourceBasicInfo.getTags())) {
+            dataSourceBasicInfo.getTags().stream()
                     .filter(tag -> fetchMetadataTagCount(tag) == 0L)
                     .forEach(tag -> {
                         String tagSql = "INSERT INTO kun_mt_tag VALUES(?)";
@@ -341,29 +289,32 @@ public class DataSourceDao {
         dbOperator.update(deleteDataSourceSQL, id);
     }
 
-    public List<DatasourceTemplate> getAllTypes() {
-        String dataSourceTypeSQL = DefaultSQLBuilder.newBuilder()
-                .select(DATASOURCE_TYPE_TABLE_COLUMNS)
-                .from(DATASOURCE_TYPE_TABLE_NAME)
+    public Optional<DataSourceBasicInfo> fetchByTypeAndName(DatasourceType datasourceType, String name) {
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(DATASOURCE_MODEL_NAME, Arrays.asList(DATASOURCE_TABLE_COLUMNS));
+        columnsMap.put(DATASOURCE_ATTR_MODEL_NAME, Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
+        String dataSourceSQL = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .autoAliasColumns()
+                .from(DATASOURCE_TABLE_NAME, DATASOURCE_MODEL_NAME)
+                .join("INNER", DATASOURCE_ATTR_TABLE_NAME, DATASOURCE_ATTR_MODEL_NAME)
+                .on(DATASOURCE_MODEL_NAME + ".id = " + DATASOURCE_ATTR_MODEL_NAME + ".datasource_id")
+                .where("datasource_type = ? AND  name=?")
                 .getSQL();
-        List<DatasourceTemplate> datasourceTemplates = dbOperator.fetchAll(dataSourceTypeSQL, DataSourceTemplateMapper.INSTANCE);
-        return datasourceTemplates;
+        return Optional.ofNullable(fetchDataSourceJoiningTag(dataSourceSQL, datasourceType.name(), name));
     }
 
-    private static class DataSourceResultMapper implements ResultSetMapper<DataSource> {
+    private static class DataSourceResultMapper implements ResultSetMapper<DataSourceBasicInfo> {
         public static final DataSourceDao.DataSourceResultMapper INSTANCE = new DataSourceDao.DataSourceResultMapper();
 
         @Override
-        public DataSource map(ResultSet rs) throws SQLException {
-            ConnectionInfoV1 connectionInfoV1 = new ConnectionInfoV1(JSONUtils.jsonStringToMap(rs.getString(DATASOURCE_MODEL_NAME + "_connection_info"), String.class, Object.class));
-            ConnectionConfig connectionConfig = JSONUtils.jsonToObject(rs.getString(DATASOURCE_MODEL_NAME + "_connection_config"), ConnectionConfig.class);
-            connectionConfig.setValues(connectionInfoV1.getValues());
-            return DataSource.newBuilder()
+        public DataSourceBasicInfo map(ResultSet rs) throws SQLException {
+            return DataSourceBasicInfo.newBuilder()
                     .withId(rs.getLong(DATASOURCE_MODEL_NAME + "_id"))
                     .withName(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_name"))
-                    .withTypeId(rs.getLong(DATASOURCE_MODEL_NAME + "_type_id"))
-                    .withConnectionConfig(connectionConfig)
                     .withDatasourceType(DatasourceType.valueOf(rs.getString(DATASOURCE_MODEL_NAME + "_datasource_type")))
+                    .withDatasourceConfigInfo(JSONUtils.jsonToObject(rs.getString(DATASOURCE_MODEL_NAME + "_datasource_config"), Map.class))
+                    .withDsi(rs.getString(DATASOURCE_MODEL_NAME + "_dsi"))
                     .withCreateUser(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_create_user"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(DATASOURCE_ATTR_MODEL_NAME + "_create_time")))
                     .withUpdateUser(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_update_user"))
@@ -372,31 +323,6 @@ public class DataSourceDao {
         }
     }
 
-    private static class DataSourceBasicMapper implements ResultSetMapper<DataSource> {
-        public static final DataSourceDao.DataSourceBasicMapper INSTANCE = new DataSourceDao.DataSourceBasicMapper();
-
-        @Override
-        public DataSource map(ResultSet rs) throws SQLException {
-            return DataSource.newBuilder()
-                    .withId(rs.getLong("id"))
-                    .withConnectionConfig(JSONUtils.jsonToObject(rs.getString("connection_config"), ConnectionConfig.class))
-                    .withDatasourceType(DatasourceType.valueOf(rs.getString("datasource_type")))
-                    .build();
-        }
-    }
-
-    private static class DataSourceTemplateMapper implements ResultSetMapper<DatasourceTemplate> {
-        public static final DataSourceDao.DataSourceTemplateMapper INSTANCE = new DataSourceDao.DataSourceTemplateMapper();
-
-
-        @Override
-        public DatasourceTemplate map(ResultSet rs) throws SQLException {
-            return DatasourceTemplate.newBuilder()
-                    .withType(rs.getString("name"))
-                    .withId(rs.getLong("id"))
-                    .build();
-        }
-    }
 
     private Pair<String, List<Object>> generateWhereClauseAndParamsFromFilter(DataSourceSearchFilter filters) {
         Preconditions.checkNotNull(filters, "Invalid argument `filters`: null");
@@ -412,37 +338,6 @@ public class DataSourceDao {
         }
 
         return Pair.of(whereClause, params);
-    }
-
-
-    /**
-     * just used to compatible old data
-     * will be removed after discovery refactor
-     */
-    private Long generateTypeId(DataSource dataSource){
-        DatasourceType datasourceType = dataSource.getDatasourceType();
-        ConnectionInfo userConnection = dataSource.getConnectionConfig().getUserConnection();
-        ConnectionType userConnectionType = userConnection.getConnectionType();
-        switch (datasourceType){
-            case POSTGRESQL:
-                return 3l;
-            case MONGODB:
-                return 2l;
-            case ARANGO:
-                return 5l;
-            case ELASTICSEARCH:
-                return 4l;
-            case MYSQL:
-                return 7l;
-            case HIVE:
-                if(userConnectionType.equals(ConnectionType.ATHENA)){
-                    return 1l;
-                }else {
-                    return 6l;
-                }
-            default:
-                throw new IllegalStateException(datasourceType + " is not supported");
-        }
     }
 
 

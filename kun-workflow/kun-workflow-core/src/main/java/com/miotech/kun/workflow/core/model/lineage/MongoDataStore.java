@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.MongoConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.MongoConnectionConfigInfo;
 
 public class MongoDataStore extends DataStore {
 
@@ -59,8 +59,8 @@ public class MongoDataStore extends DataStore {
     }
 
     @Override
-    public ConnectionInfo getConnectionInfo() {
-        return new MongoConnectionInfo(ConnectionType.MONGODB, host, port);
+    public ConnectionConfigInfo getConnectionConfigInfo() {
+        return new MongoConnectionConfigInfo(ConnectionType.MONGODB, host, port);
     }
 
     @Override

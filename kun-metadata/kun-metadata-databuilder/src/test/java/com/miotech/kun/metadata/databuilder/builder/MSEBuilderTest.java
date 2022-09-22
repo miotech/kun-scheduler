@@ -6,16 +6,13 @@ import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.common.dao.DataSourceDao;
 import com.miotech.kun.metadata.common.dao.DatasetSnapshotDao;
-import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.common.service.FilterRuleService;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
-import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.constant.StatisticsMode;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetSnapshot;
@@ -23,6 +20,7 @@ import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.filter.FilterRule;
 import com.miotech.kun.metadata.core.model.filter.FilterRuleType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceBasicInfoRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.databuilder.container.PostgreSQLTestContainer;
 import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
@@ -34,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -87,10 +86,10 @@ public class MSEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
+        ConnectionConfigInfo connectionConfigInfo = new PostgresConnectionConfigInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+        Map<String, Object> hostPortDatasourceConfig = DataSourceFactory.createHostPortDatasourceConfig(postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort());
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", hostPortDatasourceConfig, connectionConfigInfo, DatasourceType.POSTGRESQL);
 
         DataSource dataSource = dataSourceService.create(sourceRequest);
 
@@ -122,10 +121,10 @@ public class MSEBuilderTest extends DatabaseTestBase {
         PostgreSQLContainer postgreSQLContainer = PostgreSQLTestContainer.executeInitSQLThenStart("sql/init_postgresql.sql");
 
         // Mock DataSource
-        ConnectionInfo connectionInfo = new PostgresConnectionInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
+        ConnectionConfigInfo connectionConfigInfo = new PostgresConnectionConfigInfo(ConnectionType.POSTGRESQL, postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort()
                 , postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword());
-        ConnectionConfig connectionConfig = ConnectionConfig.newBuilder().withUserConnection(connectionInfo).build();
-        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", connectionConfig, DatasourceType.POSTGRESQL);
+        Map<String, Object> hostPortDatasourceConfig = DataSourceFactory.createHostPortDatasourceConfig(postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort());
+        DataSourceRequest sourceRequest = DataSourceFactory.createDataSourceRequest("pg", hostPortDatasourceConfig, connectionConfigInfo, DatasourceType.POSTGRESQL);
 
         DataSource dataSource = dataSourceService.create(sourceRequest);
 

@@ -1,10 +1,12 @@
 package com.miotech.kun.metadata.common.client;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.connection.HiveMetaStoreConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.HiveMetaStoreConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -33,7 +35,7 @@ public class HiveThriftBackend extends BaseMetadataBackend implements StorageBac
 
     private final Logger logger = LoggerFactory.getLogger(HiveThriftBackend.class);
 
-    private final HiveMetaStoreConnectionInfo connectionInfo;
+    private final HiveMetaStoreConnectionConfigInfo connectionConfig;
 
     private final FieldMappingService fieldMappingService;
 
@@ -41,12 +43,12 @@ public class HiveThriftBackend extends BaseMetadataBackend implements StorageBac
 
     private final ClientFactory clientFactory;
 
-    public HiveThriftBackend(HiveMetaStoreConnectionInfo connectionInfo, FieldMappingService fieldMappingService,
+    public HiveThriftBackend(HiveMetaStoreConnectionConfigInfo connectionConfig, FieldMappingService fieldMappingService,
                              ClientFactory clientFactory) {
-        this.connectionInfo = connectionInfo;
+        this.connectionConfig = connectionConfig;
         this.fieldMappingService = fieldMappingService;
         this.clientFactory = clientFactory;
-        client = clientFactory.getHiveClient(connectionInfo.getMetaStoreUris());
+        client = clientFactory.getHiveClient(connectionConfig.getMetaStoreUris());
     }
 
     @Override

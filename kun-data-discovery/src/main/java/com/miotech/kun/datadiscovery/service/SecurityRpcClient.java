@@ -6,12 +6,10 @@ import com.miotech.kun.security.service.BaseSecurityService;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,6 +40,12 @@ public class SecurityRpcClient extends BaseSecurityService {
         return stub.findRoleOnSpecifiedResources(roleOnSpecifiedResourcesReq);
     }
 
+    public RoleOnSpecifiedResourcesResp findRoleOnSpecifiedResourcesByUser(String moduleName, List<String> sourceSystemIds,String username) {
+        RoleOnSpecifiedResourcesReq roleOnSpecifiedResourcesReq =
+                RoleOnSpecifiedResourcesReq.newBuilder().addAllSourceSystemIds(sourceSystemIds).setModule(moduleName).setUsername(username).build();
+        return stub.findRoleOnSpecifiedResources(roleOnSpecifiedResourcesReq);
+    }
+
     public void addScopeOnSpecifiedRole(String moduleName, String roleName, String userName, List<String> sourceSystemIds) {
         UpdateScopeOnSpecifiedRoleReq updateScopeOnSpecifiedRoleReq = UpdateScopeOnSpecifiedRoleReq.newBuilder()
                 .setModule(moduleName)
@@ -57,6 +61,7 @@ public class SecurityRpcClient extends BaseSecurityService {
                 .setUsername(userName)
                 .setRolename(roleName)
                 .addAllSourceSystemIds(sourceSystemIds).build();
+
         stub.deleteScopeOnSpecifiedRole(updateScopeOnSpecifiedRoleReq);
     }
 
@@ -65,7 +70,7 @@ public class SecurityRpcClient extends BaseSecurityService {
         return stub.findRoleOnSpecifiedModule(roleOnSpecifiedModuleReq);
     }
 
-    public List<String> getGlossaryEditorList(String moduleName, String role, Long sourceSystemId) {
+    public List<String> findUserList(String moduleName, String role, Long sourceSystemId) {
         UsersOnSpecifiedRoleReq specifiedRoleReq = UsersOnSpecifiedRoleReq.newBuilder().setModule(moduleName).setRolename(role).setSourceSystemId(sourceSystemId.toString()).build();
         UsersOnSpecifiedRoleResp usersOnSpecifiedRole = stub.findUsersOnSpecifiedRole(specifiedRoleReq);
         if (Objects.isNull(usersOnSpecifiedRole) || CollectionUtils.isEmpty(usersOnSpecifiedRole.getUsernamesList())) {

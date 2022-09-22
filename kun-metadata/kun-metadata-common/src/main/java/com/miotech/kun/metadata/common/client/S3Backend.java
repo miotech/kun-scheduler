@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Preconditions;
-import com.miotech.kun.metadata.core.model.connection.S3ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.S3ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 
 import java.util.regex.Matcher;
@@ -13,12 +13,12 @@ import java.util.regex.Pattern;
 
 public class S3Backend implements StorageBackend {
 
-    private final S3ConnectionInfo connectionInfo;
+    private final S3ConnectionConfigInfo connectionInfo;
     private final AmazonS3 s3Client;
     private static final String S3_URI_PATTERN = "^(s3|s3a|s3n)://(?<bucketName>[\\w\\.]+)/(?<key>[\\w_/]+)$";
     private final ClientFactory clientFactory;
 
-    public S3Backend(S3ConnectionInfo connectionInfo,ClientFactory clientFactory) {
+    public S3Backend(S3ConnectionConfigInfo connectionInfo, ClientFactory clientFactory) {
         this.connectionInfo = connectionInfo;
         this.clientFactory = clientFactory;
         s3Client = clientFactory.getAmazonS3Client(connectionInfo.getS3AccessKey(), connectionInfo.getS3SecretKey(), connectionInfo.getS3Region());

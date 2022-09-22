@@ -37,7 +37,7 @@ public abstract class StatisticsExtractorTemplate implements DatasetStatisticsEx
     }
 
     private DataWarehouseStatTemplate buildDataWarehouseStatTemplate(DataSource dataSource, Dataset dataset) {
-        ConnectionType connectionType = dataSource.getConnectionConfig().getDataConnection().getConnectionType();
+        ConnectionType connectionType = dataSource.getDatasourceConnection().getDataConnection().getConnectionType();
         switch (connectionType) {
             case HIVE_SERVER:
             case ATHENA:
@@ -97,7 +97,7 @@ public abstract class StatisticsExtractorTemplate implements DatasetStatisticsEx
 
     @Override
     public Long getRowCount() {
-        return statTemplate.getRowCount(dataSource.getConnectionConfig().getDataConnection().getConnectionType());
+        return statTemplate.getRowCount(dataSource.getDatasourceConnection().getDataConnection().getConnectionType());
     }
 
     @Override

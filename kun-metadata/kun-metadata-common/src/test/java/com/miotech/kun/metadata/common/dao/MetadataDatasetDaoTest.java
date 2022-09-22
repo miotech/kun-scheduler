@@ -3,29 +3,29 @@ package com.miotech.kun.metadata.common.dao;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFieldFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFieldStatFactory;
-import com.miotech.kun.metadata.core.model.connection.AthenaConnectionInfo;
-import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
+import com.miotech.kun.metadata.core.model.connection.AthenaConnectionConfigInfo;
+import com.miotech.kun.metadata.core.model.connection.DatasourceConnection;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
-import com.miotech.kun.metadata.core.model.connection.HiveMetaStoreConnectionInfo;
 import com.miotech.kun.metadata.core.model.dataset.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DataSourceBasicInfo;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.*;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -91,7 +91,7 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         Optional<Dataset> datasetOptional = metadataDatasetDao.fetchDatasetByGid(1L);
 
         // 3. Validate
-        assertTrue(datasetOptional.isPresent());
+        Assertions.assertTrue(datasetOptional.isPresent());
         Dataset dataset = datasetOptional.get();
         assertThat(dataset.getGid(), is(1L));
         assertThat(dataset.getName(), is("example_dataset"));
@@ -107,9 +107,9 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         Optional<Dataset> datasetOptional = metadataDatasetDao.fetchDatasetByGid(1L);
 
         // Validate
-        assertFalse(datasetOptional.isPresent());
+        Assertions.assertFalse(datasetOptional.isPresent());
     }
-    
+
     @Test
     public void testGetDatabases_emptyParam() {
         List<Long> emptyParams = ImmutableList.of();
@@ -130,22 +130,18 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
 
     @Test
     public void testGetDatasetDetail() {
-        Long gid1 = IdGenerator.getInstance().nextId();
+        long gid1 = IdGenerator.getInstance().nextId();
         List<String> owners1 = ImmutableList.of("u1", "u2");
         List<String> tags1 = ImmutableList.of("t1", "t2");
-        Long gid2 = IdGenerator.getInstance().nextId();
+        long gid2 = IdGenerator.getInstance().nextId();
         List<String> owners2 = ImmutableList.of("u2", "u3");
         List<String> tags2 = ImmutableList.of("t2", "t3");
         Dataset dataset1 = MockDatasetFactory.createDataset(gid1, "test1");
         Dataset dataset2 = MockDatasetFactory.createDataset(gid2, "test2");
         Dataset dataset1OfFetch = metadataDatasetDao.createDataset(dataset1);
         Dataset dataset2OfFetch = metadataDatasetDao.createDataset(dataset2);
-
-        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
-                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
-                .build(), DatasourceType.HIVE, ImmutableList.of());
-        dataSourceDao.create(dataSource);
-
+        Long datasourceId = dataset1.getDatasourceId();
+        DataSourceBasicInfo dataSourceBasicInfo = mockDataSourceBasicInfo(datasourceId);
         metadataDatasetDao.overwriteOwners(dataset1OfFetch.getGid(), owners1);
         metadataDatasetDao.overwriteOwners(dataset2OfFetch.getGid(), owners2);
 
@@ -156,8 +152,14 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         assertThat(datasetDetail, notNullValue());
         assertThat(datasetDetail.getGid(), is(dataset1OfFetch.getGid()));
         assertThat(datasetDetail.getName(), is(dataset1OfFetch.getName()));
-        assertThat(datasetDetail.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetDetail.getDatasource(), is(dataSourceBasicInfo.getName()));
         assertThat(datasetDetail.getDatabase(), is(dataset1OfFetch.getDatabaseName()));
+    }
+
+    private DataSourceBasicInfo mockDataSourceBasicInfo(Long datasourceId) {
+        Map<String, Object> athenaDatasourceConfig = MockDataSourceFactory.createAthenaDatasourceConfig("jdbc:awsathena://...");
+        DataSourceBasicInfo dataSourceBasicInfo = MockDataSourceFactory.createDataSourceBasicInfo(datasourceId, "test datasource", athenaDatasourceConfig, DatasourceType.HIVE, ImmutableList.of(), "admin", "admin");
+        return dataSourceDao.create(dataSourceBasicInfo);
     }
 
     @Test
@@ -173,11 +175,7 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         Dataset dataset1OfFetch = metadataDatasetDao.createDataset(dataset1);
         Dataset dataset2OfFetch = metadataDatasetDao.createDataset(dataset2);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
-                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
-                .build(), DatasourceType.HIVE, ImmutableList.of());
-        dataSourceDao.create(dataSource);
-
+        DataSourceBasicInfo dataSourceBasicInfo = mockDataSourceBasicInfo(dataset1.getDatasourceId());
         metadataDatasetDao.overwriteOwners(dataset1OfFetch.getGid(), owners1);
         metadataDatasetDao.overwriteOwners(dataset2OfFetch.getGid(), owners2);
         tagDao.overwriteDatasetTags(dataset1OfFetch.getGid(), tags1);
@@ -191,12 +189,12 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         assertThat(datasetDetailList.size(), is(datasetIdList.size()));
         DatasetDetail datasetDetail10 = datasetDetailList.get(0);
         assertThat(datasetDetail10.getName(), is(dataset1OfFetch.getName()));
-        assertThat(datasetDetail10.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetDetail10.getDatasource(), is(dataSourceBasicInfo.getName()));
         assertThat(datasetDetail10.getDatabase(), is(dataset1OfFetch.getDatabaseName()));
 
         DatasetDetail datasetDetail20 = datasetDetailList.get(1);
         assertThat(datasetDetail20.getName(), is(dataset2OfFetch.getName()));
-        assertThat(datasetDetail20.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetDetail20.getDatasource(), is(dataSourceBasicInfo.getName()));
         assertThat(datasetDetail20.getDatabase(), is(dataset2OfFetch.getDatabaseName()));
 
     }
@@ -210,10 +208,7 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         Dataset dataset1 = MockDatasetFactory.createDataset(gid1, "test1");
         Dataset dataset1OfFetch = metadataDatasetDao.createDataset(dataset1);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
-                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
-                .build(), DatasourceType.HIVE, ImmutableList.of());
-        dataSourceDao.create(dataSource);
+        mockDataSourceBasicInfo(dataset1.getDatasourceId());
         metadataDatasetDao.overwriteOwners(dataset1OfFetch.getGid(), owners1);
         tagDao.overwriteDatasetTags(dataset1OfFetch.getGid(), tags1);
 

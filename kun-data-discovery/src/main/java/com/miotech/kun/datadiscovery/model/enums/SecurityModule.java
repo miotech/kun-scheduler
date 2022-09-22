@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public enum SecurityModule {
-    GLOSSARY(GlossaryRole.class);
+    GLOSSARY(GlossaryRole.class),
+    CONNECTION(ConnectionRole.class);
 
 
     private Class<? extends KunRole> kunRoleClass;

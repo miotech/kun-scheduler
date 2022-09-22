@@ -3,8 +3,9 @@ package com.miotech.kun.workflow.testing.factory;
 import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +40,12 @@ public class MockDataStoreFactory {
                 return "";
             }
 
+            @Nullable
             @Override
-            public ConnectionInfo getConnectionInfo() {
-                Map<String,Object> values = new HashMap<>();
-                return new ConnectionInfo(null);
+            public ConnectionConfigInfo getConnectionConfigInfo() {
+                return null;
             }
+
 
             @Override
             public String getName() {

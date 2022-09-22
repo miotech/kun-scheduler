@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.core.model.dataset;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -20,6 +20,7 @@ public abstract class DataStore implements Serializable {
 
     /**
      * extract database and schema info
+     *
      * @return
      */
     @JsonIgnore
@@ -32,6 +33,7 @@ public abstract class DataStore implements Serializable {
 
     /**
      * Returns data set identifier (DSI) of this datastore object
+     *
      * @return data set identifier
      */
     @JsonIgnore
@@ -43,7 +45,7 @@ public abstract class DataStore implements Serializable {
     /**
      * @return data store connection info
      */
-    public abstract ConnectionInfo getConnectionInfo();
+    public abstract ConnectionConfigInfo getConnectionConfigInfo();
 
     @JsonIgnore
     @Nullable

@@ -1,21 +1,21 @@
 package com.miotech.kun.metadata.common.connector;
 
-import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfigInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import com.miotech.kun.metadata.core.model.connection.JdbcConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.JdbcConnectionConfigInfo;
 
 public class ConnectorFactory {
 
     public static Connector generateConnector(DataSource datasource) {
-        ConnectionInfo connectionInfo = datasource.getConnectionConfig().getDataConnection();
-        return generateConnector(connectionInfo);
+        ConnectionConfigInfo connectionConfigInfo = datasource.getDatasourceConnection().getDataConnection().getConnectionConfigInfo();
+        return generateConnector(connectionConfigInfo);
     }
 
-    public static Connector generateConnector(ConnectionInfo connectionInfo) {
-        if (connectionInfo instanceof JdbcConnectionInfo) {
-            return new JdbcConnector((JdbcConnectionInfo) connectionInfo);
+    public static Connector generateConnector(ConnectionConfigInfo connectionConfigInfo) {
+        if (connectionConfigInfo instanceof JdbcConnectionConfigInfo) {
+            return new JdbcConnector((JdbcConnectionConfigInfo) connectionConfigInfo);
         } else {
-            throw new IllegalArgumentException(connectionInfo.getConnectionType() + " connector not support yet");
+            throw new IllegalArgumentException(connectionConfigInfo.getConnectionType() + " connector not support yet");
         }
     }
 }

@@ -25,6 +25,8 @@ public class AppBasicConversionService extends GenericConversionService {
         converterRegistry.addConverterFactory(new GlossaryBaseInfoConvertFactory());
         converterRegistry.addConverterFactory(new DatasetSearchInfoConvertFactory());
         converterRegistry.addConverterFactory(new GlossarySearchConvertFactory());
+        converterRegistry.addConverterFactory(new ConnectionInfoBasicInfoConvertFactory());
+        converterRegistry.addConverterFactory(new ConnectionInfoConvertFactory());
 
     }
 
