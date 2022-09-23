@@ -2867,9 +2867,9 @@
     "@percy/sdk-utils" "^1.3.1"
 
 "@percy/sdk-utils@^1.3.1":
-  version "1.10.2"
-  resolved "https://registry.yarnpkg.com/@percy/sdk-utils/-/sdk-utils-1.10.2.tgz#dc2e225aebc322c5fc04995ead15cfda4f0af6cb"
-  integrity sha512-z/pD7J0bTUeBWF0XsrzPl3D8KrbZEiUUkn2Qg4+p0YIDIEHAp1m5biaBe7235Nt2OuppMlQoNP6/68nyNp2m6g==
+  version "1.10.4"
+  resolved "https://registry.yarnpkg.com/@percy/sdk-utils/-/sdk-utils-1.10.4.tgz#5cab2f29f75588372743713b634e0780abdc681e"
+  integrity sha512-5MTB30SSKLMMX3Mc19Ig62stZJeKbEyRZpVj8df47GQB4s5vbB3qtRwy0cmJBwcbDZxU5LWYQABsfr9UdAKvVg==
 
 "@pmmmwh/react-refresh-webpack-plugin@^0.4.2":
   version "0.4.3"

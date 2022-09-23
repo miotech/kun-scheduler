@@ -7,6 +7,7 @@ import useI18n from '@/hooks/useI18n';
 import { TaskRun } from '@/definitions/TaskRun.type';
 import { Link } from 'umi';
 import styles from '@/pages/operation-center/deployed-task-detail/index.less';
+import { TaskRunMemoryDiagnosis } from '@/components/TasKRunDiagnosis/TaskRunMemoryDiagnosis';
 
 interface OwnProps {
   currentTab?: string;
@@ -94,6 +95,18 @@ export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetai
       >
         <div id="taskrun-dag-container" className={styles.DAGContainer}>
           <TaskRunDAG taskRun={taskRun || null} width={width ?? 0} height={(height ?? 20) - 20} />
+        </div>
+      </Tabs.TabPane>
+      <Tabs.TabPane
+        tab={
+          <span>
+            <span>{t('scheduledTasks.Diagnosis')}</span>
+          </span>
+        }
+        key="diagnosis"
+      >
+        <div id="taskrun-diagnosis-container" className={styles.DiagnosisContainer}>
+          <TaskRunMemoryDiagnosis taskRunId={taskRun?.id || ''} />
         </div>
       </Tabs.TabPane>
     </Tabs>

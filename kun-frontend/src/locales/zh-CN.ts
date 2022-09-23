@@ -106,6 +106,7 @@ export default {
   'common.reactlazylog.copyToClipboard': '复制所有内容至剪切板',
   'common.reactlazylog.copyToClipboardSuccess': '复制成功',
   'common.reactlazylog.downloadAsFile': '下载全部内容',
+  'common.taskRun.memory.diagnosis': '内存统计',
   'login.welcome': '欢迎来到妙盈鲲数据平台',
   'login.userName': '用户名',
   'login.password': '密码',
@@ -525,6 +526,7 @@ export default {
   'scheduledTasks.jumpToTaskDef': '跳转至任务定义',
   'scheduledTasks.logs': '日志',
   'scheduledTasks.DAG': 'DAG',
+  'scheduledTasks.Diagnosis': '内存统计',
   'scheduledTasks.jumpToTaskGantt': '查看任务甘特图',
   'taskRun.property.id': '运行实例 ID',
   'taskRun.property.status': '状态',
@@ -674,4 +676,44 @@ export default {
   'datasetPull.notification.success.desc': '拉取成功的数据源:',
   'datasetPull.notification.failed.title': 'Datasource拉取失败',
   'datasetPull.notification.failed.desc': '拉取失败的数据源',
+  'taskRun.diagnosis.title': '最近一次运行统计',
+  'taskRun.diagnosis.memoryUsage': '1、实际总内存消耗',
+  'taskRun.diagnosis.memoryUsagePercent': '2、实际总内存使用率',
+  'taskRun.diagnosis.executor.num.peak': '3、executor数量峰值',
+  'taskRun.diagnosis.executor.num.median': '4、executor数量中位数',
+  'taskRun.diagnosis.executor.memory.peak': '5、单个executor使用的memory峰值',
+  'taskRun.diagnosis.executor.memory.median': '6、单个executor使用的memory中位数',
+  'taskRun.diagnosis.driver.memory.peak': '7、driver使用的memory峰值',
+  'taskRun.diagnosis.driver.memory.median': '8、driver使用的memory中位数',
+  'taskRun.diagnosis.fieldDescription.title': '字段说明：',
+  'taskRun.diagnosis.fieldDescription.memoryUsage':
+    '1、实际总内存消耗：本次任务从运行开始到结束实际消耗的总内存，为executor实际使用的memory之和；',
+  'taskRun.diagnosis.fieldDescription.memoryUsagePercent':
+    '2、实际总内存使用率：实际消耗的总内存与所申请的总内存的比值；',
+  'taskRun.diagnosis.fieldDescription.executor.num.peak':
+    '3、executor数量峰值：本次任务运行的多个阶段中，executor的最大值；',
+  'taskRun.diagnosis.fieldDescription.executor.num.median':
+    '4、executor数量中位数：本次任务运行的多个阶段中，executor的中位数值；',
+  'taskRun.diagnosis.fieldDescription.executor.memory.peak':
+    '5、单个executor使用的memory峰值：本次任务运行中，单个executor用到的最大memory值；',
+  'taskRun.diagnosis.fieldDescription.executor.memory.median':
+    '6、单个executor使用的memory中位数：本次任务运行中，将每个executor用到的最大memory值从低到高排序，取中位数；',
+  'taskRun.diagnosis.fieldDescription.driver.memory.peak':
+    '7、driver使用的memory峰值：本次任务运行中，driver用到的最大memory值；',
+  'taskRun.diagnosis.fieldDescription.driver.memory.median':
+    '8、driver使用的memory中位数：本次任务运行中，将driver在不同监测时刻的memory值从低到高排序，取中位数；',
+  'taskRun.diagnosis.action.lookUp': '最近七次使用情况：点击查看',
+  'taskRun.diagnosis.lineChart.xAxis.name': '实例Id',
+  'taskRun.diagnosis.lineChart.yAxis.name.memoryValue': 'memory值',
+  'taskRun.diagnosis.lineChart.yAxis.name.executorNum': 'executor数',
+  'taskRun.diagnosis.lineChart.totalMemoryUsage.title': '最近7次运行内存消耗情况',
+  'taskRun.diagnosis.lineChart.executorDriverMemoryUsage.title': '最近7次executor、driver以及memory情况',
+  'taskRun.diagnosis.lineChart.legend.memoryUsage': '实际总内存消耗',
+  'taskRun.diagnosis.lineChart.legend.memoryUsagePercent': '实际总内存使用率',
+  'taskRun.diagnosis.lineChart.legend.executor.num.peak': 'executor数量峰值',
+  'taskRun.diagnosis.lineChart.legend.executor.num.median': 'executor数量中位数',
+  'taskRun.diagnosis.lineChart.legend.executor.memory.peak': '单个executor使用的memory峰值',
+  'taskRun.diagnosis.lineChart.legend.executor.memory.median': '单个executor使用的memory中位数',
+  'taskRun.diagnosis.lineChart.legend.driver.memory.peak': 'driver使用的memory峰值',
+  'taskRun.diagnosis.lineChart.legend.driver.memory.median': 'driver使用的memory中位数',
 };

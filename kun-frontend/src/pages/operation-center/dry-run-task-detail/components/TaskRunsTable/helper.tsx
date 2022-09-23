@@ -8,6 +8,7 @@ import { ReactComponent as StopIcon } from '@/assets/icons/stop-rect.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { StatusText } from '@/components/StatusText';
+import { TaskRunMemoryDiagnosis } from '@/components/TasKRunDiagnosis/TaskRunMemoryDiagnosis';
 import dayjs from 'dayjs';
 import { DateFormat } from '@/definitions/date.type';
 import { pick } from 'lodash';
@@ -110,6 +111,10 @@ const renderDuration = (_: string, record: any) => {
   return '-';
 };
 
+const renderTaskRunMemoryDiagnosis = (_: unknown, record: TaskRun) => {
+  return <TaskRunMemoryDiagnosis shouldModal taskRunId={record.id} />;
+};
+
 export const useColumns = (
   stopTask: TaskAction,
   rerunTask: TaskAction,
@@ -129,7 +134,7 @@ export const useColumns = (
       generateColumn(t('operationCenter.dryRun.instance.column.startTime'), 'startAt', renderStartTime),
       generateColumn(t('operationCenter.dryRun.instance.column.endTime'), 'endAt', renderEndTime),
       generateColumn(t('operationCenter.dryRun.instance.column.duration'), '', renderDuration),
-      generateColumn(t('operationCenter.dryRun.instance.column.memeory'), ''),
+      generateColumn(t('operationCenter.dryRun.instance.column.memeory'), '', renderTaskRunMemoryDiagnosis),
       generateColumn('', '', renderOperation(t, stopTask, rerunTask, viewLog), { align: 'center', width: '40px' }),
     ];
   }, [stopTask, rerunTask, viewLog, t]);
