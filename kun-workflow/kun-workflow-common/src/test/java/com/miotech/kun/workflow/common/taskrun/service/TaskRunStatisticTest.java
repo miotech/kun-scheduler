@@ -2,9 +2,7 @@ package com.miotech.kun.workflow.common.taskrun.service;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
-import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.CommonTestBase;
-import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;

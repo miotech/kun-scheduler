@@ -68,6 +68,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     @AfterEach
     public void tearDown() {
+        logger.debug("truncate all table");
         // clear all tables
         truncateAllTables();
 

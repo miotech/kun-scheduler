@@ -1,37 +1,33 @@
 package com.miotech.kun.workflow.common.taskrun.state;
 
 import com.miotech.kun.workflow.core.model.taskrun.BasicTaskRunState;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunPhase;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunState;
 
 public class TaskRunCreated extends BasicTaskRunState {
 
-    public TaskRunCreated() {
-        super(TaskRunStatus.CREATED);
+    public TaskRunCreated(Integer taskRunParse) {
+        super(taskRunParse);
     }
 
     @Override
-    protected TaskRunStatus onAbort(){
-        return TaskRunStatus.ABORTED;
+    protected TaskRunState onAssembled() {
+        //after transit to TaskRunAssembled,taskRun can be schedule
+        return new TaskRunWaiting(TaskRunPhase.WAITING);
     }
 
     @Override
-    protected TaskRunStatus onSubmit(){
-        return TaskRunStatus.QUEUED;
+    protected TaskRunState onUpstreamFailed() {
+        return new TaskRunUpstreamFailed(TaskRunPhase.UPSTREAM_FAILED);
     }
 
     @Override
-    protected TaskRunStatus onUpstreamFailed(){
-        return TaskRunStatus.UPSTREAM_FAILED;
+    protected TaskRunState onAbort() {
+        return new TaskRunAborted(TaskRunPhase.ABORTED);
     }
 
     @Override
-    protected TaskRunStatus onHangup(){
-        return TaskRunStatus.BLOCKED;
+    protected TaskRunState onRecover() {
+        return new TaskRunWaiting(TaskRunPhase.WAITING);
     }
-
-    @Override
-    protected TaskRunStatus onSkip() {
-        return TaskRunStatus.SKIPPED;
-    }
-
 }

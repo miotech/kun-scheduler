@@ -1,0 +1,21 @@
+package com.miotech.kun.workflow.scheduler.action;
+
+import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunAction;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunSMMessage;
+import com.miotech.kun.workflow.scheduler.TaskManager;
+
+public class TaskRunAssembledAction implements TaskRunAction {
+
+    private final TaskManager taskManager;
+
+    public TaskRunAssembledAction(TaskManager taskManager) {
+        this.taskManager = taskManager;
+    }
+
+    @Override
+    public void run(TaskRunSMMessage message) {
+        taskManager.resolveCondition(message.getTaskAttempt(), message.getEvent().getFromTaskRunContext());
+    }
+
+}

@@ -129,6 +129,16 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
+    public void execute(TaskAttempt taskAttempt) {
+        processLifeCycleManager.executeTaskAttempt(taskAttempt);
+    }
+
+    @Override
+    public void check(TaskAttempt taskAttempt) {
+        processLifeCycleManager.check(taskAttempt);
+    }
+
+    @Override
     public boolean cancel(Long taskAttemptId) {
         processLifeCycleManager.stop(taskAttemptId);
         return true;

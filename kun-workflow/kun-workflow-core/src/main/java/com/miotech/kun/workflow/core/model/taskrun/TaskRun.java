@@ -65,6 +65,12 @@ public class TaskRun {
 
     private final Tick scheduleTime;
 
+    /**
+     * high 16 bit represent finish phase,
+     * low 16 bit represent unfinish phase
+     */
+    private final Integer taskRunPhase;
+
     public Long getId() {
         return id;
     }
@@ -153,11 +159,15 @@ public class TaskRun {
         return scheduleTime;
     }
 
+    public Integer getTaskRunPhase() {
+        return taskRunPhase;
+    }
+
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime queuedAt,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime termAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                    List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
                    ScheduleType scheduledType, String queueName, Integer priority, ExecuteTarget executeTarget,
-                   List<TaskRunCondition> taskRunConditions, String executorLabel, Tick scheduleTime) {
+                   List<TaskRunCondition> taskRunConditions, String executorLabel, Tick scheduleTime, Integer taskRunPhase) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -181,6 +191,7 @@ public class TaskRun {
         this.taskRunConditions = taskRunConditions;
         this.executorLabel = executorLabel;
         this.scheduleTime = scheduleTime;
+        this.taskRunPhase = taskRunPhase;
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -210,7 +221,8 @@ public class TaskRun {
                 .withExecuteTarget(executeTarget)
                 .withTaskRunConditions(taskRunConditions)
                 .withExecutorLabel(executorLabel)
-                .withScheduleTime(scheduleTime);
+                .withScheduleTime(scheduleTime)
+                .withTaskRunPhase(taskRunPhase);
     }
 
     @Override
@@ -236,8 +248,9 @@ public class TaskRun {
                 ", queueName='" + queueName + '\'' +
                 ", executeTarget=" + executeTarget +
                 ", taskRunConditions=" + taskRunConditions +
-                ", executorLabel=" + executorLabel +
+                ", executorLabel='" + executorLabel + '\'' +
                 ", scheduleTime=" + scheduleTime +
+                ", taskRunPhase=" + taskRunPhase +
                 '}';
     }
 
@@ -264,6 +277,7 @@ public class TaskRun {
         private List<TaskRunCondition> taskRunConditions;
         private String executorLabel;
         private Tick scheduleTime;
+        private Integer taskRunPhase;
 
         private TaskRunBuilder() {
         }
@@ -377,10 +391,15 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withTaskRunPhase(Integer taskRunPhase){
+            this.taskRunPhase = taskRunPhase;
+            return this;
+        }
+
         public TaskRun build() {
             return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, termAt, createdAt, updatedAt, inlets,
                     outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget,
-                    taskRunConditions, executorLabel, scheduleTime);
+                    taskRunConditions, executorLabel, scheduleTime, taskRunPhase);
         }
     }
 }

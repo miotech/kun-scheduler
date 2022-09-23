@@ -72,6 +72,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
                 .ignoring(TaskRunDao.class)
                 .ignoring(TaskRunDao.TaskRunMapper.class)
                 .ignoring(DatabaseOperator.class)
+                .ignoring("taskRunPhase")
                 .ignoring(DependencyFunction.class);
     }
 

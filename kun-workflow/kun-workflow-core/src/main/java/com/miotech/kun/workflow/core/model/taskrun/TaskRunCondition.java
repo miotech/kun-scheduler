@@ -44,6 +44,28 @@ public class TaskRunCondition {
         this.updatedAt = updatedAt;
     }
 
+    public TaskRunCondition onSuccess(){
+        return cloneBuilder().withResult(true).build();
+    }
+
+    public TaskRunCondition onFailed(){
+        if(type.equals(ConditionType.TASKRUN_PREDECESSOR_FINISH)){
+            return cloneBuilder().withResult(true).build();
+        }
+        return this;
+    }
+
+    public TaskRunCondition onUpstreamFailed(){
+        if(type.equals(ConditionType.TASKRUN_PREDECESSOR_FINISH)){
+            return cloneBuilder().withResult(true).build();
+        }
+        return this;
+    }
+
+    public TaskRunCondition onScheduling(){
+        return cloneBuilder().withResult(false).build();
+    }
+
     public static TaskRunConditionBuilder newBuilder() {
         return new TaskRunConditionBuilder();
     }

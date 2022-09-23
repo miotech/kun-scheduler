@@ -12,7 +12,7 @@ import com.miotech.kun.commons.pubsub.subscribe.NopEventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
-import com.miotech.kun.workflow.TaskRunStateMachine;
+import com.miotech.kun.workflow.TaskRunStateMachineDispatcher;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunStatistic;
 import com.miotech.kun.workflow.core.Executor;
@@ -59,7 +59,7 @@ public class KunWorkflowServerModule extends AppModule {
         bind(Scheduler.class).to(LocalScheduler.class);
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
         bind(RecoverService.class);
-        bind(TaskRunStateMachine.class);
+        bind(TaskRunStateMachineDispatcher.class);
         bind(TaskRunStatistic.class);
         bind(PublicEventHandler.class);
         bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);

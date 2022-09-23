@@ -1,27 +1,23 @@
 package com.miotech.kun.workflow.common.taskrun.state;
 
 import com.miotech.kun.workflow.core.model.taskrun.BasicTaskRunState;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunPhase;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunState;
 
 public class TaskRunCheck extends BasicTaskRunState {
 
-    public TaskRunCheck() {
-        super(TaskRunStatus.CHECK);
+
+    public TaskRunCheck(Integer taskRunParse) {
+        super(taskRunParse);
     }
 
     @Override
-    protected TaskRunStatus onAbort(){
-        return TaskRunStatus.ABORTED;
+    protected TaskRunState onCheckSuccess() {
+        return new TaskRunSuccess(TaskRunPhase.SUCCESS);
     }
 
     @Override
-    protected TaskRunStatus onCheckSuccess(){
-        return TaskRunStatus.SUCCESS;
+    protected TaskRunState onCheckFailed() {
+        return new TaskRunCheckFailed(TaskRunPhase.CHECK_FAILED);
     }
-
-    @Override
-    protected TaskRunStatus onCheckFailed(){
-        return TaskRunStatus.CHECK_FAILED;
-    }
-
 }

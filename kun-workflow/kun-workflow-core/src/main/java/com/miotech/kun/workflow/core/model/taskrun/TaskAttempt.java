@@ -38,9 +38,11 @@ public class TaskAttempt {
 
     private final String runtimeLabel;
 
+    private final Integer taskRunPhase;
+
     public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status,
-                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName,Integer priority,
-                       Integer retryTimes, String executorLabel, String runtimeLabel) {
+                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt, String queueName, Integer priority,
+                       Integer retryTimes, String executorLabel, String runtimeLabel, Integer taskRunPhase) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
@@ -55,6 +57,7 @@ public class TaskAttempt {
         this.retryTimes = retryTimes;
         this.executorLabel = executorLabel;
         this.runtimeLabel = runtimeLabel;
+        this.taskRunPhase = taskRunPhase;
     }
 
     public Long getId() {
@@ -110,6 +113,10 @@ public class TaskAttempt {
         return executorLabel;
     }
 
+    public Integer getTaskRunPhase() {
+        return taskRunPhase;
+    }
+
     public String getRuntimeLabel() {
         return runtimeLabel;
     }
@@ -130,7 +137,8 @@ public class TaskAttempt {
                 .withQueueName(queueName)
                 .withPriority(priority)
                 .withRetryTimes(retryTimes)
-                .withExecutorLabel(executorLabel);
+                .withExecutorLabel(executorLabel)
+                .withPhase(taskRunPhase);
     }
 
     @Override
@@ -146,7 +154,9 @@ public class TaskAttempt {
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
                 ", retryTimes=" + retryTimes +
-                ", executorLabel=" + executorLabel +
+                ", executorLabel='" + executorLabel + '\'' +
+                ", runtimeLabel='" + runtimeLabel + '\'' +
+                ", taskRunPhase=" + taskRunPhase +
                 '}';
     }
 
@@ -164,6 +174,7 @@ public class TaskAttempt {
         private Integer retryTimes;
         private String executorLabel;
         private String runtimeLabel;
+        private Integer taskRunPhase;
 
         private Builder() {
         }
@@ -203,17 +214,17 @@ public class TaskAttempt {
             return this;
         }
 
-        public Builder withQueueName(String queueName){
+        public Builder withQueueName(String queueName) {
             this.queueName = queueName;
             return this;
         }
 
-        public Builder withPriority(Integer priority){
+        public Builder withPriority(Integer priority) {
             this.priority = priority;
             return this;
         }
 
-        public Builder withRetryTimes(Integer retryTimes){
+        public Builder withRetryTimes(Integer retryTimes) {
             this.retryTimes = retryTimes;
             return this;
         }
@@ -223,13 +234,18 @@ public class TaskAttempt {
             return this;
         }
 
-        public Builder withRuntimeLabel(String runtimeLabel){
+        public Builder withRuntimeLabel(String runtimeLabel) {
             this.runtimeLabel = runtimeLabel;
             return this;
         }
 
+        public Builder withPhase(Integer taskRunPhase) {
+            this.taskRunPhase = taskRunPhase;
+            return this;
+        }
+
         public TaskAttempt build() {
-            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority,retryTimes, executorLabel, runtimeLabel);
+            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt, queueName, priority, retryTimes, executorLabel, runtimeLabel, taskRunPhase);
         }
     }
 }

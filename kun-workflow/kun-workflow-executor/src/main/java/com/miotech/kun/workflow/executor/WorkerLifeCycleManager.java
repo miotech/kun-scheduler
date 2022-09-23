@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +51,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     private boolean maintenanceMode;
 
     public WorkerLifeCycleManager(ExecutorConfig executorConfig, WorkerMonitor workerMonitor,
-                                  AbstractQueueManager queueManager, String name) {
+                                  AbstractQueueManager queueManager, String name ) {
         this.workerMonitor = workerMonitor;
         this.queueManager = queueManager;
         this.name = name;
@@ -90,19 +89,19 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     }
 
     public void recover() {
-        List<TaskAttempt> shouldRecoverAttemptList = fetchRecoverAttempts();
-        List<WorkerInstance> instanceList = getRunningWorker();
-        logger.info("{} recover watch pods size = {}", name, instanceList.size());
-        for (WorkerInstance workerInstance : instanceList) {
-            workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
-        }
-        Set<Long> instanceSet = instanceList.stream().map(WorkerInstance::getTaskAttemptId).collect(Collectors.toSet());
-        //filter taskAttempt which instance still running
-        List<TaskAttempt> recoverAttemptList = shouldRecoverAttemptList.stream().filter(x -> !instanceSet.contains(x.getId())).collect(Collectors.toList());
-        logger.info("{} recover queued attempt size = {}", name, recoverAttemptList.size());
-        for (TaskAttempt taskAttempt : recoverAttemptList) {
-            queueManager.submit(taskAttempt);
-        }
+//        List<TaskAttempt> shouldRecoverAttemptList = fetchRecoverAttempts();
+//        List<WorkerInstance> instanceList = getRunningWorker();
+//        logger.info("{} recover watch pods size = {}", name, instanceList.size());
+//        for (WorkerInstance workerInstance : instanceList) {
+//            workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
+//        }
+//        Set<Long> instanceSet = instanceList.stream().map(WorkerInstance::getTaskAttemptId).collect(Collectors.toSet());
+//        //filter taskAttempt which instance still running
+//        List<TaskAttempt> recoverAttemptList = shouldRecoverAttemptList.stream().filter(x -> !instanceSet.contains(x.getId())).collect(Collectors.toList());
+//        logger.info("{} recover queued attempt size = {}", name, recoverAttemptList.size());
+//        for (TaskAttempt taskAttempt : recoverAttemptList) {
+//            queueManager.submit(taskAttempt);
+//        }
     }
 
 
@@ -180,10 +179,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     /* ----------- private methods ------------ */
 
 
-    private void executeTaskAttempt(TaskAttempt taskAttempt) {
+    public void executeTaskAttempt(TaskAttempt taskAttempt) {
         WorkerSnapshot existWorkerSnapShot = get(taskAttempt.getId());
         if (existWorkerSnapShot != null) {
-            logger.warn("taskAttemptId = {} is running", taskAttempt.getId());
+            logger.warn("taskAttemptId = {} is running , re-register monitor", taskAttempt.getId());
+            workerMonitor.register(taskAttempt.getId(), new InnerEventHandler());
             return;
         }
         String logPath = logPathOfTaskAttempt(taskAttempt.getId());
@@ -218,46 +218,44 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
 
     private void sendExceptionEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.EXCEPTION, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.EXCEPTION, taskAttemptId , null);
         eventBus.post(taskRunTransitionEvent);
     }
 
     private void sendRunningEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RUNNING, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.READY, taskAttemptId , null);
         eventBus.post(taskRunTransitionEvent);
     }
 
     private void sendCheckEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.COMPLETE, taskAttemptId, null);
         eventBus.post(taskRunTransitionEvent);
     }
 
     private void sendFailedEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.FAILED, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.FAILED, taskAttemptId, null);
         eventBus.post(taskRunTransitionEvent);
     }
 
     private void sendCheckFailedEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK_FAILED, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK_FAILED, taskAttemptId, null);
         eventBus.post(taskRunTransitionEvent);
     }
 
     private void sendCheckSuccessEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK_SUCCESS, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK_SUCCESS, taskAttemptId, null);
         eventBus.post(taskRunTransitionEvent);
     }
 
     private void sendAbortEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, taskAttemptId);
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, taskAttemptId, null);
         eventBus.post(taskRunTransitionEvent);
     }
 
-    private void check(WorkerSnapshot workerSnapshot) {
-        TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerSnapshot.getIns().getTaskAttemptId()).get();
+    public void check(TaskAttempt taskAttempt) {
         logger.debug("taskAttempt = {} going to check", taskAttempt.getId());
         CheckType checkType = taskAttempt.getTaskRun().getTask().getCheckType();
         logger.debug("taskAttemptId = {},checkType is {}", taskAttempt.getId(), checkType.name());
-        sendCheckEvent(taskAttempt.getId());
         switch (checkType) {
             case SKIP:
                 sendCheckSuccessEvent(taskAttempt.getId());
@@ -323,7 +321,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             preStatus = workerSnapshot.getStatus();
             Long taskAttemptId = workerSnapshot.getIns().getTaskAttemptId();
             if (isRunning(workerSnapshot)) {
-                sendRunningEvent(taskAttemptId);
+                //ignore running event
+//                sendRunningEvent(taskAttemptId);
                 return;
             }
             // worker is not running ,clean up
@@ -334,7 +333,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                     sendFailedEvent(taskAttemptId);
                 }
             } else if (isSuccess(workerSnapshot)) {
-                check(workerSnapshot);
+                sendCheckEvent(taskAttemptId);
             } else {
                 throw new IllegalStateException("illegal worker status");
             }
@@ -385,7 +384,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                     for (TaskAttempt taskAttempt : readyToExecuteTaskAttemptList) {
                         try {
                             logger.debug("{} take taskAttempt = {} from queue = {}", name, taskAttempt.getId(), taskAttempt.getQueueName());
-                            executeTaskAttempt(taskAttempt);
+                            eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.READY, taskAttempt.getId(), null));
+//                            executeTaskAttempt(taskAttempt);
                         } catch (Exception e) {
                             logger.warn("take taskAttempt = {} failed", taskAttempt.getId(), e);
                         }

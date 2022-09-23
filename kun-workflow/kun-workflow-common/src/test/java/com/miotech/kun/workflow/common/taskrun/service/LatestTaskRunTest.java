@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.taskrun.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.LocalScheduler;
+import com.miotech.kun.workflow.TaskRunStateMachineDispatcher;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -43,6 +44,7 @@ public class LatestTaskRunTest extends CommonTestBase {
     @Override
     protected void configuration() {
         bind(Scheduler.class, LocalScheduler.class);
+        bind(TaskRunStateMachineDispatcher.class,mock(TaskRunStateMachineDispatcher.class));
         mock(Executor.class);
         super.configuration();
     }
