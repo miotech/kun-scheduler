@@ -32,6 +32,7 @@ function normalizeProvidedCronExpressionValue(value?: string): string | undefine
     .join(' ');
 }
 
+// FIXME: A tempory solutin
 function fixScopValue(value?: string) {
   if (!value) {
     return '';
@@ -44,7 +45,9 @@ function fixScopValue(value?: string) {
       const arr = i.split('-');
       const start = Number(arr[0]);
       const end = Number(arr[1]);
-      if (start > end) {
+      if (Object.is(start, NaN) || Object.is(end, NaN)) {
+        newArr[idx] = `${arr[0]}-${arr[1]}`;
+      } else if (start > end) {
         newArr[idx] = `${start}-${start}`;
       } else {
         newArr[idx] = `${start}-${end}`;
