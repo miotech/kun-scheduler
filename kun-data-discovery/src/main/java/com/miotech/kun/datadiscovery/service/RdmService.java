@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -7,9 +8,7 @@ import com.miotech.kun.common.model.PageRequest;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.datadiscovery.model.bo.EditRefDataTableRequest;
-import com.miotech.kun.datadiscovery.model.bo.EditRefTableVersionInfo;
-import com.miotech.kun.datadiscovery.model.bo.ValidRefDataRequest;
+import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
 import com.miotech.kun.datadiscovery.model.entity.RefTableVersionInfo;
 import com.miotech.kun.datadiscovery.model.entity.rdm.*;
@@ -24,7 +23,11 @@ import com.miotech.kun.datadiscovery.service.rdm.RefDataValidator;
 import com.miotech.kun.datadiscovery.service.rdm.file.RefStorageFileBuilder;
 import com.miotech.kun.datadiscovery.service.rdm.file.RefUploadFileBuilder;
 import com.miotech.kun.datadiscovery.service.rdm.file.S3StoragePathGenerator;
+import com.miotech.kun.datadiscovery.util.JSONUtils;
+import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.event.DatasetCreatedEvent;
+import com.miotech.kun.metadata.core.model.search.SearchedInfo;
+import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.operationrecord.common.anno.OperationRecord;
 import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.service.BaseSecurityService;
@@ -32,8 +35,10 @@ import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.curator.shaded.com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.stereotype.Service;
@@ -69,6 +74,7 @@ public class RdmService extends BaseSecurityService {
     private final LineageAppService lineageAppService;
     private final FilterRuleAppService filterRuleAppService;
     private final RefTableVersionRepository refTableVersionRepository;
+    private final SearchAppService searchAppService;
 
     @Value("${rdm.datasource:0}")
     private Long datasourceId;
@@ -95,7 +101,7 @@ public class RdmService extends BaseSecurityService {
         }
         List<DataRecord> data = refBaseTable.getRefData().getData();
         if (data.size() < 1) {
-            throw new IllegalArgumentException(String.format("The number of rows cannot be less than 1:%s", data.size()));
+            throw new IllegalArgumentException(String.format("The number of rows cannot be less than 1:%s", 0));
         }
         if (data.size() > INPUT_MAX_LINE) {
             throw new IllegalArgumentException(String.format("he number of rows cannot be greater than %s ,size:%s", INPUT_MAX_LINE, data.size()));
@@ -120,7 +126,7 @@ public class RdmService extends BaseSecurityService {
             return RefUpdateResult.error(new ValidationResultVo(validationResult));
         }
         editRefVersionInfo.setRefTableMetaData(refBaseTable.getRefTableMetaData());
-        RefTableVersionInfo version = null;
+        RefTableVersionInfo version;
         Long tableId = request.getTableId();
         Long versionId = request.getVersionId();
         if (Objects.nonNull(versionId) && Objects.nonNull(tableId)) {
@@ -134,9 +140,17 @@ public class RdmService extends BaseSecurityService {
             log.error("Data writing failed ,edit base info:{}", editRefVersionInfo);
             throw new IllegalStateException("Data writing failed", e);
         }
-
+        searchAppService.saveOrUpdateRefTableSearchInfo(version, convertGlossaryToMap(version));
         return RefUpdateResult.success(new BaseRefTableVersionInfo(version));
+    }
 
+    private List<Map<Long, String>> convertGlossaryToMap(RefTableVersionInfo version) {
+        List<GlossaryBasicInfo> glossaryList = glossaryService.findGlossaryList(version.getGlossaryList());
+        return glossaryList.stream().map(glossaryBasicInfo -> {
+            HashMap<Long, String> map = Maps.newHashMap();
+            map.put(glossaryBasicInfo.getId(), glossaryBasicInfo.getName());
+            return map;
+        }).collect(Collectors.toList());
     }
 
 
@@ -214,6 +228,7 @@ public class RdmService extends BaseSecurityService {
         RefTableVersionInfo refTableVersionInfo = getRefVersionInfo(versionId);
         disposeGlossary(refTableVersionInfo.getGlossaryList(), refTableVersionInfo.getDatasetId());
         RefTableVersionInfo versionInfo = rollbackRefDataTableVersion(refTableVersionInfo);
+        searchAppService.saveOrUpdateRefTableSearchInfo(refTableVersionInfo,convertGlossaryToMap(refTableVersionInfo));
         refDataOperator.overwrite(versionInfo);
         return true;
     }
@@ -227,6 +242,7 @@ public class RdmService extends BaseSecurityService {
             deactivateTableVersion(refVersionInfo);
             refDataOperator.remove(refVersionInfo.getDatabaseName(), refVersionInfo.getTableName());
             filterRuleAppService.removeDatasetStatistics(refVersionInfo.getDatasetId());
+            searchAppService.removeRefTableSearchInfo(refVersionInfo.getTableId());
             return true;
         }
         String datasets = downstreamDataset.stream().map(DatasetNodeInfo::getDatasetName).collect(Collectors.joining(","));
@@ -260,19 +276,32 @@ public class RdmService extends BaseSecurityService {
                 .collect(Collectors.toList());
     }
 
-
+    @Deprecated
     public PageResult<RefTableVersionFillInfo> pageRefTableInfo(PageRequest pageRequest) {
         PageResult<RefTableVersionInfo> pageResult = refTableVersionRepository.pageRefTableInfo(pageRequest.getPageNum(), pageRequest.getPageSize());
-        List<RefTableVersionFillInfo> collect = Flux.fromIterable(pageResult.getRecords())
+        return getRefTableVersionFillInfoPageResult(pageResult.getPageSize(), pageResult.getPageNumber(), pageResult.getTotalCount(), pageResult.getRecords());
+    }
+
+    private PageResult<RefTableVersionFillInfo> getRefTableVersionFillInfoPageResult(Integer pageSize, Integer pageNumber, Integer totalCount, List<RefTableVersionInfo> records) {
+        List<RefTableVersionFillInfo> collect = Flux.fromIterable(records)
                 .flatMap(refTableVersionInfo -> Mono.fromCallable(() -> {
                     RefTableVersionFillInfo refTableVersionFillInfo = new RefTableVersionFillInfo(refTableVersionInfo);
                     fillRefTableVersionFillInfo(refTableVersionInfo, refTableVersionFillInfo);
                     return refTableVersionFillInfo;
-                }).subscribeOn(Schedulers.boundedElastic()), 10)
+                }).subscribeOn(Schedulers.boundedElastic()), 15)
                 .toStream()
                 .collect(Collectors.toList());
-        return new PageResult<>(pageResult.getPageSize(), pageResult.getPageNumber(), pageResult.getTotalCount(), collect);
+        List<RefTableVersionFillInfo> sortedList = collect.stream().sorted(Comparator.comparing(BaseRefTableVersionInfo::getUpdateTime).reversed()).collect(Collectors.toList());
+        return new PageResult<>(pageSize, pageNumber, totalCount, sortedList);
     }
+
+    public PageResult<RefTableVersionFillInfo> pageRefTableInfoBySearch(BasicSearchRequest searchRequest) {
+        UniversalSearchInfo universalSearchInfo = searchAppService.searchFullRefTableInfo(searchRequest);
+        List<Long> table_ids = universalSearchInfo.getSearchedInfoList().stream().map(SearchedInfo::getGid).collect(Collectors.toList());
+        List<RefTableVersionInfo> list = refTableVersionRepository.listRefTableInfoByIds(table_ids);
+        return getRefTableVersionFillInfoPageResult(universalSearchInfo.getPageSize(), universalSearchInfo.getPageNumber(), universalSearchInfo.getTotalCount(), list);
+    }
+
 
     private void fillRefTableVersionFillInfo(RefTableVersionInfo refTableVersionInfo, RefTableVersionFillInfo refTableVersionFillInfo) {
         refTableVersionFillInfo.setGlossaryList(glossaryService.findGlossaryList(refTableVersionInfo.getGlossaryList()));
@@ -533,4 +562,20 @@ public class RdmService extends BaseSecurityService {
         }
     }
 
+
+    public List<String> fetchResourceAttributeList(ResourceAttributeRequest request) {
+        List<String> list = searchAppService.fetchResourceAttributeList(ResourceType.REF_TABLE, request);
+        if ("glossaries".equals(request.getResourceAttributeName())) {
+            return list.stream()
+                    .filter(StringUtils::isNotBlank)
+                    .map(s -> JSONUtils.jsonToObject(s, new TypeReference<List<Map<Long, String>>>() {
+                    }))
+                    .flatMap(List::stream)
+                    .flatMap(longStringMap -> longStringMap.entrySet().stream())
+                    .map(JSONUtils::toJsonString)
+                    .distinct()
+                    .collect(Collectors.toList());
+        }
+        return list;
+    }
 }

@@ -1,11 +1,12 @@
 package com.miotech.kun.datadiscovery.testing;
 
-import com.amazonaws.services.s3.AmazonS3;
+import com.clearspring.analytics.util.Lists;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.miotech.kun.common.model.PageRequest;
 import com.miotech.kun.common.model.PageResult;
+import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.EditRefDataTableRequest;
 import com.miotech.kun.datadiscovery.model.bo.EditRefTableVersionInfo;
 import com.miotech.kun.datadiscovery.model.entity.RefTableVersionInfo;
@@ -15,27 +16,26 @@ import com.miotech.kun.datadiscovery.model.enums.RefTableVersionStatus;
 import com.miotech.kun.datadiscovery.model.vo.BaseRefTableVersionInfo;
 import com.miotech.kun.datadiscovery.model.vo.RefDataVersionFillInfo;
 import com.miotech.kun.datadiscovery.model.vo.RefTableVersionFillInfo;
-import com.miotech.kun.datadiscovery.service.FilterRuleAppService;
-import com.miotech.kun.datadiscovery.service.GlossaryService;
-import com.miotech.kun.datadiscovery.service.LineageAppService;
-import com.miotech.kun.datadiscovery.service.RdmService;
+import com.miotech.kun.datadiscovery.service.*;
 import com.miotech.kun.datadiscovery.service.rdm.file.RefStorageFileBuilder;
+import com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFactory;
+import com.miotech.kun.datadiscovery.testing.mockdata.MockSearchInfoFactory;
 import com.miotech.kun.metadata.core.model.event.DatasetCreatedEvent;
+import com.miotech.kun.metadata.core.model.search.RefTableResourceAttribute;
+import com.miotech.kun.metadata.core.model.search.SearchedInfo;
+import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 import com.miotech.kun.security.model.UserInfo;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFactory.getMultipartFile;
 import static org.hamcrest.CoreMatchers.*;
@@ -59,6 +59,9 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
     private RefStorageFileBuilder refStorageFileBuilder;
     @MockBean
     private FilterRuleAppService filterRuleAppService;
+
+    @MockBean
+    private SearchAppService searchAppService;
 
     @Test
     public void parse_csv_file() {
@@ -534,6 +537,36 @@ public class RdmServiceTest extends DataDiscoveryTestBase {
         assertThat(refTableVersionFillInfo2.getTableId(), is(tableId));
         assertThat(refTableVersionFillInfo2.getPublished(), is(true));
         assertThat(refTableVersionFillInfo2.getShowStatus(), is(RefTableVersionStatus.PUBLISHED));
+    }
+
+    @Test
+    public void test_page_ref_table_info_by_search() {
+        List<Long> glossaryList = ImmutableList.of(1L, 2L);
+        List<String> ownerList = ImmutableList.of("user1", "user2");
+        LinkedHashMap<ConstraintType, Set<String>> map = Maps.newLinkedHashMap();
+        String table = "test_table";
+        String database = "test_database";
+        RefUpdateResult refUpdateResult = init_create_ref_table_version(table, database, glossaryList, ownerList, map);
+        BaseRefTableVersionInfo versionInfo = refUpdateResult.getBaseRefTableVersionInfo();
+        Long tableId = versionInfo.getTableId();
+        Long versionId = versionInfo.getVersionId();
+        BasicSearchRequest refTableSearchRequest = MockRefDataVersionBasicFactory.mockRefTableSearchRequest("test", null, null, null, null, null, null);
+        List<Map<Long, String>> glossaryMapList = Lists.newArrayList();
+        glossaryMapList.add(Collections.singletonMap(1L, "test1"));
+        glossaryMapList.add(Collections.singletonMap(2L, "test2"));
+        RefTableResourceAttribute attribute = RefTableResourceAttribute.newBuilder().withOwners("user1,user2").withGlossaries(glossaryMapList).build();
+        SearchedInfo searchedInfo = MockSearchInfoFactory.mockRefTableSearch(tableId, table, attribute);
+        UniversalSearchInfo universalSearchInfo = MockSearchInfoFactory.mockUniversalSearchInfo(Collections.singletonList(searchedInfo));
+        when(searchAppService.searchFullRefTableInfo(refTableSearchRequest)).thenReturn(universalSearchInfo);
+        PageResult<RefTableVersionFillInfo> page1 = rdmService.pageRefTableInfoBySearch(refTableSearchRequest);
+        assertThat(page1.getTotalCount(), is(1));
+        List<RefTableVersionFillInfo> records = page1.getRecords();
+        assertThat(records.size(), is(1));
+        RefTableVersionFillInfo refTableVersionFillInfo = records.get(0);
+        assertThat(refTableVersionFillInfo.getVersionId(), is(versionId));
+        assertThat(refTableVersionFillInfo.getTableId(), is(tableId));
+        assertThat(refTableVersionFillInfo.getPublished(), is(false));
+        assertThat(refTableVersionFillInfo.getShowStatus(), is(RefTableVersionStatus.UNPUBLISHED));
     }
 
     @Test

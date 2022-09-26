@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,8 +39,7 @@ public class SearchService {
     public UniversalSearchInfo search(UniversalSearchRequest request) {
         logger.debug("search search:{}", request);
         checked(request);
-        Integer searchCount = universalSearchDao.searchCount(request.getSearchFilterOptions(),
-                request.getResourceTypeNames(), request.isShowDeleted(), request.getResourceAttributeMap());
+        Integer searchCount = universalSearchDao.searchCount(request);
         UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
         universalSearchInfo.setPageNumber(request.getPageNumber());
         universalSearchInfo.setPageNumber(request.getPageSize());
@@ -51,21 +49,19 @@ public class SearchService {
             return universalSearchInfo;
         }
         universalSearchInfo.setTotalCount(searchCount);
-        List<SearchedInfo> searchResult = universalSearchDao.search(request.getSearchFilterOptions(),
-                request.getResourceTypeNames(), request.getResourceAttributeMap(), request.isShowDeleted(), request.getPageNumber(), request.getPageSize());
+        List<SearchedInfo> searchResult = universalSearchDao.search(request);
         universalSearchInfo.setSearchedInfoList(searchResult);
         return universalSearchInfo;
     }
 
     public UniversalSearchInfo noneKeywordPage(UniversalSearchRequest request) {
         logger.debug("search search:{}", request);
-        List<SearchedInfo> searchedInfoList = universalSearchDao.noneKeywordPage(request.getResourceTypeNames(),
-                request.getResourceAttributeMap(), request.isShowDeleted(), request.getPageNumber(), request.getPageSize());
+        List<SearchedInfo> searchedInfoList = universalSearchDao.noneKeywordPage(request);
         UniversalSearchInfo universalSearchInfo = new UniversalSearchInfo();
         universalSearchInfo.setPageNumber(request.getPageNumber());
         universalSearchInfo.setPageSize(request.getPageSize());
         universalSearchInfo.setSearchedInfoList(searchedInfoList);
-        Integer searchCount = universalSearchDao.noneKeywordSearchCount(request.getResourceTypeNames(), request.getResourceAttributeMap(), request.isShowDeleted());
+        Integer searchCount = universalSearchDao.noneKeywordSearchCount(request);
         universalSearchInfo.setTotalCount(searchCount);
         return universalSearchInfo;
     }
@@ -98,6 +94,7 @@ public class SearchService {
         } else {
             universalSearchDao.update(searchedInfo);
         }
+
     }
 
     public void remove(SearchedInfo searchedInfo) {
@@ -105,9 +102,5 @@ public class SearchService {
 
         universalSearchDao.remove(searchedInfo.getResourceType(), searchedInfo.getGid());
 
-    }
-
-    public void updateStatus(ResourceType resourceType, long gid, boolean deleted) {
-        universalSearchDao.updateStatus(resourceType, gid, deleted);
     }
 }

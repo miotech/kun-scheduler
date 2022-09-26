@@ -15,4 +15,9 @@ public class GlossaryResourceAttribute extends ResourceAttribute {
             @JsonProperty("owners") String owners) {
         super(owners);
     }
+
+    @Override
+    public String toString() {
+        return "GlossaryResourceAttribute{} " + super.toString();
+    }
 }

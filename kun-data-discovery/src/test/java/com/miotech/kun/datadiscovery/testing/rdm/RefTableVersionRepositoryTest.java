@@ -9,6 +9,7 @@ import com.miotech.kun.datadiscovery.testing.mockdata.MockRefDataVersionBasicFac
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.*;
@@ -57,6 +58,16 @@ public class RefTableVersionRepositoryTest extends DataDiscoveryTestBase {
         List<RefTableVersionInfo> records = pageResult.getRecords();
         assertThat(records.size(), is(1));
         RefTableVersionInfo refTableVersionInfo = records.get(0);
+        assertEquals(refTableVersionInfo, info);
+    }
+
+    @Test
+    public void test_list_ref_table_info() {
+        RefTableVersionInfo info = MockRefDataVersionBasicFactory.mockDefaultUnpublishedRefTableVersionInfo(1L, 1L, "test_table", "test_database");
+        refTableVersionRepository.create(info);
+        List<RefTableVersionInfo> list = refTableVersionRepository.listRefTableInfoByIds(Collections.singletonList(1L));
+        assertThat(list.size(), is(1));
+        RefTableVersionInfo refTableVersionInfo = list.get(0);
         assertEquals(refTableVersionInfo, info);
     }
 

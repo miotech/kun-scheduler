@@ -34,6 +34,7 @@ public class FilterRuleAppService {
         if (Objects.isNull(datasetId)) {
             return;
         }
+        log.info("add rule dataset id:{}",datasetId);
         addFilterRule(getFilterRule(datasetId));
     }
 
@@ -41,6 +42,7 @@ public class FilterRuleAppService {
         if (Objects.isNull(datasetId)) {
             return;
         }
+        log.info("remove rule dataset id:{}",datasetId);
         removeFilterRule(getFilterRule(datasetId));
     }
 

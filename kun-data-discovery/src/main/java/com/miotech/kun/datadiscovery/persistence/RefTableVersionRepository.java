@@ -197,7 +197,7 @@ public class RefTableVersionRepository extends BaseRepository {
 
     }
 
-
+    @Deprecated// updated un search
     public PageResult<RefTableVersionInfo> pageRefTableInfo(Integer pageNumber, Integer pageSize) {
         Integer count = countRefTableInfo();
         log.debug("count:{}", count);
@@ -216,6 +216,39 @@ public class RefTableVersionRepository extends BaseRepository {
         return new PageResult<>(pageSize, pageNumber, count, result);
     }
 
+    public List<RefTableVersionInfo> listRefTableInfoByIds(List<Long> tableIds) {
+        if (CollectionUtils.isEmpty(tableIds)) {
+            return Lists.newArrayList();
+        }
+        String group_sql = DefaultSQLBuilder.newBuilder().select(RTVI_TABLE_ID + " as max_table", String.format("max(coalesce(%s,0)) as max_version_number", RTVI_VERSION_NUMBER)).from(TABLE_RTVI_NAME, "grtvi")
+                .where(String.format("%s is null and %s = false", RTVI_END_TIME, RTVI_DELETED))
+                .groupBy(RTVI_TABLE_ID).getSQL();
+        String sql = DefaultSQLBuilder.newBuilder().select(COLUMNS).from(TABLE_RTVI_NAME, TABLE_RTVI_ALIAS)
+                .join("inner", String.format("(%s)", group_sql), "temp_table")
+                .on("temp_table.max_table=kmrtvi.table_id  and temp_table.max_version_number=COALESCE(kmrtvi.version_number,0)")
+                .where(" 1=1 "
+                        + filterTableIds(tableIds)
+                        + filterDeleted(false)
+                )
+                .orderBy(String.format("%s desc ", RTVI_UPDATE_TIME)).getSQL();
+
+        return jdbcTemplate.query(sql, RefDataVersionMapper.INSTANCE, tableIds.toArray());
+    }
+
+    private String filterTableIds(List<Long> tableIds) {
+        if (CollectionUtils.isEmpty(tableIds)) {
+            return StringUtils.EMPTY;
+        }
+        return String.format("  and %s in " + collectionToConditionSql(tableIds), RTVI_TABLE_ID);
+
+    }
+
+    private String filterDeleted(Boolean deleted) {
+        return String.format(" and %s=%s", RTVI_DELETED, deleted);
+
+    }
+
+    @Deprecated// updated un search
     public Integer countRefTableInfo() {
         String sql = DefaultSQLBuilder.newBuilder().select(String.format("count( distinct %s) as count", RTVI_TABLE_ID)).from(TABLE_RTVI_NAME, TABLE_RTVI_ALIAS)
                 .where(String.format("%s =?  and %s<>? limit 1", RTVI_DELETED, RTVI_STATUS)).getSQL();

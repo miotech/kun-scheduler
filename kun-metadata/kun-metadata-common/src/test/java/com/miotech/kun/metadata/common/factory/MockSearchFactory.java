@@ -1,15 +1,12 @@
 package com.miotech.kun.metadata.common.factory;
 
-import com.google.common.collect.Sets;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
-import com.miotech.kun.metadata.core.model.search.DataSetResourceAttribute;
-import com.miotech.kun.metadata.core.model.search.ResourceAttribute;
-import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
-import com.miotech.kun.metadata.core.model.search.SearchedInfo;
+import com.miotech.kun.metadata.core.model.search.*;
 import com.miotech.kun.metadata.core.model.vo.ResourceAttributeInfoRequest;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +29,15 @@ public class MockSearchFactory {
         return resourceAttribute;
     }
 
+    public static RefTableResourceAttribute mockRefTableResourceAttribute(List<Map<Long, String>> glossies, String owners) {
+        RefTableResourceAttribute resourceAttribute = RefTableResourceAttribute
+                .newBuilder()
+                .withGlossaries(glossies)
+                .withOwners(owners)
+                .build();
+        return resourceAttribute;
+    }
+
     public static ResourceAttribute mockResourceAttribute(String owners) {
         ResourceAttribute resourceAttribute = new ResourceAttribute(owners);
         return resourceAttribute;
@@ -45,6 +51,20 @@ public class MockSearchFactory {
                 .withDescription(description)
                 .withResourceAttribute(resourceAttribute)
                 .withDeleted(isDeleted)
+                .build();
+        return searchedInfo;
+    }
+
+    public static SearchedInfo mockSearchedInfo(Long gid, String name, ResourceType resourceType, String description, ResourceAttribute resourceAttribute, Boolean isDeleted, OffsetDateTime createTime, OffsetDateTime updateTime) {
+        SearchedInfo searchedInfo = SearchedInfo.Builder.newBuilder()
+                .withGid(gid)
+                .withResourceType(resourceType)
+                .withName(name)
+                .withDescription(description)
+                .withResourceAttribute(resourceAttribute)
+                .withDeleted(isDeleted)
+                .withCreateTime(createTime)
+                .withUpdateTime(updateTime)
                 .build();
         return searchedInfo;
     }

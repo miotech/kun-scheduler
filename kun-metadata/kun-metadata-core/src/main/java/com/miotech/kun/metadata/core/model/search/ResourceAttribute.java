@@ -14,8 +14,11 @@ import java.io.Serializable;
  * @author: zemin  huang
  * @create: 2022-03-08 10:10
  **/
-@JsonSubTypes({@JsonSubTypes.Type(value = DataSetResourceAttribute.class)
-        , @JsonSubTypes.Type(value = GlossaryResourceAttribute.class)})
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = DataSetResourceAttribute.class)
+        , @JsonSubTypes.Type(value = GlossaryResourceAttribute.class)
+        , @JsonSubTypes.Type(value = RefTableResourceAttribute.class)
+})
 public class ResourceAttribute implements Serializable {
 
     private String owners;
@@ -29,5 +32,10 @@ public class ResourceAttribute implements Serializable {
         return owners;
     }
 
-
+    @Override
+    public String toString() {
+        return "ResourceAttribute{" +
+                "owners='" + owners + '\'' +
+                '}';
+    }
 }
