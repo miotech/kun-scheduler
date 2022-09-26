@@ -2260,6 +2260,44 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     }
 
+    @Test
+    public void taskRunCreatedReceiveConditionChange_should_not_discard(){
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
+        for (TaskRun taskRun : taskRuns) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+        TaskRun taskRun1 = taskRuns.get(0);
+        TaskRun taskRun2 = taskRuns.get(1);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            TaskRunTransitionEvent runningEvent = new TaskRunTransitionEvent(READY, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkEvent = new TaskRunTransitionEvent(COMPLETE, taskAttempt.getId(), null);
+            TaskRunTransitionEvent checkSuccess = new TaskRunTransitionEvent(CHECK_SUCCESS, taskAttempt.getId(), null);
+            eventBus.post(runningEvent);
+            eventBus.post(checkEvent);
+            eventBus.post(checkSuccess);
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+
+        TaskAttempt attempt2 = MockTaskAttemptFactory.createTaskAttemptWithPhase(taskRun2,TaskRunPhase.CREATED);
+        taskRunDao.createAttempt(attempt2);
+        taskManager.submit(Arrays.asList(taskRun1));
+
+        awaitUntilAttemptDone(attempt2.getId());
+
+        assertTransitAtLeastOnce(attempt2.getId(),
+                CONDITION_CHANGE,
+                ASSEMBLED,
+                SUBMIT,
+                READY,
+                COMPLETE,
+                CHECK_SUCCESS);
+    }
+
     public static Stream<Integer> recoverTaskRun() {
         return Stream.of(TaskRunPhase.CREATED, TaskRunPhase.CREATED | TaskRunPhase.WAITING, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED);
     }

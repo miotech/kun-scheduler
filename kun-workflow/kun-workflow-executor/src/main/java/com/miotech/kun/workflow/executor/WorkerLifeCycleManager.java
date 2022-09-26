@@ -14,6 +14,7 @@ import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunPhase;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
@@ -27,9 +28,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 
 public abstract class WorkerLifeCycleManager implements LifeCycleManager {
@@ -89,19 +88,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     }
 
     public void recover() {
-//        List<TaskAttempt> shouldRecoverAttemptList = fetchRecoverAttempts();
-//        List<WorkerInstance> instanceList = getRunningWorker();
-//        logger.info("{} recover watch pods size = {}", name, instanceList.size());
-//        for (WorkerInstance workerInstance : instanceList) {
-//            workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
-//        }
-//        Set<Long> instanceSet = instanceList.stream().map(WorkerInstance::getTaskAttemptId).collect(Collectors.toSet());
-//        //filter taskAttempt which instance still running
-//        List<TaskAttempt> recoverAttemptList = shouldRecoverAttemptList.stream().filter(x -> !instanceSet.contains(x.getId())).collect(Collectors.toList());
-//        logger.info("{} recover queued attempt size = {}", name, recoverAttemptList.size());
-//        for (TaskAttempt taskAttempt : recoverAttemptList) {
-//            queueManager.submit(taskAttempt);
-//        }
+
     }
 
 
@@ -126,12 +113,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         WorkerSnapshot workerSnapshot = getWorker(taskAttemptId);
         if (workerSnapshot == null) {
             TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
-            if (taskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                sendAbortEvent(taskAttemptId);
+            if (TaskRunPhase.isCreated(taskAttempt.getTaskRunPhase()) || TaskRunPhase.isWaiting(taskAttempt.getTaskRunPhase())) {
                 return;
-            } else if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
+            } else if (TaskRunPhase.isQueued(taskAttempt.getTaskRunPhase())) {
                 queueManager.remove(taskAttempt);
-                sendAbortEvent(taskAttemptId);
                 return;
             } else {
                 throw new IllegalStateException("unable to stop taskRun with status: " + taskAttempt.getStatus());
@@ -140,7 +125,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (!stopWorker(taskAttemptId)) {
             throw new IllegalStateException("stop worker failed");
         }
-        sendAbortEvent(taskAttemptId);
         cleanupWorker(workerSnapshot.getIns());
     }
 
@@ -247,8 +231,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         eventBus.post(taskRunTransitionEvent);
     }
 
-    private void sendAbortEvent(Long taskAttemptId) {
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, taskAttemptId, null);
+    private void sendReSubmitEvent(Long taskAttemptId){
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RESUBMIT, taskAttemptId, null);
         eventBus.post(taskRunTransitionEvent);
     }
 
@@ -281,19 +265,20 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             logger.debug("taskAttempt = {} has reach retry limit,retry limit = {}", taskAttempt.getId(), retryLimit);
             return false;
         }
-        logger.debug("taskAttempt = {} going to  retry,next retry times = {}", taskAttempt.getId(), taskAttempt.getRetryTimes() + 1);
-        TaskAttempt retryTaskAttempt = taskAttempt.cloneBuilder()
-                .withRetryTimes(taskAttempt.getRetryTimes() + 1)
-                .build();
-        taskRunDao.updateAttempt(retryTaskAttempt);
+        logger.debug("taskAttempt = {} going to  retry,next retry time = {}", taskAttempt.getId(), taskAttempt.getRetryTimes() + 1);
         Integer retryDelay = taskAttempt.getTaskRun().getTask().getRetryDelay();
         //sleep to delay
         if (retryDelay != null && retryDelay > 0) {
             logger.debug("taskAttempt = {} wait {}s for  retry", taskAttempt.getId(), retryDelay);
             Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.SECONDS);
         }
-        //retry attempt
-        queueManager.submit(taskAttempt);
+
+        TaskAttempt retryTaskAttempt = taskAttempt.cloneBuilder()
+                .withRetryTimes(taskAttempt.getRetryTimes() + 1)
+                .build();
+        taskRunDao.updateAttempt(retryTaskAttempt);
+
+        sendReSubmitEvent(taskAttempt.getId());
         return true;
     }
 
@@ -385,7 +370,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                         try {
                             logger.debug("{} take taskAttempt = {} from queue = {}", name, taskAttempt.getId(), taskAttempt.getQueueName());
                             eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.READY, taskAttempt.getId(), null));
-//                            executeTaskAttempt(taskAttempt);
                         } catch (Exception e) {
                             logger.warn("take taskAttempt = {} failed", taskAttempt.getId(), e);
                         }

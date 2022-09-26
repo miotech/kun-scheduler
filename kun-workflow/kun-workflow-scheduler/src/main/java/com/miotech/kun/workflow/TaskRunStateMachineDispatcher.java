@@ -119,10 +119,7 @@ public class TaskRunStateMachineDispatcher {
 
     private void preTransition(TaskRunTransitionEvent event) {
         //save event to database if not exist
-        TaskRunTransitionEvent savedEvent = taskRunDao.fetchEvent(event.getTaskAttemptId(), event.getType());
-        if (savedEvent == null) {
-            taskRunDao.saveTransitEvent(event, false);
-        }
+        taskRunDao.saveTransitEvent(event, false);
     }
 
     private TaskRunStateMachine generateStateMache(TaskAttempt taskAttempt) {

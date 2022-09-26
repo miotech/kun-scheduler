@@ -43,6 +43,7 @@ import com.miotech.kun.workflow.executor.config.ExecutorConfig;
 import com.miotech.kun.workflow.executor.config.ExecutorRpcConfig;
 import com.miotech.kun.workflow.executor.local.*;
 import com.miotech.kun.workflow.executor.mock.*;
+import com.miotech.kun.workflow.scheduler.action.TaskRunAbortAction;
 import com.miotech.kun.workflow.scheduler.action.TaskRunCheckAction;
 import com.miotech.kun.workflow.scheduler.action.TaskRunStartAction;
 import com.miotech.kun.workflow.scheduler.action.TaskRunSubmitAction;
@@ -217,6 +218,10 @@ public class LocalExecutorTest extends CommonTestBase {
         taskRunStateMachineDispatcher.register(TaskRunPhase.RUNNING, TaskRunTransitionEventType.COMPLETE, new TaskRunCheckAction(executor));
         taskRunStateMachineDispatcher.register(TaskRunPhase.QUEUED, TaskRunTransitionEventType.RECOVER, new TaskRunSubmitAction(executor));
         taskRunStateMachineDispatcher.register(TaskRunPhase.RUNNING, TaskRunTransitionEventType.RECOVER, new TaskRunStartAction(executor));
+        taskRunStateMachineDispatcher.register(TaskRunPhase.QUEUED, TaskRunTransitionEventType.ABORT, new TaskRunAbortAction(executor));
+        taskRunStateMachineDispatcher.register(TaskRunPhase.RUNNING, TaskRunTransitionEventType.ABORT, new TaskRunAbortAction(executor));
+        taskRunStateMachineDispatcher.register(TaskRunPhase.RUNNING, TaskRunTransitionEventType.RESUBMIT, new TaskRunSubmitAction(executor));
+
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
         taskRunStateMachineDispatcher.start();
@@ -442,7 +447,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(localQueueManager.getCapacity("default"), is(localQueueManager.getResourceQueue("default").getWorkerNumbers() - 1));
 
         //clean up running process
-        executor.cancel(runningTaskAttempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, runningTaskAttempt.getId(), null);
+        eventBus.post(abortEvent);
+        awaitUntilAttemptDone(runningTaskAttempt.getId());
         awaitUntilProcessDown("default", 0);
         // events
         assertStatusHistory(runningTaskAttempt.getId(),
@@ -767,7 +774,8 @@ public class LocalExecutorTest extends CommonTestBase {
 
         assertThat(localQueueManager.getCapacity("default"), is(localQueueManager.getResourceQueue("default").getWorkerNumbers() - 1));
         awaitUntilOperatorRunning(attempt.getId());
-        executor.cancel(attempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, attempt.getId(), null);
+        eventBus.post(abortEvent);
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -814,7 +822,8 @@ public class LocalExecutorTest extends CommonTestBase {
         awaitUntilRunning(attempt.getId());
 
         awaitUntilOperatorRunning(attempt.getId());
-        executor.cancel(attempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, attempt.getId(), null);
+        eventBus.post(abortEvent);
 
         // wait until aborted
         awaitUntilAttemptAbort(attempt.getId());
@@ -856,7 +865,8 @@ public class LocalExecutorTest extends CommonTestBase {
 
         assertThat(localQueueManager.getCapacity("default"), is(localQueueManager.getResourceQueue("default").getWorkerNumbers() - 1));
         awaitUntilOperatorRunning(attempt.getId());
-        executor.cancel(attempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, attempt.getId(), null);
+        eventBus.post(abortEvent);
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -901,7 +911,8 @@ public class LocalExecutorTest extends CommonTestBase {
         awaitUntilRunning(attempt.getId());
 
         awaitUntilOperatorRunning(attempt.getId());
-        executor.cancel(attempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, attempt.getId(), null);
+        eventBus.post(abortEvent);
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -951,7 +962,8 @@ public class LocalExecutorTest extends CommonTestBase {
         //verify
         TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
         assertThat(saved.getStatus(), is(TaskRunStatus.QUEUED));
-        executor.cancel(taskAttempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, taskAttempt.getId(), null);
+        eventBus.post(abortEvent);
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
         assertStatusHistory(taskAttempt.getId(),
@@ -973,7 +985,8 @@ public class LocalExecutorTest extends CommonTestBase {
         //verify
         TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
         assertThat(saved.getStatus(), is(TaskRunStatus.CREATED));
-        executor.cancel(taskAttempt.getId());
+        TaskRunTransitionEvent abortEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, saved.getId(), null);
+        eventBus.post(abortEvent);
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
         assertStatusHistory(taskAttempt.getId(),
@@ -1336,6 +1349,33 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(result.getResourceQueues().get(0).getWorkerNumbers(), is(2));
         assertThat(result.getResourceQueues().get(1).getQueueName(), is("test"));
         assertThat(result.getResourceQueues().get(1).getWorkerNumbers(), is(2));
+    }
+
+    @Test
+    public void taskAttemptFailedAutoRetry_should_work(){
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        Task autoRetryTask = task.cloneBuilder().withRetries(2).withRetryDelay(5).build();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(autoRetryTask);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttemptWithPhase(taskRun, TaskRunPhase.CREATED | TaskRunPhase.WAITING);
+        prepareAttempt(TestOperator3.class, taskAttempt);
+
+        // process
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.SUBMIT, taskAttempt.getId(), null);
+        eventBus.post(taskRunTransitionEvent);
+
+        awaitUntilAttemptDone(taskAttempt.getId());
+
+        assertStatusHistory(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.FAILED);
+
     }
 
 

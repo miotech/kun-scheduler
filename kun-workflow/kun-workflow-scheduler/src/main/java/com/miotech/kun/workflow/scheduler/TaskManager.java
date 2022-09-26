@@ -64,8 +64,13 @@ public class TaskManager {
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         save(taskAttempts);
         for (TaskAttempt taskAttempt : taskAttempts) {
-            TaskRunTransitionEvent transitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ASSEMBLED, taskAttempt.getId(), null);
-            eventBus.post(transitionEvent);
+            try {
+                TaskRunTransitionEvent transitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ASSEMBLED, taskAttempt.getId(), null);
+                eventBus.post(transitionEvent);
+            } catch (Throwable e) {
+                logger.error("send ASSEMBLED event after attempt {} created failed", taskAttempt.getId(), e);
+            }
+
         }
     }
 
@@ -217,6 +222,17 @@ public class TaskManager {
         }
     }
 
+    public boolean abort(Long taskRunId) {
+        TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+
+        if (Objects.isNull(attempt)) {
+            throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
+        }
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, attempt.getId(), null);
+        eventBus.post(taskRunTransitionEvent);
+        return true;
+    }
+
     /* ----------- private methods ------------ */
 
     private void init() {
@@ -224,6 +240,7 @@ public class TaskManager {
         stateMachineDispatcher.register(TaskRunPhase.UPSTREAM_FAILED, TaskRunTransitionEventType.RESET, new ResetAction(this));
         stateMachineDispatcher.register(TaskRunPhase.BLOCKED, TaskRunTransitionEventType.RESET, new ResetAction(this));
         stateMachineDispatcher.register(TaskRunPhase.WAITING, TaskRunTransitionEventType.RESET, new ResetAction(this));
+        stateMachineDispatcher.register(TaskRunPhase.CREATED, TaskRunTransitionEventType.CONDITION_CHANGE, new TaskRunUpstreamChangeAction(this));
         stateMachineDispatcher.register(TaskRunPhase.UPSTREAM_FAILED, TaskRunTransitionEventType.CONDITION_CHANGE, new TaskRunUpstreamChangeAction(this));
         stateMachineDispatcher.register(TaskRunPhase.BLOCKED, TaskRunTransitionEventType.CONDITION_CHANGE, new TaskRunUpstreamChangeAction(this));
         stateMachineDispatcher.register(TaskRunPhase.WAITING, TaskRunTransitionEventType.CONDITION_CHANGE, new TaskRunUpstreamChangeAction(this));
@@ -233,6 +250,7 @@ public class TaskManager {
         stateMachineDispatcher.register(TaskRunPhase.UPSTREAM_FAILED, TaskRunTransitionEventType.SUBMIT, new TaskRunSubmitAction(executor));
         stateMachineDispatcher.register(TaskRunPhase.BLOCKED, TaskRunTransitionEventType.SUBMIT, new TaskRunSubmitAction(executor));
         stateMachineDispatcher.register(TaskRunPhase.WAITING, TaskRunTransitionEventType.SUBMIT, new TaskRunSubmitAction(executor));
+        stateMachineDispatcher.register(TaskRunPhase.RUNNING, TaskRunTransitionEventType.RESUBMIT, new TaskRunSubmitAction(executor));
         stateMachineDispatcher.register(TaskRunPhase.FAILED, TaskRunTransitionEventType.RESCHEDULE, new TaskRunRetryAction(this));
         stateMachineDispatcher.register(TaskRunPhase.CHECK_FAILED, TaskRunTransitionEventType.RESCHEDULE, new TaskRunRetryAction(this));
         stateMachineDispatcher.register(TaskRunPhase.ABORTED, TaskRunTransitionEventType.RESCHEDULE, new TaskRunRetryAction(this));

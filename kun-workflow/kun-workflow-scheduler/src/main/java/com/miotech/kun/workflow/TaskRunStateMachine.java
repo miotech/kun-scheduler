@@ -132,7 +132,7 @@ public class TaskRunStateMachine {
 
     public void conditionChange(Long fromTaskRunId, Integer prePhase, Integer nextPhase) {
         TaskRunCondition taskRunCondition = conditionManager.conditionChange(fromTaskRunId, prePhase, nextPhase);
-        taskRunDao.updateTaskRunCondition(taskRunCondition);
+        taskRunDao.updateTaskRunCondition(taskRunId, taskRunCondition);
     }
 
     public void removeCondition(Long fromTaskRunId, Integer fromTaskRunPhase) {
@@ -233,7 +233,7 @@ public class TaskRunStateMachine {
 
     private void initCondition(Long fromTaskRunId, Integer fromTaskRunPhase) {
         TaskRunCondition taskRunCondition = conditionManager.initCondition(fromTaskRunId, fromTaskRunPhase);
-        taskRunDao.updateTaskRunCondition(taskRunCondition);
+        taskRunDao.updateTaskRunCondition(taskRunId, taskRunCondition);
     }
 
     private boolean updateStatus(Integer currentStatus, Integer nextStatus) {
@@ -423,7 +423,7 @@ public class TaskRunStateMachine {
             taskRunDao.resetTaskRunTimestampToNull(Arrays.asList(taskRunId), "term_at");
         }
 
-        if(TaskRunPhase.isFailure(nextPhase)){
+        if (TaskRunPhase.isFailure(nextPhase)) {
             recordUpstreamFailed(taskRunId);
         }
     }

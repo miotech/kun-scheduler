@@ -16,6 +16,11 @@ public class TaskRunRunning extends BasicTaskRunState {
     }
 
     @Override
+    protected TaskRunState onResubmit() {
+        return new TaskRunQueued(TaskRunPhase.QUEUED);
+    }
+
+    @Override
     protected TaskRunState onFailed() {
         return new TaskRunFailed(TaskRunPhase.FAILED);
     }

@@ -27,6 +27,11 @@ public class TaskRunCreated extends BasicTaskRunState {
     }
 
     @Override
+    protected TaskRunState onUpstreamFinished() {
+        return this;
+    }
+
+    @Override
     protected TaskRunState onRecover() {
         return new TaskRunWaiting(TaskRunPhase.WAITING);
     }

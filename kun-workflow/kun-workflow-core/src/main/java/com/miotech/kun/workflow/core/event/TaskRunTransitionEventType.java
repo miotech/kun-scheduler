@@ -20,7 +20,8 @@ public enum TaskRunTransitionEventType {
     CHECK_SUCCESS,
     CHECK_FAILED,
     EXCEPTION,
-    SKIP
+    SKIP,
+    RESUBMIT//attempt failed auto retry
 
 
 }
