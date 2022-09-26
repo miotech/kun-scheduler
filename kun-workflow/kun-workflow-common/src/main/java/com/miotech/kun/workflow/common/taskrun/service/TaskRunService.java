@@ -263,6 +263,7 @@ public class TaskRunService {
     }
 
     public TaskRunGanttChartVO getTaskRunGantt(Long taskRunId, Integer upstreamTraceTime_hours) {
+        OffsetDateTime now = DateTimeUtils.now();
         TaskRun taskRun = findTaskRun(taskRunId);
         List<TaskRun> result = new ArrayList<>();
         List<Long> upstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId);
@@ -281,6 +282,12 @@ public class TaskRunService {
                         } else {
                             return tr1.getStartAt().compareTo(tr2.getStartAt());
                         }
+                    })
+                    .map(tr -> {
+                        if (tr.getQueuedAt() == null) {
+                            tr = tr.cloneBuilder().withQueuedAt(now).build();
+                        }
+                        return tr;
                     })
                     .collect(Collectors.toList());
             result.addAll(upstreamTaskRunList);
@@ -301,6 +308,12 @@ public class TaskRunService {
                         } else {
                             return tr1.getStartAt().compareTo(tr2.getStartAt());
                         }
+                    })
+                    .map(tr -> {
+                        if (tr.getQueuedAt() == null) {
+                            tr = tr.cloneBuilder().withQueuedAt(now).build();
+                        }
+                        return tr;
                     })
                     .collect(Collectors.toList());
             result.addAll(downstreamTaskRunList);
