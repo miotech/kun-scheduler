@@ -343,6 +343,9 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         // fetch workflow ids using deployed tasks
         if (!request.getDefinitionIds().isEmpty()) {
             List<Long> taskIds = deployedTaskDao.fetchWorkflowTaskId(request.getDefinitionIds());
+            if (taskIds.isEmpty()) {
+                throw new IllegalArgumentException(String.format("No matched deployed-task found"));
+            }
             searchRequestBuilder.withTaskIds(taskIds);
         }
         if (org.apache.commons.lang3.StringUtils.isNoneBlank(request.getName())) {
