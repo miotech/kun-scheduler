@@ -67,6 +67,20 @@ public class TaskRunPhase {
         return false;
     }
 
+    public static boolean isQueued(Integer taskRunPhase){
+        if(((taskRunPhase & QUEUED) != 0)){
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isWaiting(Integer taskRunPhase) {
+        if ((taskRunPhase & WAITING) != 0) {
+            return true;
+        }
+        return false;
+    }
+
     public static boolean isFailure(Integer taskRunPhase) {
         if ((taskRunPhase & (FAILED | ABORTED | CHECK_FAILED)) != 0) {
             return true;

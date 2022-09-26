@@ -49,4 +49,11 @@ public interface Scheduler {
      * remove taskrun's selected upstream taskrun dependency
      */
     public boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds);
+
+    /**
+     * abort a taskrun
+     * @param taskRunId
+     * @return
+     */
+    public boolean abort(Long taskRunId);
 }

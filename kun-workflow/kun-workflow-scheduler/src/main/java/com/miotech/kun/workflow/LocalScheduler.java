@@ -61,4 +61,9 @@ public class LocalScheduler implements Scheduler {
     public boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
         return taskManager.batchRemoveDependency(taskRunId, upstreamTaskRunIds);
     }
+
+    @Override
+    public boolean abort(Long taskRunId) {
+        return taskManager.abort(taskRunId);
+    }
 }

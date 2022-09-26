@@ -5,8 +5,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.LocalScheduler;
-import com.miotech.kun.workflow.TaskRunSMExecutor;
-import com.miotech.kun.workflow.TaskRunStateMachineBuffer;
 import com.miotech.kun.workflow.TaskRunStateMachineDispatcher;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
@@ -49,11 +47,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.*;
-import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
@@ -284,30 +282,6 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(vo.getEndLine(), is(3));
     }
 
-    @Test
-    public void abortTaskRun_shouldSendAbortSignalsToExecutors() {
-        // Prepare
-        Mockito.doAnswer(invocation -> {
-            TaskAttemptProps attemptPropsTemplate = TaskAttemptProps.newBuilder()
-                    .withStatus(TaskRunStatus.RUNNING)
-                    .build();
-            return attemptPropsTemplate.cloneBuilder().withId(11L).build();
-        }).when(taskRunDao).fetchLatestTaskAttempt(Mockito.anyLong());
-
-        Map<Long, Boolean> stopSignalReceived = new HashMap<>();
-        Mockito.doAnswer(invocation -> {
-            Long id = invocation.getArgument(0);
-            stopSignalReceived.put(id, true);
-            return true;
-        }).when(executor).cancel(Mockito.anyLong());
-
-        // process
-        boolean result = taskRunService.abortTaskRun(1L);
-
-        // Validate
-        assertThat(result, is(true));
-        assertThat(stopSignalReceived.getOrDefault(11L, false), is(true));
-    }
 
     private Resource createResource(String fileName, String text, int times) throws IOException {
         File file = tempFolder.newFile(fileName);

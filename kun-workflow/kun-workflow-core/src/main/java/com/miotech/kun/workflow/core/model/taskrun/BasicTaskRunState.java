@@ -78,6 +78,8 @@ public class BasicTaskRunState implements TaskRunState {
             case CONDITION_REMOVE:
                 nextState = onConditionRemoved();
                 break;
+            case RESUBMIT:
+                nextState = onResubmit();
             default:
                 //do nothing
         }
@@ -184,6 +186,10 @@ public class BasicTaskRunState implements TaskRunState {
 
     protected TaskRunState onSkip() {
         throw new IllegalStateException("Skip is not support for phase: " + taskRunParse);
+    }
+
+    protected TaskRunState onResubmit() {
+        throw new IllegalStateException("Resubmit is not support for phase: " + taskRunParse);
     }
 
 }

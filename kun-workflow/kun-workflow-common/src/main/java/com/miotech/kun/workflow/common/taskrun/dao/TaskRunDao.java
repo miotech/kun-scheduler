@@ -75,7 +75,7 @@ public class TaskRunDao {
     private static final List<String> taskRunConditionCols = ImmutableList.of("task_run_id", "condition", "result", "type", "created_at", "updated_at");
 
     private static final String EVENT_TABLE_NAME = "kun_wf_task_run_transit_event";
-    private static final List<String> taskRunTransitEventCols = ImmutableList.of("id", "task_attempt_id", "event_type", "completed", "context","created_at", "updated_at");
+    private static final List<String> taskRunTransitEventCols = ImmutableList.of("id", "task_attempt_id", "event_type", "completed", "context", "created_at", "updated_at");
 
     private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
 
@@ -1616,15 +1616,15 @@ public class TaskRunDao {
         return dbOperator.update(conditionSQL, pmTc.toArray());
     }
 
-    public void updateTaskRunCondition(TaskRunCondition taskRunCondition) {
+    public void updateTaskRunCondition(Long taskRunId, TaskRunCondition taskRunCondition) {
         String condition = JSONUtils.toJsonString(taskRunCondition.getCondition());
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(CONDITION_TABLE_NAME)
                 .set("result")
-                .where("condition = ?")
+                .where("task_run_id = ? and condition = ?")
                 .asPrepared()
                 .getSQL();
-        dbOperator.update(sql, taskRunCondition.getResult(), condition);
+        dbOperator.update(sql, taskRunCondition.getResult(), taskRunId, condition);
     }
 
     /**
@@ -2167,26 +2167,10 @@ public class TaskRunDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(EVENT_TABLE_NAME)
                 .set("completed")
-                .where("task_attempt_id = ? and event_type = ? and completed = ?")
+                .where("task_attempt_id = ? and event_type = ? and context = ? and completed = ?")
                 .asPrepared()
                 .getSQL();
-        dbOperator.update(sql, true, event.getTaskAttemptId(), event.getType().name(), false);
-    }
-
-    public TaskRunTransitionEvent fetchEvent(Long taskAttemptId, TaskRunTransitionEventType eventType) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select(taskRunTransitEventCols.toArray(new String[0]))
-                .from(EVENT_TABLE_NAME)
-                .where("task_attempt_id = ? and event_type = ? and completed = ?")
-                .limit()
-                .asPrepared()
-                .getSQL();
-        List<TaskRunTransitionEvent> transitionEvents = dbOperator.fetchAll(sql, new TaskRunTransitEventMapper(),
-                taskAttemptId, eventType.name(), false, 1);
-        if (transitionEvents.size() > 0) {
-            return transitionEvents.get(0);
-        }
-        return null;
+        dbOperator.update(sql, true, event.getTaskAttemptId(), event.getType().name(), JSONUtils.toJsonString(event.getFromTaskRunContext()), false);
     }
 
     public List<TaskRunTransitionEvent> fetchUnCompletedEvents(Long attemptId) {
@@ -2197,24 +2181,6 @@ public class TaskRunDao {
                 .where("created_at > ? and task_attempt_id = ? and completed = ?")
                 .getSQL();
         return dbOperator.fetchAll(sql, new TaskRunTransitEventMapper(), dateLimit, attemptId, false);
-    }
-
-    public TaskRunTransitionEvent fetchLastCompletedEvents(Long attemptId) {
-        OffsetDateTime dateLimit = DateTimeUtils.now().plusDays(-RECOVER_LIMIT_DAYS);
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select(taskRunTransitEventCols.toArray(new String[0]))
-                .from(EVENT_TABLE_NAME)
-                .where("created_at > ? and task_attempt_id = ? and completed = ?")
-                .limit()
-                .orderBy("id desc")
-                .asPrepared()
-                .getSQL();
-        List<TaskRunTransitionEvent> lastEvent = dbOperator.fetchAll(sql, new TaskRunTransitEventMapper(), dateLimit, attemptId, true, 1);
-        if (lastEvent.size() > 0) {
-            return lastEvent.get(0);
-        } else {
-            return null;
-        }
     }
 
     public List<TaskAttempt> fetchNotTermAttempt() {

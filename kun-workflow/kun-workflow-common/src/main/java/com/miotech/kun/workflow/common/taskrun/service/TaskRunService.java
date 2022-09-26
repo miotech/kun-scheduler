@@ -527,13 +527,7 @@ public class TaskRunService {
     }
 
     public boolean abortTaskRun(Long taskRunId) {
-        TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
-
-        if (Objects.isNull(attempt)) {
-            throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
-        }
-
-        return executor.cancel(attempt.getId());
+        return scheduler.abort(taskRunId);
     }
 
     public boolean skipTaskRun(Long taskRunId) {
