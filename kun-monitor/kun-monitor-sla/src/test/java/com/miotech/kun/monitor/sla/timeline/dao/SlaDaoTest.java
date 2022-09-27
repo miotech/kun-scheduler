@@ -186,6 +186,21 @@ public class SlaDaoTest extends MonitorSlaTestBase {
         assertThat(node, sameBeanAs(taskDefinitionNode));
     }
 
+    @Test
+    public void testUpdate_nullValue() {
+        TaskDefinitionNode taskDefinitionNode = MockTaskDefinitionNodeFactory.create();
+        slaDao.save(taskDefinitionNode);
+        // update
+        taskDefinitionNode.setName(taskDefinitionNode.getName() + "_new");
+        taskDefinitionNode.setDeadline(null);
+        taskDefinitionNode.setLevel(null);
+        slaDao.update(taskDefinitionNode);
+        // validate
+        TaskDefinitionNode node = slaDao.findById(taskDefinitionNode.getId());
+        assertThat(node, notNullValue());
+        assertThat(node, sameBeanAs(taskDefinitionNode));
+    }
+
     private void validateBind(Long from, Long to, TaskDefinitionNode.Relationship relationship, Long expectedCount) {
         String relationshipCount = "MATCH (n: TASK_DEFINITION{id: ?})-[r:%s]->(m: TASK_DEFINITION{id: ?}) return count(1) as c";
         Long count = jdbcTemplate.query(String.format(relationshipCount, relationship.toString()), rs -> {
