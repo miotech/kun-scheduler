@@ -270,9 +270,6 @@ public class TaskRunStateMachine {
         TaskRunStatus nextStatus = TaskRunPhase.toStatus(taskAttemptPhase);
         logger.debug("fetch taskAttempt by {}", taskAttemptId);
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
-        if (!nextStatus.equals(taskAttempt.getStatus())) {
-            sendEvent(taskAttempt, currentStatus, nextStatus);
-        }
 
         OffsetDateTime now = DateTimeUtils.now();
         if (nextStatus == TaskRunStatus.QUEUED) {
@@ -286,6 +283,10 @@ public class TaskRunStateMachine {
             }
         }
         updateDatabase(this, taskAttemptPhase);
+
+        if (!nextStatus.equals(taskAttempt.getStatus())) {
+            sendEvent(taskAttempt, currentStatus, nextStatus);
+        }
 
         invokeDownStream(prePhase, event);
 
