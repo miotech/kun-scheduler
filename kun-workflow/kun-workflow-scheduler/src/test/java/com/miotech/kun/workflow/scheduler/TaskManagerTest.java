@@ -1990,7 +1990,7 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     /**
      * scenario: 1>>2, 2>>5, 3>>5, 4>>5, 5>>6
-     * 1,2,3,4 are failed, 5 is upstream_failed with root cause 1,3,4; 6 is upstream_failed with root cause 1,3,4
+     * 1,3,4 are failed, 5 is upstream_failed with root cause 1,3,4; 6 is upstream_failed with root cause 1,3,4
      * remove 5's dependency 2&3;
      * 5,6 should keep as upstream_failed with root cause 4
      */
@@ -2028,12 +2028,12 @@ public class TaskManagerTest extends SchedulerTestBase {
         }).when(executor).submit(ArgumentMatchers.any());
 
         taskManager.submit(Arrays.asList(taskRun1, taskRun2, taskRun3, taskRun4, taskRun5, taskRun6));
-        awaitUntilAttemptUpstreamFailed(taskRun5.getId() + 1);
+        awaitUntilAttemptDone(taskRun3.getId() + 1);
+        awaitUntilAttemptDone(taskRun4.getId() + 1);
         awaitUntilAttemptUpstreamFailed(taskRun6.getId() + 1);
 
         //process
         taskManager.batchRemoveDependency(taskRun5.getId(), Arrays.asList(taskRun2.getId(), taskRun3.getId()));
-        TimeUnit.SECONDS.sleep(2);
 
         //verify
         TaskRun savedTaskRun5 = taskRunDao.fetchTaskRunById(taskRun5.getId()).get();

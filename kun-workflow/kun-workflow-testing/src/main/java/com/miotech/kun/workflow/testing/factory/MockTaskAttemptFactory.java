@@ -13,7 +13,7 @@ public class MockTaskAttemptFactory {
     }
 
     public static TaskAttempt createTaskAttempt(TaskRun taskRun) {
-        return createTaskAttemptWithStatus(taskRun,taskRun.getStatus());
+        return createTaskAttemptWithPhase(taskRun,taskRun.getTaskRunPhase());
 
     }
 

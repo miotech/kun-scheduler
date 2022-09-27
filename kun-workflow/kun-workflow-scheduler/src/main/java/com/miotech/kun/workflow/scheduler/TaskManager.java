@@ -140,6 +140,7 @@ public class TaskManager {
             List<Long> taskRunShouldUpdateFailedUpstreamTaskRunIds = new ArrayList<>();
             taskRunShouldUpdateFailedUpstreamTaskRunIds.addAll(taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId));
             taskRunShouldUpdateFailedUpstreamTaskRunIds.add(taskRunId);
+            logger.debug("remove upstream failed taskRunIds {} for {}", failedUpstreamTaskRunIdsToBeRemoved, taskRunShouldUpdateFailedUpstreamTaskRunIds);
             taskRunDao.removeFailedUpstreamTaskRunIds(taskRunShouldUpdateFailedUpstreamTaskRunIds, failedUpstreamTaskRunIdsToBeRemoved);
         }
 

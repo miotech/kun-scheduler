@@ -1951,36 +1951,6 @@ public class TaskRunDao {
         return taskRunIdToDependenciesMap;
     }
 
-    public List<TaskAttempt> fetchTaskAttemptListForRecover(List<TaskRunStatus> taskRunStatusList) {
-        if (taskRunStatusList.size() == 0) {
-            return new ArrayList<>();
-        }
-        String filterTaskRunStatus = taskRunStatusList.stream().map(x -> "?").collect(Collectors.joining(","));
-        Map<String, List<String>> columnsMap = new HashMap<>();
-        columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
-        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
-        columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
-
-        String whereCase = TASK_ATTEMPT_MODEL_NAME + ".status in " + "(" + filterTaskRunStatus +
-                ") and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
-        String sql = DefaultSQLBuilder.newBuilder()
-                .columns(columnsMap)
-                .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
-                .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
-                .on(TASK_RUN_MODEL_NAME + ".id = " + TASK_ATTEMPT_MODEL_NAME + ".task_run_id")
-                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
-                .on(TaskDao.TASK_MODEL_NAME + ".id = " + TASK_RUN_MODEL_NAME + ".task_id")
-                .autoAliasColumns()
-                .where(whereCase)
-                .getSQL();
-        OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-RECOVER_LIMIT_DAYS);
-        List<Object> params = new ArrayList<>();
-        params.addAll(taskRunStatusList.stream().map(Enum::toString).collect(Collectors.toList()));
-        params.add(recoverLimit);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance),
-                params.toArray());
-    }
-
 
     //创建TaskRun依赖
     public void createTaskRunDependency(TaskRunDependency dependency) {
@@ -2183,10 +2153,12 @@ public class TaskRunDao {
         return dbOperator.fetchAll(sql, new TaskRunTransitEventMapper(), dateLimit, attemptId, false);
     }
 
-    public List<TaskAttempt> fetchNotTermAttempt() {
-        List<Long> taskAttemptIdList = fetchNotTermAttemptIds();
-        return fetchTaskAttemptByIds(taskAttemptIdList);
-
+    public List<TaskAttempt> shouldRecoverAttempts(){
+        List<Long> notTermAttemptIds = fetchNotTermAttemptIds();
+        List<Long> hasUnCompleteEventAttemptIds = fetchAttemptIdsHasUnCompletedEvents();
+        notTermAttemptIds.addAll(hasUnCompleteEventAttemptIds);
+        List<Long> shouldRecoverAttemptIds = notTermAttemptIds.stream().distinct().collect(Collectors.toList());
+        return fetchTaskAttemptByIds(shouldRecoverAttemptIds);
     }
 
     public List<Long> fetchNotTermAttemptIds() {
@@ -2199,6 +2171,16 @@ public class TaskRunDao {
                 .asPrepared()
                 .getSQL();
         return dbOperator.fetchAll(sql, rs -> rs.getLong("id"), dateLimit, finishedPhase);
+    }
+
+    public List<Long> fetchAttemptIdsHasUnCompletedEvents(){
+        OffsetDateTime dateLimit = DateTimeUtils.now().plusDays(-RECOVER_LIMIT_DAYS);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("distinct(task_attempt_id)")
+                .from(EVENT_TABLE_NAME)
+                .where("created_at > ? and completed = ?")
+                .getSQL();
+        return dbOperator.fetchAll(sql,rs -> rs.getLong("task_attempt_id"),dateLimit,false);
     }
 
     public void cleanExpiredEvents() {

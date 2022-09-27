@@ -186,20 +186,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         }
     }
 
-    private List<TaskAttempt> fetchRecoverAttempts() {
-        List<TaskAttempt> candidateRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
-        List<String> executorLabels = Lists.newArrayList(StringUtils.split(executorConfig.getLabel(), ","));
-        //add executor name to label list
-        executorLabels.add(executorConfig.getName());
-        List<TaskAttempt> shouldRecoverAttemptList = new ArrayList<>();
-        for (TaskAttempt taskAttempt : candidateRecoverAttemptList) {
-            if (executorLabels.contains(taskAttempt.getRuntimeLabel())) {
-                shouldRecoverAttemptList.add(taskAttempt);
-            }
-        }
-        return shouldRecoverAttemptList;
-    }
-
 
     private void sendExceptionEvent(Long taskAttemptId) {
         TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.EXCEPTION, taskAttemptId , null);
