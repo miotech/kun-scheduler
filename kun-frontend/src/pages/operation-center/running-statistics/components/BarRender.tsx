@@ -12,6 +12,9 @@ import style from './BarRender.less';
 
 // 求时间中间隔多少m
 function getIntervalMinutes(startDate: Date, endDate: Date) {
+  if (!startDate || !endDate) {
+    return 0;
+  }
   const ms = moment(endDate).valueOf() - moment(startDate).valueOf();
   if (ms < 0) return 0;
   return Math.ceil(ms / 1000 / 60);
@@ -25,6 +28,7 @@ interface BarRendererProps {
   top: number,
   searchWords: string,
   isSelected: boolean,
+  infoList: Task[],
 }
 
 interface YarnInfoObj extends YarnInfo {
@@ -116,13 +120,22 @@ const OtherTaskBar: React.FC<TaskRenderProps> = memo(function OtherTaskBar(props
 });
 
 export const BarRender = memo((props: BarRendererProps) => {
-  const { task, toolBarStartTime, taskRunId, top, searchWords, isSelected } = props;
+  const { infoList, task, toolBarStartTime, taskRunId, top, searchWords, isSelected } = props;
   const t = useI18n();
   const [routeState, setRouteState] = useUrlState({});
 
+  const waitLeftWidth = useCallback((queuedAt) => {
+    let currentQueuedAt = queuedAt;
+    if (!queuedAt) {
+      const lastQueuedAtIndex = infoList.findIndex((item) => (!item.queuedAt)) - 1;
+      currentQueuedAt = infoList[lastQueuedAtIndex]?.queuedAt || 0;
+    }
+    return getIntervalMinutes(toolBarStartTime, currentQueuedAt);
+  }, [toolBarStartTime, infoList]);
+
   const ganttRenderData = useMemo(() => {
     const { yarnInfo } = task;
-    const waitLeft = task.queuedAt ? getIntervalMinutes(toolBarStartTime, task.queuedAt) || 1 : 0;
+    const waitLeft = waitLeftWidth(task.queuedAt);
     const waitWidth = task.queuedAt && task.startAt ? getIntervalMinutes(task.queuedAt, task.startAt) || 1 : 0;
     const runWidth = task.startAt ? getIntervalMinutes(task.startAt, task.endAt) || 1 : 0;
     let yarnInfoObj = null;
