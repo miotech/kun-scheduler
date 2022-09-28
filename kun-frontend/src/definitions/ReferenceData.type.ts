@@ -119,3 +119,19 @@ export interface ValidationResultVo {
 export interface DataBase {
   name: string;
 }
+
+// Service Definition
+export interface FetchRdmDatasParams {
+  keyword?: string;
+  glossaries?: Array<Record<string, string>>;
+  startCreateTime?: string;
+  endCreateTime?: string;
+  startUpdateTime?: string;
+  endUpdateTime?: string;
+  pageSize: number;
+  pageNumber: number;
+  resourceAttributeMap?: {
+    glossaries?: Array<Record<string, string>>;
+    owners?: string;
+  };
+}
