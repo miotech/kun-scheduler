@@ -10,12 +10,8 @@ module.exports = {
   },
   plugins: ['react-hooks'],
   rules: {
-    'semi': [
-      'error', 'always'
-    ],
-    'func-names': [
-      'error', 'as-needed'
-    ],
+    semi: ['error', 'always'],
+    'func-names': ['error', 'as-needed'],
     'no-param-reassign': [
       'error',
       {
@@ -26,6 +22,7 @@ module.exports = {
     'import/no-extraneous-dependencies': 'off',
     'react-hooks/rules-of-hooks': 'error', // 检查 Hook 的规则
     'react-hooks/exhaustive-deps': 'warn', // 检查 effect 的依赖
+    'no-case-declarations': 'off',
   },
   parserOptions: {
     tsconfigRootDir: __dirname,
@@ -40,5 +37,5 @@ module.exports = {
      * See the project section above for more information.projecttsconfig.json
      */
     createDefaultProgram: true,
-  }
+  },
 };

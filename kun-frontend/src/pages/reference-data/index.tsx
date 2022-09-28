@@ -1,19 +1,20 @@
-import React, { useCallback, useState, useMemo, useEffect } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { Tag, Table, Popover } from 'antd';
+import { pickBy } from 'lodash';
 import Icon, { PlusOutlined } from '@ant-design/icons';
 import { PaginationProps } from 'antd/es/pagination';
-import { useQueryParams, StringParam, NumberParam, withDefault, BooleanParam } from 'use-query-params';
 import { ReactComponent as UploadExcelIcon } from '@/assets/icons/upload-excel.svg';
-import { getTableList } from '@/services/reference-data/referenceData';
+import { fetchRdmDatas } from '@/services/reference-data/referenceData';
 import { useRequest } from 'ahooks';
 import { Link } from 'umi';
 import { dateFormatter } from '@/utils/datetime-utils';
 import { GlossaryChild } from '@/rematch/models/glossary';
-import { ReferenceRecords, LineageDataset } from '@/definitions/ReferenceData.type';
+import { ReferenceRecords, LineageDataset, FetchRdmDatasParams } from '@/definitions/ReferenceData.type';
 import useI18n from '@/hooks/useI18n';
 import styles from './index.less';
 import UploadModal from './components/Upload';
 import TimeCited from './components/TimeCited';
+import { FilterBar, Filters } from './components';
 
 const CreatePopoverContent = (setIsModalVisible: (value: boolean) => void) => {
   const t = useI18n();
@@ -35,43 +36,42 @@ export default function ReferenceData() {
   const t = useI18n();
   const i18n = 'dataDiscovery.referenceData.table';
 
-  const { data: tableList, loading, run: doSearch } = useRequest(getTableList, {
-    manual: true,
+  const [query, setQuery] = useState<FetchRdmDatasParams>({
+    pageNum: 1,
+    pageSize: 15,
   });
 
-  const [query, setQuery] = useQueryParams({
-    searchContent: StringParam,
-    datasource: StringParam,
-    database: StringParam,
-    schema: StringParam,
-    type: StringParam,
-    tags: StringParam,
-    owners: StringParam,
-    pageNumber: withDefault(NumberParam, 1),
-    pageSize: withDefault(NumberParam, 15),
-    displayDeleted: BooleanParam,
-  });
+  const { data: tableList, loading } = useRequest(
+    fetchRdmDatas.bind(null, pickBy(query, value => !!value) as FetchRdmDatasParams),
+    {
+      refreshDeps: [query],
+      debounceTrailing: true,
+      debounceWait: 500,
+    },
+  );
 
-  const { pageNumber, pageSize } = query;
-
-  useEffect(() => {
-    doSearch({ pageNum: pageNumber, pageSize });
-  }, [pageNumber, pageSize, doSearch]);
+  const { pageNum, pageSize } = query;
 
   const setFilterQuery = useCallback(
-    (obj, shouldChangePageNum = true) => {
+    (filterQuery, shouldChangePageNum = true) => {
+      let updatedQuery = { ...filterQuery };
       if (shouldChangePageNum) {
-        setQuery({ ...obj, pageNumber: 1 }, 'replaceIn');
-      } else {
-        setQuery(obj, 'replaceIn');
+        updatedQuery = {
+          ...updatedQuery,
+          pageNum: 1,
+        };
+        setQuery(preQuery => ({
+          ...preQuery,
+          ...updatedQuery,
+        }));
       }
     },
     [setQuery],
   );
 
   const handleChangePage = useCallback(
-    (pageNum: number) => {
-      setFilterQuery({ pageNumber: pageNum }, false);
+    (pageNumer: number) => {
+      setFilterQuery({ pageNum: pageNumer }, false);
     },
     [setFilterQuery],
   );
@@ -91,18 +91,26 @@ export default function ReferenceData() {
       setTimeCitedVisible(true);
     }
   }, []);
+
+  const handleFilterChange = useCallback(
+    (updatedFilters: Filters) => {
+      setFilterQuery(updatedFilters);
+    },
+    [setFilterQuery],
+  );
+
   const tablePagination: PaginationProps = useMemo(
     () => ({
       size: 'small',
       total: tableList?.totalCount || 0,
-      current: pageNumber,
+      current: pageNum,
       pageSize,
       pageSizeOptions: ['15', '25', '50', '100'],
       onChange: handleChangePage,
       onShowSizeChange: handleChangePageSize,
       showSizeChanger: true,
     }),
-    [tableList, handleChangePage, handleChangePageSize, pageNumber, pageSize],
+    [tableList, handleChangePage, handleChangePageSize, pageNum, pageSize],
   );
 
   const columns = [
@@ -132,10 +140,13 @@ export default function ReferenceData() {
       dataIndex: 'glossaryList',
       key: 'glossaryList',
       render: (glossaryList: GlossaryChild[]) => {
-        return <div style={{ maxWidth: '200px' }}>
-          {glossaryList?.map((glossary: GlossaryChild) => <Tag style={{marginTop: '5px'}}>{glossary.name}</Tag>)}
-        </div>;
-
+        return (
+          <div style={{ maxWidth: '200px' }}>
+            {glossaryList?.map((glossary: GlossaryChild) => (
+              <Tag style={{ marginTop: '5px' }}>{glossary.name}</Tag>
+            ))}
+          </div>
+        );
       },
     },
     {
@@ -210,6 +221,11 @@ export default function ReferenceData() {
           <PlusOutlined className={styles.addButton} />
         </Popover>
       </div>
+      <FilterBar
+        filters={query as Filters}
+        totalCount={tablePagination.total || 0}
+        onFilterChange={handleFilterChange}
+      />
       <div className={styles.table}>
         <Table
           columns={columns}
