@@ -3,28 +3,20 @@ import { Table, Tooltip, Typography } from 'antd';
 import moment from 'moment';
 import SafeUrlAssembler from 'safe-url-assembler';
 import { Link } from 'umi';
-import { connect } from 'react-redux';
-import { RootDispatch, RootState } from '@/rematch/store';
-import { ColumnProps } from 'antd/es/table';
 import useI18n from '@/hooks/useI18n';
 import useCronSemanticText from '@/hooks/useCronSemanticText';
 import { KunSpin } from '@/components/KunSpin';
 import LogUtils from '@/utils/logUtils';
 import { DeployedTask } from '@/definitions/DeployedTask.type';
-
+import { ColumnProps } from 'antd/es/table';
 import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { UsernameText } from '@/components/UsernameText';
 import TextContainer from '@/components/TextContainer/TextContainer';
+import useRedux from '@/hooks/useRedux';
 import styles from './DeployedTasksTable.less';
 
 interface DeployedTasksTableProps {
-  tableData: DeployedTask[];
-  loading?: boolean;
-  pageNum?: number;
-  pageSize?: number;
-  total?: number;
-  onChangePagination?: (nextPageNum: number, pageSize?: number) => void;
   selectedTask: DeployedTask | null;
   setSelectedTask: (deployedTask: DeployedTask | null) => any;
 }
@@ -33,12 +25,41 @@ const { Text } = Typography;
 
 const logger = LogUtils.getLoggers('DeployedTasksTableComp');
 
-const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function DeployedTasksTable(props) {
+export const DeployedTasksTable: FC<DeployedTasksTableProps> = memo((props) => {
   const t = useI18n();
+
+  const {
+    selector: { loading, pageNum, pageSize, total, tableData },
+    dispatch,
+  } = useRedux(s => ({
+    tableData: s.scheduledTasks.deployedTasks;
+    loading: s.loading.effects.scheduledTasks.fetchScheduledTasks,
+    pageNum: s.scheduledTasks.filters.pageNum,
+    pageSize: s.scheduledTasks.filters.pageSize,
+    total: s.scheduledTasks.totalCount,
+  }));
 
   const { selectedTask, setSelectedTask } = props;
 
-  const { pageNum = 1, pageSize = 25, total = 0, onChangePagination } = props;
+
+  const onChangePagination = useCallback((nextPage: number, nextPageSize?: number) => {
+    dispatch.scheduledTasks.updateFilter({
+      pageNum: nextPage,
+      pageSize: nextPageSize,
+    });
+  }, [dispatch]);
+
+  const handleRowEvents = useCallback(
+    (record: DeployedTask) => {
+      return {
+        onClick: () => {
+          logger.trace('record = %o;', record);
+          setSelectedTask(record);
+        },
+      };
+    },
+    [setSelectedTask],
+  );
 
   const columns = useMemo<ColumnProps<DeployedTask>[]>(
     () => [
@@ -92,34 +113,24 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function Deploy
         render: (txt: string) => {
           return (
             // eslint-disable-next-line react-hooks/rules-of-hooks
-            <Tooltip title={useCronSemanticText(txt, {})}>
+            <Tooltip >
               <Text code>{txt}</Text>
             </Tooltip>
           );
         },
       },
     ],
-    [t],
+    [t]
   );
 
-  const handleRowEvents = useCallback(
-    (record: DeployedTask) => {
-      return {
-        onClick: () => {
-          logger.trace('record = %o;', record);
-          setSelectedTask(record);
-        },
-      };
-    },
-    [setSelectedTask],
-  );
+
 
   return (
-    <KunSpin spinning={props.loading}>
+    <KunSpin spinning={loading}>
       <Table<DeployedTask>
         className={styles.DeployedTasksTable}
         columns={columns}
-        dataSource={props.tableData}
+        dataSource={tableData}
         rowKey={r => `${r.id}`}
         size="small"
         pagination={{
@@ -145,25 +156,3 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function Deploy
   );
 });
 
-const mapStateToProps = (s: RootState) => ({
-  tableData: s.scheduledTasks.deployedTasksTableData,
-  loading: s.loading.effects.scheduledTasks.fetchScheduledTasks,
-  pageNum: s.scheduledTasks.filters.pageNum,
-  pageSize: s.scheduledTasks.filters.pageSize,
-  total: s.scheduledTasks.totalCount,
-});
-
-const mapDispatchToProps = (dispatch: RootDispatch) => ({
-  onChangePagination: (nextPage: number, nextPageSize?: number) => {
-    dispatch.scheduledTasks.updateFilter({
-      pageNum: nextPage,
-      pageSize: nextPageSize,
-    });
-  },
-});
-
-export const DeployedTasksTable = connect(
-  mapStateToProps,
-  // @ts-ignore
-  mapDispatchToProps,
-)(DeployedTasksTableComp);

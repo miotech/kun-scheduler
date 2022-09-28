@@ -303,13 +303,27 @@ export const appRoutes = [
         routes: [
           {
             title: 'common.pageTitle.dataSettings',
-            path: './data-sources',
+            path: './data-source',
             menuDisplay: true,
             icon: 'SettingOutlined',
-            component: 'data-settings/index',
             breadcrumbLink: true,
-            exact: true,
             wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+            routes: [
+              {
+                title: 'common.pageTitle.dataSettings',
+                path: '.',
+                component: 'data-settings/index',
+                exact: true,
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+              {
+                title: '详情',
+                path: './detail',
+                exact: true,
+                component: 'data-settings/data-source-detail/index',
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              }
+            ]
           },
           {
             title: 'common.pageTitle.variableSettings',

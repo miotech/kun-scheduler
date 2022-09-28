@@ -35,7 +35,6 @@ export const UserSelect: FunctionComponent<Props> = props => {
       )),
     [users],
   );
-
   return (
     <Select
       disabled={props.disabled || !users.length}
