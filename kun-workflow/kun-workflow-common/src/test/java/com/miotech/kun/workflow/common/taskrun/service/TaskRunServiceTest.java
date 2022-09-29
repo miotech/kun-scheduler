@@ -1125,12 +1125,10 @@ public class TaskRunServiceTest extends CommonTestBase {
         }
 
         TaskRunWithDependenciesVO result1 = taskRunService.getTaskRunWithDependencies(taskRuns.get(2).getId(), 1, -1);
-        assertThat(result1.getUpstreamTaskRuns().size(), is(1));
-        assertThat(result1.getDownstreamTaskRuns().size(), is(2));
+        assertThat(result1.getTaskRuns().size(), is(4));
 
         TaskRunWithDependenciesVO result2 = taskRunService.getTaskRunWithDependencies(taskRuns.get(2).getId(), -1, 1);
-        assertThat(result2.getUpstreamTaskRuns().size(), is(2));
-        assertThat(result2.getDownstreamTaskRuns().size(), is(1));
+        assertThat(result2.getTaskRuns().size(), is(4));
     }
 
 }

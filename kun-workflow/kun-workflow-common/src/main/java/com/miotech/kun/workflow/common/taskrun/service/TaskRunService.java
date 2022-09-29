@@ -231,37 +231,38 @@ public class TaskRunService {
         Preconditions.checkArgument(upstreamLevel == -1 || upstreamLevel >= 0, "upstream level should be non negative or -1 denoting all");
         Preconditions.checkArgument(downstreamLevel == -1 || downstreamLevel >= 0, "downstream level should be non negative or -1 denoting all");
         TaskRun taskRun = findTaskRun(taskRunId);
-        List<TaskRun> upstreamTaskRuns;
+        List<TaskRun> result = new ArrayList<>();
+        result.add(taskRun);
         if (upstreamLevel == -1) {
             List<Long> upstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId);
-            upstreamTaskRuns = taskRunDao.fetchTaskRunsByIds(upstreamTaskRunIds)
+            result.addAll(taskRunDao.fetchTaskRunsByIds(upstreamTaskRunIds)
                     .stream()
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         } else if (upstreamLevel > 0) {
-            upstreamTaskRuns = taskRunDao.fetchUpstreamTaskRunsById(taskRunId, upstreamLevel, false);
-        } else {
-            upstreamTaskRuns = Collections.emptyList();
+            result.addAll(taskRunDao.fetchUpstreamTaskRunsById(taskRunId, upstreamLevel, false));
         }
 
-        List<TaskRun> downstreamTaskRuns;
         if (downstreamLevel == -1) {
             List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
-            downstreamTaskRuns = taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
+            result.addAll(taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
                     .stream()
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()));
         } else if (downstreamLevel > 0) {
-            downstreamTaskRuns = taskRunDao.fetchDownstreamTaskRunsById(taskRunId, downstreamLevel, false);
-        } else {
-            downstreamTaskRuns = Collections.emptyList();
+            result.addAll(taskRunDao.fetchDownstreamTaskRunsById(taskRunId, downstreamLevel, false));
         }
+        List<TaskRunVO> taskRuns = result.stream()
+                .map(this::convertToVOWithoutAttempt)
+                .collect(Collectors.toList());
+        List<TaskRunDependencyVO> dependencies = result.stream()
+                .flatMap(x -> x.getDependentTaskRunIds().stream()
+                        .map(t -> new TaskRunDependencyVO(x.getId(), t)))
+                .collect(Collectors.toList());
 
-        return new TaskRunWithDependenciesVO(convertToVO(taskRun, false),
-                upstreamTaskRuns.stream().map(tr -> convertToVO(tr, false)).collect(Collectors.toList()),
-                downstreamTaskRuns.stream().map(tr -> convertToVO(tr, false)).collect(Collectors.toList()));
+        return new TaskRunWithDependenciesVO(taskRuns, dependencies);
     }
 
 

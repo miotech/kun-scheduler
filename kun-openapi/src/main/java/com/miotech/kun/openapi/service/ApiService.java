@@ -1,12 +1,12 @@
 package com.miotech.kun.openapi.service;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.JwtUtils;
 import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
+import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.web.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillDetailVO;
@@ -15,6 +15,8 @@ import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
+import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskDependencyVO;
+import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.CreateTaskDefinitionRequest;
@@ -27,6 +29,7 @@ import com.miotech.kun.dataplatform.web.common.taskdefview.vo.CreateTaskDefViewR
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateService;
+import com.miotech.kun.dataplatform.web.common.utils.TagUtils;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.openapi.model.request.*;
 import com.miotech.kun.openapi.model.response.*;
@@ -35,15 +38,14 @@ import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.PaginationResult;
-import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.client.model.TaskRunSearchRequest;
-import com.miotech.kun.workflow.client.model.TaskRunWithDependencies;
+import com.miotech.kun.workflow.client.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.miotech.kun.dataplatform.web.common.utils.TagUtils.TAG_TASK_DEFINITION_ID_NAME;
 
 @Service
 public class ApiService extends BaseSecurityService {
@@ -151,21 +153,29 @@ public class ApiService extends BaseSecurityService {
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinitionService.find(taskId)));
     }
 
-    public TaskWithDependencies fetchTaskWithDependencies(Long taskId, int upstreamLevel, int downstreamLevel) {
-        Preconditions.checkArgument(upstreamLevel == 1, "upstream level support only 1 level now");
-        Preconditions.checkArgument(downstreamLevel == 1, "downstream level support only 1 level now");
-        TaskVO task = convertToTaskVO(taskDefinitionService.convertToVO(taskDefinitionService.find(taskId)));
-        List<TaskVO> upstreamTasks = taskDefinitionService.fetchUpstreamTaskDefinition(taskId)
+    public TaskVOWithDependencies fetchTaskWithDependencies(Long taskDefinitionId, int upstreamLevel, int downstreamLevel) {
+        DeployedTask deployedTask = deployedTaskService.find(taskDefinitionId);
+        TaskWithDependencies taskWithDependencies = workflowClient.getTaskWithDependencies(deployedTask.getWorkflowTaskId(), upstreamLevel, downstreamLevel);
+
+        Map<Long, Long> taskDefinitionIdMap = new HashMap<>();
+        for (Task task : taskWithDependencies.getTasks()) {
+            Long taskDefId = TagUtils.getTagValue(task.getTags(), TAG_TASK_DEFINITION_ID_NAME)
+                    .map(Long::parseLong)
+                    .get();
+            taskDefinitionIdMap.put(task.getId(), taskDefId);
+        }
+
+        List<TaskVO> tasks = taskDefinitionService.convertToVOList(taskDefinitionService.findByDefIds(new ArrayList<>(taskDefinitionIdMap.values())), true)
                 .stream()
-                .map(t -> taskDefinitionService.convertToVO(t))
-                .map(this::convertToTaskVO)
-                .collect(Collectors.toList());
-        List<TaskVO> downstreamTasks = taskDefinitionService.fetchDownstreamTaskDefinition(taskId)
+                .map(this::convertToTaskVO).collect(Collectors.toList());
+        List<TaskDependencyVO> dependencies = taskWithDependencies.getDependencies()
                 .stream()
-                .map(t -> taskDefinitionService.convertToVO(t))
-                .map(this::convertToTaskVO)
+                .map(x -> new TaskDependencyVO(
+                        taskDefinitionIdMap.get(x.getDownstreamTaskId()),
+                        taskDefinitionIdMap.get(x.getUpstreamTaskId())))
                 .collect(Collectors.toList());
-        return new TaskWithDependencies(task, upstreamTasks, downstreamTasks);
+
+        return new TaskVOWithDependencies(tasks, dependencies);
     }
 
 

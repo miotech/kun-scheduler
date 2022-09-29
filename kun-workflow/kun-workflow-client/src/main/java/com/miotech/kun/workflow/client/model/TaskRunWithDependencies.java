@@ -4,33 +4,23 @@ import java.util.List;
 
 public class TaskRunWithDependencies {
 
-    private TaskRun taskRun;
+    private List<TaskRun> taskRuns;
 
-    private List<TaskRun> upstreamTaskRuns;
+    private List<TaskRunDependency> dependencies;
 
-    private List<TaskRun> downstreamTaskRuns;
-
-    public TaskRun getTaskRun() {
-        return taskRun;
+    public List<TaskRun> getTaskRuns() {
+        return taskRuns;
     }
 
-    public void setTaskRun(TaskRun taskRun) {
-        this.taskRun = taskRun;
+    public void setTaskRuns(List<TaskRun> taskRuns) {
+        this.taskRuns = taskRuns;
     }
 
-    public List<TaskRun> getUpstreamTaskRuns() {
-        return upstreamTaskRuns;
+    public List<TaskRunDependency> getDependencies() {
+        return dependencies;
     }
 
-    public void setUpstreamTaskRuns(List<TaskRun> upstreamTaskRuns) {
-        this.upstreamTaskRuns = upstreamTaskRuns;
-    }
-
-    public List<TaskRun> getDownstreamTaskRuns() {
-        return downstreamTaskRuns;
-    }
-
-    public void setDownstreamTaskRuns(List<TaskRun> downstreamTaskRuns) {
-        this.downstreamTaskRuns = downstreamTaskRuns;
+    public void setDependencies(List<TaskRunDependency> dependencies) {
+        this.dependencies = dependencies;
     }
 }

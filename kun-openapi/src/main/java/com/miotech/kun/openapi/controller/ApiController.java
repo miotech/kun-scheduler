@@ -129,9 +129,9 @@ public class ApiController {
     }
 
     @GetMapping("/task/{taskId}/dependencies")
-    public RequestResult<TaskWithDependencies> fetchTaskWithDependencies(@PathVariable Long taskId,
-                                                                         @RequestParam(required = false, defaultValue = "1") int upstreamLevel,
-                                                                         @RequestParam(required = false, defaultValue = "1") int downstreamLevel) {
+    public RequestResult<TaskVOWithDependencies> fetchTaskWithDependencies(@PathVariable Long taskId,
+                                                                    @RequestParam(required = false, defaultValue = "1") int upstreamLevel,
+                                                                    @RequestParam(required = false, defaultValue = "1") int downstreamLevel) {
         Preconditions.checkNotNull(taskId, "task id should not be null");
         return RequestResult.success(apiService.fetchTaskWithDependencies(taskId, upstreamLevel, downstreamLevel));
     }

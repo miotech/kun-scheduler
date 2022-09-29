@@ -4,40 +4,28 @@ import java.util.List;
 
 public class TaskRunWithDependenciesVO {
 
-    private TaskRunVO taskRun;
+    private List<TaskRunVO> taskRuns;
 
-    private List<TaskRunVO> upstreamTaskRuns;
+    private List<TaskRunDependencyVO> dependencies;
 
-    private List<TaskRunVO> downstreamTaskRuns;
-
-
-    public TaskRunWithDependenciesVO(TaskRunVO taskRun, List<TaskRunVO> upstreamTaskRuns, List<TaskRunVO> downstreamTaskRuns) {
-        this.taskRun = taskRun;
-        this.upstreamTaskRuns = upstreamTaskRuns;
-        this.downstreamTaskRuns = downstreamTaskRuns;
+    public TaskRunWithDependenciesVO(List<TaskRunVO> taskRuns, List<TaskRunDependencyVO> dependencies) {
+        this.taskRuns = taskRuns;
+        this.dependencies = dependencies;
     }
 
-    public TaskRunVO getTaskRun() {
-        return taskRun;
+    public List<TaskRunVO> getTaskRuns() {
+        return taskRuns;
     }
 
-    public void setTaskRun(TaskRunVO taskRun) {
-        this.taskRun = taskRun;
+    public void setTaskRuns(List<TaskRunVO> taskRuns) {
+        this.taskRuns = taskRuns;
     }
 
-    public List<TaskRunVO> getUpstreamTaskRuns() {
-        return upstreamTaskRuns;
+    public List<TaskRunDependencyVO> getDependencies() {
+        return dependencies;
     }
 
-    public void setUpstreamTaskRuns(List<TaskRunVO> upstreamTaskRuns) {
-        this.upstreamTaskRuns = upstreamTaskRuns;
-    }
-
-    public List<TaskRunVO> getDownstreamTaskRuns() {
-        return downstreamTaskRuns;
-    }
-
-    public void setDownstreamTaskRuns(List<TaskRunVO> downstreamTaskRuns) {
-        this.downstreamTaskRuns = downstreamTaskRuns;
+    public void setDependencies(List<TaskRunDependencyVO> dependencies) {
+        this.dependencies = dependencies;
     }
 }
