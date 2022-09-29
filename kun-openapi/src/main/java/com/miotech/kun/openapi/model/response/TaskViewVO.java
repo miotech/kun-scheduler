@@ -1,4 +1,4 @@
-package com.miotech.kun.openapi.model;
+package com.miotech.kun.openapi.model.response;
 
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;

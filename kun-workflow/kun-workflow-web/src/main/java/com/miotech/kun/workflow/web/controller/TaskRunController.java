@@ -9,7 +9,7 @@ import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
-import com.miotech.kun.workflow.common.taskrun.state.TaskRunRunning;
+import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
@@ -216,6 +216,13 @@ public class TaskRunController {
                                       @QueryParameter(defaultValue = "1") int downstreamLevel
     ) {
         return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
+    }
+
+    @RouteMapping(url = "/taskruns/{taskRunId}/dependencies", method = "GET")
+    public TaskRunWithDependenciesVO getTaskRunWithDependencies(@RouteVariable Long taskRunId,
+                                                                @QueryParameter(defaultValue = "1") int upstreamLevel,
+                                                                @QueryParameter(defaultValue = "1") int downstreamLevel) {
+        return taskRunService.getTaskRunWithDependencies(taskRunId, upstreamLevel, downstreamLevel);
     }
 
     @RouteMapping(url = "/taskruns/{taskRunId}/getAllDownstream", method = "GET")

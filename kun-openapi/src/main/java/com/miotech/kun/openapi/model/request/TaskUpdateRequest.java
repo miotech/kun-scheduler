@@ -1,4 +1,4 @@
-package com.miotech.kun.openapi.model;
+package com.miotech.kun.openapi.model.request;
 
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskPayload;
 import lombok.Data;

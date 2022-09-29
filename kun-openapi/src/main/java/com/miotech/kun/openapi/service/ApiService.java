@@ -2,12 +2,18 @@ package com.miotech.kun.openapi.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.JwtUtils;
+import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.web.common.backfill.service.BackfillService;
+import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillDetailVO;
+import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
+import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
@@ -22,11 +28,17 @@ import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionView
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
-import com.miotech.kun.openapi.model.*;
+import com.miotech.kun.openapi.model.request.*;
+import com.miotech.kun.openapi.model.response.*;
+import com.miotech.kun.operationrecord.common.anno.OperationRecord;
+import com.miotech.kun.operationrecord.common.model.OperationRecordType;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.PaginationResult;
+import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.client.model.TaskRunSearchRequest;
+import com.miotech.kun.workflow.client.model.TaskRunWithDependencies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +67,16 @@ public class ApiService extends BaseSecurityService {
     private DeployService deployService;
 
     @Autowired
+    private DeployedTaskService deployedTaskService;
+
+    @Autowired
     private WorkflowClient workflowClient;
+
+    @Autowired
+    private BackfillService backfillService;
+
+    private static final List<String> SCHEDULE_TYPE_FILTER = Lists.newArrayList("SCHEDULED");
+
 
     public String authenticate(UserRequest request) {
         UserInfo userInfo = getUserByUsername(request.getUsername());
@@ -85,6 +106,14 @@ public class ApiService extends BaseSecurityService {
                 result.getRecords().stream().map(TaskViewVO::from).collect(Collectors.toList()));
     }
 
+    public PageResult<TaskViewVO> getTaskViewList(TaskDefinitionViewSearchParams searchParams) {
+        PageResult<TaskDefinitionViewVO> result = taskDefinitionViewService.searchPage(searchParams);
+        return new PageResult<>(result.getPageSize(),
+                result.getPageNumber(),
+                result.getTotalCount(),
+                result.getRecords().stream().map(TaskViewVO::from).collect(Collectors.toList()));
+    }
+
     public TaskViewDetailVO getTaskViewDetail(Long taskViewId) {
         Optional<TaskDefinitionView> fetchedTaskView = taskDefinitionViewService.fetchById(taskViewId);
         Preconditions.checkArgument(fetchedTaskView.isPresent(), "Task view not found. Please re-check task view id.");
@@ -105,17 +134,7 @@ public class ApiService extends BaseSecurityService {
     }
 
 
-    public PaginationResult<TaskVO> searchTask(TaskSearchRequest request) {
-        TaskDefinitionSearchRequest searchRequest = new TaskDefinitionSearchRequest(request.getPageSize(),
-                request.getPageNum(),
-                request.getTaskName(),
-                request.getTaskTemplateName(),
-                ImmutableList.of(),
-                request.getOwnerId() == null? ImmutableList.of() : ImmutableList.of(request.getOwnerId()),
-                Optional.of(false),
-                request.getTaskViewId() == null? ImmutableList.of() : ImmutableList.of(request.getTaskViewId())
-                );
-
+    public PaginationResult<TaskVO> searchTask(TaskDefinitionSearchRequest searchRequest) {
         PaginationResult<TaskDefinition> taskDefinitions = taskDefinitionService.search(searchRequest);
         PaginationResult<TaskVO> result = new PaginationResult<>(
                 taskDefinitions.getPageSize(),
@@ -131,6 +150,25 @@ public class ApiService extends BaseSecurityService {
     public TaskVO getTask(Long taskId) {
         return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinitionService.find(taskId)));
     }
+
+    public TaskWithDependencies fetchTaskWithDependencies(Long taskId, int upstreamLevel, int downstreamLevel) {
+        Preconditions.checkArgument(upstreamLevel == 1, "upstream level support only 1 level now");
+        Preconditions.checkArgument(downstreamLevel == 1, "downstream level support only 1 level now");
+        TaskVO task = convertToTaskVO(taskDefinitionService.convertToVO(taskDefinitionService.find(taskId)));
+        List<TaskVO> upstreamTasks = taskDefinitionService.fetchUpstreamTaskDefinition(taskId)
+                .stream()
+                .map(t -> taskDefinitionService.convertToVO(t))
+                .map(this::convertToTaskVO)
+                .collect(Collectors.toList());
+        List<TaskVO> downstreamTasks = taskDefinitionService.fetchDownstreamTaskDefinition(taskId)
+                .stream()
+                .map(t -> taskDefinitionService.convertToVO(t))
+                .map(this::convertToTaskVO)
+                .collect(Collectors.toList());
+        return new TaskWithDependencies(task, upstreamTasks, downstreamTasks);
+    }
+
+
 
     public TaskVO createTask(TaskCreateRequest request, String token) {
         String owner = setUserByToken(token);
@@ -182,7 +220,66 @@ public class ApiService extends BaseSecurityService {
         return workflowClient.changeTaskRunPriority(request.getTaskRunId(), request.getPriority());
     }
 
-    private String setUserByToken(String token) {
+
+    public PaginationResult<TaskRun> fetchTaskRunList(TaskRunSearchRequest taskRunSearchRequest) {
+
+        return workflowClient.searchTaskRun(taskRunSearchRequest);
+    }
+
+    public TaskRun fetchTaskRun(Long taskRunId) {
+        return workflowClient.getTaskRun(taskRunId);
+    }
+
+    public PaginationResult<TaskRun> fetchTaskRunByTaskId(Long taskDefId, int pageSize, int pageNum) {
+        TaskRunSearchRequest taskRunSearchRequest = TaskRunSearchRequest.newBuilder()
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
+                .withTaskIds(Collections.singletonList(deployedTaskService.find(taskDefId).getWorkflowTaskId()))
+                .withPageNum(pageNum)
+                .withPageSize(pageSize)
+                .build();
+        return workflowClient.searchTaskRun(taskRunSearchRequest);
+    }
+
+    @OperationRecord(type = OperationRecordType.TASK_ABORT, args = {"#taskRunId"})
+    public TaskRun abortTaskRun(Long taskRunId) {
+        return workflowClient.stopTaskRun(taskRunId);
+    }
+
+    @OperationRecord(type = OperationRecordType.TASK_RERUN, args = {"#taskRunId"})
+    public TaskRun restartTaskRun(Long taskRunId) {
+        return workflowClient.restartTaskRun(taskRunId);
+    }
+
+    @OperationRecord(type = OperationRecordType.TASK_RERUN, args = {"#taskRunIds"})
+    public void restartTaskRuns(List<Long> taskRunIds) {
+        workflowClient.restartTaskRuns(taskRunIds);
+    }
+
+    @OperationRecord(type = OperationRecordType.TASK_SKIP, args = {"#taskRunId"})
+    public TaskRun skipTaskRun(Long taskRunId) {
+        return workflowClient.skipTaskRun(taskRunId);
+    }
+
+    @OperationRecord(type = OperationRecordType.TASK_REMOVE_DEPENDENCY, args = {"#taskRunId", "#upstreamTaskRunIds"})
+    public void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
+        workflowClient.removeTaskRunDependency(taskRunId, upstreamTaskRunIds);
+    }
+
+    public TaskRunWithDependencies fetchTaskRunWithDependencies(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        return workflowClient.getTaskRunWithDependencies(taskRunId, upstreamLevel, downstreamLevel);
+    }
+
+    public PageResult<Backfill> fetchBackfillList(BackfillSearchParams backfillSearchParams) {
+        return backfillService.search(backfillSearchParams);
+    }
+
+    public BackfillDetailVO fetchBackfillDetail(Long backfillId) {
+        Optional<Backfill> backfillOptional = backfillService.fetchById(backfillId);
+        List<TaskRun> taskRuns = backfillService.fetchTaskRunsByBackfillId(backfillId);
+        return BackfillDetailVO.from(backfillOptional.get(), taskRuns);
+    }
+
+    public String setUserByToken(String token) {
         Preconditions.checkArgument(token.startsWith("Bearer "), "Token should in format: Bearer {token}");
         String username = JwtUtils.parseUsername(token);
         UserInfo userInfo = getUserByUsername(username);

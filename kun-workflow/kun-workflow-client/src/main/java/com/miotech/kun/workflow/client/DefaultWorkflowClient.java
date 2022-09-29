@@ -260,6 +260,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public TaskRunWithDependencies getTaskRunWithDependencies(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        return wfApi.getTaskRunWithDependencies(taskRunId, upstreamLevel, downstreamLevel);
+    }
+
+    @Override
     public TaskRunGanttChart getTaskRunGantt(Long taskRunId) {
         return wfApi.getTaskRunGantt(taskRunId);
     }

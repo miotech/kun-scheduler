@@ -1,4 +1,4 @@
-package com.miotech.kun.openapi.model;
+package com.miotech.kun.openapi.model.request;
 
 import lombok.Data;
 

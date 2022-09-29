@@ -1,4 +1,4 @@
-package com.miotech.kun.openapi.model;
+package com.miotech.kun.openapi.model.response;
 
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import lombok.Data;
