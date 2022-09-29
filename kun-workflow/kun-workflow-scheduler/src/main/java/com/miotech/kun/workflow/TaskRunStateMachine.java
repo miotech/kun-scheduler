@@ -60,21 +60,26 @@ public class TaskRunStateMachine {
 
     public void generateCondition() {
         logger.debug("generate condition for taskRun : {}", taskRunId);
-        List<TaskRunCondition> conditions = taskRunDao.fetchTaskRunConditionsById(taskRunId);
-        Map<Long, TaskRunCondition> conditionMap = new HashMap<>();
-        for (TaskRunCondition taskRunCondition : conditions) {
-            Long upTaskRunId = Long.valueOf(taskRunCondition.getCondition().getContent().get("taskRunId"));
-            conditionMap.put(upTaskRunId, taskRunCondition);
-        }
-        List<Long> conditionTaskRunIds = conditionMap.keySet().stream().collect(Collectors.toList());
-        conditionManager = new ConditionManager(conditionMap);
-
-        List<Optional<TaskRun>> conditionTaskRuns = taskRunDao.fetchTaskRunsByIds(conditionTaskRunIds);
-        for (Optional<TaskRun> conditionTaskRun : conditionTaskRuns) {
-            if (conditionTaskRun.isPresent()) {
-                initCondition(conditionTaskRun.get().getId(), conditionTaskRun.get().getTaskRunPhase());
+        try {
+            List<TaskRunCondition> conditions = taskRunDao.fetchTaskRunConditionsById(taskRunId);
+            Map<Long, TaskRunCondition> conditionMap = new HashMap<>();
+            for (TaskRunCondition taskRunCondition : conditions) {
+                Long upTaskRunId = Long.valueOf(taskRunCondition.getCondition().getContent().get("taskRunId"));
+                conditionMap.put(upTaskRunId, taskRunCondition);
             }
+            List<Long> conditionTaskRunIds = conditionMap.keySet().stream().collect(Collectors.toList());
+            conditionManager = new ConditionManager(conditionMap);
+
+            List<Optional<TaskRun>> conditionTaskRuns = taskRunDao.fetchTaskRunsByIds(conditionTaskRunIds);
+            for (Optional<TaskRun> conditionTaskRun : conditionTaskRuns) {
+                if (conditionTaskRun.isPresent()) {
+                    initCondition(conditionTaskRun.get().getId(), conditionTaskRun.get().getTaskRunPhase());
+                }
+            }
+        } catch (Exception e) {
+            logger.error("generate condition for taskRunId failed", taskRunId, e);
         }
+
 
     }
 
