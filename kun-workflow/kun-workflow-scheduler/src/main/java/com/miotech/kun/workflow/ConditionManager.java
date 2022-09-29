@@ -102,7 +102,7 @@ public class ConditionManager {
 
     private void computeUpstreamFailed() {
         Integer currentUpstreamFailed = 0;
-        for (Long conditionTaskRunId : conditionMap.keySet()) {
+        for (Long conditionTaskRunId : conditionPhase.keySet()) {
             TaskRunCondition taskRunCondition = conditionMap.get(conditionTaskRunId);
             if (taskRunCondition.getType().equals(ConditionType.TASKRUN_DEPENDENCY_SUCCESS) && !taskRunCondition.getResult()
                     && TaskRunPhase.isFailedOrUpstreamFailed(conditionPhase.get(conditionTaskRunId))) {
