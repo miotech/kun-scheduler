@@ -99,6 +99,7 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
                   key={item.id}
                   toolBarStartTime={toolBarStartTime}
                   taskRunId={taskRunId}
+                  infoList={infoList}
                 />
               );
             }
