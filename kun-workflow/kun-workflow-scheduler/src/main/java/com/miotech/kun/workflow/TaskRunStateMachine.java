@@ -105,13 +105,13 @@ public class TaskRunStateMachine {
                 Integer prePhase = taskAttemptPhase;
                 taskAttemptPhase = computePhase(nextState.getPhase());
                 logger.debug("taskAttempt: {} change state from {} to {} ", taskAttemptId, taskRunState, nextState);
-                finishEvents.add(nextEvent);
                 postTransition(prePhase, nextEvent);
                 taskRunState.afterTransition(nextEvent, taskAttempt);
             } catch (Throwable e) {
                 logger.error("attempt {}  " +
                         "do transition failed for phase  {}", taskAttemptId, taskAttemptPhase, e);
             }
+            finishEvents.add(nextEvent);
             saveFinishedEvents();
 
         }
