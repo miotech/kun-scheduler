@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class SearchController {
 
-    private static Logger logger = LoggerFactory.getLogger(ProcessController.class);
+    private static Logger logger = LoggerFactory.getLogger(SearchController.class);
 
     @Inject
     private SearchService searchService;

@@ -1,10 +1,14 @@
 package com.miotech.kun.metadata.common.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.dao.UniversalSearchDao;
 import com.miotech.kun.metadata.common.factory.MockSearchFactory;
+import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
 import com.miotech.kun.metadata.core.model.constant.SearchOperator;
@@ -22,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -430,6 +435,85 @@ class SearchServiceTest extends DatabaseTestBase {
         List<String> schemaList = searchService.fetchResourceAttributeList(request2);
         Assertions.assertTrue(CollectionUtils.isNotEmpty(schemaList));
         assertThat(schemaList.size(), is(1));
+
+    }
+
+    @Test
+    void test_search_resource_attribute_list_refTableResourceAttribute() {
+        ResourceType resourceType = ResourceType.REF_TABLE;
+        List<Map<Long, String>> glossiesInfo = Lists.newArrayList();
+        glossiesInfo.add(Collections.singletonMap(IdGenerator.getInstance().nextId(), "data ref_test1"));
+        glossiesInfo.add(Collections.singletonMap(IdGenerator.getInstance().nextId(), "test_search_resource"));
+        RefTableResourceAttribute ra1 = MockSearchFactory.mockRefTableResourceAttribute(glossiesInfo, "zhangsan");
+        SearchedInfo si1 = MockSearchFactory.mockSearchedInfo(1L, "name", resourceType, "description", ra1, false);
+        searchService.saveOrUpdate(si1);
+        ResourceAttributeInfoRequest request = MockSearchFactory.mockResourceAttributeInfoRequest(resourceType, "glossaries", null, false);
+        List<String> glossies = searchService.fetchResourceAttributeList(request);
+        Assertions.assertTrue(CollectionUtils.isNotEmpty(glossies));
+        assertThat(glossies.size(), is(1));
+        UniversalSearchRequest searchReq = MockSearchFactory.mockUniversalSearchRequest(Sets.newHashSet(ResourceType.REF_TABLE), "test", Sets.newHashSet(SearchContent.values()), null, false);
+        UniversalSearchInfo search = searchService.search(searchReq);
+        List<SearchedInfo> searchedInfoList = search.getSearchedInfoList();
+        Assertions.assertTrue(CollectionUtils.isNotEmpty(searchedInfoList));
+        assertThat(searchedInfoList.size(), is(1));
+    }
+
+    @Test
+    void test_search_resource_attribute_list_like_serach() {
+        ResourceType resourceType = ResourceType.REF_TABLE;
+        Long l = IdGenerator.getInstance().nextId();
+        Map<Long, String> glossary1 = Collections.singletonMap(l, "Apricot");
+        Map<Long, String> glossary2 = Collections.singletonMap(IdGenerator.getInstance().nextId(), "Apple");
+        Map<Long, String> glossary3 = Collections.singletonMap(IdGenerator.getInstance().nextId(), "Banana");
+        Map<Long, String> glossary4 = Collections.singletonMap(IdGenerator.getInstance().nextId(), "Coconut");
+        Map<Long, String> glossary5 = Collections.singletonMap(IdGenerator.getInstance().nextId(), "Mango");
+        List<Map<Long, String>> glossiesInfo1 = Lists.newArrayList();
+        glossiesInfo1.add(glossary1);
+        glossiesInfo1.add(glossary2);
+        RefTableResourceAttribute ra1 = MockSearchFactory.mockRefTableResourceAttribute(glossiesInfo1, "zhangsan");
+        SearchedInfo si1 = MockSearchFactory.mockSearchedInfo(1L, "name", resourceType, "description", ra1, false);
+        searchService.saveOrUpdate(si1);
+        List<Map<Long, String>> glossiesInfo2 = Lists.newArrayList();
+        glossiesInfo2.add(glossary3);
+        glossiesInfo2.add(glossary4);
+        RefTableResourceAttribute ra2 = MockSearchFactory.mockRefTableResourceAttribute(glossiesInfo2, "lisi");
+        SearchedInfo si2 = MockSearchFactory.mockSearchedInfo(2L, "name", resourceType, "description", ra2, false);
+        searchService.saveOrUpdate(si2);
+        List<Map<Long, String>> glossiesInfo3 = Lists.newArrayList();
+        glossiesInfo3.add(glossary1);
+        glossiesInfo3.add(glossary3);
+        glossiesInfo3.add(glossary5);
+        RefTableResourceAttribute ra3 = MockSearchFactory.mockRefTableResourceAttribute(glossiesInfo3, "wangwu");
+        SearchedInfo si3 = MockSearchFactory.mockSearchedInfo(3L, "name", resourceType, "description", ra3, false);
+        searchService.saveOrUpdate(si3);
+
+        ResourceAttributeInfoRequest request = MockSearchFactory.mockResourceAttributeInfoRequest(resourceType, "glossaries", null, false);
+        Map<Long, String> glossaryMap = searchService
+                .fetchResourceAttributeList(request).stream().map(s -> JSONUtils.jsonToObject(s, new TypeReference<List<Map<Long, String>>>() {
+                })).flatMap(Collection::stream).flatMap(map -> map.entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1));
+        assertThat(glossaryMap.size(), is(5));
+        Map<String, Object> resourceAttributeMap1 = new HashMap<>();
+        resourceAttributeMap1.put("glossaries", glossiesInfo1);
+        ResourceAttributeInfoRequest request1 = MockSearchFactory.mockResourceAttributeInfoRequest(resourceType, "owners", resourceAttributeMap1, false);
+        List<String> list = searchService.fetchResourceAttributeList(request1);
+        assertThat(list.size(), is(1));
+        assertThat(list.get(0), is("zhangsan"));
+        Map<String, Object> resourceAttributeMap2 = new HashMap<>();
+        resourceAttributeMap2.put("glossaries", glossiesInfo2);
+        ResourceAttributeInfoRequest request2 = MockSearchFactory.mockResourceAttributeInfoRequest(resourceType, "owners", resourceAttributeMap2, false);
+        List<String> list2 = searchService.fetchResourceAttributeList(request2);
+        assertThat(list2.size(), is(1));
+        assertThat(list2.get(0), is("lisi"));
+        Map<String, Object> resourceAttributeMap3 = new HashMap<>();
+        resourceAttributeMap3.put("glossaries", Lists.newArrayList(glossary1));
+        ResourceAttributeInfoRequest request3 = MockSearchFactory.mockResourceAttributeInfoRequest(resourceType, "owners", resourceAttributeMap3, false);
+        List<String> list3 = searchService.fetchResourceAttributeList(request3);
+        assertThat(list3.size(), is(2));
+        assertThat(list3.get(0), is("wangwu"));
+        assertThat(list3.get(1), is("zhangsan"));
+        UniversalSearchRequest searchReq = MockSearchFactory.mockUniversalSearchRequest(Sets.newHashSet(ResourceType.REF_TABLE), String.valueOf(l), Sets.newHashSet(SearchContent.values()), null, false);
+        UniversalSearchInfo search = searchService.search(searchReq);
+        System.out.println(search);
 
     }
 }

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.RefTableVersionInfo;
 import com.miotech.kun.datadiscovery.model.entity.rdm.RefColumn;
 import com.miotech.kun.datadiscovery.model.enums.ConstraintType;
@@ -13,10 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class MockRefDataVersionBasicFactory {
 
@@ -138,6 +136,19 @@ public class MockRefDataVersionBasicFactory {
         info.setDeleted(false);
         info.setDatasetId(null);
         return info;
+    }
+
+    public static BasicSearchRequest mockRefTableSearchRequest(String keyword, List<Map<String, String>> glossaries, String owners, OffsetDateTime startCreateTime, OffsetDateTime endCreateTime, OffsetDateTime startUpdateTime, OffsetDateTime endUpdateTime) {
+        BasicSearchRequest refTableSearchRequest = new BasicSearchRequest();
+        Map<String,Object> rs=new HashMap<>();
+        rs.put("glossaries",glossaries);
+        rs.put("owners",owners);;
+        refTableSearchRequest.setKeyword(keyword);
+        refTableSearchRequest.setStartCreateTime(startCreateTime);
+        refTableSearchRequest.setEndCreateTime(endCreateTime);
+        refTableSearchRequest.setStartUpdateTime(startUpdateTime);
+        refTableSearchRequest.setEndUpdateTime(endUpdateTime);
+        return refTableSearchRequest;
     }
 
 

@@ -14,6 +14,7 @@ import com.miotech.kun.metadata.core.model.constant.SearchContent;
 import com.miotech.kun.metadata.core.model.search.ResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
+import com.miotech.kun.metadata.core.model.vo.UniversalSearchRequest;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,119 +52,148 @@ public class UniversalSearchDao {
     private static final String COLUMN_SEARCH_TS = "search_ts";
     private static final String COLUMN_UPDATE_TIME = "update_time";
     private static final String COLUMN_DELETED = "deleted";
+    private static final String COLUMN_CREATE_TIME = "create_time";
     private static final String TS_CONFIG = "english";
 
     //    private static final String COLUMN_RANK_FORMAT = "ts_rank_cd(search_ts , to_tsquery(?)) AS rank";
     private static final String COLUMN_SELECT = new StringJoiner(",")
             .add(COLUMN_GID).add(COLUMN_RESOURCE_TYPE).add(COLUMN_NAME).add(COLUMN_DESCRIPTION)
-            .add(COLUMN_RESOURCE_ATTRIBUTE).add(COLUMN_DELETED).toString();
+            .add(COLUMN_RESOURCE_ATTRIBUTE)
+            .add(COLUMN_UPDATE_TIME)
+            .add(COLUMN_DELETED)
+            .add(COLUMN_CREATE_TIME)
+            .toString();
     private static final String[] COLUMNS = new String[]{COLUMN_GID, COLUMN_RESOURCE_TYPE, COLUMN_NAME, COLUMN_DESCRIPTION,
-            COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME, COLUMN_DELETED};
+            COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME, COLUMN_DELETED, COLUMN_CREATE_TIME};
 
 
-    public List<SearchedInfo> search(List<SearchFilterOption> searchFilterOptionList,
-                                     Set<String> resourceTypeSet, Map<String, Object> resourceAttributeMap,
-                                     boolean showDeleted,
-                                     Integer pageNumber,
-                                     Integer pageSize) {
+    public List<SearchedInfo> search(UniversalSearchRequest request) {
+        List<SearchFilterOption> searchFilterOptionList = request.getSearchFilterOptions();
+        Set<String> resourceTypeSet = request.getResourceTypeNames();
+        Integer pageNumber = request.getPageNumber();
+        Integer pageSize = request.getPageSize();
+        Map<String, Object> resourceAttributeMap = request.getResourceAttributeMap();
+        boolean showDeleted = request.isShowDeleted();
+        OffsetDateTime startCreateTime = request.getStartCreateTime();
+        OffsetDateTime endCreateTime = request.getEndCreateTime();
+        OffsetDateTime startUpdateTime = request.getStartUpdateTime();
+        OffsetDateTime endUpdateTime = request.getEndUpdateTime();
         String optionsString = new SearchOptionJoiner().add(searchFilterOptionList).toString();
         logger.debug("search options:optionsString:{},resource Type{},limit page{},num{}", optionsString, resourceTypeSet, pageNumber, pageSize);
         if (optionsString.isEmpty()) {
             return Lists.newArrayList();
         }
+        List<Object> params = Lists.newArrayList();
+        params.add(optionsString);
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(COLUMN_SELECT, similarity(searchFilterOptionList))
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('" + TS_CONFIG + "',?) " + " and  resource_type in "
-                        + collectionToConditionSql(resourceTypeSet)
+                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('" + TS_CONFIG + "',?) "
+                        + filterType(params, resourceTypeSet)
                         + filterResourceAttributes(resourceAttributeMap)
+                        + filterTime(params, COLUMN_CREATE_TIME, startCreateTime, endCreateTime)
+                        + filterTime(params, COLUMN_UPDATE_TIME, startUpdateTime, endUpdateTime)
                         + showDeleted(showDeleted))
                 .orderBy("rank desc").getSQL();
         String limitSql = toLimitSql(pageNumber, pageSize);
         String resultSql = sql.concat(limitSql);
-        List<Object> params = Lists.newArrayList();
-        params.add(optionsString);
-        params.addAll(resourceTypeSet);
         return dbOperator.fetchAll(resultSql, UniversalSearchMapper.INSTANCE, params.toArray());
     }
 
-    private String filterResourceAttributes(Map<String, Object> resourceAttributeMap) {
-        if (MapUtils.isEmpty(resourceAttributeMap)) {
-            return "";
+    private String filterType(List<Object> params, Collection<String> resourceTypeSet) {
+        if (CollectionUtils.isEmpty(resourceTypeSet)) {
+            return StringUtils.EMPTY;
         }
-        String jsonString = JSONUtils.toJsonString(resourceAttributeMap);
-        return new StringBuilder(" and ").append(COLUMN_RESOURCE_ATTRIBUTE).append(" @>'").append(jsonString).append("'").toString();
+        return " and " + COLUMN_RESOURCE_TYPE + " in " + collectionToConditionSql(params, resourceTypeSet);
     }
 
-    private String showDeleted(boolean showDeleted) {
-        if (showDeleted) {
-            return "";
-        }
-        return " and deleted =false ";
-    }
 
-    public List<SearchedInfo> noneKeywordPage(Set<String> resourceTypeSet, Map<String, Object> resourceAttributeMap, boolean showDeleted, Integer pageNumber, Integer pageSize) {
+    public List<SearchedInfo> noneKeywordPage(UniversalSearchRequest request) {
+        Set<String> resourceTypeSet = request.getResourceTypeNames();
+        Integer pageNumber = request.getPageNumber();
+        Integer pageSize = request.getPageSize();
+        Map<String, Object> resourceAttributeMap = request.getResourceAttributeMap();
+        boolean showDeleted = request.isShowDeleted();
+        OffsetDateTime startCreateTime = request.getStartCreateTime();
+        OffsetDateTime endCreateTime = request.getEndCreateTime();
+        OffsetDateTime startUpdateTime = request.getStartUpdateTime();
+        OffsetDateTime endUpdateTime = request.getEndUpdateTime();
         logger.debug("search options:resourceTypeSet:{},limit page{},num{}", resourceTypeSet, pageNumber, pageSize);
+        List<Object> params = Lists.newArrayList();
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(COLUMN_SELECT)
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where("resource_type in " + collectionToConditionSql(resourceTypeSet) + filterResourceAttributes(resourceAttributeMap) + showDeleted(showDeleted))
+                .where(" 1=1 "
+                        + filterType(params, resourceTypeSet)
+                        + filterResourceAttributes(resourceAttributeMap)
+                        + showDeleted(showDeleted)
+                        + filterTime(params, COLUMN_CREATE_TIME, startCreateTime, endCreateTime)
+                        + filterTime(params, COLUMN_UPDATE_TIME, startUpdateTime, endUpdateTime)
+                )
+                .orderBy(" update_time desc")
                 .getSQL();
         String limitSql = toLimitSql(pageNumber, pageSize);
         String resultSql = sql.concat(limitSql);
-        List<Object> params = Lists.newArrayList();
-        params.addAll(resourceTypeSet);
         return dbOperator.fetchAll(resultSql, UniversalSearchMapper.INSTANCE, params.toArray());
     }
 
 
-    private String similarity(List<SearchFilterOption> searchFilterOptionList) {
-        StringJoiner stringJoiner = new StringJoiner(" ");
-        searchFilterOptionList.forEach(searchFilterOption -> stringJoiner.add(SearchOptionJoiner.escapeSql(searchFilterOption.getKeyword())));
-        StringJoiner sql = new StringJoiner("+");
-        String keyword = stringJoiner.toString();
-        String sqlString = sql.add(String.format(" similarity (coalesce(%s,''),'%s')*" + SearchContent.NAME.getWeightNum(), COLUMN_NAME, keyword))
-                .add(String.format("similarity (coalesce(%s,'') ,'%s')*" + SearchContent.DESCRIPTION.getWeightNum(), COLUMN_DESCRIPTION, keyword))
-                .add(String.format(" similarity (coalesce((select  string_agg(distinct(value), ',') from jsonb_each_text(%s)),''),'%s')*" +
-                        SearchContent.ATTRIBUTE.getWeightNum(), COLUMN_RESOURCE_ATTRIBUTE, keyword))
-                .toString();
-        return sqlString.concat(" as rank");
-    }
-
-    public Integer searchCount(List<SearchFilterOption> searchFilterOptionList, Set<String> resourceTypeSet, boolean showDeleted, Map<String, Object> resourceAttributeMap) {
+    public Integer searchCount(UniversalSearchRequest request) {
+        List<SearchFilterOption> searchFilterOptionList = request.getSearchFilterOptions();
+        Set<String> resourceTypeSet = request.getResourceTypeNames();
+        Map<String, Object> resourceAttributeMap = request.getResourceAttributeMap();
+        boolean showDeleted = request.isShowDeleted();
+        OffsetDateTime startCreateTime = request.getStartCreateTime();
+        OffsetDateTime endCreateTime = request.getEndCreateTime();
+        OffsetDateTime startUpdateTime = request.getStartUpdateTime();
+        OffsetDateTime endUpdateTime = request.getEndUpdateTime();
         String optionsString = new SearchOptionJoiner().add(searchFilterOptionList).toString();
         logger.debug("search count options:optionsString:{},resource Type{}", optionsString, resourceTypeSet);
-        String sql = DefaultSQLBuilder.newBuilder().select("count(1) as count")
-                .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('" + TS_CONFIG + "',?)  and  resource_type in " + collectionToConditionSql(resourceTypeSet)
-                        + filterResourceAttributes(resourceAttributeMap)
-                        + showDeleted(showDeleted)).getSQL();
         List<Object> params = Lists.newArrayList();
         params.add(optionsString);
-        params.addAll(resourceTypeSet);
+        String sql = DefaultSQLBuilder.newBuilder().select("count(1) as count")
+                .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
+                .where(COLUMN_SEARCH_TS + " @@ to_tsquery('" + TS_CONFIG + "',?)  "
+                        + filterType(params, resourceTypeSet)
+                        + filterResourceAttributes(resourceAttributeMap)
+                        + filterTime(params, COLUMN_CREATE_TIME, startCreateTime, endCreateTime)
+                        + filterTime(params, COLUMN_UPDATE_TIME, startUpdateTime, endUpdateTime)
+                        + showDeleted(showDeleted)).getSQL();
+
         return dbOperator.fetchOne(sql, rs -> rs.getInt("count"), params.toArray());
     }
 
-    public Integer noneKeywordSearchCount(Set<String> resourceTypeSet, Map<String, Object> resourceAttributeMap, boolean showDeleted) {
+    public Integer noneKeywordSearchCount(UniversalSearchRequest request) {
+        Set<String> resourceTypeSet = request.getResourceTypeNames();
+        Map<String, Object> resourceAttributeMap = request.getResourceAttributeMap();
+        boolean showDeleted = request.isShowDeleted();
+        OffsetDateTime startCreateTime = request.getStartCreateTime();
+        OffsetDateTime endCreateTime = request.getEndCreateTime();
+        OffsetDateTime startUpdateTime = request.getStartUpdateTime();
+        OffsetDateTime endUpdateTime = request.getEndUpdateTime();
         logger.debug("search count resource Type{}", resourceTypeSet);
+        List<Object> params = Lists.newArrayList();
         String sql = DefaultSQLBuilder.newBuilder().select("count(1) as count")
                 .from(TABLE_KUN_MT_UNIVERSAL_SEARCH, TABLE_A_KUN_MT_UNIVERSAL_SEARCH)
-                .where(" resource_type in " + collectionToConditionSql(resourceTypeSet)
+                .where(" 1=1 "
+                        + filterType(params, resourceTypeSet)
                         + filterResourceAttributes(resourceAttributeMap)
+                        + filterTime(params, COLUMN_CREATE_TIME, startCreateTime, endCreateTime)
+                        + filterTime(params, COLUMN_UPDATE_TIME, startUpdateTime, endUpdateTime)
                         + showDeleted(showDeleted)).getSQL();
-        List<Object> params = Lists.newArrayList();
-        params.addAll(resourceTypeSet);
         return dbOperator.fetchOne(sql, rs -> rs.getInt("count"), params.toArray());
     }
 
     public void update(SearchedInfo searchedInfo) {
         ImmutableList<String> setOptions = ImmutableList.of(COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME);
         ImmutableList<String> options = ImmutableList.of(COLUMN_GID, COLUMN_RESOURCE_TYPE);
+        OffsetDateTime now = DateTimeUtils.now();
+        OffsetDateTime updateTime = Objects.isNull(searchedInfo.getUpdateTime()) ? now : searchedInfo.getUpdateTime();
         ImmutableList<? extends Serializable> params = ImmutableList.of(
                 StringUtils.stripToEmpty(searchedInfo.getName()),
                 StringUtils.stripToEmpty(searchedInfo.getDescription()),
                 JSONUtils.toJsonString(searchedInfo.getResourceAttribute()),
-                DateTimeUtils.now(),
+                updateTime,
                 searchedInfo.getGid(),
                 searchedInfo.getResourceType().name());
 
@@ -173,15 +204,18 @@ public class UniversalSearchDao {
     }
 
     public void save(SearchedInfo searchedInfo) {
-
+        OffsetDateTime now = DateTimeUtils.now();
+        OffsetDateTime createTime = Objects.isNull(searchedInfo.getCreateTime()) ? now : searchedInfo.getCreateTime();
+        OffsetDateTime updateTime = Objects.isNull(searchedInfo.getUpdateTime()) ? now : searchedInfo.getUpdateTime();
         ImmutableList<? extends Serializable> params = ImmutableList.of(
                 searchedInfo.getGid(),
                 searchedInfo.getResourceType().name(),
                 StringUtils.stripToEmpty(searchedInfo.getName()),
                 StringUtils.stripToEmpty(searchedInfo.getDescription()),
                 JSONUtils.toJsonString(searchedInfo.getResourceAttribute()),
-                DateTimeUtils.now(),
-                false
+                updateTime,
+                false,
+                createTime
         );
         String sql = DefaultSQLBuilder.newBuilder().insert(COLUMNS).into(TABLE_KUN_MT_UNIVERSAL_SEARCH).asPrepared().getSQL();
         dbOperator.update(sql, params.toArray());
@@ -226,17 +260,11 @@ public class UniversalSearchDao {
             return Lists.newArrayList();
         }
         return list.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
-
-    }
-
-    public void updateStatus(ResourceType resourceType, long gid, boolean deleted) {
-
     }
 
 
     private static class UniversalSearchMapper implements ResultSetMapper<SearchedInfo> {
         public static final ResultSetMapper<SearchedInfo> INSTANCE = new UniversalSearchDao.UniversalSearchMapper();
-        private final Logger logger = LoggerFactory.getLogger(UniversalSearchMapper.class);
 
         @Override
         public SearchedInfo map(ResultSet rs) throws SQLException {
@@ -247,6 +275,8 @@ public class UniversalSearchDao {
                     .withDescription(rs.getString(COLUMN_DESCRIPTION))
                     .withResourceAttribute(parseResourceAttribute(
                             ResourceType.valueOf(rs.getString(COLUMN_RESOURCE_TYPE)), rs.getString(COLUMN_RESOURCE_ATTRIBUTE)))
+                    .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(COLUMN_CREATE_TIME)))
+                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(COLUMN_UPDATE_TIME)))
                     .withDeleted(rs.getBoolean(COLUMN_DELETED))
                     .build();
 
@@ -257,22 +287,36 @@ public class UniversalSearchDao {
         }
     }
 
-    public static String and(ImmutableList<String> list) {
+    private String similarity(List<SearchFilterOption> searchFilterOptionList) {
+        StringJoiner stringJoiner = new StringJoiner(" ");
+        searchFilterOptionList.forEach(searchFilterOption -> stringJoiner.add(SearchOptionJoiner.escapeSql(searchFilterOption.getKeyword())));
+        StringJoiner sql = new StringJoiner("+");
+        String keyword = stringJoiner.toString();
+        String sqlString = sql.add(String.format(" similarity (coalesce(%s,''),'%s')*" + SearchContent.NAME.getWeightNum(), COLUMN_NAME, keyword))
+                .add(String.format("similarity (coalesce(%s,'') ,'%s')*" + SearchContent.DESCRIPTION.getWeightNum(), COLUMN_DESCRIPTION, keyword))
+                .add(String.format(" similarity (coalesce((select  string_agg(distinct(value), ',') from jsonb_each_text(%s)),''),'%s')*" +
+                        SearchContent.ATTRIBUTE.getWeightNum(), COLUMN_RESOURCE_ATTRIBUTE, keyword))
+                .toString();
+        return sqlString.concat(" as rank");
+    }
+
+    private static String and(ImmutableList<String> list) {
         StringJoiner and = new StringJoiner(" AND ");
         list.forEach((s -> and.add(String.format("%s=?", s))));
         return and.toString();
     }
 
-    public static String set(ImmutableList<String> list) {
+    private static String set(ImmutableList<String> list) {
         StringJoiner and = new StringJoiner(",");
         list.forEach((s -> and.add(String.format("%s=?", s))));
         return and.toString();
     }
 
-    public String collectionToConditionSql(Collection<?> collection) {
+    private String collectionToConditionSql(List<Object> params, Collection<?> collection) {
         if (CollectionUtils.isNotEmpty(collection)) {
+            params.addAll(collection);
             StringBuilder collectionSql = new StringBuilder("(");
-            for (Object object : collection) {
+            for (Object ignored : collection) {
                 collectionSql.append("?").append(",");
             }
             collectionSql.deleteCharAt(collectionSql.length() - 1);
@@ -282,9 +326,46 @@ public class UniversalSearchDao {
         return "";
     }
 
-    public String toLimitSql(int pageNum, int pageSize) {
+    private String toLimitSql(int pageNum, int pageSize) {
         StringJoiner pageSql = new StringJoiner(" ", " ", "");
         pageSql.add("limit ").add(String.valueOf(pageSize)).add(" offset ").add(String.valueOf((pageNum - 1) * pageSize));
         return pageSql.toString();
     }
+
+    private String filterTime(List<Object> params, String colName, OffsetDateTime startTime, OffsetDateTime endTime) {
+        if (Objects.isNull(startTime) && Objects.isNull(endTime)) {
+            return StringUtils.EMPTY;
+        }
+        if (Objects.nonNull(startTime) && Objects.nonNull(endTime)) {
+            if (startTime.compareTo(endTime) > 0) {
+                return StringUtils.EMPTY;
+            }
+            params.add(startTime);
+            params.add(endTime);
+            return String.format(" and %s between ? and ?", colName);
+        }
+        if (Objects.isNull(startTime)) {
+            params.add(endTime);
+            return String.format(" and %s <= ? ", colName);
+        }
+        params.add(startTime);
+        return String.format(" and %s >= ? ", colName);
+
+    }
+
+    private String filterResourceAttributes(Map<String, Object> resourceAttributeMap) {
+        if (MapUtils.isEmpty(resourceAttributeMap)) {
+            return "";
+        }
+        String jsonString = JSONUtils.toJsonString(resourceAttributeMap);
+        return " and " + COLUMN_RESOURCE_ATTRIBUTE + " @>'" + jsonString + "'";
+    }
+
+    private String showDeleted(boolean showDeleted) {
+        if (showDeleted) {
+            return "";
+        }
+        return " and deleted =false ";
+    }
+
 }

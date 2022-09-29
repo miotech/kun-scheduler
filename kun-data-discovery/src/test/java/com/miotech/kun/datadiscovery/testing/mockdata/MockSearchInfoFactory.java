@@ -7,6 +7,7 @@ import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.search.DataSetResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.GlossaryResourceAttribute;
+import com.miotech.kun.metadata.core.model.search.ResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.UniversalSearchInfo;
 
@@ -31,6 +32,23 @@ public class MockSearchInfoFactory {
                 .withResourceAttribute(resourceAttribute)
                 .withDeleted(false).build();
         return datasetSearchedInfo;
+    }
+
+    public static SearchedInfo mockRefTableSearch(Long id, String name, ResourceAttribute resourceAttribute) {
+        SearchedInfo refTableSearchedInfo = SearchedInfo.Builder.newBuilder()
+                .withGid(id)
+                .withResourceType(ResourceType.REF_TABLE)
+                .withName(name)
+                .withDescription("desc")
+                .withResourceAttribute(resourceAttribute)
+                .withDeleted(false).build();
+        return refTableSearchedInfo;
+    }
+
+    public static UniversalSearchInfo mockUniversalSearchInfo(List<SearchedInfo> searchedInfoList) {
+        UniversalSearchInfo us = new UniversalSearchInfo(searchedInfoList);
+        us.setTotalCount(searchedInfoList.size());
+        return us;
     }
 
     public static BasicSearchRequest mockBasicSearchRequest(String keyword) {

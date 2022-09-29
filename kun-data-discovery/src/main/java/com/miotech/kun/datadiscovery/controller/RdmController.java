@@ -4,10 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.miotech.kun.common.model.PageRequest;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.commons.pubsub.publish.EventPublisher;
-import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
-import com.miotech.kun.datadiscovery.model.bo.EditRefDataTableRequest;
-import com.miotech.kun.datadiscovery.model.bo.ValidRefDataRequest;
+import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.Database;
 import com.miotech.kun.datadiscovery.model.entity.rdm.RefBaseTable;
 import com.miotech.kun.datadiscovery.model.entity.rdm.RefUpdateResult;
@@ -19,8 +16,6 @@ import com.miotech.kun.datadiscovery.service.MetadataService;
 import com.miotech.kun.datadiscovery.service.RdmService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -121,10 +116,22 @@ public class RdmController {
      * @param pageRequest
      * @return
      */
+    @Deprecated
     @GetMapping("/rdm/info/table/page")
     public RequestResult<PageResult> pageRefTableInfo(PageRequest pageRequest) {
         PageResult<RefTableVersionFillInfo> refTableVersionFillInfoPageResult = rdmService.pageRefTableInfo(pageRequest);
         return RequestResult.success(refTableVersionFillInfoPageResult);
+    }
+
+    @PostMapping("/rdm/info/table/page/search")
+    public RequestResult<PageResult> pageRefTableInfoBySearch(@RequestBody BasicSearchRequest searchRequest) {
+        PageResult<RefTableVersionFillInfo> refTableVersionFillInfoPageResult = rdmService.pageRefTableInfoBySearch(searchRequest);
+        return RequestResult.success(refTableVersionFillInfoPageResult);
+    }
+
+    @PostMapping("/rdm/attribute/list")
+    public RequestResult<List<String>> getResourceAttributeList(@RequestBody ResourceAttributeRequest request) {
+        return RequestResult.success(rdmService.fetchResourceAttributeList(request));
     }
 
     /**

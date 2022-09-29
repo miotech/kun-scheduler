@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.gson.reflect.TypeToken;
@@ -8,9 +9,11 @@ import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.ResourceAttributeRequest;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfo;
+import com.miotech.kun.datadiscovery.model.entity.RefTableVersionInfo;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.constant.SearchContent;
 import com.miotech.kun.metadata.core.model.search.GlossaryResourceAttribute;
+import com.miotech.kun.metadata.core.model.search.RefTableResourceAttribute;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 import com.miotech.kun.metadata.core.model.search.SearchedInfo;
 import com.miotech.kun.metadata.core.model.vo.ResourceAttributeInfoRequest;
@@ -68,9 +71,16 @@ public class SearchAppService {
 
 
     public UniversalSearchInfo searchFullDataSet(DatasetSearchRequest searchRequest) {
-        Map<String, Object> resourceAttributeMap = getDatasetSearchResourceAttributeMap(searchRequest);
+        Map<String, Object> resourceAttributeMap = getSearchResourceAttributeMap(searchRequest);
         UniversalSearchRequest universalSearchRequest = getUniversalSearchRequest(Sets.newHashSet(SearchContent.values()),
                 ResourceType.DATASET, searchRequest, resourceAttributeMap);
+        return getUniversalSearchInfo(universalSearchRequest);
+    }
+
+    public UniversalSearchInfo searchFullRefTableInfo(BasicSearchRequest searchRequest) {
+        Map<String, Object> resourceAttributeMap = searchRequest.getResourceAttributeMap();
+        UniversalSearchRequest universalSearchRequest = getUniversalSearchRequest(Sets.newHashSet(SearchContent.values()),
+                ResourceType.REF_TABLE, searchRequest, resourceAttributeMap);
         return getUniversalSearchInfo(universalSearchRequest);
     }
 
@@ -80,8 +90,8 @@ public class SearchAppService {
         return getUniversalSearchInfo(universalSearchRequest);
     }
 
-    private static Map<String, Object> getDatasetSearchResourceAttributeMap(DatasetSearchRequest searchRequest) {
-        Set<String> fieldsSet = Arrays.stream(DatasetSearchRequest.class.getDeclaredFields()).map(Field::getName).collect(Collectors.toSet());
+    private static Map<String, Object> getSearchResourceAttributeMap(BasicSearchRequest searchRequest) {
+        Set<String> fieldsSet = Arrays.stream(searchRequest.getClass().getDeclaredFields()).map(Field::getName).collect(Collectors.toSet());
         Map<String, Object> map = JSONUtils.toJavaObject(JSONUtils.toJsonString(searchRequest), new TypeToken<Map<String, Object>>() {
         }.getType());
         Set<String> keySet = map.keySet();
@@ -118,10 +128,16 @@ public class SearchAppService {
         request.setResourceTypes(Sets.newHashSet(type));
         request.setSearchFilterOptions(searchFilterOptionList);
         request.setPageSize(searchRequest.getPageSize());
+        request.setPageSize(searchRequest.getPageSize());
+        request.setPageSize(searchRequest.getPageSize());
         request.setPageNumber(searchRequest.getPageNumber());
         if (Objects.nonNull(resourceAttributeMap)) {
             request.setResourceAttributeMap(resourceAttributeMap);
         }
+        request.setStartCreateTime(searchRequest.getStartCreateTime());
+        request.setEndCreateTime(searchRequest.getEndCreateTime());
+        request.setStartUpdateTime(searchRequest.getStartUpdateTime());
+        request.setEndUpdateTime(searchRequest.getEndUpdateTime());
         return request;
     }
 
@@ -167,4 +183,25 @@ public class SearchAppService {
     }
 
 
+    public void removeRefTableSearchInfo(Long tableId) {
+        SearchedInfo searchedInfo = SearchedInfo.Builder.newBuilder().withResourceType(ResourceType.REF_TABLE).withGid(tableId).withDeleted(true).build();
+        remove(searchedInfo);
+    }
+
+    public void saveOrUpdateRefTableSearchInfo(RefTableVersionInfo refTableVersionInfo, List<Map<Long, String>> glossaries) {
+        List<String> ownerList = refTableVersionInfo.getOwnerList();
+        RefTableResourceAttribute attribute = RefTableResourceAttribute.newBuilder()
+                .withOwners(Joiner.on(",").join(ownerList))
+                .withGlossaries(glossaries)
+                .build();
+        SearchedInfo searchedInfo = SearchedInfo.Builder.newBuilder()
+                .withResourceType(ResourceType.REF_TABLE)
+                .withGid(refTableVersionInfo.getTableId())
+                .withName(refTableVersionInfo.getTableName())
+                .withDescription(refTableVersionInfo.getVersionDescription())
+                .withDeleted(false)
+                .withResourceAttribute(attribute)
+                .build();
+        saveOrUpdate(searchedInfo);
+    }
 }

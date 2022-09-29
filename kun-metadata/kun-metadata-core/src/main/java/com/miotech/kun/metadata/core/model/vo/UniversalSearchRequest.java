@@ -7,6 +7,7 @@ import com.miotech.kun.metadata.core.model.constant.ResourceType;
 import com.miotech.kun.metadata.core.model.search.SearchFilterOption;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,10 @@ public class UniversalSearchRequest extends PageInfo implements Serializable {
     private Set<ResourceType> resourceTypes = Sets.newHashSet(ResourceType.values());
     private Map<String, Object> resourceAttributeMap = Maps.newHashMap();
     private boolean showDeleted = false;
+    private OffsetDateTime startCreateTime;
+    private OffsetDateTime endCreateTime;
+    private OffsetDateTime startUpdateTime;
+    private OffsetDateTime endUpdateTime;
 
     public List<SearchFilterOption> getSearchFilterOptions() {
         return searchFilterOptions;
@@ -69,6 +74,38 @@ public class UniversalSearchRequest extends PageInfo implements Serializable {
         this.showDeleted = showDeleted;
     }
 
+    public OffsetDateTime getStartCreateTime() {
+        return startCreateTime;
+    }
+
+    public void setStartCreateTime(OffsetDateTime startCreateTime) {
+        this.startCreateTime = startCreateTime;
+    }
+
+    public OffsetDateTime getEndCreateTime() {
+        return endCreateTime;
+    }
+
+    public void setEndCreateTime(OffsetDateTime endCreateTime) {
+        this.endCreateTime = endCreateTime;
+    }
+
+    public OffsetDateTime getStartUpdateTime() {
+        return startUpdateTime;
+    }
+
+    public void setStartUpdateTime(OffsetDateTime startUpdateTime) {
+        this.startUpdateTime = startUpdateTime;
+    }
+
+    public OffsetDateTime getEndUpdateTime() {
+        return endUpdateTime;
+    }
+
+    public void setEndUpdateTime(OffsetDateTime endUpdateTime) {
+        this.endUpdateTime = endUpdateTime;
+    }
+
     @Override
     public String toString() {
         return "UniversalSearchRequest{" +
@@ -76,6 +113,10 @@ public class UniversalSearchRequest extends PageInfo implements Serializable {
                 ", resourceTypes=" + resourceTypes +
                 ", resourceAttributeMap=" + resourceAttributeMap +
                 ", showDeleted=" + showDeleted +
+                ", startCreateTime=" + startCreateTime +
+                ", endCreateTime=" + endCreateTime +
+                ", startUpdateTime=" + startUpdateTime +
+                ", endUpdateTime=" + endUpdateTime +
                 '}';
     }
 }

@@ -108,4 +108,15 @@ public class DataSetResourceAttribute extends ResourceAttribute {
             return new DataSetResourceAttribute(datasource, database, schema, type, owners, tags);
         }
     }
+
+    @Override
+    public String toString() {
+        return "DataSetResourceAttribute{" +
+                "datasource='" + datasource + '\'' +
+                ", database='" + database + '\'' +
+                ", schema='" + schema + '\'' +
+                ", type='" + type + '\'' +
+                ", tags='" + tags + '\'' +
+                "} " + super.toString();
+    }
 }

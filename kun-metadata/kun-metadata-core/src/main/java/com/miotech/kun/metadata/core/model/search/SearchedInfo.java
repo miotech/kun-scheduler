@@ -2,11 +2,11 @@ package com.miotech.kun.metadata.core.model.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.miotech.kun.metadata.core.model.constant.ResourceType;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 
 /**
  * @program: kun
@@ -20,6 +20,8 @@ public class SearchedInfo implements Serializable {
     private String name;
     private String description;
     private ResourceAttribute resourceAttribute;
+    private OffsetDateTime createTime;
+    private OffsetDateTime updateTime;
     private boolean deleted;
 
     public Long getGid() {
@@ -46,6 +48,14 @@ public class SearchedInfo implements Serializable {
         return deleted;
     }
 
+    public OffsetDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public OffsetDateTime getUpdateTime() {
+        return updateTime;
+    }
+
     @JsonCreator
     public SearchedInfo(
             @JsonProperty("gid") Long gid,
@@ -55,14 +65,24 @@ public class SearchedInfo implements Serializable {
             @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "resourceType", visible = true)
             @JsonProperty("resourceAttribute")
                     ResourceAttribute resourceAttribute,
-            @JsonProperty("deleted") boolean deleted) {
+            @JsonProperty("createTime") OffsetDateTime createTime,
+            @JsonProperty("updateTime") OffsetDateTime updateTime,
+            @JsonProperty("deleted") boolean deleted
+    ) {
         this.gid = gid;
         this.resourceType = resourceType;
         this.name = name;
         this.description = description;
         this.resourceAttribute = resourceAttribute;
+        this.createTime = createTime;
+        this.updateTime = updateTime;
         this.deleted = deleted;
     }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
 
     public static final class Builder {
         private Long gid;
@@ -70,6 +90,8 @@ public class SearchedInfo implements Serializable {
         private String name;
         private String description;
         private ResourceAttribute resourceAttribute;
+        private OffsetDateTime createTime;
+        private OffsetDateTime updateTime;
         private boolean deleted;
 
         private Builder() {
@@ -104,13 +126,37 @@ public class SearchedInfo implements Serializable {
             return this;
         }
 
+        public Builder withCreateTime(OffsetDateTime createTime) {
+            this.createTime = createTime;
+            return this;
+        }
+
+        public Builder withUpdateTime(OffsetDateTime updateTime) {
+            this.updateTime = updateTime;
+            return this;
+        }
+
         public Builder withDeleted(boolean deleted) {
             this.deleted = deleted;
             return this;
         }
 
         public SearchedInfo build() {
-            return new SearchedInfo(gid, resourceType, name, description, resourceAttribute, deleted);
+            return new SearchedInfo(gid, resourceType, name, description, resourceAttribute, createTime, updateTime, deleted);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "SearchedInfo{" +
+                "gid=" + gid +
+                ", resourceType=" + resourceType +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", resourceAttribute=" + resourceAttribute +
+                ", createTime=" + createTime +
+                ", updateTime=" + updateTime +
+                ", deleted=" + deleted +
+                '}';
     }
 }
