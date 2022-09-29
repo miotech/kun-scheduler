@@ -7,109 +7,119 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunPhase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * manage taskRunStateMachine's condition
+ */
 public class ConditionManager {
 
     private final Logger logger = LoggerFactory.getLogger(ConditionManager.class);
     private final Map<Long, TaskRunCondition> conditionMap;
-    private final Integer conditionSize;
-    private final AtomicInteger satisfyCount = new AtomicInteger(0);
-    private final AtomicInteger upstreamFailedCount = new AtomicInteger(0);
-    private final AtomicInteger blockCount = new AtomicInteger(0);
+    private final Map<Long, Integer> conditionPhase;
+    private Integer satisfyCount = 0;
+    private Integer upstreamFailedCount = 0;
+    private Integer blockCount = 0;
 
     public ConditionManager(Map<Long, TaskRunCondition> conditionMap) {
         this.conditionMap = conditionMap;
-        conditionSize = conditionMap.size();
+        conditionPhase = new HashMap<>();
     }
 
     public TaskRunCondition conditionChange(Long fromTaskRunId, Integer prePhase, Integer nextPhase) {
+        conditionPhase.put(fromTaskRunId, nextPhase);
         TaskRunCondition taskRunCondition = conditionMap.get(fromTaskRunId);
         TaskRunCondition newCondition = updateCondition(taskRunCondition, nextPhase);
+        conditionMap.put(fromTaskRunId, newCondition);
         logger.debug("update condition from {} to {} , fromTaskRunId {}", taskRunCondition, newCondition, fromTaskRunId);
 
         ConditionType type = taskRunCondition.getType();
         if (type.equals(ConditionType.TASKRUN_DEPENDENCY_SUCCESS)) {
-            computeUpstreamFailed(prePhase, nextPhase);
+            computeUpstreamFailed();
         } else if (type.equals(ConditionType.TASKRUN_PREDECESSOR_FINISH)) {
-            computeBlock(taskRunCondition, newCondition);
+            computeBlock();
         }
-        computeSatisfy(taskRunCondition, newCondition);
+        computeSatisfy();
 
-        conditionMap.put(fromTaskRunId, newCondition);
         return newCondition;
     }
 
     public TaskRunCondition initCondition(Long fromTaskRunId, Integer fromTaskRunPhase) {
+        conditionPhase.put(fromTaskRunId, fromTaskRunPhase);
         TaskRunCondition taskRunCondition = conditionMap.get(fromTaskRunId);
         TaskRunCondition newCondition = updateCondition(taskRunCondition, fromTaskRunPhase);
-        //false to true
+        conditionMap.put(fromTaskRunId, newCondition);
+
         if (newCondition.getResult()) {
-            satisfyCount.incrementAndGet();
-        }
-        //true to false
-        else if (!newCondition.getResult()) {
+            computeSatisfy();
+        } else if (!newCondition.getResult()) {
             ConditionType type = taskRunCondition.getType();
             if (type.equals(ConditionType.TASKRUN_PREDECESSOR_FINISH)) {
-                blockCount.incrementAndGet();
+                computeBlock();
             } else if (TaskRunPhase.isFailedOrUpstreamFailed(fromTaskRunPhase) && type.equals(ConditionType.TASKRUN_DEPENDENCY_SUCCESS)) {
-                upstreamFailedCount.incrementAndGet();
+                computeUpstreamFailed();
             }
         }
-        conditionMap.put(fromTaskRunId, newCondition);
         return newCondition;
     }
 
     public void removeCondition(Long fromTaskRunId, Integer fromTaskRunPhase) {
         conditionMap.remove(fromTaskRunId);
-        if (TaskRunPhase.isFailedOrUpstreamFailed(fromTaskRunPhase)) {
-            upstreamFailedCount.decrementAndGet();
-        } else if (TaskRunPhase.isSuccess(fromTaskRunPhase)) {
-            satisfyCount.decrementAndGet();
-        }
+        conditionPhase.remove(fromTaskRunId);
+        computeBlock();
+        computeUpstreamFailed();
+        computeSatisfy();
     }
 
     public boolean conditionSatisfy() {
-        return satisfyCount.get() == conditionSize;
+        return satisfyCount == conditionMap.size();
     }
 
     public ConditionStatus resolveCondition() {
 
         ConditionStatus conditionStatus = ConditionStatus.WAITING;
 
-        if (satisfyCount.get() == conditionMap.size()) {
+        if (satisfyCount == conditionMap.size()) {
             conditionStatus = ConditionStatus.SATISFY;
-        } else if (upstreamFailedCount.get() > 0) {
+        } else if (upstreamFailedCount > 0) {
             conditionStatus = ConditionStatus.UPSTREAM_FAILED;
-        } else if (blockCount.get() > 0) {
+        } else if (blockCount > 0) {
             conditionStatus = ConditionStatus.BLOCK;
         }
         return conditionStatus;
     }
 
-    private void computeSatisfy(TaskRunCondition preCondition, TaskRunCondition nextCondition) {
-        if (preCondition.getResult() && !nextCondition.getResult()) {
-            satisfyCount.decrementAndGet();
-        } else if (!preCondition.getResult() && nextCondition.getResult()) {
-            satisfyCount.incrementAndGet();
+    private void computeSatisfy() {
+        Integer currentSatisfy = 0;
+        for (TaskRunCondition taskRunCondition : conditionMap.values()) {
+            if (taskRunCondition.getResult()) {
+                currentSatisfy++;
+            }
         }
+        satisfyCount = currentSatisfy;
     }
 
-    private void computeUpstreamFailed(Integer prePhase, Integer nexPhase) {
-        if (TaskRunPhase.isFailedOrUpstreamFailed(prePhase) && !TaskRunPhase.isFailedOrUpstreamFailed(nexPhase)) {
-            upstreamFailedCount.decrementAndGet();
-        } else if (!TaskRunPhase.isFailedOrUpstreamFailed(prePhase) && TaskRunPhase.isFailedOrUpstreamFailed(nexPhase)) {
-            upstreamFailedCount.incrementAndGet();
+    private void computeUpstreamFailed() {
+        Integer currentUpstreamFailed = 0;
+        for (Long conditionTaskRunId : conditionMap.keySet()) {
+            TaskRunCondition taskRunCondition = conditionMap.get(conditionTaskRunId);
+            if (taskRunCondition.getType().equals(ConditionType.TASKRUN_DEPENDENCY_SUCCESS) && !taskRunCondition.getResult()
+                    && TaskRunPhase.isFailedOrUpstreamFailed(conditionPhase.get(conditionTaskRunId))) {
+                currentUpstreamFailed++;
+            }
         }
+        upstreamFailedCount = currentUpstreamFailed;
     }
 
-    private void computeBlock(TaskRunCondition preCondition, TaskRunCondition nextCondition) {
-        if (preCondition.getResult() && !nextCondition.getResult()) {
-            blockCount.incrementAndGet();
-        } else if (!preCondition.getResult() && nextCondition.getResult()) {
-            blockCount.decrementAndGet();
+    private void computeBlock() {
+        Integer currentBlock = 0;
+        for (TaskRunCondition taskRunCondition : conditionMap.values()) {
+            if (taskRunCondition.getType().equals(ConditionType.TASKRUN_PREDECESSOR_FINISH) && !taskRunCondition.getResult()) {
+                currentBlock++;
+            }
         }
+        blockCount = currentBlock;
     }
 
     private TaskRunCondition updateCondition(TaskRunCondition taskRunCondition, Integer fromTaskRunPhase) {
