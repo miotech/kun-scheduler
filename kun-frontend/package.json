@@ -26,7 +26,9 @@
     "start:prod": "HTTPS=1 FORK_TS_CHECKER=1 USE_MOCK=true PROXY_TARGET=\"https://kun.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun.miotech.com\" PROXY_PDF_TARGET=\"https://kun.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun.miotech.com\" PORT=9801 umi dev",
     "start:prod-nochack": "HTTPS=1 USE_MOCK=true PROXY_TARGET=\"https://kun.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun.miotech.com\" PROXY_PDF_TARGET=\"https://kun.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun.miotech.com\" PORT=9801 umi dev",
     "i18n": "node i18n-updater/index.js",
-    "storybook": "start-storybook -s ./public -p 9802"
+    "storybook": "start-storybook -s ./public -p 9802",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
@@ -139,6 +141,7 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-export-namespace-from": "^7.8.3",
+    "@percy/cypress": "^3.1.2",
     "@storybook/addon-a11y": "^6.1.1",
     "@storybook/addon-docs": "^6.1.1",
     "@storybook/addon-essentials": "^6.1.1",
@@ -177,6 +180,7 @@
     "babel-loader": "^8.2.1",
     "copy-webpack-plugin": "^6.0.3",
     "cross-env": "^7.0.2",
+    "dotenv": "^16.0.2",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.2",
     "eslint": "^7.0.0",
@@ -216,7 +220,7 @@
     "webpack-chain": "^6.5.0"
   },
   "optionalDependencies": {
-    "cypress": "^4.9.0",
+    "cypress": "^10.7.0",
     "kndb": "^0.1.0",
     "lorem-ipsum": "^2.0.3"
   },

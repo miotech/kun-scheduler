@@ -244,3 +244,6 @@ i18n-updater/
 
 # storybook jest addon
 .jest-test-results.json
+
+# cypress
+cypress/videos/
