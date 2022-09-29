@@ -1,6 +1,6 @@
 import _dayjs from 'dayjs';
 import dayjsUpdateLocalePlugin from 'dayjs/plugin/updateLocale';
-import dayjsDurationPlugin from 'dayjs/plugin/duration';
+import dayjsDurationPlugin, { Duration } from 'dayjs/plugin/duration';
 import dayjsRelativeTimePlugin from 'dayjs/plugin/relativeTime';
 import dayjsRelativeTimeLocaleZhCN from '@/constants/dayjs-relative-time-locale.zh-cn';
 import locale_zh_CN from 'dayjs/locale/zh-cn';
@@ -30,3 +30,24 @@ export function dateFormatter(value: number | string) {
   }
   return dayjs(value).format('YYYY-MM-DD HH:mm');
 }
+
+/**
+ * //FIXME: support mutiple format
+ * This util fomarts dayjs duration object to HH:mm:ss' format
+ * @param duration
+ * @returns
+ */
+export const durationFormatter = (duration: Duration) => {
+  const formattedSequence: Array<{
+    unit: keyof Pick<Duration, 'hours' | 'minutes' | 'seconds'>;
+    joiner: '-' | ':' | '' | ' ';
+  }> = [
+    { unit: 'hours', joiner: ':' },
+    { unit: 'minutes', joiner: ':' },
+    { unit: 'seconds', joiner: '' },
+  ];
+  return formattedSequence.reduce((res: string, { unit, joiner }: typeof formattedSequence[0]) => {
+    const value = duration[unit]();
+    return `${res}${value < 0 ? 0 : value}${joiner}`;
+  }, '');
+};

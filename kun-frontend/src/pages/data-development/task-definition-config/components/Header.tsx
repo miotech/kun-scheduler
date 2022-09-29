@@ -197,6 +197,20 @@ export const Header: React.FC<Props> = props => {
             <Button onClick={handleDeleteBtnClick}>{t('common.button.delete')}</Button>
             {/* Dry run */}
             <Button onClick={handleCommitDryRun}>{t('common.button.dryrun')}</Button>
+            {/*  */}
+            <Link
+              to={{
+                pathname: SafeUrlAssembler()
+                  .template('/operation-center/dry-run-tasks/:taskDefId')
+                  .param({
+                    taskDefId: draftTaskDef?.id,
+                  })
+                  .toString(),
+                state: { taskName: draftTaskDef?.name },
+              }}
+            >
+              <Button>{t('dataDevelopment.goToDryRunTasks')}</Button>
+            </Link>
             {/* Backfill */}
             <Button onClick={() => setConfirmBackfillCreateModalVisible(true)}>{t('dataDevelopment.backfill')}</Button>
             {/* Save */}

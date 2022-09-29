@@ -181,6 +181,25 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
         dataIndex: 'isDeployed',
         render: (txt: any, record: TaskDefinition) => (record.isDeployed ? t('common.yes') : t('common.no')),
       },
+      {
+        key: 'commissioningHistory',
+        width: 80,
+        title: t('dataDevelopment.definition.property.dryRunHistory'),
+        render: (_: unknown, record: TaskDefinition) => {
+          return (
+            <Link
+              to={SafeUrlAssembler()
+                .template('/operation-center/dry-run-tasks/:taskDefId')
+                .param({
+                  taskDefId: record.id,
+                })
+                .toString()}
+            >
+              {t('dataDevelopment.definition.operation.lookUp')}
+            </Link>
+          );
+        },
+      },
     ],
     [t],
   );
