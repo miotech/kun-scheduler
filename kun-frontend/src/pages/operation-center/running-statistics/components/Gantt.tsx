@@ -65,7 +65,7 @@ export const Gantt: React.FC<OwnProps> = memo(function Gantt(props) {
       );
       setOffsetState(scrollOffset);
     
-      document.getElementById('toolbar').style.paddingRight = `${scrollLeft + 200}px`; // +200是为了时间范围小时撑开时间轴
+      document.getElementById('toolbar').style.paddingRight = `${scrollLeft + 300}px`; // +200是为了时间范围小时撑开时间轴
       document.getElementById('toolbar').scrollLeft = scrollLeft;
       closeCurrentTime();
     },

@@ -1,7 +1,7 @@
 import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dagre from 'dagre';
 import isNil from 'lodash/isNil';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import { Zoom } from '@visx/zoom';
 import { localPoint } from '@visx/event';
 import { Graph } from '@visx/network';
@@ -14,7 +14,7 @@ import { EventEmitter } from 'ahooks/lib/useEventEmitter';
 import { DagState } from '@/rematch/models/dag';
 import useRedux from '@/hooks/useRedux';
 import './index.less';
-import { useMount, useUnmount } from 'ahooks';
+import { useMount, useUnmount, useFullscreen, useSize } from 'ahooks';
 
 export interface DAGTaskGraphProps {
   nodes: TaskNode[];
@@ -44,6 +44,15 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
     closeUpstreamDag,
     closeDownstreamDag,
   } = props;
+  const fullScreenRef = useRef(null);
+  const [isFullscreen, { enterFullscreen, exitFullscreen }] = useFullscreen(fullScreenRef);
+  const size = useSize(fullScreenRef);
+  let dagHeight = height || 1024;
+  let dagWidth = width || 768;
+  if (isFullscreen) {
+    dagHeight = size?.height || 0;
+    dagWidth = size?.width || 0;
+  }
 
   /* Here offsetX and offsetY are applied to centering DAG position */
   const [offsetX, setOffsetX] = useState<number>(0);
@@ -176,7 +185,7 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
       setOffsetX(x - nodeWidth / 2);
       setOffsetY(y - nodeHeight / 2);
     }
-  }, [graph, currentClickId, centerTaskId, zoomRef]);
+  }, [graph, currentClickId, centerTaskId,isFullscreen, zoomRef]);
 
   if (props.viewportCenter$) {
     // when receiving place center event
@@ -224,12 +233,11 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
       scaleY: 0.9756097560975611,
     };
   }, []);
-
   const graphDOM = useMemo(() => {
     return (
       <Graph
-        left={-(offsetX - width / 2 + 75)}
-        top={-(offsetY - height / 2 + 45)}
+        left={-(offsetX - dagWidth / 2 + 75)}
+        top={-(offsetY - dagHeight / 2 + 45)}
         graph={vxGraphData}
         linkComponent={DAGTaskEdge as any}
         nodeComponent={({ node }) => (
@@ -247,8 +255,8 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
     vxGraphData,
     offsetX,
     offsetY,
-    width,
-    height,
+    dagWidth,
+    dagHeight,
     expandUpstreamDAG,
     expandDownstreamDAG,
     closeUpstreamDag,
@@ -258,8 +266,8 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
   const renderDragMaskRect = useCallback(
     zoom => (
       <rect
-        width={width}
-        height={height}
+        width={dagWidth}
+        height={dagHeight}
         rx={14}
         fill="transparent"
         onTouchStart={zoom.dragStart}
@@ -277,11 +285,11 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
         }}
       />
     ),
-    [width, height],
+    [dagWidth, dagHeight],
   );
 
   return (
-    <>
+    <div ref={fullScreenRef} >
       <div className="dag-button-group">
         <button
           type="button"
@@ -308,13 +316,29 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
         >
           <MinusOutlined />
         </button>
+        {!isFullscreen &&
+          <button
+            type="button"
+            onClick={enterFullscreen}
+            className="dag-util-btn">
+            <FullscreenOutlined />
+          </button>
+        }
+        {isFullscreen &&
+          <button
+            type="button"
+            onClick={exitFullscreen}
+            className="dag-util-btn">
+            <FullscreenExitOutlined />
+          </button>
+        }
       </div>
-      <Zoom ref={zoomRef} width={width || 1024} height={height || 768} wheelDelta={wheelDeltaEventCallback}>
+      <Zoom ref={zoomRef} width={dagWidth} height={dagHeight} wheelDelta={wheelDeltaEventCallback}>
         {zoom => {
           return (
             <svg
-              width={width}
-              height={height}
+              width={dagWidth}
+              height={dagHeight}
               style={{
                 cursor: zoom.isDragging ? 'grabbing' : 'grab',
                 // overflow: zoom.isDragging ? 'overlay' : 'hidden',
@@ -334,7 +358,7 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
                   <path d="M 0 0 L 10 5 L 0 10 z" fill="#7A7E87" />
                 </marker>
               </defs>
-              <rect width={width} height={height} rx={14} fill="#FFF" />
+              <rect width={dagWidth} height={dagHeight} rx={14} fill="#FFF" />
 
               {/* When not dragging, place drag mask behind */}
               {renderDragMaskRect(zoom)}
@@ -349,8 +373,8 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
                      instead we use reference and DOM setAttribute to update this matrix value
                   */
                   /* transform={zoomStr} */
-                  width={width}
-                  height={height}
+                  width={dagWidth}
+                  height={dagHeight}
                 >
                   <g id="realgraph" ref={graphWrapperRef}>
                     {graphDOM}
@@ -364,6 +388,6 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
           );
         }}
       </Zoom>
-    </>
+    </div>
   );
 };
