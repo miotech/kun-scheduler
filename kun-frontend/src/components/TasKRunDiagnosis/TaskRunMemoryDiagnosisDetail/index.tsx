@@ -18,7 +18,7 @@ const generateFiled = (dataIndex: keyof TaskRunDiagnosis, unit: string, i18Key: 
 };
 
 const fileds = [
-  generateFiled('memorySeconds', 'MB', 'taskRun.diagnosis.memoryUsage'),
+  generateFiled('memorySeconds', 'MB-seconds', 'taskRun.diagnosis.memoryUsage'),
   generateFiled('memoryUsagePercentage', '%', 'taskRun.diagnosis.memoryUsagePercent'),
   generateFiled('maxExecutorNumber', '', 'taskRun.diagnosis.executor.num.peak'),
   generateFiled('medianExecutorNumber', '', 'taskRun.diagnosis.executor.num.median'),

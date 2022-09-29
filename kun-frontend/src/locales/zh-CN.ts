@@ -692,7 +692,7 @@ export default {
   'taskRun.diagnosis.driver.memory.median': '8、driver使用的memory中位数',
   'taskRun.diagnosis.fieldDescription.title': '字段说明：',
   'taskRun.diagnosis.fieldDescription.memoryUsage':
-    '1、实际总内存消耗：本次任务从运行开始到结束实际消耗的总内存，为executor实际使用的memory之和；',
+    '1、实际内存消耗：指本次任务从运行开始到结束时间段内，每秒消耗内存的总和；',
   'taskRun.diagnosis.fieldDescription.memoryUsagePercent':
     '2、实际总内存使用率：实际消耗的总内存与所申请的总内存的比值；',
   'taskRun.diagnosis.fieldDescription.executor.num.peak':

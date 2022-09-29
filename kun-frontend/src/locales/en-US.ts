@@ -698,8 +698,8 @@ export default {
   'datasetPull.notification.failed.title': 'Datasource pull failed',
   'datasetPull.notification.failed.desc': 'Data source that failed to pull',
   'taskRun.diagnosis.title': 'Last run statistics',
-  'taskRun.diagnosis.memoryUsage': '1. Actual total memory consumption',
-  'taskRun.diagnosis.memoryUsagePercent': '2. Actual total memory usage',
+  'taskRun.diagnosis.memoryUsage': '1. Total memory consumption',
+  'taskRun.diagnosis.memoryUsagePercent': '2. Total memory usage',
   'taskRun.diagnosis.executor.num.peak': '3. Peak number of executors',
   'taskRun.diagnosis.executor.num.median': '4. Median number of executors',
   'taskRun.diagnosis.executor.memory.peak': '5. The peak memory usage of a single executor',
@@ -708,9 +708,9 @@ export default {
   'taskRun.diagnosis.driver.memory.median': '8. The median memory used by the driver',
   'taskRun.diagnosis.fieldDescription.title': 'Field Description:',
   'taskRun.diagnosis.fieldDescription.memoryUsage':
-    '1. Actual total memory consumption: The total memory actually consumed by this task from the beginning to the end of the operation is the sum of the memory actually used by the executor;',
+    '1. Total memory consumption: the total memory consumption per second from the start to the end of the task;',
   'taskRun.diagnosis.fieldDescription.memoryUsagePercent':
-    '2. Actual total memory usage: the ratio of the total memory actually consumed to the total memory applied for;',
+    '2. Total memory usage: the ratio of the total memory actually consumed to the total memory applied for;',
   'taskRun.diagnosis.fieldDescription.executor.num.peak':
     '3. Peak number of executors: the maximum value of executors in multiple stages of this task running;',
   'taskRun.diagnosis.fieldDescription.executor.num.median':
@@ -729,8 +729,8 @@ export default {
   'taskRun.diagnosis.lineChart.yAxis.name.executorNum': 'Executor Number',
   'taskRun.diagnosis.lineChart.totalMemoryUsage.title': 'Memory consumption of the last 7 runs',
   'taskRun.diagnosis.lineChart.executorDriverMemoryUsage.title': 'The last 7 executor, driver and memory situations',
-  'taskRun.diagnosis.lineChart.legend.memoryUsage': 'Actual total memory consumption',
-  'taskRun.diagnosis.lineChart.legend.memoryUsagePercent': 'Actual total memory usage',
+  'taskRun.diagnosis.lineChart.legend.memoryUsage': 'Total memory consumption',
+  'taskRun.diagnosis.lineChart.legend.memoryUsagePercent': 'Total memory usage',
   'taskRun.diagnosis.lineChart.legend.executor.num.peak': 'Peak number of executors',
   'taskRun.diagnosis.lineChart.legend.executor.num.median': 'Median number of executors',
   'taskRun.diagnosis.lineChart.legend.executor.memory.peak': 'The peak memory usage of a single executor',
