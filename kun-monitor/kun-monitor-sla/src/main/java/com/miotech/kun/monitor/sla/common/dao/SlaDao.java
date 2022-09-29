@@ -161,11 +161,15 @@ public class SlaDao {
         if (taskDefinitionNode.getLevel() != null) {
             params.add("td.level=?");
             values.add(taskDefinitionNode.getLevel());
+        } else {
+            params.add("td.level=null");
         }
 
         if (taskDefinitionNode.getDeadline() != null) {
             params.add("td.deadline=?");
             values.add(taskDefinitionNode.getDeadline());
+        } else {
+            params.add("td.deadline=null");
         }
 
         if (taskDefinitionNode.getAvgTaskRunTimeLastSevenTimes() != null) {
