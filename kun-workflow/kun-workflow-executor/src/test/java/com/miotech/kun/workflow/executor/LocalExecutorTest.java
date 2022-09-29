@@ -1365,6 +1365,7 @@ public class LocalExecutorTest extends CommonTestBase {
         eventBus.post(taskRunTransitionEvent);
 
         awaitUntilAttemptDone(taskAttempt.getId());
+        awaitUntilProcessDown("default", 0);
 
         assertStatusHistory(taskAttempt.getId(),
                 TaskRunStatus.CREATED,

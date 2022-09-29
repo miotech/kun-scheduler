@@ -70,7 +70,7 @@ public class TaskRunStateMachineDispatcher {
         logger.debug("clean expired events...");
         taskRunDao.cleanExpiredEvents();
         logger.debug("recover state machine...");
-        List<TaskAttempt> notTermAttempts = taskRunDao.fetchNotTermAttempt();
+        List<TaskAttempt> notTermAttempts = taskRunDao.shouldRecoverAttempts();
         logger.debug("going to recover {} stateMachine", notTermAttempts.size());
         for (TaskAttempt notTermAttempt : notTermAttempts) {
             TaskRunStateMachine stateMachine = generateStateMache(notTermAttempt);
@@ -116,6 +116,7 @@ public class TaskRunStateMachineDispatcher {
     public TaskRunStateMachine fetchStateMachine(Long taskRunId) {
         return buffer.get(taskRunId);
     }
+
 
     private void preTransition(TaskRunTransitionEvent event) {
         //save event to database if not exist

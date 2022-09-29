@@ -10,6 +10,8 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -315,7 +317,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(attemptOptional.isPresent());
         TaskAttempt attempt = attemptOptional.get();
         TaskAttempt baselineModel = MockTaskRunFactory.createTaskAttempt(3L, sampleTaskRun, 3);
-        assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun","taskRunPhase"));
+        assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun", "taskRunPhase"));
         // TaskRun instance should be nested inside
         assertThat(attempt.getTaskRun(), notNullValue());
         assertThat(attempt.getTaskRun(), sameBeanAs(sampleTaskRun)
@@ -921,28 +923,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     }
 
-    @Test
-    public void testFetchTaskAttemptListForRecover() {
-        //prepare
-        TaskRunStatus[] taskRunStatuses = TaskRunStatus.values();
-        List<Task> taskList = MockTaskFactory.createTasks(taskRunStatuses.length);
-        for (int i = 0; i < taskRunStatuses.length; i++) {
-            TaskRun taskRun = MockTaskRunFactory.createTaskRunWithStatus(taskList.get(i), taskRunStatuses[i]);
-            TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
-            taskDao.create(taskList.get(i));
-            taskRunDao.createTaskRun(taskRun);
-            taskRunDao.createAttempt(taskAttempt);
-        }
 
-        List<TaskRunStatus> taskRunStatusConditions = Arrays.asList(TaskRunStatus.CREATED, TaskRunStatus.QUEUED, TaskRunStatus.ERROR);
-        List<TaskAttempt> selectedAttempt = taskRunDao.fetchTaskAttemptListForRecover(taskRunStatusConditions);
-        List<TaskRunStatus> selectedStatus = selectedAttempt.stream().map(TaskAttempt::getStatus).collect(Collectors.toList());
-
-        //verify
-        assertThat(selectedAttempt, hasSize(3));
-        assertThat(selectedStatus, containsInAnyOrder(TaskRunStatus.CREATED, TaskRunStatus.ERROR, TaskRunStatus.QUEUED));
-
-    }
 
     @Test
     public void fetchFailedUpstreamTaskRuns_ShouldSuccess() {
@@ -1231,13 +1212,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createAttempt(taskAttempt1);
-        taskRunDao.updateTaskAttemptStatus(taskAttempt1.getId(),TaskRunStatus.UPSTREAM_FAILED);
+        taskRunDao.updateTaskAttemptStatus(taskAttempt1.getId(), TaskRunStatus.UPSTREAM_FAILED);
         for (int i = 1; i < taskRunList.size(); i++) {
             TaskRun taskRun = taskRunList.get(i);
             TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
             taskRunDao.createTaskRun(taskRun);
             taskRunDao.createAttempt(taskAttempt);
-            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.FAILED);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
         }
         List<Long> taskRunIds = taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList());
 
@@ -1248,10 +1229,10 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun saved2 = taskRunDao.fetchTaskRunById(taskRunIds.get(1)).get();
         TaskRun saved3 = taskRunDao.fetchTaskRunById(taskRunIds.get(2)).get();
         TaskRun saved4 = taskRunDao.fetchTaskRunById(taskRunIds.get(3)).get();
-        assertThat(saved1.getStatus(),is(TaskRunStatus.CREATED));
-        assertThat(saved2.getStatus(),is(TaskRunStatus.FAILED));
-        assertThat(saved3.getStatus(),is(TaskRunStatus.FAILED));
-        assertThat(saved4.getStatus(),is(TaskRunStatus.FAILED));
+        assertThat(saved1.getStatus(), is(TaskRunStatus.CREATED));
+        assertThat(saved2.getStatus(), is(TaskRunStatus.FAILED));
+        assertThat(saved3.getStatus(), is(TaskRunStatus.FAILED));
+        assertThat(saved4.getStatus(), is(TaskRunStatus.FAILED));
 
     }
 
@@ -1322,7 +1303,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     public void fetchUpstreamTaskRunIds_shouldSuccess() {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2");
-        for(TaskRun taskRun : taskRunList) {
+        for (TaskRun taskRun : taskRunList) {
             taskDao.create(taskRun.getTask());
             taskRunDao.createTaskRun(taskRun);
         }
@@ -1336,7 +1317,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     public void fetchUpStreamTaskRunIdsRecursive_shouldSuccess() {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
-        for(TaskRun taskRun : taskRunList) {
+        for (TaskRun taskRun : taskRunList) {
             taskDao.create(taskRun.getTask());
             taskRunDao.createTaskRun(taskRun);
         }
@@ -1350,7 +1331,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     public void fetchTaskRunsByIds_shouldSuccess() {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
-        for(TaskRun taskRun : taskRunList) {
+        for (TaskRun taskRun : taskRunList) {
             taskDao.create(taskRun.getTask());
             taskRunDao.createTaskRun(taskRun);
         }
@@ -1389,13 +1370,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void taskRunShouldBeCreatedTest(){
+    public void taskRunShouldBeCreatedTest() {
         //prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4,"0>>2;0>>3;1>>2");
-        for (Task task : taskList){
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>2;0>>3;1>>2");
+        for (Task task : taskList) {
             taskDao.create(task);
         }
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList,"0>>2;0>>3;1>>2");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;0>>3;1>>2");
         TaskRun taskRun1 = taskRunList.get(0);
         TaskRun taskRun2 = taskRunList.get(1).cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
         TaskRun taskRun3 = taskRunList.get(2).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED).build();
@@ -1406,14 +1387,14 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(taskRun3);
         taskRunDao.createTaskRun(taskRun4);
 
-        DataStore dataStore = MockDataStoreFactory.getMockDataStore(DataStoreType.HIVE_TABLE,"aa","bb");
-        taskRunDao.updateTaskRunInletsOutlets(taskRun1.getId(),Arrays.asList(dataStore),new ArrayList<>());
+        DataStore dataStore = MockDataStoreFactory.getMockDataStore(DataStoreType.HIVE_TABLE, "aa", "bb");
+        taskRunDao.updateTaskRunInletsOutlets(taskRun1.getId(), Arrays.asList(dataStore), new ArrayList<>());
 
-        List<Long> taskRunShouldBeCreated = taskRunDao.taskRunShouldBeCreated(Arrays.asList(taskRun3.getId(),taskRun4.getId()));
+        List<Long> taskRunShouldBeCreated = taskRunDao.taskRunShouldBeCreated(Arrays.asList(taskRun3.getId(), taskRun4.getId()));
 
         //verify
-        assertThat(taskRunShouldBeCreated,hasSize(1));
-        assertThat(taskRunShouldBeCreated.get(0),is(taskRun3.getId()));
+        assertThat(taskRunShouldBeCreated, hasSize(1));
+        assertThat(taskRunShouldBeCreated.get(0), is(taskRun3.getId()));
     }
 
     @Test
@@ -1445,7 +1426,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void lossUpdateConditionTaskRunsTest(){
+    public void lossUpdateConditionTaskRunsTest() {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
         taskList.forEach(x -> taskDao.create(x));
@@ -1460,12 +1441,12 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         List<Long> lossUpdateTaskRuns = taskRunDao.lossUpdateConditionTaskRuns();
 
-        assertThat(lossUpdateTaskRuns,hasSize(1));
-        assertThat(lossUpdateTaskRuns,containsInAnyOrder(taskRun1.getId()));
+        assertThat(lossUpdateTaskRuns, hasSize(1));
+        assertThat(lossUpdateTaskRuns, containsInAnyOrder(taskRun1.getId()));
     }
 
     @Test
-    public void fixConditionWithTaskRunIdTest(){
+    public void fixConditionWithTaskRunIdTest() {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2;");
         taskList.forEach(x -> taskDao.create(x));
@@ -1481,7 +1462,152 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         List<Long> lossUpdateTaskRuns = taskRunDao.lossUpdateConditionTaskRuns();
 
-        assertThat(lossUpdateTaskRuns,hasSize(1));
-        assertThat(lossUpdateTaskRuns,containsInAnyOrder(taskRun2.getId()));
+        assertThat(lossUpdateTaskRuns, hasSize(1));
+        assertThat(lossUpdateTaskRuns, containsInAnyOrder(taskRun2.getId()));
+    }
+
+    /**
+     * taskAttempt1 is failed
+     * taskAttempt2 is upstream_failed with unCompleted events CONDITION_CHANGE
+     * taskAttempt3 is queued with unCompleted events READY
+     * taskAttempt3 is waiting(status:created) without events
+     * result should only contain taskAttempt2,3,4
+     */
+    @Test
+    public void fetchRecoverAttempts_should_not_duplicate() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = taskList.get(0);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithPhase(task1, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED | TaskRunPhase.FAILED);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskDao.create(task1);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt1.getId(), taskAttempt1.getTaskRunPhase(), null, null, null, null);
+
+        Task task2 = taskList.get(1);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRunWithPhase(task2, TaskRunPhase.CREATED | TaskRunPhase.UPSTREAM_FAILED);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt2);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt2.getId(), taskAttempt2.getTaskRunPhase(), null, null, null, null);
+        taskRunDao.saveTransitEvent(new TaskRunTransitionEvent(TaskRunTransitionEventType.CONDITION_CHANGE, taskAttempt2.getId(), null), false);
+
+        Task task3 = MockTaskFactory.createTask();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRunWithPhase(task3, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED);
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
+        taskDao.create(task3);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createAttempt(taskAttempt3);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt3.getId(), taskAttempt3.getTaskRunPhase(), null, null, null, null);
+        taskRunDao.saveTransitEvent(new TaskRunTransitionEvent(TaskRunTransitionEventType.READY, taskAttempt3.getId(), null), false);
+
+        Task task4 = MockTaskFactory.createTask();
+        TaskRun taskRun4 = MockTaskRunFactory.createTaskRunWithPhase(task4, TaskRunPhase.CREATED | TaskRunPhase.WAITING);
+        TaskAttempt taskAttempt4 = MockTaskAttemptFactory.createTaskAttempt(taskRun4);
+        taskDao.create(task4);
+        taskRunDao.createTaskRun(taskRun4);
+        taskRunDao.createAttempt(taskAttempt4);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt4.getId(), taskAttempt4.getTaskRunPhase(), null, null, null, null);
+
+        //process
+        List<TaskAttempt> shouldRecoverAttempts = taskRunDao.shouldRecoverAttempts();
+
+        //verify
+        assertThat(shouldRecoverAttempts, hasSize(3));
+        List<Long> recoverAttemptIds = shouldRecoverAttempts.stream().map(TaskAttempt::getId).collect(Collectors.toList());
+        assertThat(recoverAttemptIds, containsInAnyOrder(taskAttempt2.getId(), taskAttempt3.getId(), taskAttempt4.getId()));
+
+    }
+
+    /**
+     * taskAttempt1 is failed
+     * taskAttempt2 is upstream_failed with unCompleted events CONDITION_CHANGE
+     * taskAttempt3 is queued with unCompleted events READY
+     * result should only contain taskAttempt2,3
+     */
+    @Test
+    public void testFetchAttemptIdsWithUnCompletedEvent() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = taskList.get(0);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithPhase(task1, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED | TaskRunPhase.FAILED);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskDao.create(task1);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt1.getId(), taskAttempt1.getTaskRunPhase(), null, null, null, null);
+
+        Task task2 = taskList.get(1);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRunWithPhase(task2, TaskRunPhase.CREATED | TaskRunPhase.UPSTREAM_FAILED);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt2);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt2.getId(), taskAttempt2.getTaskRunPhase(), null, null, null, null);
+        taskRunDao.saveTransitEvent(new TaskRunTransitionEvent(TaskRunTransitionEventType.CONDITION_CHANGE, taskAttempt2.getId(), null), false);
+
+        Task task3 = MockTaskFactory.createTask();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRunWithPhase(task3, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED);
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
+        taskDao.create(task3);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createAttempt(taskAttempt3);
+        taskRunDao.saveTransitEvent(new TaskRunTransitionEvent(TaskRunTransitionEventType.READY, taskAttempt3.getId(), null), false);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt3.getId(), taskAttempt3.getTaskRunPhase(), null, null, null, null);
+
+        //process
+        List<Long> taskAttemptIds = taskRunDao.fetchAttemptIdsHasUnCompletedEvents();
+
+        //verify
+        assertThat(taskAttemptIds, hasSize(2));
+        assertThat(taskAttemptIds, containsInAnyOrder(taskAttempt2.getId(), taskAttempt3.getId()));
+
+    }
+
+    /**
+     * taskAttempt1 is failed
+     * taskAttempt2 is upstream_failed with unCompleted events CONDITION_CHANGE
+     * taskAttempt3 is queued with unCompleted events READY
+     * result should only contain taskAttempt 3
+     */
+    @Test
+    public void testFetchNotTermAttemptIds() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = taskList.get(0);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithPhase(task1, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED | TaskRunPhase.FAILED);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskDao.create(task1);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt1.getId(), taskAttempt1.getTaskRunPhase(), null, null, null, null);
+
+        Task task2 = taskList.get(1);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRunWithPhase(task2, TaskRunPhase.CREATED | TaskRunPhase.UPSTREAM_FAILED);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt2);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt2.getId(), taskAttempt2.getTaskRunPhase(), null, null, null, null);
+        taskRunDao.saveTransitEvent(new TaskRunTransitionEvent(TaskRunTransitionEventType.CONDITION_CHANGE, taskAttempt2.getId(), null), false);
+
+        Task task3 = MockTaskFactory.createTask();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRunWithPhase(task3, TaskRunPhase.CREATED | TaskRunPhase.WAITING | TaskRunPhase.QUEUED);
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
+        taskDao.create(task3);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createAttempt(taskAttempt3);
+        taskRunDao.saveTransitEvent(new TaskRunTransitionEvent(TaskRunTransitionEventType.READY, taskAttempt3.getId(), null), false);
+        taskRunDao.updateTaskAttemptPhase(taskAttempt3.getId(), taskAttempt3.getTaskRunPhase(), null, null, null, null);
+
+        //process
+        List<Long> taskAttemptIds = taskRunDao.fetchNotTermAttemptIds();
+
+        //verify
+        assertThat(taskAttemptIds, hasSize(1));
+        assertThat(taskAttemptIds, containsInAnyOrder(taskAttempt3.getId()));
+
     }
 }

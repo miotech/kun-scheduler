@@ -136,6 +136,7 @@ public class MockTaskRunFactory {
                     .withQueueName(tasks.get(i).getQueueName())
                     .withPriority(tasks.get(i).getPriority())
                     .withScheduleTime(tick)
+                    .withTaskRunPhase(TaskRunPhase.CREATED)
                     .build();
             taskRuns.add(tr);
         }
