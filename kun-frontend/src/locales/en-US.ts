@@ -108,6 +108,7 @@ export default {
   'common.reactlazylog.copyToClipboard': 'Copy all contents to clipboard',
   'common.reactlazylog.copyToClipboardSuccess': 'Copied success!',
   'common.reactlazylog.downloadAsFile': 'Download all contents as file',
+  'common.taskRun.memory.diagnosis': 'Memory Statistic',
   'login.welcome': 'Welcome to MioTech KUN Data Platform',
   'login.userName': 'Username',
   'login.password': 'Password',
@@ -544,6 +545,7 @@ export default {
   'scheduledTasks.jumpToTaskDef': 'Jump to task definition',
   'scheduledTasks.logs': 'Logs',
   'scheduledTasks.DAG': 'DAG',
+  'scheduledTasks.Diagnosis': 'Memory Diagnosis',
   'scheduledTasks.jumpToTaskGantt': 'View the Task Gantt Chart',
   'taskRun.property.id': 'Run Instance ID',
   'taskRun.property.status': 'Status',
@@ -695,4 +697,44 @@ export default {
   'datasetPull.notification.success.desc': 'Data sources that are successfully pulled:',
   'datasetPull.notification.failed.title': 'Datasource pull failed',
   'datasetPull.notification.failed.desc': 'Data source that failed to pull',
+  'taskRun.diagnosis.title': 'Last run statistics',
+  'taskRun.diagnosis.memoryUsage': '1. Actual total memory consumption',
+  'taskRun.diagnosis.memoryUsagePercent': '2. Actual total memory usage',
+  'taskRun.diagnosis.executor.num.peak': '3. Peak number of executors',
+  'taskRun.diagnosis.executor.num.median': '4. Median number of executors',
+  'taskRun.diagnosis.executor.memory.peak': '5. The peak memory usage of a single executor',
+  'taskRun.diagnosis.executor.memory.median': '6. The median memory usage of a single executor',
+  'taskRun.diagnosis.driver.memory.peak': '7. The peak memory used by the driver',
+  'taskRun.diagnosis.driver.memory.median': '8. The median memory used by the driver',
+  'taskRun.diagnosis.fieldDescription.title': 'Field Description:',
+  'taskRun.diagnosis.fieldDescription.memoryUsage':
+    '1. Actual total memory consumption: The total memory actually consumed by this task from the beginning to the end of the operation is the sum of the memory actually used by the executor;',
+  'taskRun.diagnosis.fieldDescription.memoryUsagePercent':
+    '2. Actual total memory usage: the ratio of the total memory actually consumed to the total memory applied for;',
+  'taskRun.diagnosis.fieldDescription.executor.num.peak':
+    '3. Peak number of executors: the maximum value of executors in multiple stages of this task running;',
+  'taskRun.diagnosis.fieldDescription.executor.num.median':
+    '4. Median number of executors: the median value of executors in multiple stages of the task running;',
+  'taskRun.diagnosis.fieldDescription.executor.memory.peak':
+    '5. The peak value of memory used by a single executor: the maximum memory value used by a single executor during the operation of this task;',
+  'taskRun.diagnosis.fieldDescription.executor.memory.median':
+    '6. Median of memory used by a single executor: During the operation of this task, sort the maximum memory value used by each executor from low to high, and take the median;',
+  'taskRun.diagnosis.fieldDescription.driver.memory.peak':
+    '7. The peak memory value used by the driver: the maximum memory value used by the driver during the operation of this task;',
+  'taskRun.diagnosis.fieldDescription.driver.memory.median':
+    '8. The median of the memory used by the driver: During the operation of this task, the memory values ​​of the driver at different monitoring times are sorted from low to high, and the median is taken;',
+  'taskRun.diagnosis.action.lookUp': 'Last seven usages: Click to view',
+  'taskRun.diagnosis.lineChart.xAxis.name': 'Instance Id',
+  'taskRun.diagnosis.lineChart.yAxis.name.memoryValue': 'Memory Value',
+  'taskRun.diagnosis.lineChart.yAxis.name.executorNum': 'Executor Number',
+  'taskRun.diagnosis.lineChart.totalMemoryUsage.title': 'Memory consumption of the last 7 runs',
+  'taskRun.diagnosis.lineChart.executorDriverMemoryUsage.title': 'The last 7 executor, driver and memory situations',
+  'taskRun.diagnosis.lineChart.legend.memoryUsage': 'Actual total memory consumption',
+  'taskRun.diagnosis.lineChart.legend.memoryUsagePercent': 'Actual total memory usage',
+  'taskRun.diagnosis.lineChart.legend.executor.num.peak': 'Peak number of executors',
+  'taskRun.diagnosis.lineChart.legend.executor.num.median': 'Median number of executors',
+  'taskRun.diagnosis.lineChart.legend.executor.memory.peak': 'The peak memory usage of a single executor',
+  'taskRun.diagnosis.lineChart.legend.executor.memory.median': 'The median memory usage of a single executor',
+  'taskRun.diagnosis.lineChart.legend.driver.memory.peak': 'The peak memory used by the driver',
+  'taskRun.diagnosis.lineChart.legend.driver.memory.median': 'The median memory used by the driver',
 };

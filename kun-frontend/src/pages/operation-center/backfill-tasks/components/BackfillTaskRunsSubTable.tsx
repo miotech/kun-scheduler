@@ -11,6 +11,7 @@ import Icon, { FileSearchOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 import TextContainer from '@/components/TextContainer/TextContainer';
+import { TaskRunMemoryDiagnosis } from '@/components/TasKRunDiagnosis/TaskRunMemoryDiagnosis';
 
 interface OwnProps {
   data: TaskRun[];
@@ -83,6 +84,7 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
       {
         title: t('operationCenter.backfill.taskrun.status'),
         key: 'status',
+        width: 120,
         dataIndex: 'status',
         render: (txt, record) => {
           return renderStatus(record.status);
@@ -92,14 +94,14 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
         title: t('operationCenter.backfill.taskrun.startTime'),
         key: 'startAt',
         dataIndex: 'startAt',
-        width: 240,
+        width: 200,
         render: (txt, record) => (record.startAt ? dayjs(record.startAt).format('YYYY-MM-DD HH:mm:ss') : '-'),
       },
       {
         title: t('operationCenter.backfill.taskrun.endTime'),
         key: 'endAt',
         dataIndex: 'endAt',
-        width: 240,
+        width: 200,
         render: (txt, record) => (record.endAt ? dayjs(record.endAt).format('YYYY-MM-DD HH:mm:ss') : '-'),
       },
       {
@@ -124,6 +126,15 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
           return `${duration.hours()}:${duration.minutes()}:${duration.seconds()}`;
         },
       },
+      {
+        title: t('common.taskRun.memory.diagnosis'),
+        key: 'diagnosis',
+        width: 64,
+        render: (_, record) => {
+          return <TaskRunMemoryDiagnosis shouldModal taskRunId={record.id} />;
+        },
+      },
+
       {
         title: '',
         key: 'operations',

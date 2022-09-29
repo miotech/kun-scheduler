@@ -13,7 +13,7 @@ plugins {
 apply plugin: 'com.github.node-gradle.node'
 
 node {
-    version = "12.13.0"
+    version = "14.20.0"
     yarnVersion = "1.9.4"
     download = true
 }
