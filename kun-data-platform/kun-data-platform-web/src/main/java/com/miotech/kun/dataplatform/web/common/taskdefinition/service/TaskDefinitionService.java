@@ -4,6 +4,7 @@ import com.cronutils.model.Cron;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.miotech.kun.dataplatform.facade.TaskDefinitionFacade;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
@@ -15,6 +16,7 @@ import com.miotech.kun.dataplatform.web.common.datastore.service.DatasetService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployRequest;
+import com.miotech.kun.dataplatform.web.common.deploy.vo.TaskTryRunSearchRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskTryDao;
@@ -598,7 +600,65 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         );
     }
 
+    public PaginationResult<TaskRun> searchTaskTryRuns(TaskTryRunSearchRequest request) {
+        Preconditions.checkArgument(request.getPageNum() > 0, "page number should be a positive number");
+        Preconditions.checkArgument(request.getPageSize() > 0, "page size should be a positive number");
+        TaskRunSearchRequest.Builder searchRequestBuilder = TaskRunSearchRequest.newBuilder()
+                .withPageSize(request.getPageSize())
+                .withPageNum(request.getPageNum());
 
+        List<Long> taskIds = taskTryDao.fetchByTaskDefinitionIds(request.getDefinitionIds())
+                .stream()
+                .map(TaskTry::getWorkflowTaskId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (taskIds.isEmpty()) {
+            return new PaginationResult<>(request.getPageSize(), request.getPageNum(), 0, Collections.emptyList());
+        }
+
+        searchRequestBuilder.withTaskIds(taskIds);
+        if (request.getStartTime() != null) {
+            searchRequestBuilder.withDateFrom(request.getStartTime());
+        }
+        if (request.getEndTime() != null) {
+            searchRequestBuilder.withDateTo(request.getEndTime());
+        }
+        if (request.getStatus() != null) {
+            searchRequestBuilder.withStatus(Sets.newHashSet(request.getStatus()));
+        }
+        return workflowClient.searchTaskRun(searchRequestBuilder.build());
+    }
+
+    public TaskRunLogVO getTaskTryRunLog(Long taskRunId, Integer start, Integer end, Integer attempt) {
+        Preconditions.checkNotNull(taskRunId, "taskRunId should not be null");
+        Preconditions.checkNotNull(attempt, "attempt cannot be null");
+        TaskRunLog log;
+        if (start == null && end == null) {
+            log = workflowClient.getLatestRunLog(taskRunId, attempt);
+        } else {
+            log = workflowClient.getLatestRunLog(taskRunId, start, end, attempt);
+        }
+        TaskRunStatus status = workflowClient.getTaskRunState(taskRunId).getStatus();
+        return new TaskRunLogVO(
+                log.getTaskRunId(),
+                log.getAttempt(),
+                log.getStartLine(),
+                log.getEndLine(),
+                log.getLogs(),
+                status.isFinished(),
+                status);
+    }
+
+    public TaskRun stopTaskTryRun(Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        return workflowClient.stopTaskRun(taskRunId);
+    }
+
+    public TaskRun restartTaskTryRun(Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        return workflowClient.restartTaskRun(taskRunId);
+    }
 
     public TaskDefinitionVO convertToVO(TaskDefinition taskDefinition) {
         Map<Long, Boolean> commitStatus = taskCommitService.getLatestCommitStatus(

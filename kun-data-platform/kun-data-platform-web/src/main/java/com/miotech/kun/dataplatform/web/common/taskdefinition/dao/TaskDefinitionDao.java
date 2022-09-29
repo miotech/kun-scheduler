@@ -141,7 +141,7 @@ public class TaskDefinitionDao {
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))
-                .orderBy("id")
+                .orderBy("update_time desc, id desc")
                 .limit(searchRequest.getPageSize())
                 .offset(searchRequest.getPageSize() * (searchRequest.getPageNum()-1))
                 .getSQL();

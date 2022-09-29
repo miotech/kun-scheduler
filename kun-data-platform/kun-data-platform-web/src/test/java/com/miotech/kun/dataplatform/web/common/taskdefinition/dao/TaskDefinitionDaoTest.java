@@ -184,7 +184,7 @@ public class TaskDefinitionDaoTest extends DataPlatformTestBase {
     public void search() {
         List<TaskDefinition> taskDefinitions = MockTaskDefinitionFactory.createTaskDefinitions(100);
         taskDefinitions.forEach(x -> taskDefinitionDao.create(x));
-        TaskDefinition taskDefinition = taskDefinitions.get(0);
+        TaskDefinition taskDefinition = taskDefinitions.get(99);
         // filter nothing
         TaskDefinitionSearchRequest request;
         PaginationResult<TaskDefinition> taskDefPage;
