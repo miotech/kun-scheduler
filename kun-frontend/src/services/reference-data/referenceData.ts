@@ -1,6 +1,7 @@
 import { get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
-import { DataBase } from '@/definitions/ReferenceData.type';
+import { DataBase, FetchRdmDatasParams } from '@/definitions/ReferenceData.type';
+import { QueryAttributeListParams } from '@/definitions/ResourceAttribute.type';
 
 export async function parseData(data: any) {
   return post('rdm/data/parse', {
@@ -86,3 +87,25 @@ export async function validRdm(data: any) {
     prefix: DEFAULT_API_PREFIX,
   });
 }
+
+/**
+ * @param params
+ * @returns
+ */
+export const fetchRdmDatas = (params: FetchRdmDatasParams) => {
+  return post('/rdm/info/table/page/search', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
+};
+
+/**
+ * @param params
+ * @returns
+ */
+export const queryRdmAttributeList = (params: QueryAttributeListParams) => {
+  return post('/rdm/attribute/list', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
+};
