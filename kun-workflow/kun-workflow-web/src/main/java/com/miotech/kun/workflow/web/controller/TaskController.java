@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTasksParams;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.common.task.vo.TaskWithDependenciesVO;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
 
@@ -82,6 +83,14 @@ public class TaskController {
     ) {
         return taskService.getNeighbors(taskId, upstreamLevel, downstreamLevel);
     }
+
+    @RouteMapping(url = "/tasks/{taskId}/dependencies", method = "GET")
+    public TaskWithDependenciesVO getTaskWithDependencies(@RouteVariable Long taskId,
+                                                          @QueryParameter(defaultValue = "1") int upstreamLevel,
+                                                          @QueryParameter(defaultValue = "1") int downstreamLevel) {
+        return taskService.getTaskWithDependencies(taskId, upstreamLevel, downstreamLevel);
+    }
+
 
     @RouteMapping(url= "/tasks/_run", method = "POST")
     public Object runTasks(@RequestBody RunTasksParams runTasksParams) {

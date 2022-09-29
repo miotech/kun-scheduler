@@ -16,6 +16,7 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunWithDependenciesVO;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -1114,5 +1115,20 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(result, is(true));
     }
 
+    @Test
+    public void getTaskRunWithDependencies_shouldSuccess() {
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(5, "0>>1;1>>2;2>>3;3>>4");
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;1>>2;2>>3;3>>4");
+        for (TaskRun taskRun : taskRuns) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+
+        TaskRunWithDependenciesVO result1 = taskRunService.getTaskRunWithDependencies(taskRuns.get(2).getId(), 1, -1);
+        assertThat(result1.getTaskRuns().size(), is(4));
+
+        TaskRunWithDependenciesVO result2 = taskRunService.getTaskRunWithDependencies(taskRuns.get(2).getId(), -1, 1);
+        assertThat(result2.getTaskRuns().size(), is(4));
+    }
 
 }

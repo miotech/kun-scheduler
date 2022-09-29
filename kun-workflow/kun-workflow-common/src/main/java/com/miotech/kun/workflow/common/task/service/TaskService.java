@@ -282,6 +282,30 @@ public class TaskService {
         return new TaskDAGVO(result, edges);
     }
 
+    public TaskWithDependenciesVO getTaskWithDependencies(Long taskId, int upstreamLevel, int downstreamLevel) {
+        Preconditions.checkArgument(upstreamLevel == -1 || upstreamLevel >= 0, "upstream level should be non negative or -1 denoting all");
+        Preconditions.checkArgument(downstreamLevel == -1 || downstreamLevel >= 0, "downstream level should be non negative or -1 denoting all");
+        Task task = fetchById(taskId);
+        List<Task> tasks = new ArrayList<>();
+        tasks.add(task);
+        if (upstreamLevel == -1) {
+            List<Long> upstreamTaskIds = taskDao.fetchUpstreamTaskIdsRecursive(taskId);
+            tasks.addAll(taskDao.fetchTasksByIds(upstreamTaskIds));
+        } else if (upstreamLevel > 0) {
+            tasks.addAll(taskDao.fetchUpstreamTasks(task, upstreamLevel, false));
+        }
+        if (downstreamLevel == -1) {
+            List<Long> downstreamTaskRunIds = taskDao.fetchDownstreamTaskIdsRecursive(taskId);
+            tasks.addAll(taskDao.fetchTasksByIds(downstreamTaskRunIds));
+        } else if (downstreamLevel > 0) {
+            tasks.addAll(taskDao.fetchDownstreamTasks(task, downstreamLevel, false));
+        }
+        List<TaskDependency> dependencies = tasks.stream()
+                .flatMap(x -> x.getDependencies().stream())
+                .collect(Collectors.toList());
+        return new TaskWithDependenciesVO(tasks, dependencies);
+    }
+
     /**
      * Fetch task page with filters
      *

@@ -255,7 +255,61 @@ public class TaskDao {
         return resultTaskIds;
     }
 
-    private List<Task> fetchTasksByIds(Collection<Long> taskIds) {
+    public List<Long> fetchUpstreamTaskIdsRecursive(Long taskId) {
+        String recursiveResult = "fetch_upstream";
+        String unRecursiveSql = DefaultSQLBuilder.newBuilder()
+                .select("upstream_task_id")
+                .from(TASK_RELATION_TABLE_NAME)
+                .where("downstream_task_id=?")
+                .getSQL();
+        String dependencySQL = DefaultSQLBuilder.newBuilder()
+                .select(TASK_RELATION_MODEL_NAME + ".upstream_task_id")
+                .from(TASK_RELATION_TABLE_NAME, TASK_RELATION_MODEL_NAME)
+                .join("inner", recursiveResult, "fu")
+                .on("fu.upstream_task_id=" + TASK_RELATION_MODEL_NAME + ".downstream_task_id")
+                .getSQL();
+        String finalSql = DefaultSQLBuilder.newBuilder()
+                .select("upstream_task_id")
+                .from(recursiveResult)
+                .getSQL();
+        StringBuilder recursiveSqlBuilder = new StringBuilder();
+        String recursiveSql = recursiveSqlBuilder.append("WITH RECURSIVE fetch_upstream AS (\n")
+                .append(unRecursiveSql + "\n")
+                .append("UNION\n")
+                .append(dependencySQL + "\n")
+                .append(") " + finalSql)
+                .toString();
+        return dbOperator.fetchAll(recursiveSql, rs -> rs.getLong(1), taskId);
+    }
+
+    public List<Long> fetchDownstreamTaskIdsRecursive(Long taskId) {
+        String recursiveResult = "fetch_downstream";
+        String unRecursiveSql = DefaultSQLBuilder.newBuilder()
+                .select("downstream_task_id")
+                .from(TASK_RELATION_TABLE_NAME)
+                .where("upstream_task_id=?")
+                .getSQL();
+        String dependencySQL = DefaultSQLBuilder.newBuilder()
+                .select(TASK_RELATION_MODEL_NAME + ".downstream_task_id")
+                .from(TASK_RELATION_TABLE_NAME, TASK_RELATION_MODEL_NAME)
+                .join("inner", recursiveResult, "fd")
+                .on("fd.downstream_task_id=" + TASK_RELATION_MODEL_NAME + ".upstream_task_id")
+                .getSQL();
+        String finalSql = DefaultSQLBuilder.newBuilder()
+                .select("downstream_task_id")
+                .from(recursiveResult)
+                .getSQL();
+        StringBuilder recursiveSqlBuilder = new StringBuilder();
+        String recursiveSql = recursiveSqlBuilder.append("WITH RECURSIVE fetch_downstream AS (\n")
+                .append(unRecursiveSql + "\n")
+                .append("UNION\n")
+                .append(dependencySQL + "\n")
+                .append(") " + finalSql)
+                .toString();
+        return dbOperator.fetchAll(recursiveSql, rs -> rs.getLong(1), taskId);
+    }
+
+    public List<Task> fetchTasksByIds(Collection<Long> taskIds) {
         Preconditions.checkNotNull(taskIds, "Invalid argument `taskIds`: null");
         if (taskIds.isEmpty()) {
             return new ArrayList<>();

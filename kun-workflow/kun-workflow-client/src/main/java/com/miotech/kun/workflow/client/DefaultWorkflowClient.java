@@ -200,6 +200,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public TaskWithDependencies getTaskWithDependencies(Long taskId, int upstreamLevel, int downstreamLevel) {
+        return wfApi.getTaskWithDependencies(taskId, upstreamLevel, downstreamLevel);
+    }
+
+    @Override
     public TaskRun getTaskRun(Long taskRunId) {
         return wfApi.getTaskRun(taskRunId);
     }
@@ -257,6 +262,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public TaskRunDAG getTaskRunDAG(Long taskRunId, int upstreamLevel, int downstreamLevel) {
         return wfApi.getTaskRunDAG(taskRunId, upstreamLevel, downstreamLevel);
+    }
+
+    @Override
+    public TaskRunWithDependencies getTaskRunWithDependencies(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        return wfApi.getTaskRunWithDependencies(taskRunId, upstreamLevel, downstreamLevel);
     }
 
     @Override

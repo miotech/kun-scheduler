@@ -138,6 +138,16 @@ public interface WorkflowClient {
     TaskDAG getTaskDAG(Long taskId, int upstreamLevel, int downstreamLevel);
 
     /**
+     * get workflow task with dependencies
+     * @param taskId
+     * @param upstreamLevel non-negative integer or -1 denoting all
+     * @param downstreamLevel non-negative integer or -1 denoting all
+     * @return
+     */
+    TaskWithDependencies getTaskWithDependencies(Long taskId, int upstreamLevel, int downstreamLevel);
+
+
+    /**
      * fetch task run
      * @param taskRunId
      * @return
@@ -211,6 +221,15 @@ public interface WorkflowClient {
      * @return
      */
     TaskRunDAG getTaskRunDAG(Long taskRunId, int upstreamLevel, int downstreamLevel);
+
+    /**
+     * get task run with dependencies
+     * @param taskRunId
+     * @param upstreamLevel non-negative integer or -1 denoting all
+     * @param downstreamLevel non-negative integer or -1 denoting all
+     * @return
+     */
+    TaskRunWithDependencies getTaskRunWithDependencies(Long taskRunId, int upstreamLevel, int downstreamLevel);
 
     /**
      * get gantt chart info of task run

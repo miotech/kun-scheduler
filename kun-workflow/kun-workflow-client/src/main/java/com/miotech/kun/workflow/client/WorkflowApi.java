@@ -268,6 +268,16 @@ public class WorkflowApi {
         return get(url.build(), TaskDAG.class);
     }
 
+    public TaskWithDependencies getTaskWithDependencies(Long taskId, int upstreamLevel, int downstreamLevel) {
+        HttpUrl url = buildUrl(API_TASKS)
+                .addPathSegment(taskId.toString())
+                .addPathSegment("dependencies")
+                .addQueryParameter("upstreamLevel", Integer.toString(upstreamLevel))
+                .addQueryParameter("downstreamLevel", Integer.toString(downstreamLevel))
+                .build();
+        return get(url, TaskWithDependencies.class);
+    }
+
     // TaskRun
     public TaskRun getTaskRun(Long taskRunId) {
         HttpUrl url = buildUrl(API_TASK_RUNS)
@@ -327,6 +337,16 @@ public class WorkflowApi {
             url.addQueryParameter("downstreamLevel", Integer.toString(downstreamLevel));
         }
         return get(url.build(), TaskRunDAG.class);
+    }
+
+    public TaskRunWithDependencies getTaskRunWithDependencies(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        HttpUrl url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("dependencies")
+                .addQueryParameter("upstreamLevel", Integer.toString(upstreamLevel))
+                .addQueryParameter("downstreamLevel", Integer.toString(downstreamLevel))
+                .build();
+        return get(url, TaskRunWithDependencies.class);
     }
 
     public TaskRunGanttChart getTaskRunGantt(Long taskRunId) {

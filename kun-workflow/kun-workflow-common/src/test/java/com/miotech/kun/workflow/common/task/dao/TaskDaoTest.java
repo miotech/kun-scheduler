@@ -10,18 +10,19 @@ import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.*;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import com.shazam.shazamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -611,5 +612,29 @@ public class TaskDaoTest extends DatabaseTestBase {
 
         assertEquals(insertedTasks.size() - 1, count1);
         assertEquals((insertedTasks.size() - 1) / 2, count2);
+    }
+
+    @Test
+    public void fetchUpstreamTaskIdsRecursive_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        for(Task task : taskList) {
+            taskDao.create(task);
+        }
+
+        List<Long> fetchedUpstreamTaskRunIds = taskDao.fetchUpstreamTaskIdsRecursive(taskList.get(2).getId());
+
+        MatcherAssert.assertThat(new HashSet<>(fetchedUpstreamTaskRunIds), Matchers.is(new HashSet<>(Arrays.asList(taskList.get(0).getId(), taskList.get(1).getId()))));
+    }
+
+    @Test
+    public void fetchDownstreamTaskIdsRecursive_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        for(Task task : taskList) {
+            taskDao.create(task);
+        }
+
+        List<Long> fetchedUpstreamTaskRunIds = taskDao.fetchDownstreamTaskIdsRecursive(taskList.get(0).getId());
+
+        MatcherAssert.assertThat(new HashSet<>(fetchedUpstreamTaskRunIds), Matchers.is(new HashSet<>(Arrays.asList(taskList.get(1).getId(), taskList.get(2).getId()))));
     }
 }

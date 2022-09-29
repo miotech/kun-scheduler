@@ -21,7 +21,10 @@ dependencies {
     implementation project(':kun-data-platform:kun-data-platform-web')
     implementation project(':kun-security:kun-security-common')
     implementation project(':kun-workflow:kun-workflow-client')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-operation-record:kun-operation-record-common')
     implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-commons:kun-commons-db")
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'

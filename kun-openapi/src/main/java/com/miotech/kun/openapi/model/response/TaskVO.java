@@ -1,4 +1,4 @@
-package com.miotech.kun.openapi.model;
+package com.miotech.kun.openapi.model.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskPayload;

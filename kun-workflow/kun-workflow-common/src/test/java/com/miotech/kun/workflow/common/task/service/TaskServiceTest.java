@@ -18,6 +18,8 @@ import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.common.task.vo.TaskWithDependenciesVO;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunWithDependenciesVO;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.common.Tag;
@@ -30,7 +32,9 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import com.shazam.shazamcrest.MatcherAssert;
 import org.apache.commons.lang3.tuple.Pair;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -892,5 +896,17 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(updated.getScheduleConf().getType(), is(ScheduleType.NONE));
         assertThat(updated.getScheduleConf().getTimeZone(), is("Asia/Shanghai"));
         assertThat(updated.getScheduleConf().getBlockType(), is(BlockType.WAIT_PREDECESSOR));
+    }
+
+    @Test
+    public void getTaskWithDependencies_shouldSuccess() {
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(5, "0>>1;1>>2;2>>3;3>>4");
+        for (Task task : tasks) {
+            taskDao.create(task);
+        }
+        TaskWithDependenciesVO result1 = taskService.getTaskWithDependencies(tasks.get(2).getId(), 1, -1);
+        MatcherAssert.assertThat(result1.getTasks().size(), is(4));
+        TaskWithDependenciesVO result2 = taskService.getTaskWithDependencies(tasks.get(2).getId(), -1, 1);
+        MatcherAssert.assertThat(result2.getTasks().size(), is(4));
     }
 }

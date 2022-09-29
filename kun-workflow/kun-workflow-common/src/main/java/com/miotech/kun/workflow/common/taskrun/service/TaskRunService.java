@@ -227,6 +227,45 @@ public class TaskRunService {
         return new TaskRunDAGVO(nodes, edges);
     }
 
+    public TaskRunWithDependenciesVO getTaskRunWithDependencies(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        Preconditions.checkArgument(upstreamLevel == -1 || upstreamLevel >= 0, "upstream level should be non negative or -1 denoting all");
+        Preconditions.checkArgument(downstreamLevel == -1 || downstreamLevel >= 0, "downstream level should be non negative or -1 denoting all");
+        TaskRun taskRun = findTaskRun(taskRunId);
+        List<TaskRun> result = new ArrayList<>();
+        result.add(taskRun);
+        if (upstreamLevel == -1) {
+            List<Long> upstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId);
+            result.addAll(taskRunDao.fetchTaskRunsByIds(upstreamTaskRunIds)
+                    .stream()
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toList()));
+        } else if (upstreamLevel > 0) {
+            result.addAll(taskRunDao.fetchUpstreamTaskRunsById(taskRunId, upstreamLevel, false));
+        }
+
+        if (downstreamLevel == -1) {
+            List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
+            result.addAll(taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
+                    .stream()
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toList()));
+        } else if (downstreamLevel > 0) {
+            result.addAll(taskRunDao.fetchDownstreamTaskRunsById(taskRunId, downstreamLevel, false));
+        }
+        List<TaskRunVO> taskRuns = result.stream()
+                .map(this::convertToVOWithoutAttempt)
+                .collect(Collectors.toList());
+        List<TaskRunDependencyVO> dependencies = result.stream()
+                .flatMap(x -> x.getDependentTaskRunIds().stream()
+                        .map(t -> new TaskRunDependencyVO(x.getId(), t)))
+                .collect(Collectors.toList());
+
+        return new TaskRunWithDependenciesVO(taskRuns, dependencies);
+    }
+
+
     public TaskRunGanttChartVO getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, TimeType timeType) {
         Set<TaskRunStatus> status = ImmutableSet.of(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED, TaskRunStatus.ABORTED, TaskRunStatus.RUNNING);
         List<String> scheduleType = ImmutableList.of("SCHEDULED");

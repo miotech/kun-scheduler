@@ -660,6 +660,23 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         return workflowClient.restartTaskRun(taskRunId);
     }
 
+    public List<TaskDefinition> fetchUpstreamTaskDefinition(Long taskDefinitionId) {
+        List<Long> upstreamTaskDefinitionIds = taskRelationDao.fetchByDownstreamId(taskDefinitionId)
+                .stream()
+                .map(TaskRelation::getUpstreamId)
+                .collect(Collectors.toList());
+        return findByDefIds(upstreamTaskDefinitionIds);
+    }
+
+    public List<TaskDefinition> fetchDownstreamTaskDefinition(Long taskDefinitionId) {
+        List<Long> downstreamTaskDefinitionIds = taskRelationDao.fetchByUpstreamId(taskDefinitionId)
+                .stream()
+                .map(TaskRelation::getDownstreamId)
+                .collect(Collectors.toList());
+        return findByDefIds(downstreamTaskDefinitionIds);
+    }
+
+
     public TaskDefinitionVO convertToVO(TaskDefinition taskDefinition) {
         Map<Long, Boolean> commitStatus = taskCommitService.getLatestCommitStatus(
                 Collections.singletonList(taskDefinition.getDefinitionId()));
