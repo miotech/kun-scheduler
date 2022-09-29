@@ -44,7 +44,7 @@ const MemoryUsageLineChart: React.FC<Props> = ({ data }) => {
       },
       yAxis: [
         {
-          name: `${memoryUsageTxt}(MB)`,
+          name: `${memoryUsageTxt}(MB-seconds)`,
           type: 'value',
         },
         {
