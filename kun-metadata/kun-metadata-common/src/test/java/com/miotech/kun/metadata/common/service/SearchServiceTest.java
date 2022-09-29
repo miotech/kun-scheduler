@@ -458,6 +458,7 @@ class SearchServiceTest extends DatabaseTestBase {
         assertThat(searchedInfoList.size(), is(1));
     }
 
+
     @Test
     void test_search_resource_attribute_list_like_serach() {
         ResourceType resourceType = ResourceType.REF_TABLE;
@@ -514,6 +515,32 @@ class SearchServiceTest extends DatabaseTestBase {
         UniversalSearchRequest searchReq = MockSearchFactory.mockUniversalSearchRequest(Sets.newHashSet(ResourceType.REF_TABLE), String.valueOf(l), Sets.newHashSet(SearchContent.values()), null, false);
         UniversalSearchInfo search = searchService.search(searchReq);
         System.out.println(search);
+    }
+
+    @Test
+    void test_search_data_status_update() {
+        Long gid = 1L;
+        ResourceType resourceType = ResourceType.REF_TABLE;
+        List<Map<Long, String>> glossiesInfo = Lists.newArrayList();
+        glossiesInfo.add(Collections.singletonMap(IdGenerator.getInstance().nextId(), "data ref_test1"));
+        glossiesInfo.add(Collections.singletonMap(IdGenerator.getInstance().nextId(), "test_search_resource"));
+        RefTableResourceAttribute ra1 = MockSearchFactory.mockRefTableResourceAttribute(glossiesInfo, "zhangsan");
+        SearchedInfo si1 = MockSearchFactory.mockSearchedInfo(gid, "name", resourceType, "description", ra1, false);
+        searchService.saveOrUpdate(si1);
+        ResourceAttributeInfoRequest request = MockSearchFactory.mockResourceAttributeInfoRequest(resourceType, "glossaries", null, false);
+        List<String> glossies = searchService.fetchResourceAttributeList(request);
+        Assertions.assertTrue(CollectionUtils.isNotEmpty(glossies));
+        assertThat(glossies.size(), is(1));
+        UniversalSearchRequest searchReq = MockSearchFactory.mockUniversalSearchRequest(Sets.newHashSet(ResourceType.REF_TABLE), "test", Sets.newHashSet(SearchContent.values()), null, false);
+        UniversalSearchInfo search = searchService.search(searchReq);
+        List<SearchedInfo> searchedInfoList = search.getSearchedInfoList();
+        Assertions.assertTrue(CollectionUtils.isNotEmpty(searchedInfoList));
+        assertThat(searchedInfoList.size(), is(1));
+        SearchedInfo si1_delete = MockSearchFactory.mockSearchedInfo(gid, "name", resourceType, "description", ra1, true);
+        searchService.saveOrUpdate(si1_delete);
+        UniversalSearchInfo search_delete = searchService.search(searchReq);
+        assertThat(search_delete.getTotalCount(), is(0));
+        Assertions.assertTrue(CollectionUtils.isEmpty(search_delete.getSearchedInfoList()));
 
     }
 }

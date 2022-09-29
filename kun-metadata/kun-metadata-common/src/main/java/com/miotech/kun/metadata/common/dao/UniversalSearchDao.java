@@ -185,7 +185,7 @@ public class UniversalSearchDao {
     }
 
     public void update(SearchedInfo searchedInfo) {
-        ImmutableList<String> setOptions = ImmutableList.of(COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME);
+        ImmutableList<String> setOptions = ImmutableList.of(COLUMN_NAME, COLUMN_DESCRIPTION, COLUMN_RESOURCE_ATTRIBUTE, COLUMN_UPDATE_TIME, COLUMN_DELETED);
         ImmutableList<String> options = ImmutableList.of(COLUMN_GID, COLUMN_RESOURCE_TYPE);
         OffsetDateTime now = DateTimeUtils.now();
         OffsetDateTime updateTime = Objects.isNull(searchedInfo.getUpdateTime()) ? now : searchedInfo.getUpdateTime();
@@ -194,6 +194,7 @@ public class UniversalSearchDao {
                 StringUtils.stripToEmpty(searchedInfo.getDescription()),
                 JSONUtils.toJsonString(searchedInfo.getResourceAttribute()),
                 updateTime,
+                searchedInfo.isDeleted(),
                 searchedInfo.getGid(),
                 searchedInfo.getResourceType().name());
 
