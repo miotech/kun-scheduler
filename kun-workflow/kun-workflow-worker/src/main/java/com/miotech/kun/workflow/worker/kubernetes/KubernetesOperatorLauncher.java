@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.worker.kubernetes;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -97,6 +98,14 @@ public class KubernetesOperatorLauncher {
         appender.start();
 
         rootLogger.addAppender(appender);
+
+        rootLogger.setLevel(Level.INFO);
+        rootLogger.addAppender(appender);
+
+        ch.qos.logback.classic.Logger kunLogger
+                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun");
+        kunLogger.setLevel(Level.DEBUG);
+
     }
 
     private static String trimPrefix(String logPath) {
