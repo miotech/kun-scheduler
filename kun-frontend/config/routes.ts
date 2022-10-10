@@ -22,7 +22,7 @@ export const appRoutes = [
         icon: 'LineChartOutlined',
         menuDisplay: true,
         showChildren: false,
-        breadcrumbLink: true,
+        showSubHeader: false,
         routes: [
           {
             title: 'common.pageTitle.monitoringDashboard',

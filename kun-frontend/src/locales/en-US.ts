@@ -573,7 +573,7 @@ export default {
   'taskRun.skip': 'Skip Task',
   'taskRun.property.attempt.jumpToLatest': 'Jump to latest attempt',
   'monitoringDashboard.title': 'Monitoring Dashboard',
-  'monitoringDashboard.dataDiscovery.title': 'Data Discovery',
+  'monitoringDashboard.dataKanban.title': 'Data Kanban',
   'monitoringDashboard.dataDiscovery.coveredRatio': 'Coverage',
   'monitoringDashboard.dataDiscovery.longExistingFailedCaseCount': 'Count of Long-existing Failed Cases',
   'monitoringDashboard.dataDiscovery.passRatio': 'Pass Ratio',

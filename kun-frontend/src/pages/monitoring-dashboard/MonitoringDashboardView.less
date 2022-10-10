@@ -1,6 +1,53 @@
 .View {
-  position: relative;
-  padding: 8px 0;
+  :global {
+    .ant-tabs {
+      overflow: unset;
+    }
+    .ant-tabs > .ant-tabs-nav,
+    .ant-tabs > div > .ant-tabs-nav {
+      height: 55px;
+      padding: 0 17px 0 0;
+      margin: 0;
+      background-color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-top: 1px solid #eeeeee;
+    }
+
+    .ant-tabs-tab {
+      padding: 12px 16px;
+    }
+
+    .ant-tabs-tab:hover .ant-tabs-tab-btn {
+      color: #49a9de;
+    }
+
+    .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+      color: #49a9de;
+      font-size: 18px;
+    }
+
+    .ant-tabs-top > .ant-tabs-nav .ant-tabs-ink-bar {
+      background-color: #49a9de;
+      &::after {
+        content: '';
+        width: 0;
+        height: 0;
+        position: absolute;
+        top: -3px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-style: solid;
+        border-width: 0 10px 10px 10px;
+        border-color: transparent transparent #49a9de transparent;
+      }
+    }
+
+    .ant-tabs-content-holder {
+      padding: 15px 16px 28px;
+    }
+  }
 }
 
 .PrimaryDivision {
@@ -21,10 +68,6 @@
 
 // The floating reload button
 .ReloadBtnWrapper {
-  position: fixed;
-  right: 16px;
-  top: 76px;
-  z-index: 1;
 }
 
 @media (min-width: @screen-xl-min) {

@@ -559,7 +559,7 @@ export default {
   'taskRun.skip': '跳过任务',
   'taskRun.property.attempt.jumpToLatest': '跳转至最新一次运行',
   'monitoringDashboard.title': '数据监控',
-  'monitoringDashboard.dataDiscovery.title': '数据发现',
+  'monitoringDashboard.dataKanban.title': '数据看板',
   'monitoringDashboard.dataDiscovery.coveredRatio': '覆盖率',
   'monitoringDashboard.dataDiscovery.longExistingFailedCaseCount': '长期存在失败用例数',
   'monitoringDashboard.dataDiscovery.passRatio': '通过率',

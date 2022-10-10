@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Layout} from 'antd';
+import { Layout } from 'antd';
 import { IRoute } from 'umi';
 import { KunSpin } from '@/components/KunSpin';
 import { useSelector } from 'react-redux';
@@ -12,7 +12,6 @@ import Sider from '@/components/Sider/Sider';
 import Breadcrumb from '@/components/Breadcrumb/Breadcrumb';
 
 import css from './DefaultLayout.less';
-
 
 const { Content } = Layout;
 
@@ -29,7 +28,7 @@ export default memo(function DefaultLayout({ children, route, asBlock }: Props) 
 
   return (
     <KunSpin
-      asBlock={(typeof asBlock === 'boolean') ? asBlock : false}
+      asBlock={typeof asBlock === 'boolean' ? asBlock : false}
       wrapperClassName={css.spinContainer}
       spinning={isLoading}
       tip={t('common.loading')}
@@ -39,9 +38,9 @@ export default memo(function DefaultLayout({ children, route, asBlock }: Props) 
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
           <Content className={css.content}>
-            <div className="dafault-layout-subheader">
-              <Breadcrumb route={route} />
-            </div>
+            {route.showSubHeader && (
+              <div className="dafault-layout-subheader">{route.showBreadcrumbLink && <Breadcrumb route={route} />}</div>
+            )}
             <div className={css.contentInner}>{children}</div>
           </Content>
         </Layout>
