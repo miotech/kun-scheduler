@@ -2,7 +2,7 @@ import React, { memo, useState, useCallback, useMemo } from 'react';
 import { Modal, message, Skeleton } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { dayjs } from '@/utils/datetime-utils';
-import { DataSource } from '@/rematch/models/dataSettings';
+import { DataSourceInfo } from '@/definitions/DataSource.type';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
@@ -13,8 +13,8 @@ import useFetchPullDataset from '@/hooks/useFetchPullDataset';
 import styles from './DatabaseItem.less';
 
 interface Props {
-  database: DataSource;
-  onClickUpdate: (database: DataSource) => void;
+  database: DataSourceInfo;
+  onClickUpdate: (database: DataSourceInfo) => void;
   onClickDelete: (id: string) => void;
 }
 
@@ -100,7 +100,7 @@ export default memo(function DatabaseItem({ database, onClickDelete, onClickUpda
           <span className={styles.name}>{database.name}</span>
           <span className={styles.dbType}>{database.datasourceType}</span>
         </div>
-        <div className={styles.updateUser}>{`${t('dataSettings.updateUser')}: ${database.update_user}`}</div>
+        <div className={styles.updateUser}>{`${t('dataSettings.updateUser')}: ${database.updateUser}`}</div>
       </div>
 
       <div className={styles.operateArea}>
@@ -109,7 +109,7 @@ export default memo(function DatabaseItem({ database, onClickDelete, onClickUpda
             {pullLoading
               ? t('dataSettings.databaseItem.pulling')
               : t('dataSettings.databaseItem.updatedOn', {
-                  time: watermarkFormatter(database.update_time),
+                  time: watermarkFormatter(database.updateTime),
                 })}
             {pullProcessInfo}
           </span>

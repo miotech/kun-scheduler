@@ -6,17 +6,20 @@ import {
 } from '@/definitions/TaskTemplate.type';
 import { Input, Select } from 'antd';
 import { DataSourceSingleSelect } from '@/components/DataSourceSelect';
+import { DataSourceConnectionSelect } from '@/components/DataSourceConnectionSelect';
 import { KeyValueTable } from '@/components/KeyValueTable/KeyValueTable';
 import StringListInput from '@/components/StringListInput';
 import { SparkSQLEditor } from '@/components/CodeEditor';
+import { FormInstance } from 'antd/es/form';
 
 /**
  * Generate form component by given parameter display type
  * @param parameter
  * @param props
  */
-export function formComponentFactory(parameter: DisplayParameter, props: any) {
+export function formComponentFactory(parameter: DisplayParameter, props: any, form: FormInstance) {
   const type: ParameterDisplayType | string = parameter.type || '';
+  const name: string = parameter.name || '';
   switch (type) {
     case 'sql':
       return <SparkSQLEditor {...props} />;
@@ -26,6 +29,8 @@ export function formComponentFactory(parameter: DisplayParameter, props: any) {
       return <Input.TextArea style={{ minHeight: '140px' }} {...props} />;
     case 'datasource':
       return <DataSourceSingleSelect {...props} />;
+    case 'connection':
+      return <DataSourceConnectionSelect {...props} form={form} name={name} />;
     case 'keyvalue':
       return <KeyValueTable {...props} />;
     case 'list':

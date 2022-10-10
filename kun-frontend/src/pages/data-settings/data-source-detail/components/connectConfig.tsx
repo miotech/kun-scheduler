@@ -1,69 +1,86 @@
-import React, { memo, useMemo, useState, useEffect } from 'react';
-import { Button, Form, Input, Select, Row, Col, Space, Radio } from 'antd';
+import React, { memo, useMemo, useState } from 'react';
+import { Button, Form, Space } from 'antd';
 import { FormInstance } from 'antd/es/form';
-import { PlusCircleOutlined, DeleteOutlined } from '@ant-design/icons';
-import { HiveTempType, DataSourceType, hiveConnections, otherConnections } from '@/definitions/DataSource.type';
+import { PlusCircleOutlined } from '@ant-design/icons';
+import { HiveTempType, DataSourceType, databaseTemplateMap, DataSourceInfo } from '@/definitions/DataSource.type';
 import { useUpdateEffect } from 'ahooks';
+import useI18n from '@/hooks/useI18n';
 import styles from './connectConfig.less';
 import { UserConnect } from './userConnect';
 import { AdvancedConfig } from './AdvancedConfig';
 
 interface ConnectConfigProps {
   form: FormInstance;
+  AdvancedConfigForm: FormInstance;
+  advancedConfigFormData: Object;
+  setAdvancedConfigFormData: (value: Object) => void;
+  isEditing: boolean;
+  isCreate: boolean;
+  dataSourceInfo: DataSourceInfo;
 }
 export const ConnectConfig = memo((props: ConnectConfigProps) => {
-  const { form } = props;
+  const t = useI18n();
+  const {
+    form,
+    AdvancedConfigForm,
+    isEditing,
+    isCreate,
+    dataSourceInfo,
+    advancedConfigFormData,
+    setAdvancedConfigFormData,
+  } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const datasourceType = Form.useWatch('datasourceType', form);
-  const host = Form.useWatch(['datasourceConfig', 'host'], form);
-  const port = Form.useWatch(['datasourceConfig', 'port'], form);
-  const athenaUrl = Form.useWatch(['datasourceConfig', 'athenaUrl'], form);
+  const host = Form.useWatch(['datasourceConfigInfo', 'host'], form);
+  const port = Form.useWatch(['datasourceConfigInfo', 'port'], form);
+  const athenaUrl = Form.useWatch(['datasourceConfigInfo', 'athenaUrl'], form);
 
-  const templateList = useMemo(() => {
-    if (datasourceType === DataSourceType.HIVE) {
-      return hiveConnections.find(item => item.connection === 'userConnection')?.templateList;
-    }
-    return otherConnections.find(item => item.connection === 'userConnection')?.templateList;
+  const userConnectionRadioList = useMemo(() => {
+    return databaseTemplateMap[datasourceType as DataSourceType]?.find(item => item.connection === 'userConnection')
+      ?.templateList;
   }, [datasourceType]);
 
   useUpdateEffect(() => {
-    const userConnectionListValues = form.getFieldValue(['users', 'datasourceConnection', 'userConnectionList']);
-    const newUserConnectionListValues = userConnectionListValues.map(item => {
-      if (item.connectionType === HiveTempType.ATHENA) {
+    const userConnectionListValues = form.getFieldValue(['datasourceConnection', 'userConnectionList']);
+    const newUserConnectionListValues = userConnectionListValues?.map(item => {
+      if (item?.connectionConfigInfo?.connectionType === HiveTempType.ATHENA) {
         return {
           ...item,
-          athenaUrl
-
+          connectionConfigInfo: {
+            ...item.connectionConfigInfo,
+            athenaUrl,
+          },
         };
       }
       return {
         ...item,
-        host,
-        port
+        connectionConfigInfo: {
+          ...item.connectionConfigInfo,
+          host,
+          port,
+        },
       };
-
     });
-    form.setFieldValue(['users', 'datasourceConnection', 'userConnectionList'], newUserConnectionListValues);
+    form.setFieldValue(['datasourceConnection', 'userConnectionList'], newUserConnectionListValues);
   }, [host, port, athenaUrl]);
+
+  const isEdit = useMemo(() => {
+    return isEditing || isCreate;
+  }, [isEditing, isCreate]);
+
   return (
-    <Form
-      form={form}
-      preserve={false}
-      className={styles.container}
-      labelCol={{ span: 7 }}
-    >
+    <Form form={form} className={styles.container} labelCol={{ span: 8 }}>
       <div className={styles.header}>
-        <div className={styles.title}>连接配置</div>
+        <div className={styles.title}>{t('dataSettings.connectConfig')}</div>
         <div className={styles.buttonGroup}>
-          <Space size='small'>
-            <Button type="link" onClick={() => setIsModalOpen(true)}>高级配置</Button>
+          <Space size="small">
+            <Button type="link" disabled={!datasourceType} onClick={() => setIsModalOpen(true)}>
+              {t('dataSettings.advancedConfig')}
+            </Button>
           </Space>
         </div>
       </div>
-      <Form.List
-        name={['users', 'datasourceConnection', 'userConnectionList']}
-        initialValue={[{ connectionType: HiveTempType.HIVE_SERVER, host, port, athenaUrl }]}
-      >
+      <Form.List name={['datasourceConnection', 'userConnectionList']}>
         {(fields, { add, remove }) => (
           <>
             {fields.map(({ key, name, ...restField }) => {
@@ -73,33 +90,43 @@ export const ConnectConfig = memo((props: ConnectConfigProps) => {
                     form={form}
                     name={name}
                     restField={restField}
-                    templateList={templateList}
+                    isEditing={isEditing}
+                    isCreate={isCreate}
+                    dataSourceInfo={dataSourceInfo}
+                    userConnectionRadioList={userConnectionRadioList}
                     remove={remove}
                     fieldsLength={fields.length}
                   />
-                </div>);
+                </div>
+              );
             })}
             <div className={styles.footer}>
               <Button
                 type="link"
-                onClick={() => add({ connectionType: HiveTempType.HIVE_SERVER, host, port, athenaUrl })}
+                onClick={() => add({ connectionConfigInfo: { host, port, athenaUrl } })}
                 shape="circle"
-                disabled={fields.length >= 5}
-                icon={<PlusCircleOutlined />} >
-                添加连接
+                disabled={fields.length >= 5 || !datasourceType || !isEdit}
+                icon={<PlusCircleOutlined />}
+              >
+                {t('dataSettings.connectConfig.addButton')}
               </Button>
-              <div className={styles.remark}>
-                最多添加5个
-              </div>
+              <div className={styles.remark}>{t('dataSettings.connectConfig.addNotice')}</div>
             </div>
           </>
         )}
       </Form.List>
-      <AdvancedConfig
-        form={form}
-        isModalOpen={isModalOpen}
-        setIsModalOpen={setIsModalOpen}
-      />
+      {isModalOpen && (
+        <AdvancedConfig
+          form={form}
+          isEdit={isEdit}
+          advancedConfigFormData={advancedConfigFormData}
+          AdvancedConfigForm={AdvancedConfigForm}
+          isModalOpen={isModalOpen}
+          dataSourceInfo={dataSourceInfo}
+          setIsModalOpen={setIsModalOpen}
+          setAdvancedConfigFormData={setAdvancedConfigFormData}
+        />
+      )}
     </Form>
   );
 });

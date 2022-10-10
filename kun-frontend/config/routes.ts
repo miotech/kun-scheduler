@@ -317,13 +317,20 @@ export const appRoutes = [
                 wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
-                title: '详情',
+                title: 'common.pageTitle.dataSettingDetail',
                 path: './detail',
                 exact: true,
                 component: 'data-settings/data-source-detail/index',
                 wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
-              }
-            ]
+              },
+              {
+                title: 'common.pageTitle.dataSettingAdd',
+                path: './add',
+                exact: true,
+                component: 'data-settings/data-source-detail/index',
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+            ],
           },
           {
             title: 'common.pageTitle.variableSettings',

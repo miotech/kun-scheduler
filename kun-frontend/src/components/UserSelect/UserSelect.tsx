@@ -10,12 +10,14 @@ interface OwnProps {
   value?: string | string[];
   onChange?: (nextUserValue: string | string[]) => any;
   mode?: string;
+  disabled?: boolean;
+  userDisabled?: string;
 }
 
 type Props = SelectProps<string | string[]> & OwnProps;
 
 export const UserSelect: FunctionComponent<Props> = props => {
-  const { value, onChange, placeholder, mode, ...restProps } = props;
+  const { value, onChange, placeholder, mode, disabled, userDisabled, ...restProps } = props;
   const t = useI18n();
 
   const { data: respData, loading } = useRequest(fetchUsersList, {
@@ -29,15 +31,20 @@ export const UserSelect: FunctionComponent<Props> = props => {
   const options = useMemo(
     () =>
       users.map(user => (
-        <Select.Option key={user.id} value={user.username} label={user.username}>
+        <Select.Option
+          key={user.id}
+          value={user.username}
+          disabled={userDisabled && user.username === userDisabled}
+          label={user.username}
+        >
           {user.username}
         </Select.Option>
       )),
-    [users],
+    [users, userDisabled],
   );
   return (
     <Select
-      disabled={props.disabled || !users.length}
+      disabled={disabled || !users.length}
       showSearch
       optionFilterProp="label"
       notFoundContent={loading ? <KunSpin size="small" /> : null}

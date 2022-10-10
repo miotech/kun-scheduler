@@ -4,7 +4,6 @@ import moment from 'moment';
 import SafeUrlAssembler from 'safe-url-assembler';
 import { Link } from 'umi';
 import useI18n from '@/hooks/useI18n';
-import useCronSemanticText from '@/hooks/useCronSemanticText';
 import { KunSpin } from '@/components/KunSpin';
 import LogUtils from '@/utils/logUtils';
 import { DeployedTask } from '@/definitions/DeployedTask.type';
@@ -14,7 +13,24 @@ import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { UsernameText } from '@/components/UsernameText';
 import TextContainer from '@/components/TextContainer/TextContainer';
 import useRedux from '@/hooks/useRedux';
+import cronstrue from 'cronstrue/i18n';
 import styles from './DeployedTasksTable.less';
+
+export interface Options {
+  throwExceptionOnParseError?: boolean;
+  verbose?: boolean;
+  dayOfWeekStartIndexZero?: boolean;
+  use24HourTimeFormat?: boolean;
+  locale?: string;
+}
+export function CronSemanticText(cronExpression: string, lang: string, options?: Options): string {
+  return cronstrue.toString(cronExpression, {
+    locale: lang,
+    use24HourTimeFormat: true,
+    throwExceptionOnParseError: false,
+    ...options,
+  });
+}
 
 interface DeployedTasksTableProps {
   selectedTask: DeployedTask | null;
@@ -32,7 +48,7 @@ export const DeployedTasksTable: FC<DeployedTasksTableProps> = memo((props) => {
     selector: { loading, pageNum, pageSize, total, tableData },
     dispatch,
   } = useRedux(s => ({
-    tableData: s.scheduledTasks.deployedTasks;
+    tableData: s.scheduledTasks.deployedTasksTableData,
     loading: s.loading.effects.scheduledTasks.fetchScheduledTasks,
     pageNum: s.scheduledTasks.filters.pageNum,
     pageSize: s.scheduledTasks.filters.pageSize,
@@ -62,64 +78,67 @@ export const DeployedTasksTable: FC<DeployedTasksTableProps> = memo((props) => {
   );
 
   const columns = useMemo<ColumnProps<DeployedTask>[]>(
-    () => [
-      // Column: Deployed task name
-      {
-        title: t('scheduledTasks.property.name'),
-        dataIndex: 'name',
-        key: 'name',
-        render: (txt: string, record: DeployedTask) => {
-          return (
-            <Link
-              to={SafeUrlAssembler()
-                .template('/operation-center/scheduled-tasks/:id')
-                .param({ id: record.id })
-                .toString()}
-            >
-              <TextContainer maxWidth={500}>{txt}</TextContainer>
-            </Link>
-          );
+    () => {
+      const lang =  t('common.cronstrue.lang');
+      return [
+        // Column: Deployed task name
+        {
+          title: t('scheduledTasks.property.name'),
+          dataIndex: 'name',
+          key: 'name',
+          render: (txt: string, record: DeployedTask) => {
+            return (
+              <Link
+                to={SafeUrlAssembler()
+                  .template('/operation-center/scheduled-tasks/:id')
+                  .param({ id: record.id })
+                  .toString()}
+              >
+                <TextContainer maxWidth={500}>{txt}</TextContainer>
+              </Link>
+            );
+          },
         },
-      },
-      // Column: Owner
-      {
-        title: t('scheduledTasks.property.owner'),
-        dataIndex: 'owner',
-        key: 'owner',
-        render: (txt: string) => (txt ? <UsernameText owner={txt} /> : ''),
-      },
-      // Column: Last run time
-      {
-        title: t('scheduledTasks.property.lastRunTime'),
-        dataIndex: ['latestTaskRun', 'startAt'],
-        key: 'latestRunTime',
-        render: (txt: string) => (txt ? moment(txt).format('YYYY-MM-DD HH:mm:ss') : '-'),
-        width: 200,
-      },
-      // Column: Last run status
-      {
-        title: t('scheduledTasks.property.lastRunStatus'),
-        dataIndex: ['latestTaskRun', 'status'],
-        key: 'latestRunStatus',
-        render: (txt: RunStatusEnum) => (txt ? <StatusText status={txt} /> : '-'),
-        width: 120,
-      },
-      // Column: Cron expression
-      {
-        title: t('scheduledTasks.property.cronExpression'),
-        dataIndex: ['taskPayload', 'scheduleConfig', 'cronExpr'],
-        key: 'cronExpr',
-        width: 200,
-        render: (txt: string) => {
-          return (
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            <Tooltip >
-              <Text code>{txt}</Text>
-            </Tooltip>
-          );
+        // Column: Owner
+        {
+          title: t('scheduledTasks.property.owner'),
+          dataIndex: 'owner',
+          key: 'owner',
+          render: (txt: string) => (txt ? <UsernameText owner={txt} /> : ''),
         },
-      },
-    ],
+        // Column: Last run time
+        {
+          title: t('scheduledTasks.property.lastRunTime'),
+          dataIndex: ['latestTaskRun', 'startAt'],
+          key: 'latestRunTime',
+          render: (txt: string) => (txt ? moment(txt).format('YYYY-MM-DD HH:mm:ss') : '-'),
+          width: 200,
+        },
+        // Column: Last run status
+        {
+          title: t('scheduledTasks.property.lastRunStatus'),
+          dataIndex: ['latestTaskRun', 'status'],
+          key: 'latestRunStatus',
+          render: (txt: RunStatusEnum) => (txt ? <StatusText status={txt} /> : '-'),
+          width: 120,
+        },
+        // Column: Cron expression
+        {
+          title: t('scheduledTasks.property.cronExpression'),
+          dataIndex: ['taskPayload', 'scheduleConfig', 'cronExpr'],
+          key: 'cronExpr',
+          width: 200,
+          render: (txt: string) => {
+            return (
+              // eslint-disable-next-line react-hooks/rules-of-hooks
+              <Tooltip title={CronSemanticText(txt, lang)}>
+                <Text code>{txt}</Text>
+              </Tooltip>
+            );
+          },
+        },
+      ];
+    },
     [t]
   );
 

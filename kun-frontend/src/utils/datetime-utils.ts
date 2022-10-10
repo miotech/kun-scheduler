@@ -24,7 +24,7 @@ if (!window.dayjs) {
 // @ts-ignore
 export const dayjs = window.dayjs as typeof _dayjs;
 
-export function dateFormatter(value: number | string) {
+export function dateFormatter(value: number | string | undefined) {
   if (!value) {
     return '-';
   }

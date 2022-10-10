@@ -38,7 +38,7 @@ const shouldLabelColonHidden = (displayParam: DisplayParameter) => {
 
 export const ParamConfig: React.FC<SchedulingConfigProps> = props => {
   // const t = useI18n();
-  const { initTaskDefinition, taskTemplate } = props;
+  const { initTaskDefinition, taskTemplate, form } = props;
 
   // maps each display parameter to form item
   const paramItems = (taskTemplate?.displayParameters || []).map(displayParam => {
@@ -52,6 +52,7 @@ export const ParamConfig: React.FC<SchedulingConfigProps> = props => {
             label: renderLabel(displayParam, initTaskDefinition),
             colon: !shouldLabelColonHidden(displayParam),
           }}
+          form={form}
         />
       </Row>
     );

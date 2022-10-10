@@ -1,14 +1,12 @@
 import {
   searchDataBasesService,
-  addDatabaseService,
-  updateDatabaseService,
   pullDatasetsFromDatabaseService,
   deleteDatabaseService,
   DataSourcePullProcessVO,
   fetchLatestPullProcessesOfDataSources,
 } from '@/services/dataSettings';
 import { Pagination } from '@/definitions/common-types';
-import { Watermark } from '@/definitions/Dataset.type';
+import { DataSourceInfo } from '@/definitions/DataSource.type';
 import { RootDispatch, RootState } from '../store';
 
 export enum DatabaseTypeItemFieldItemFormat {
@@ -43,31 +41,12 @@ export type DatabaseInfomation = {
   };
 };
 
-export interface DatasourceInfo {
-  datasourceType: string | null;
-  name: string;
-  information: DatabaseInfomation;
-  tags: string[];
-}
-
-export interface UpdateDatasourceInfo extends DatasourceInfo {
-  id: string;
-}
-
-export interface DataSource extends UpdateDatasourceInfo {
-  create_user: string;
-  create_time: number;
-  update_user: string;
-  update_time: number;
-  highWatermark: Watermark;
-}
-
 export interface DataSettingsState {
   searchLoading: boolean;
   searchContent: string;
   pagination: Pagination;
-  dataSourceList: DataSource[];
-  currentDatabase: DataSource | null;
+  dataSourceList: DataSourceInfo[];
+  currentDatabase: DataSourceInfo | null;
   pullProcesses: Record<string, DataSourcePullProcessVO>;
   pullProcessesIsLoading: boolean;
 }
@@ -137,7 +116,7 @@ export const dataSettings = {
             if (resp) {
               const { datasources, pageNumber, pageSize, totalCount } = resp;
               dispatch.dataSettings.batchUpdateState({
-                dataSourceList: datasources as DataSource[],
+                dataSourceList: datasources as DataSourceInfo[],
                 pagination: {
                   pageSize,
                   pageNumber,
@@ -152,29 +131,6 @@ export const dataSettings = {
         }
       },
 
-      async addDatabase(newDatabase: DatasourceInfo) {
-        try {
-          const resp = await addDatabaseService(newDatabase);
-          if (resp) {
-            return resp;
-          }
-        } catch (e) {
-          // do nothing
-        }
-        return null;
-      },
-
-      async updateDatabase(newDatabase: UpdateDatasourceInfo) {
-        try {
-          const resp = await updateDatabaseService(newDatabase);
-          if (resp) {
-            return resp;
-          }
-        } catch (e) {
-          // do nothing
-        }
-        return null;
-      },
 
       async pullDatasetsFromDatabase(id: string) {
         try {

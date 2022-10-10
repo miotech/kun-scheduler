@@ -14,7 +14,6 @@ export enum DataSourceType {
 
 export const dataSourceList = Object.values(DataSourceType);
 
-
 export enum HiveTempType {
   HIVE_SERVER = 'HIVE_SERVER',
   HIVE_METASTORE = 'HIVE_METASTORE',
@@ -22,128 +21,123 @@ export enum HiveTempType {
   S3 = 'S3',
   ATHENA = 'ATHENA',
   HDFS = 'HDFS',
+  POSTGRESQL = 'POSTGRESQL',
+  MYSQL = 'MYSQL',
+  ARANGO = 'ARANGO',
+  MONGODB = 'MONGODB',
+  ELASTICSEARCH = 'ELASTICSEARCH',
 }
 
-export const hiveConnectionTemplateList = [
-  {
-    tempType: HiveTempType.HIVE_SERVER,
-    fieldList: [
-      {
-        field: 'host',
-        type: 'string',
-        disabled: true,
-      },
-      {
-        field: 'port',
-        type: 'string',
-        disabled: true,
-      },
-      {
-        field: 'username',
-        type: 'string',
-      },
-      {
-        field: 'password',
-        type: 'password',
-      },
-    ],
-  },
-  {
-    tempType: HiveTempType.HIVE_METASTORE,
-    fieldList: [
-      {
-        field: 'metaStoreUris',
-        type: 'string',
-      },
-    ],
-  },
-  {
-    tempType: HiveTempType.GLUE,
-    fieldList: [
-      {
-        field: 'glueAccessKey',
-        type: 'string',
-      },
-      {
-        field: 'glueSecretKey',
-        type: 'string',
-      },
-      {
-        field: 'glueRegion',
-        type: 'string',
-      },
-    ],
-  },
-  {
-    tempType: HiveTempType.S3,
-    fieldList: [
-      {
-        field: 's3AccessKey',
-        type: 'string',
-      },
-      {
-        field: 's3SecretKey',
-        type: 'string',
-      },
-      {
-        field: 's3Region',
-        type: 'string',
-      },
-    ],
-  },
-  {
-    tempType: HiveTempType.ATHENA,
-    fieldList: [
-      {
-        field: 'athenaUrl',
-        type: 'string',
-        disabled: true,
-      },
-      {
-        field: 'athenaUsername',
-        type: 'string',
-      },
-      {
-        field: 'athenaPassword',
-        type: 'password',
-      },
-    ],
-  },
-  {
-    tempType: HiveTempType.HDFS,
-    fieldList: [
-      {
-        field: 'hdfsUrl',
-        type: 'string',
-      },
-      {
-        field: 'user',
-        type: 'string',
-      },
-    ],
-  },
-];
-
-export const otherFieldList = [
+const commonFieldList = [
   {
     field: 'host',
     type: 'string',
     disabled: true,
+    required: true,
   },
   {
     field: 'port',
     type: 'string',
     disabled: true,
+    required: true,
   },
   {
     field: 'username',
     type: 'string',
+    required: false,
   },
   {
     field: 'password',
     type: 'password',
+    encryption: true,
+    required: false,
   },
 ];
+
+export const FieldListMap = {
+  [HiveTempType.HIVE_SERVER]: commonFieldList,
+  [HiveTempType.HIVE_METASTORE]: [
+    {
+      field: 'metaStoreUris',
+      type: 'string',
+      required: false,
+    },
+  ],
+  [HiveTempType.GLUE]: [
+    {
+      field: 'glueAccessKey',
+      type: 'string',
+      encryption: true,
+      required: false,
+    },
+    {
+      field: 'glueSecretKey',
+      type: 'string',
+      encryption: true,
+      required: false,
+    },
+    {
+      field: 'glueRegion',
+      type: 'string',
+      required: false,
+    },
+  ],
+  [HiveTempType.S3]: [
+    {
+      field: 's3AccessKey',
+      type: 'string',
+      encryption: true,
+      required: false,
+    },
+    {
+      field: 's3SecretKey',
+      type: 'string',
+      encryption: true,
+      required: false,
+    },
+    {
+      field: 's3Region',
+      type: 'string',
+      required: false,
+    },
+  ],
+  [HiveTempType.ATHENA]: [
+    {
+      field: 'athenaUrl',
+      type: 'string',
+      disabled: true,
+      required: true,
+    },
+    {
+      field: 'athenaUsername',
+      type: 'string',
+      required: false,
+    },
+    {
+      field: 'athenaPassword',
+      type: 'password',
+      encryption: true,
+      required: false,
+    },
+  ],
+  [HiveTempType.HDFS]: [
+    {
+      field: 'hdfsUrl',
+      type: 'string',
+      required: false,
+    },
+    {
+      field: 'user',
+      type: 'string',
+      required: false,
+    },
+  ],
+  [HiveTempType.POSTGRESQL]: commonFieldList,
+  [HiveTempType.MYSQL]: commonFieldList,
+  [HiveTempType.ARANGO]: commonFieldList,
+  [HiveTempType.MONGODB]: commonFieldList,
+  [HiveTempType.ELASTICSEARCH]: commonFieldList,
+};
 
 export interface ConnectionItem {
   connection: string;
@@ -169,63 +163,158 @@ export const hiveConnections: ConnectionItem[] = [
   },
 ];
 
-export const otherConnections = [
+export const mysqlConnections: ConnectionItem[] = [
   {
     connection: 'userConnection',
-    templateList: [HiveTempType.HIVE_SERVER],
+    templateList: [HiveTempType.MYSQL],
+  },
+  {
+    connection: 'dataConnection',
+    templateList: [HiveTempType.MYSQL],
+  },
+  {
+    connection: 'metadataConnection',
+    templateList: [HiveTempType.MYSQL],
+  },
+  {
+    connection: 'storageConnection',
+    templateList: [HiveTempType.MYSQL],
   },
 ];
 
+export const postgresqlConnections: ConnectionItem[] = [
+  {
+    connection: 'userConnection',
+    templateList: [HiveTempType.POSTGRESQL],
+  },
+  {
+    connection: 'dataConnection',
+    templateList: [HiveTempType.POSTGRESQL],
+  },
+  {
+    connection: 'metadataConnection',
+    templateList: [HiveTempType.POSTGRESQL],
+  },
+  {
+    connection: 'storageConnection',
+    templateList: [HiveTempType.POSTGRESQL],
+  },
+];
+
+export const arangoConnections: ConnectionItem[] = [
+  {
+    connection: 'userConnection',
+    templateList: [HiveTempType.ARANGO],
+  },
+  {
+    connection: 'dataConnection',
+    templateList: [HiveTempType.ARANGO],
+  },
+  {
+    connection: 'metadataConnection',
+    templateList: [HiveTempType.ARANGO],
+  },
+  {
+    connection: 'storageConnection',
+    templateList: [HiveTempType.ARANGO],
+  },
+];
+
+export const mongodbConnections: ConnectionItem[] = [
+  {
+    connection: 'userConnection',
+    templateList: [HiveTempType.MONGODB],
+  },
+  {
+    connection: 'dataConnection',
+    templateList: [HiveTempType.MONGODB],
+  },
+  {
+    connection: 'metadataConnection',
+    templateList: [HiveTempType.MONGODB],
+  },
+  {
+    connection: 'storageConnection',
+    templateList: [HiveTempType.MONGODB],
+  },
+];
+
+export const elasticsearchConnections: ConnectionItem[] = [
+  {
+    connection: 'userConnection',
+    templateList: [HiveTempType.ELASTICSEARCH],
+  },
+  {
+    connection: 'dataConnection',
+    templateList: [HiveTempType.ELASTICSEARCH],
+  },
+  {
+    connection: 'metadataConnection',
+    templateList: [HiveTempType.ELASTICSEARCH],
+  },
+  {
+    connection: 'storageConnection',
+    templateList: [HiveTempType.ELASTICSEARCH],
+  },
+];
+
+export const databaseTemplateMap = {
+  [DataSourceType.HIVE]: hiveConnections,
+  [DataSourceType.MYSQL]: mysqlConnections,
+  [DataSourceType.POSTGRESQL]: postgresqlConnections,
+  [DataSourceType.ARANGO]: arangoConnections,
+  [DataSourceType.MONGODB]: mongodbConnections,
+  [DataSourceType.ELASTICSEARCH]: elasticsearchConnections,
+};
 export interface DatasourceConfig {
   port?: number;
   host?: string;
-  athenaUrl?: string
+  athenaUrl?: string;
 }
 
-export interface SecurityInfo {
-
-}
+export interface SecurityInfo {}
 
 export interface ConnectionConfigInfo {
-
+  connectionType: HiveTempType;
 }
 export interface UserConnection {
-  id: string,
-  datasourceId: string,
-  connScope: string,
-  connectionConfigInfo: ConnectionConfigInfo,
-  description: string,
-  updateUser?: string,
-  createUser?: string,
-  createTime?: string,
-  securityInfo: SecurityInfo,
-  securityUserList: string[]
+  id: string;
+  name: string;
+  connScope: string;
+  connectionConfigInfo: ConnectionConfigInfo;
+  description: string;
+  updateUser?: string;
+  updateTime?: string;
+  createUser?: string;
+  createTime?: string;
+  securityInfo: SecurityInfo;
+  securityUserList: string[];
 }
 
-export interface DataConnection {
+export interface DataConnection {}
 
-}
+export interface MetadataConnection {}
 
-export interface MetadataConnection {
-
-}
-
-export interface StorageConnection {
-
-}
+export interface StorageConnection {}
 
 export interface DatasourceConnection {
-  userConnection: UserConnection,
-  dataConnection: DataConnection,
-  metadataConnection: MetadataConnection,
-  storageConnection: StorageConnection,
+  userConnectionList: UserConnection[];
+  dataConnection: DataConnection;
+  metadataConnection: MetadataConnection;
+  storageConnection: StorageConnection;
 }
 export interface DataSourceForm {
-  datasourceType: DataSourceType,
+  datasourceType: DataSourceType;
   name: string;
-  datasourceConnection: DatasourceConnection,
-  datasourceConfig: DatasourceConfig,
-  tags: string[],
-  createUser: string,
-  createTime: string
+  datasourceConnection: DatasourceConnection;
+  datasourceConfigInfo: DatasourceConfig;
+  tags: string[];
+}
+
+export interface DataSourceInfo extends DataSourceForm {
+  createUser: string;
+  createTime: number;
+  updateUser: string;
+  updateTime: number;
+  id: string;
 }

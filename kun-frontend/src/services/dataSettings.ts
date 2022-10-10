@@ -1,5 +1,5 @@
-import { DataSource, DatasourceInfo, UpdateDatasourceInfo } from '@/rematch/models/dataSettings';
 import { Pagination, Sort } from '@/definitions/common-types';
+import { DataSourceForm, DataSourceInfo } from '@/definitions/DataSource.type';
 
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
@@ -7,7 +7,7 @@ import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { DatasetPullProcessVO } from './datasetDetail';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
-  datasources: DataSource[];
+  datasources: DataSourceInfo[];
 }
 
 export async function searchDataBasesService(search: string, pagination: Pagination) {
@@ -25,16 +25,23 @@ export async function searchDataBasesService(search: string, pagination: Paginat
   });
 }
 
-export async function addDatabaseService(reqBody: DatasourceInfo) {
-  return post<DataSource>('/metadata/datasource/add', {
+export async function getUserConnection(id: string) {
+  return get('/metadata/datasource/user-connection/:id', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function addDatabaseService(reqBody: DataSourceForm) {
+  return post('/metadata/datasource/add', {
     data: reqBody,
     prefix: DEFAULT_API_PREFIX,
   });
 }
 
-export async function updateDatabaseService(reqBody: UpdateDatasourceInfo) {
+export async function updateDatabaseService(reqBody: DataSourceInfo) {
   const { id, ...others } = reqBody;
-  return post<DataSource>('/metadata/datasource/:id/update', {
+  return post('/metadata/datasource/:id/update', {
     pathParams: { id },
     data: others,
     prefix: DEFAULT_API_PREFIX,
@@ -86,6 +93,13 @@ export interface DeleteDatabaseResp {
 
 export async function deleteDatabaseService(id: string) {
   return delet<DeleteDatabaseResp>('/metadata/datasource/:id', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export async function getDatabaseService(id: string) {
+  return get('/metadata/datasource/:id', {
     pathParams: { id },
     prefix: DEFAULT_API_PREFIX,
   });
