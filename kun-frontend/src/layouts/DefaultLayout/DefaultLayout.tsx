@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Layout } from 'antd';
 import { IRoute } from 'umi';
 import { KunSpin } from '@/components/KunSpin';
@@ -21,10 +21,42 @@ interface Props {
   asBlock?: boolean;
 }
 
+const HOME_PATH = '/';
+
+const useRouteMatch = (route: IRoute) => {
+  const matchPath = useSelector((state: RootState) => state.route.currentMatchPath);
+
+  return useMemo(() => {
+    const findRoute = (traceRoute: IRoute, findPath: string): IRoute | undefined => {
+      if (traceRoute.path === findPath) {
+        return traceRoute;
+      }
+
+      const routes = traceRoute.routes ?? [];
+
+      const findedRoute = routes.find(routeItem => {
+        const { path } = routeItem;
+        if (!path || path === HOME_PATH) return false;
+
+        if (findPath.includes(path)) return true;
+
+        return false;
+      });
+
+      if (!findedRoute) return undefined;
+
+      return findRoute(findedRoute, findPath);
+    };
+
+    return findRoute(route, matchPath);
+  }, [matchPath, route]);
+};
+
 export default memo(function DefaultLayout({ children, route, asBlock }: Props) {
   const isLoading = useSelector((state: RootState) => state.user.whoamiLoading);
 
   const t = useI18n();
+  const matchRoute = useRouteMatch(route);
 
   return (
     <KunSpin
@@ -38,8 +70,10 @@ export default memo(function DefaultLayout({ children, route, asBlock }: Props) 
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
           <Content className={css.content}>
-            {route.showSubHeader && (
-              <div className="dafault-layout-subheader">{route.showBreadcrumbLink && <Breadcrumb route={route} />}</div>
+            {!matchRoute?.hiddeSubHeader && (
+              <div className="dafault-layout-subheader">
+                <Breadcrumb route={route} />
+              </div>
             )}
             <div className={css.contentInner}>{children}</div>
           </Content>

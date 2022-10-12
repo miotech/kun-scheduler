@@ -5,8 +5,9 @@ import { ReloadOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 
-import DataDiscoveryBoard from './components/data-discovery-board';
+// import DataDiscoveryBoard from './components/data-discovery-board';
 import DataDevelopmentBoard from './components/data-development-board';
+import { DataKanban } from './components/data-kaban';
 
 import styles from './MonitoringDashboardView.less';
 
@@ -60,7 +61,8 @@ export const MonitoringDashboardView: React.FC<Props> = memo(function Monitoring
     <div id="monitoring-dashboard-view" className={styles.View}>
       <Tabs tabBarExtraContent={{ right: refreshButton }}>
         <TabPane tab={t('monitoringDashboard.dataKanban.title')} key="dataKanban">
-          <DataDiscoveryBoard />
+          {/* <DataDiscoveryBoard /> */}
+          <DataKanban />
         </TabPane>
         <TabPane tab={t('monitoringDashboard.dataDevelopment.title')} key="dataDevelopment">
           <DataDevelopmentBoard />
