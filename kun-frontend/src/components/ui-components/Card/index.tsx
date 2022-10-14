@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card as AntCard, Row, Col, Divider } from 'antd';
-import { cloneDeep } from 'lodash';
 import omitBy from 'lodash/omitBy';
 import { CardProps } from 'antd/es';
 
@@ -15,7 +14,7 @@ interface Props extends CardProps {
 }
 
 const getColProps = (node: React.ReactElement) => {
-  return omitBy(cloneDeep(node?.props || {}), ['chilren', 'className']);
+  return omitBy({ ...(node?.props || {}) }, ['chilren', 'className']);
 };
 
 const renderChildren = (childrens: React.ReactElement[], split?: React.ReactNode, gutter?: number, wrap?: boolean) => {
@@ -50,10 +49,10 @@ const renderChildren = (childrens: React.ReactElement[], split?: React.ReactNode
 };
 
 const Card = ({ title, children, split, gutter, wrap, ...resetProps }: Props) => {
-  const child = Array.isArray(children) ? children : [children];
+  const childrens = Array.isArray(children) ? children : [children];
   return (
     <AntCard title={title} bordered={false} className="miotech-card" {...resetProps}>
-      <Row gutter={split ? 0 : gutter ?? 8}>{renderChildren(child, split, gutter, wrap)}</Row>
+      <Row gutter={split ? 0 : gutter ?? 8}>{renderChildren(childrens, split, gutter, wrap)}</Row>
     </AntCard>
   );
 };
