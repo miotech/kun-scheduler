@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Modal, Upload, message } from 'antd';
 import { CloudUploadOutlined } from '@ant-design/icons';
 import { UploadProps } from 'antd/es/upload/interface';
@@ -13,11 +13,13 @@ interface Props {
   isModalVisible: boolean;
   setIsModalVisible: (value: boolean) => void;
   reUpload?: boolean;
+  versionId?: string;
 }
 const UploadExcel: React.FC<Props> = (props: Props) => {
   const { dispatch } = useRedux(() => {});
   const [referenceData, setReferenceData] = useState<null | ReferenceDataState>();
-  const { isModalVisible, reUpload, setIsModalVisible } = props;
+  const { isModalVisible, reUpload, setIsModalVisible, versionId } = props;
+
   const t = useI18n();
   const i18n = 'dataDiscovery.referenceData.uploadExcel';
   const handleUpload = async () => {
@@ -31,13 +33,16 @@ const UploadExcel: React.FC<Props> = (props: Props) => {
       history.push('/data-discovery/reference-data/table-configration');
     }
   };
+  const uploadAction = useMemo(() => {
+    return versionId ? `/kun/api/v1/rdm/data/reparse/${versionId}` : '/kun/api/v1/rdm/data/parse';
+  }, [versionId]);
 
   const uploadProps: UploadProps = {
     name: 'file',
     accept: '.xlsx, .xls, .csv',
     multiple: false,
     maxCount: 1,
-    action: '/kun/api/v1/rdm/data/parse',
+    action: uploadAction,
     onRemove: () => {
       setReferenceData(null);
     },

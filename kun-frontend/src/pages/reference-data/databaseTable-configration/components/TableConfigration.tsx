@@ -194,6 +194,7 @@ const ReferRenceTable: React.FC<Props> = forwardRef((props, ref) => {
       dataIndex: newIndex,
       primaryKey: false,
       width: 200,
+      editable: true,
       onCell: (record: TableRecord) => ({
         record,
         dataIndex: newIndex,

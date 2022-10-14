@@ -59,6 +59,7 @@ const tansTableColumnsToReq = (tableColumns: TableColumn[]) => {
         name: item.name,
         index: index - 1, // 去除recordNumber这一列
         columnType: item.columnType,
+        editable: item.editable,
       });
     }
   });
@@ -288,7 +289,12 @@ export default function DatabaseTableConfiguration() {
           )}
         </div>
         {isModalVisible && (
-          <UploadModal isModalVisible={isModalVisible} reUpload setIsModalVisible={setIsModalVisible} />
+          <UploadModal
+            isModalVisible={isModalVisible}
+            reUpload
+            versionId={tableConfigDetail?.versionId}
+            setIsModalVisible={setIsModalVisible}
+          />
         )}
       </KunSpin>
     </div>

@@ -56,7 +56,7 @@ export const DeleteContent = (dataIndex: number, deleteColumn: (index: number) =
 export const RenderPrimaryKey = (
   column: TableColumn,
   saveTableColumn: (column: TableColumn) => void,
-  editTable: boolean
+  editTable: boolean,
 ) => {
   const save = (e: any) => {
     saveTableColumn({ ...column, primaryKey: e.target.checked });
@@ -80,7 +80,10 @@ export const RenderDataType = (column: TableColumn, saveTableColumn: (column: Ta
   );
 };
 
-export const HeaderRow: React.FC = ({ ...props }, { saveTableColumn, deleteColumn, editTable, hasPublishedVersion, originColumns }) => {
+export const HeaderRow: React.FC = (
+  { ...props },
+  { saveTableColumn, deleteColumn, editTable, hasPublishedVersion, originColumns },
+) => {
   const t = useI18n();
 
   return (
@@ -88,7 +91,8 @@ export const HeaderRow: React.FC = ({ ...props }, { saveTableColumn, deleteColum
       <div className={styles.headerRow} style={{ height: '49px' }}>
         {props.children?.map(child => {
           const { column } = child.props;
-          const disabledEdit = hasPublishedVersion && originColumns.find((originColumn: Column) => originColumn.name === column.name);
+          const disabledEdit =
+            hasPublishedVersion && originColumns.find((originColumn: Column) => originColumn.name === column.name);
 
           if (column.dataIndex === 'recordNumber') {
             return <div className={styles.columnLeft}> {t('dataDiscovery.referenceData.tableConfig.fieldName')}</div>;
@@ -112,12 +116,12 @@ export const HeaderRow: React.FC = ({ ...props }, { saveTableColumn, deleteColum
       <div className={styles.headerRow} style={{ height: '49px' }}>
         {props.children?.map(child => {
           const { column } = child.props;
-          const disabledEdit = hasPublishedVersion && originColumns.find((originColumn: Column) => originColumn.name === column.name);
+          // const disabledEdit = hasPublishedVersion && originColumns.find((originColumn: Column) => originColumn.name === column.name);
 
           if (column.dataIndex === 'recordNumber') {
             return <div className={styles.columnLeft}> {t('dataDiscovery.referenceData.tableConfig.dataType')}</div>;
           }
-          if (editTable && !disabledEdit) {
+          if (editTable && column.editable) {
             return (
               <div key={child.key} className={styles.tableHeaderEdit}>
                 {RenderDataType(column, saveTableColumn)}

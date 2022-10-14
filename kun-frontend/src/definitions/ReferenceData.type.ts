@@ -24,6 +24,7 @@ export interface Column {
   name: string;
   index: number;
   columnType: ColumnType;
+  editable: boolean;
 }
 
 export interface ReftableMetaData {
@@ -59,6 +60,7 @@ export interface TableColumn {
   dataIndex: number | string;
   primaryKey: boolean;
   width: number;
+  editable: boolean;
 }
 
 export interface TableRecord {
